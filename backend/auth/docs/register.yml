@@ -1,0 +1,26 @@
+tags:
+  - Auth
+summary: Регистрация пользователя
+description: Регистрирует нового пользователя, хеширует пароль и сохраняет в базе данных.
+parameters:
+  - in: body
+    name: user
+    description: Данные пользователя
+    required: true
+    schema:
+      type: object
+      properties:
+        username:
+          type: string
+          example: "newuser"
+        email:
+          type: string
+          example: "newuser@example.com"
+        password:
+          type: string
+          example: "securepassword"
+responses:
+  201:
+    description: Успешная регистрация
+  409:
+    description: Пользователь уже существует

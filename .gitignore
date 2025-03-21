@@ -39,3 +39,4 @@ yarn-error.log
 # Разное
 .DS_Store
 Thumbs.db
+/backend/migrations/
