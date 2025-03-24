@@ -1,47 +1,63 @@
 from http import HTTPStatus
 
-from flasgger import swag_from
-from flask import jsonify, request
-from flask_jwt_extended import get_jwt_identity, jwt_required
+from flask import request
+from flask_jwt_extended import jwt_required
+from flask_restx import Resource, fields
 
-from . import auth_bp
-from .services import *
+from backend.auth import auth_ns
+from backend.core import api
+from .services import create_user, authenticate_user
 
+user_model = api.model('User', {
+    'username': fields.String(required=True, description='Имя пользователя'),
+    'email': fields.String(required=True, description='Электронная почта пользователя'),
+    'password': fields.String(required=True, description='Пароль пользователя')
+})
 
-@auth_bp.route("/register", methods=["POST"])
-@swag_from("docs/register.yml")
-def register():
-    data = request.json
-    username = data.get("username")
-    email = data.get("email")
-    password = data.get("password")
-
-    new_user = create_user(username, email, password)
-
-    if not new_user:
-        return jsonify({"message": "User with this username or email already exists"}), HTTPStatus.CONFLICT
-
-    return jsonify({"message": "User created successfully"}), HTTPStatus.CREATED
+login_model = api.model('Login', {
+    'username': fields.String(required=True, description='Имя пользователя'),
+    'password': fields.String(required=True, description='Пароль пользователя')
+})
 
 
-@auth_bp.route("/login", methods=["POST"])
-@swag_from("docs/login.yml")
-def login():
-    data = request.json
-    username = data.get("username")
-    password = data.get("password")
+@auth_ns.route('/register')
+class Register(Resource):
+    @api.expect(user_model)
+    @api.doc(description="Регистрация нового пользователя")
+    def post(self):
+        data = request.json
+        username = data.get("username")
+        email = data.get("email")
+        password = data.get("password")
 
-    access_token = authenticate_user(username, password)
+        new_user = create_user(username, email, password)
 
-    if access_token:
-        return jsonify(access_token=access_token), HTTPStatus.OK
+        if not new_user:
+            return {"message": "User with this username or email already exists"}, HTTPStatus.CONFLICT
 
-    return jsonify({"message": "Invalid credentials"}), HTTPStatus.UNAUTHORIZED
+        return {"message": "User registered successfully"}, HTTPStatus.CREATED
 
 
-@auth_bp.route("/protected", methods=["GET"])
-@jwt_required()
-@swag_from("docs/protected.yml")
-def protected():
-    current_user = get_jwt_identity()
-    return jsonify({"message": f"Hello, {current_user}!"}), HTTPStatus.OK
+@auth_ns.route('/login')
+class Login(Resource):
+    @api.expect(login_model)
+    @api.doc(description="Аутентификация пользователя для получения токена доступа")
+    def post(self):
+        data = request.json
+        username = data.get("username")
+        password = data.get("password")
+
+        access_token = authenticate_user(username, password)
+
+        if access_token:
+            return {"access_token": access_token}, HTTPStatus.OK
+
+        return {"message": "Invalid credentials"}, HTTPStatus.UNAUTHORIZED
+
+
+@auth_ns.route('/protected')
+class Protected(Resource):
+    @jwt_required()
+    @api.doc(description="Доступ к защищенному ресурсу. Требуется авторизация.")
+    def get(self):
+        return {"message": "This is a protected resource"}, HTTPStatus.OK
