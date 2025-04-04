@@ -1,0 +1,13 @@
+class AuthMessages:
+    AUTH_INVALID_CREDENTIALS = "Неверные учетные данные"
+    AUTH_ACCESS_DENIED = "Доступ запрещен"
+    USER_NOT_FOUND = "Пользователь не найден"
+    USER_ALREADY_EXISTS = "Пользователь с таким именем или почтой уже существует либо роль недопустима"
+    USER_CREATED = "Пользователь успешно зарегистрирован"
+    PASSWORD_CHANGED = "Пароль успешно изменен"
+    PASSWORD_INVALID_OLD = "Неверный старый пароль"
+    USER_DELETED_SELF = "Вы успешно удалили свой аккаунт"
+    USER_DELETED = "Пользователь успешно удален"
+    PROTECTED_RESOURCE = "Доступ к защищенному ресурсу получен"
+    ROLE_CHANGE_FORBIDDEN = "Для выбора роли, отличной от 'Пользователь', требуется авторизация администратора"
+    PASSWORD_CHANGE_FORBIDDEN = "Вы можете изменить пароль только для своего аккаунта"

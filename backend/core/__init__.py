@@ -23,6 +23,7 @@ def create_app():
 
 def register_apps(app):
     from backend.auth import auth_ns
-    api.add_namespace(auth_ns, path='/auth')
+    api.add_namespace(auth_ns, path='/api/auth')
+
     from backend.app_example import new_app_ns
-    api.add_namespace(new_app_ns, path='/app_example')
+    api.add_namespace(new_app_ns, path='/api/app_example')
