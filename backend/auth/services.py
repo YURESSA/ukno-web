@@ -1,6 +1,6 @@
 from flask_jwt_extended import create_access_token
 from backend.core import db
-from .models import User, Role
+from backend.models.models import User, Role
 
 
 def get_user_by_username(username):

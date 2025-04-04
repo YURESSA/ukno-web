@@ -6,7 +6,7 @@ from flask_restx import Resource, fields
 
 from backend.auth import auth_ns
 from backend.core import api
-from .models import User
+from backend.models.models import User
 from .services import create_user, authenticate_user, change_password, delete_user
 from ..core.messages import AuthMessages
 
