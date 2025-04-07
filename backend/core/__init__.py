@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
+
 from .config import Config
 from .database import db, migrate
 from .extensions import jwt, api
@@ -22,8 +23,11 @@ def create_app():
 
 
 def register_apps(app):
-    from backend.auth import auth_ns
-    api.add_namespace(auth_ns, path='/api/auth')
+    from backend.user import user_ns
+    api.add_namespace(user_ns, path='/api/user')
 
-    from backend.app_example import new_app_ns
-    api.add_namespace(new_app_ns, path='/api/app_example')
+    from backend.admin import admin_ns
+    api.add_namespace(admin_ns, path='/api/admin')
+
+    from backend.resident import resident_ns
+    api.add_namespace(resident_ns, path='/api/resident')
