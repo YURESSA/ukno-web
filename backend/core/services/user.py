@@ -20,7 +20,7 @@ def get_all_users(role=None):
     return users
 
 
-def create_user(username, email, password, full_name, phone, role_name="Пользователь"):
+def create_user(username, email, password, full_name, phone, role_name):
     role = get_role_by_name(role_name)
     if not role or User.query.filter((User.username == username) | (User.email == email)).first():
         return None

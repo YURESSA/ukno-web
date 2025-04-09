@@ -18,9 +18,13 @@ def parse_user_data(data, default_role):
     return username, email, password, full_name, phone, role_name
 
 
-def register_user(default_role, data):
-    username, email, password, full_name, phone, _ = parse_user_data(data, default_role)
-    new_user = create_user(username, email, password, full_name, phone, default_role)
+def register_user(default_role, data, current_user_role="user"):
+    username, email, password, full_name, phone, role_name = parse_user_data(data, default_role)
+
+    if current_user_role != "admin":
+        role_name = default_role
+
+    new_user = create_user(username, email, password, full_name, phone, role_name)
     if not new_user:
         return {"message": AuthMessages.USER_ALREADY_EXISTS}, HTTPStatus.CONFLICT
     return {"message": AuthMessages.USER_CREATED}, HTTPStatus.CREATED
@@ -30,7 +34,7 @@ def login_user(role, data):
     username = data.get("username")
     password = data.get("password")
     user = User.query.filter_by(username=username).first()
-    # Проверяем, что пользователь существует, пароль верный и роль соответствует
+
     if not user or not user.check_password(password) or user.role.role_name.lower() != role.lower():
         return None
     return authenticate_user(username, password)

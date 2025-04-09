@@ -5,9 +5,9 @@ from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
 from flask_restx import Resource
 
 from backend.core.services.auth import authenticate_user, change_password
+from backend.core.services.common_endpoints import get_user_info_response, register_user
 from backend.core.services.user import delete_user, get_user_by_username, get_all_users
 from . import admin_ns
-from backend.core.services.common_endpoints import get_user_info_response, register_user
 from ..core.messages import AuthMessages
 from ..core.schemas.auth_schemas import login_model, change_password_model, user_model
 
@@ -84,8 +84,9 @@ class AdminUserList(Resource):
     def post(self):
         if not admin_required():
             return {"message": AuthMessages.AUTH_ACCESS_DENIED}, HTTPStatus.FORBIDDEN
+        current_role = get_jwt().get('role')
         data = request.get_json()
-        return register_user("user", data)
+        return register_user("user", data, current_role)
 
 
 @admin_ns.route('/users/detail/<string:username>')
