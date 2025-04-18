@@ -133,15 +133,56 @@ def create_excursion(data, created_by, files):
 
 
 def update_excursion(excursion, data, files):
-    for f in ['title', 'description', 'duration', 'category_id', 'event_type_id', 'is_active']:
-        if f in data:
-            setattr(excursion, f, data[f])
+    for field in ['title', 'description', 'duration', 'category_id', 'event_type_id', 'is_active']:
+        if field in data:
+            setattr(excursion, field, data[field])
 
     clear_photos(excursion)
     add_photos(excursion, process_photos(files or []))
 
-    clear_sessions_and_schedules(excursion)
-    add_sessions(excursion, data.get("sessions", []))
+    incoming = data.get("sessions", [])
+    existing = {s.start_datetime.isoformat(): s for s in excursion.sessions}
+
+    for s_data in incoming:
+        dt_str = s_data["start_datetime"]
+        try:
+            dt = datetime.fromisoformat(dt_str)
+        except ValueError:
+            return {"message": f"Неверный формат даты: {dt_str}"}, HTTPStatus.BAD_REQUEST
+
+        max_p = s_data["max_participants"]
+        cost = s_data["cost"]
+
+        if dt_str in existing:
+            sess = existing.pop(dt_str)
+            booked = len(sess.reservations)
+            if max_p < booked:
+                return {
+                    "message": f"Нельзя уменьшить max_participants сеанса {dt_str} ниже уже забронированного ({booked})"
+                }, HTTPStatus.BAD_REQUEST
+
+            sess.max_participants = max_p
+            sess.cost = cost
+        else:
+            new_sess = ExcursionSession(
+                excursion_id=excursion.excursion_id,
+                start_datetime=dt,
+                max_participants=max_p,
+                cost=cost
+            )
+            db.session.add(new_sess)
+
+    for dt_str, sess in existing.items():
+        if sess.reservations:
+            return {
+                "message": (
+                    f"Нельзя удалить сеанс {dt_str}, "
+                    f"на который есть бронирования"
+                )
+            }, HTTPStatus.BAD_REQUEST
+        db.session.delete(sess)
+
+    RecurringSchedule.query.filter_by(excursion_id=excursion.excursion_id).delete()
     add_schedules(excursion, data.get("recurring_schedule", []))
 
     excursion.tags.clear()

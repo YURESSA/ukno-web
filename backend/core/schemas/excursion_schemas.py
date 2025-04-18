@@ -25,3 +25,11 @@ photos_param = {
     'description': 'Файлы изображений экскурсии (можно несколько)',
     'multiple': True
 }
+
+reservation_model = api.model('ReservationRequest', {
+    'session_id': fields.Integer(required=True, description='ID сеанса')
+})
+
+cancel_model = api.model('CancelReservationRequest', {
+    'reservation_id': fields.Integer(required=True, description='ID бронирования')
+})
