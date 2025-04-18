@@ -1,12 +1,8 @@
-from http import HTTPStatus
-
 from flask import request
-from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt
 from flask_restx import Resource
 
-from backend.core.services.auth import authenticate_user, change_password
-from backend.core.services.common_endpoints import get_user_info_response, register_user
-from backend.core.services.user import delete_user, get_user_by_username, get_all_users
+from backend.core.services.profile_service import *
 from . import admin_ns
 from ..core.messages import AuthMessages
 from ..core.schemas.auth_schemas import login_model, change_password_model, user_model

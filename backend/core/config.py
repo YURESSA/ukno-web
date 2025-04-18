@@ -17,3 +17,5 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     ALLOWED_ORIGINS = ["*"]
+    UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER", "static/uploads")
+    ALLOWED_EXTENSIONS = os.getenv("ALLOWED_EXTENSIONS", "png,jpg,jpeg,gif").split(',')

@@ -2,10 +2,10 @@ from flask import request
 from flask_jwt_extended import jwt_required
 from flask_restx import Resource
 
-from backend.core.services.common_endpoints import *
-from backend.core.messages import AuthMessages
 from backend.core.schemas.auth_schemas import login_model, user_model, change_password_model
+from backend.core.services.profile_service import *
 from . import user_ns
+from ..core.services.excursion_service import list_excursions, serialize_excursion
 
 
 @user_ns.route('/register')
@@ -50,3 +50,34 @@ class UserProfile(Resource):
     @user_ns.doc(description="Удаление аккаунта")
     def delete(self):
         return delete_profile()
+
+
+@user_ns.route('/excursions')
+class UserExcursionsList(Resource):
+    @user_ns.doc(
+        description="Список всех активных экскурсий (без авторизации)",
+        params={
+            'category': 'фильтр по имени категории',
+            'event_type': 'фильтр по имени типа события',
+            'tags': 'фильтр по тегам, через запятую',
+            'min_duration': 'мин. продолжительность, минуты',
+            'max_duration': 'макс. продолжительность, минуты',
+            'title': 'часть названия',
+            'sort': 'имя поля для сортировки, допустимо "-duration", "title"'
+        }
+    )
+    def get(self):
+        args = request.args
+        filters = {
+            'category': args.get('category'),
+            'event_type': args.get('event_type'),
+            'tags': args.get('tags'),
+            'min_duration': args.get('min_duration'),
+            'max_duration': args.get('max_duration'),
+            'title': args.get('title'),
+        }
+        sort = args.get('sort')
+        excursions = list_excursions(filters, sort)
+        return {
+            "excursions": [serialize_excursion(excursion) for excursion in excursions]
+        }, HTTPStatus.OK
