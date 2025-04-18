@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from backend.core import db
 
 excursion_tags = db.Table(
@@ -69,6 +70,9 @@ class Excursion(db.Model):
                f"duration={self.duration}, category_id={self.category_id}, event_type_id={self.event_type_id}, " \
                f"created_by={self.created_by}, is_active={self.is_active})"
 
+    def get_all_reservations(self):
+        return [r for s in self.sessions for r in s.reservations]
+
     def to_dict(self):
         return {
             'excursion_id': self.excursion_id,
@@ -118,6 +122,12 @@ class ExcursionSession(db.Model):
     cost = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
 
     excursion = db.relationship("Excursion", back_populates="sessions")
+    reservations = db.relationship(
+        "Reservation",
+        back_populates="session",
+        cascade="all, delete-orphan",
+        lazy=True
+    )
 
     def __str__(self):
         return f"ExcursionSession(id={self.session_id}, excursion_id={self.excursion_id}, " \
@@ -126,9 +136,35 @@ class ExcursionSession(db.Model):
 
     def to_dict(self):
         return {
+            'session_id': self.session_id,
             'start_datetime': self.start_datetime.isoformat(),
             'max_participants': self.max_participants,
-            'cost': str(self.cost)
+            'cost': str(self.cost),
+            'booked': len(self.reservations)
+        }
+
+
+class Reservation(db.Model):
+    __tablename__ = 'reservations'
+
+    reservation_id = db.Column(db.Integer, primary_key=True)
+    session_id = db.Column(db.Integer, db.ForeignKey('excursion_sessions.session_id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    booked_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    session = db.relationship("ExcursionSession", back_populates="reservations")
+    user = db.relationship("User", back_populates="reservations")
+
+    def __str__(self):
+        return (f"Reservation(id={self.reservation_id}, session_id={self.session_id}, "
+                f"user_id={self.user_id}, booked_at={self.booked_at})")
+
+    def to_dict(self):
+        return {
+            'reservation_id': self.reservation_id,
+            'session_id': self.session_id,
+            'user_id': self.user_id,
+            'booked_at': self.booked_at.isoformat()
         }
 
 
