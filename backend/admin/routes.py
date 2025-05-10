@@ -29,7 +29,7 @@ class AdminLogin(Resource):
 
         access_token = authenticate_user(username, password)
         if access_token:
-            return {"access_token": access_token}, HTTPStatus.OK
+            return {"access_token": access_token, "role": "admin"}, HTTPStatus.OK
         return {"message": AuthMessages.AUTH_INVALID_CREDENTIALS}, HTTPStatus.UNAUTHORIZED
 
 
