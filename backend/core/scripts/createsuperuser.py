@@ -2,11 +2,12 @@ import os
 import sys
 from getpass import getpass
 
+# Путь к корню проекта (ukno-web/) из любой директории
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 sys.path.append(BASE_DIR)
 
 from backend.core import create_app, db
-from backend.core.models.auth_models import Role, User
+from backend.core.models.auth_models import Role, User  # поправь путь, если у тебя другой
 
 def create_superuser():
     print("=== Создание суперпользователя ===")
