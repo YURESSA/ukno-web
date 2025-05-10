@@ -26,7 +26,7 @@ class ResidentLogin(Resource):
         data = request.get_json()
         token = login_user("resident", data)
         if token:
-            return {"access_token": token}, HTTPStatus.OK
+            return {"access_token": token, "role": "resident"}, HTTPStatus.OK
         return {"message": AuthMessages.AUTH_INVALID_CREDENTIALS}, HTTPStatus.UNAUTHORIZED
 
 

@@ -29,7 +29,7 @@ class UserLogin(Resource):
         data = request.get_json()
         token = login_user("user", data)
         if token:
-            return {"access_token": token}, HTTPStatus.OK
+            return {"access_token": token, "role": "user"}, HTTPStatus.OK
         return {"message": AuthMessages.AUTH_INVALID_CREDENTIALS}, HTTPStatus.UNAUTHORIZED
 
 
