@@ -8,6 +8,7 @@ from backend.core.schemas.auth_schemas import login_model, user_model, change_pa
 from backend.core.services.profile_service import *
 from . import user_ns
 from ..core.models.excursion_models import Reservation, ExcursionSession
+from ..core.models.news_models import News
 from ..core.schemas.excursion_schemas import reservation_model, cancel_model
 from ..core.services.excursion_service import list_excursions, serialize_excursion
 
@@ -161,3 +162,23 @@ class Reservations(Resource):
         db.session.delete(reservation)
         db.session.commit()
         return {"message": "Бронирование отменено"}, HTTPStatus.OK
+
+
+@user_ns.route('/news')
+class NewsList(Resource):
+    @user_ns.doc(description="Список всех новостей (без авторизации)")
+    def get(self):
+        news_list = News.query.order_by(News.created_at.desc()).all()
+        return {
+            "news": [n.to_dict() for n in news_list]
+        }, HTTPStatus.OK
+
+
+@user_ns.route('/news/<int:news_id>')
+class NewsDetail(Resource):
+    @user_ns.doc(description="Детальный просмотр новости по ID (без авторизации)")
+    def get(self, news_id):
+        news = News.query.get(news_id)
+        if not news:
+            return {"message": "Новость не найдена"}, HTTPStatus.NOT_FOUND
+        return news.to_dict(), HTTPStatus.OK
