@@ -1,3 +1,6 @@
+import json
+import os
+
 from flask import request
 from flask_jwt_extended import jwt_required, get_jwt
 from flask_restx import Resource
@@ -5,7 +8,9 @@ from flask_restx import Resource
 from backend.core.services.profile_service import *
 from . import admin_ns
 from ..core.messages import AuthMessages
+from ..core.models.news_models import News
 from ..core.schemas.auth_schemas import login_model, change_password_model, user_model
+from ..core.services.utilits import save_image
 
 
 def admin_required():
@@ -109,3 +114,126 @@ class AdminUserDetail(Resource):
             return {"message": AuthMessages.USER_DELETED}, HTTPStatus.OK
         return {
             "message": AuthMessages.USER_NOT_FOUND}, HTTPStatus.NOT_FOUND
+
+
+@admin_ns.route('/news')
+class NewsResource(Resource):
+    @jwt_required()
+    @admin_ns.doc(
+        description="Создание новости с JSON-данными (в поле 'data') и изображением (в поле 'image')",
+        params={
+            'data': 'JSON-объект с полями title, content',
+            'image': 'Файл изображения (jpeg, png и т.д.)'
+        }
+    )
+    def post(self):
+        jwt_data = get_jwt()
+        if jwt_data.get("role") != "admin":
+            return {"message": AuthMessages.AUTH_ACCESS_DENIED}, HTTPStatus.FORBIDDEN
+
+        if 'data' not in request.form:
+            return {"message": "Поле 'data' обязательно"}, HTTPStatus.BAD_REQUEST
+        try:
+            data = json.loads(request.form['data'])
+        except json.JSONDecodeError as e:
+            return {"message": f"Ошибка в JSON: {str(e)}"}, HTTPStatus.BAD_REQUEST
+
+        title = data.get("title")
+        content = data.get("content")
+        if not all([title, content]):
+            return {"message": "Поля title и content обязательны"}, HTTPStatus.BAD_REQUEST
+
+        image = request.files.get("image")
+        image_path = save_image(image, "news") if image else None
+        username = get_jwt_identity()
+        user = User.query.filter_by(username=username).first()
+        if not user:
+            return {"message": "Пользователь не найден"}, HTTPStatus.NOT_FOUND
+        author_id = user.user_id
+        news = News(
+            title=title,
+            content=content,
+            author_id=author_id,
+            image_path=image_path
+        )
+        db.session.add(news)
+        db.session.commit()
+
+        return {
+            "message": "Новость успешно создана",
+            "news_id": news.news_id
+        }, HTTPStatus.CREATED
+
+    @jwt_required()
+    @admin_ns.doc(description="Получение всех новостей")
+    def get(self):
+        news_list = News.query.order_by(News.created_at.desc()).all()
+        return {"news": [n.to_dict() for n in news_list]}, HTTPStatus.OK
+
+
+@admin_ns.route('/news/<int:news_id>')
+class NewsDetailResource(Resource):
+    @jwt_required()
+    @admin_ns.doc(description="Получение конкретной новости по ID")
+    def get(self, news_id):
+        news = News.query.get(news_id)
+        if not news:
+            return {"message": "Новость не найдена"}, HTTPStatus.NOT_FOUND
+        return news.to_dict(), HTTPStatus.OK
+
+    @jwt_required()
+    @admin_ns.doc(description="Обновление новости по ID (только администратор)",
+                  params={'data': 'JSON с полями title и/или content', 'image': 'Новая картинка (опционально)'})
+    def put(self, news_id):
+        jwt_data = get_jwt()
+        if jwt_data.get("role") != "admin":
+            return {"message": AuthMessages.AUTH_ACCESS_DENIED}, HTTPStatus.FORBIDDEN
+
+        news = News.query.get(news_id)
+        if not news:
+            return {"message": "Новость не найдена"}, HTTPStatus.NOT_FOUND
+
+        if 'data' not in request.form:
+            return {"message": "Поле 'data' обязательно"}, HTTPStatus.BAD_REQUEST
+        try:
+            data = json.loads(request.form['data'])
+        except json.JSONDecodeError as e:
+            return {"message": f"Ошибка в JSON: {str(e)}"}, HTTPStatus.BAD_REQUEST
+
+        title = data.get("title")
+        content = data.get("content")
+
+        if title:
+            news.title = title
+        if content:
+            news.content = content
+
+        image = request.files.get("image")
+        if image:
+            news.image_path = save_image(image, "news")
+
+        db.session.commit()
+        return {"message": "Новость обновлена", "news": news.to_dict()}, HTTPStatus.OK
+
+    @jwt_required()
+    @admin_ns.doc(description="Удаление новости по ID (только администратор)")
+    def delete(self, news_id):
+        jwt_data = get_jwt()
+        if jwt_data.get("role") != "admin":
+            return {"message": AuthMessages.AUTH_ACCESS_DENIED}, HTTPStatus.FORBIDDEN
+
+        news = News.query.get(news_id)
+        if not news:
+            return {"message": "Новость не найдена"}, HTTPStatus.NOT_FOUND
+
+        if news.image_path:
+            image_path = os.path.join(os.getcwd(), news.image_path)
+            if os.path.exists(image_path):
+                try:
+                    os.remove(image_path)
+                except Exception as e:
+                    return {"message": f"Ошибка при удалении изображения: {str(e)}"}, HTTPStatus.INTERNAL_SERVER_ERROR
+
+        db.session.delete(news)
+        db.session.commit()
+        return {"message": "Новость удалена"}, HTTPStatus.OK

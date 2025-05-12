@@ -47,7 +47,7 @@ def process_photos(files):
         file.seek(0)
         if size > 5 * 1024 * 1024:
             raise ValueError("Размер файла не должен превышать 5 MB")
-        rel_path = save_image(file)
+        rel_path = save_image(file, "excursion_photos")
         photos.append({"photo_url": rel_path, "order_index": idx})
     return photos
 
