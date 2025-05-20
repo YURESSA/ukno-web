@@ -93,8 +93,13 @@ class Reservations(Resource):
     @jwt_required()
     @user_ns.doc(description="Список своих бронирований")
     def get(self):
-        user_id = get_jwt_identity()
-        reservations = Reservation.query.filter_by(user_id=user_id).all()
+        username = get_jwt_identity()
+        user = User.query.filter_by(username=username).first()
+
+        if not user:
+            return {"message": "Пользователь не найден"}, HTTPStatus.UNAUTHORIZED
+
+        reservations = Reservation.query.filter_by(user_id=user.user_id).all()
 
         return {
             "reservations": [
@@ -105,7 +110,7 @@ class Reservations(Resource):
                     "excursion_title": r.session.excursion.title,
                     "start_datetime": r.session.start_datetime.isoformat(),
                     "cost": str(r.session.cost),
-                    "booked_at": r.booked_at.isoformat()
+                    "booked_at": r.booked_at.isoformat() if r.booked_at else None
                 }
                 for r in reservations
             ]
@@ -117,7 +122,11 @@ class Reservations(Resource):
     def post(self):
         data = request.get_json()
         session_id = data.get('session_id')
-        user_id = get_jwt_identity()
+        username = get_jwt_identity()
+        user = User.query.filter_by(username=username).first()
+
+        if not user:
+            return {"message": "Пользователь не найден"}, HTTPStatus.UNAUTHORIZED
 
         if not session_id:
             return {"message": "session_id is required"}, HTTPStatus.BAD_REQUEST
@@ -127,7 +136,7 @@ class Reservations(Resource):
             return {"message": "Сеанс не найден"}, HTTPStatus.NOT_FOUND
 
         # Проверка дубликата
-        if Reservation.query.filter_by(session_id=session_id, user_id=user_id).first():
+        if Reservation.query.filter_by(session_id=session_id, user_id=user.user_id).first():
             return {"message": "Вы уже записаны на этот сеанс"}, HTTPStatus.CONFLICT
 
         # Проверка доступных мест
@@ -137,7 +146,7 @@ class Reservations(Resource):
         # Создание бронирования
         r = Reservation(
             session_id=session_id,
-            user_id=user_id,
+            user_id=user.user_id,
             booked_at=datetime.utcnow()
         )
         db.session.add(r)
@@ -150,14 +159,18 @@ class Reservations(Resource):
     def delete(self):
         data = request.get_json() or {}
         reservation_id = data.get('reservation_id')
-        user_id = get_jwt_identity()
+        username = get_jwt_identity()
+        user = User.query.filter_by(username=username).first()
+
+        if not user:
+            return {"message": "Пользователь не найден"}, HTTPStatus.UNAUTHORIZED
 
         if not reservation_id:
             return {"message": "reservation_id is required"}, HTTPStatus.BAD_REQUEST
 
         reservation = Reservation.query.get(reservation_id)
-        if not reservation or reservation.user_id != user_id:
-            return {"message": "Бронирование не найдено"}, HTTPStatus.NOT_FOUND
+        if not reservation or reservation.user_id != user.user_id:
+            return {"message": "Бронирование не найдено или не принадлежит вам"}, HTTPStatus.NOT_FOUND
 
         db.session.delete(reservation)
         db.session.commit()
