@@ -1,7 +1,8 @@
 import json
+from functools import wraps
 
 from flask import request
-from flask_jwt_extended import jwt_required, get_jwt
+from flask_jwt_extended import jwt_required, get_jwt, verify_jwt_in_request
 from flask_restx import Resource
 
 from backend.core.schemas.auth_schemas import *
@@ -11,11 +12,16 @@ from ..core.schemas.excursion_schemas import *
 from ..core.services.excursion_service import *
 
 
-def resident_required():
-    claims = get_jwt()
-    if claims.get("role") != "resident":
-        return False
-    return True
+def resident_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        verify_jwt_in_request()
+        claims = get_jwt()
+        if claims.get("role") != "resident":
+            return {"message": "Доступ запрещён"}, HTTPStatus.FORBIDDEN
+        return fn(*args, **kwargs)
+
+    return wrapper
 
 
 @resident_ns.route('/login')
@@ -32,36 +38,30 @@ class ResidentLogin(Resource):
 
 @resident_ns.route('/profile')
 class ResidentProfile(Resource):
-    @jwt_required()
+    @resident_required
     @resident_ns.doc(description="Получение информации о резиденте")
     def get(self):
-        if not resident_required():
-            return {"message": AuthMessages.AUTH_ACCESS_DENIED}, HTTPStatus.FORBIDDEN
         user, error, status = get_profile()
         if error:
             return error, status
         return get_user_info_response(user)
 
-    @jwt_required()
+    @resident_required
     @resident_ns.expect(change_password_model)
     @resident_ns.doc(description="Изменение пароля резидента")
     def put(self):
-        if not resident_required():
-            return {"message": AuthMessages.AUTH_ACCESS_DENIED}, HTTPStatus.FORBIDDEN
         data = request.get_json()
         return change_profile_password(data)
 
-    @jwt_required()
+    @resident_required
     @resident_ns.doc(description="Удаление аккаунта резидента")
     def delete(self):
-        if not resident_required():
-            return {"message": AuthMessages.AUTH_ACCESS_DENIED}, HTTPStatus.FORBIDDEN
         return delete_profile()
 
 
 @resident_ns.route('/excursions')
 class ExcursionsResource(Resource):
-    @jwt_required()
+    @resident_required
     @resident_ns.doc(
         description="Создание экскурсии с данными JSON (в поле 'data') и фотофайлами",
         params={
@@ -70,9 +70,6 @@ class ExcursionsResource(Resource):
         }
     )
     def post(self):
-        if not resident_required():
-            return {"message": "Доступ запрещён"}, HTTPStatus.FORBIDDEN
-
         if 'data' not in request.form:
             return {"message": "Поле 'data' обязательно"}, HTTPStatus.BAD_REQUEST
         try:
@@ -92,7 +89,7 @@ class ExcursionsResource(Resource):
             "excursion_id": excursion.excursion_id
         }, HTTPStatus.CREATED
 
-    @jwt_required()
+    @resident_required
     @resident_ns.doc(description="Получение всех экскурсий, созданных текущим резидентом")
     def get(self):
         resident_id = get_jwt_identity()
@@ -102,7 +99,7 @@ class ExcursionsResource(Resource):
 
 @resident_ns.route('/excursions_detail/<int:excursion_id>')
 class DetailExcursion(Resource):
-    @jwt_required()
+    @resident_required
     def get(self, excursion_id):
         resident_id = get_jwt_identity()
         excursion = get_excursion_or_404(excursion_id, resident_id)
@@ -110,9 +107,9 @@ class DetailExcursion(Resource):
         if not excursion:
             return {"message": "Экскурсия не найдена или не принадлежит текущему резиденту"}, HTTPStatus.NOT_FOUND
 
-        return serialize_excursion(excursion), HTTPStatus.OK
+        return get_detailed_excursion_with_reservations(excursion), HTTPStatus.OK
 
-    @jwt_required()
+    @resident_required
     @resident_ns.doc(
         description="Обновление экскурсии с JSON-данными (в поле 'data') и новыми фотофайлами",
         params={
@@ -137,7 +134,7 @@ class DetailExcursion(Resource):
         files = request.files.getlist("photos")
         return update_excursion(excursion, data, files)
 
-    @jwt_required()
+    @resident_required
     def delete(self, excursion_id):
         resident_id = get_jwt_identity()
         excursion = get_excursion_or_404(excursion_id, resident_id)
@@ -155,3 +152,12 @@ class DetailExcursion(Resource):
 
         except Exception as e:
             return {"message": f"Ошибка при удалении экскурсии: {str(e)}"}, HTTPStatus.INTERNAL_SERVER_ERROR
+
+@resident_ns.route('/analytics')
+class ExcursionAnalytics(Resource):
+    @resident_required
+    @resident_ns.doc(description="Аналитика по экскурсиям резидента (кол-во посетителей, популярность и т.д.)")
+    def get(self):
+        resident_id = get_jwt_identity()
+        analytics_data = get_resident_excursion_analytics(resident_id)
+        return analytics_data, HTTPStatus.OK

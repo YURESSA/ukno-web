@@ -71,7 +71,6 @@ def add_sessions(excursion, sessions):
             cost=s["cost"]
         ))
 
-
 def add_schedules(excursion, schedules):
     for r in schedules:
         start_time = datetime.strptime(r["start_time"], "%H:%M").time()
@@ -80,7 +79,8 @@ def add_schedules(excursion, schedules):
             weekday=r["weekday"],
             start_time=start_time,
             repeats=r["repeats"],
-            max_participants=r["max_participants"]
+            max_participants=r["max_participants"],
+            cost=r["cost"]
         ))
 
 
@@ -286,3 +286,67 @@ def list_excursions(filters, sort_key):
             query = query.order_by(order)
 
     return query.all()
+
+
+def get_resident_excursion_analytics(resident_id):
+    excursions = db.session.query(Excursion).filter_by(created_by=resident_id).all()
+
+    if not excursions:
+        return {"message": "У вас пока нет экскурсий", "stats": []}
+
+    result = []
+    total_visitors = 0
+    most_popular = None
+    max_reservations = 0
+
+    for excursion in excursions:
+        sessions = excursion.sessions
+        session_count = len(sessions)
+        excursion_total_reservations = sum(len(session.reservations) for session in sessions)
+
+        if excursion_total_reservations > max_reservations:
+            most_popular = excursion
+            max_reservations = excursion_total_reservations
+
+        total_visitors += excursion_total_reservations
+
+        result.append({
+            "excursion_id": excursion.excursion_id,
+            "title": excursion.title,
+            "session_count": session_count,
+            "total_reservations": excursion_total_reservations,
+        })
+
+    return {
+        "total_excursions": len(excursions),
+        "total_visitors": total_visitors,
+        "most_popular_excursion": {
+            "title": most_popular.title,
+            "total_reservations": max_reservations
+        } if most_popular else None,
+        "details": result
+    }
+
+def get_detailed_excursion_with_reservations(excursion):
+    result = excursion.to_dict()
+    result['sessions'] = []
+
+    for session in excursion.sessions:
+        session_data = session.to_dict()
+        session_data['reservations'] = []
+
+        for reservation in session.reservations:
+            session_data['reservations'].append({
+                'reservation_id': reservation.reservation_id,
+                'user_id': reservation.user_id,
+                'booked_at': reservation.booked_at.isoformat(),
+                'user': {
+                    'user_id': reservation.user.user_id,
+                    'full_name': reservation.user.full_name,
+                    'email': reservation.user.email
+                } if reservation.user else None
+            })
+
+        result['sessions'].append(session_data)
+
+    return result

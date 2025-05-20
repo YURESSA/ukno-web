@@ -178,13 +178,14 @@ class RecurringSchedule(db.Model):
     count_of_repeats = db.Column(db.Integer, nullable=False, default=0)
     repeats = db.Column(db.Integer, nullable=False)
     max_participants = db.Column(db.Integer, nullable=False)
+    cost = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
 
     excursion = db.relationship("Excursion", back_populates="recurring_schedules")
 
     def __str__(self):
         return f"RecurringSchedule(id={self.recurring_id}, excursion_id={self.excursion_id}, " \
                f"weekday={self.weekday}, start_time={self.start_time}, count_of_repeats={self.count_of_repeats}, " \
-               f"repeats={self.repeats}, max_participants={self.max_participants})"
+               f"repeats={self.repeats}, max_participants={self.max_participants}, cost={self.cost})"
 
     def to_dict(self):
         return {
@@ -192,8 +193,10 @@ class RecurringSchedule(db.Model):
             'start_time': self.start_time.isoformat(),
             'count_of_repeats': self.count_of_repeats,
             'repeats': self.repeats,
-            'max_participants': self.max_participants
+            'max_participants': self.max_participants,
+            'cost': str(self.cost)
         }
+
 
 
 class Tag(db.Model):
