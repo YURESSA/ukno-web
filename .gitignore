@@ -42,3 +42,4 @@ Thumbs.db
 /backend/migrations/
 /backend/static/
 /backend/media/
+/media/

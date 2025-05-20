@@ -9,7 +9,7 @@ class News(db.Model):
     news_id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
     image_path = db.Column(db.String(255), nullable=True)
     author_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
 
