@@ -102,7 +102,7 @@ class DetailExcursion(Resource):
     @resident_required
     def get(self, excursion_id):
         resident_id = get_jwt_identity()
-        excursion = get_excursion_or_404(excursion_id, resident_id)
+        excursion = get_excursion_for_resident(excursion_id, resident_id)
 
         if not excursion:
             return {"message": "Экскурсия не найдена или не принадлежит текущему резиденту"}, HTTPStatus.NOT_FOUND
@@ -119,7 +119,7 @@ class DetailExcursion(Resource):
     )
     def put(self, excursion_id):
         resident_id = get_jwt_identity()
-        excursion = get_excursion_or_404(excursion_id, resident_id)
+        excursion = get_excursion_for_resident(excursion_id, resident_id)
 
         if not excursion:
             return {"message": "Экскурсия не найдена или не принадлежит текущему резиденту"}, HTTPStatus.NOT_FOUND
@@ -137,7 +137,7 @@ class DetailExcursion(Resource):
     @resident_required
     def delete(self, excursion_id):
         resident_id = get_jwt_identity()
-        excursion = get_excursion_or_404(excursion_id, resident_id)
+        excursion = get_excursion_for_resident(excursion_id, resident_id)
 
         if not excursion:
             return {"message": "Экскурсия не найдена или не принадлежит текущему резиденту"}, HTTPStatus.NOT_FOUND
