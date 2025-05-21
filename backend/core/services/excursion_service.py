@@ -7,12 +7,15 @@ from backend.core.models.excursion_models import *
 from backend.core.services.utilits import save_image
 
 
-def get_excursion_or_404(excursion_id, resident_id):
+
+def get_excursion_for_resident(excursion_id, resident_id):
     return Excursion.query.filter_by(
         excursion_id=excursion_id,
         created_by=resident_id
     ).first()
 
+def get_excursion(excursion_id):
+    return Excursion.query.filter_by(excursion_id=excursion_id).first()
 
 def get_excursions_for_resident(resident_id):
     return Excursion.query.filter_by(created_by=resident_id).all()
@@ -71,6 +74,7 @@ def add_sessions(excursion, sessions):
             cost=s["cost"]
         ))
 
+
 def add_schedules(excursion, schedules):
     for r in schedules:
         start_time = datetime.strptime(r["start_time"], "%H:%M").time()
@@ -105,16 +109,24 @@ def create_excursion(data, created_by, files):
     cat = Category.query.filter_by(category_name=data.get("category")).first()
     if not cat:
         return None, {"message": "Категория не найдена"}, HTTPStatus.BAD_REQUEST
-    et = EventType.query.filter_by(event_type_name=data.get("event_type")).first()
-    if not et:
-        return None, {"message": "Тип события не найден"}, HTTPStatus.BAD_REQUEST
-
+    fmt = FormatType.query.filter_by(format_type_name=data.get("format_type")).first()
+    if not fmt:
+        return None, {"message": "Формат мероприятия не найден"}, HTTPStatus.BAD_REQUEST
+    age_cat = AgeCategory.query.filter_by(age_category_name=data.get("age_category")).first()
+    if not age_cat:
+        return None, {"message": "Возрастная категория не найдена"}, HTTPStatus.BAD_REQUEST
+    place = data.get("place")
+    if not place:
+        return None, {"message": "Место проведения обязательно"}, HTTPStatus.BAD_REQUEST
     excursion = Excursion(
         title=data.get("title"),
         description=data.get("description"),
         duration=data.get("duration"),
         category_id=cat.category_id,
-        event_type_id=et.event_type_id,
+        format_type_id=fmt.format_type_id,
+        age_category_id=age_cat.age_category_id,
+        place=place,
+        conducted_by=data.get("conducted_by"),
         is_active=data.get("is_active"),
         created_by=created_by
     )
@@ -133,7 +145,8 @@ def create_excursion(data, created_by, files):
 
 
 def update_excursion(excursion, data, files):
-    for field in ['title', 'description', 'duration', 'category_id', 'event_type_id', 'is_active']:
+    for field in ['title', 'description', 'duration', 'category_id', 'format_type_id', 'age_category_id', 'place',
+                  'conducted_by', 'is_active']:
         if field in data:
             setattr(excursion, field, data[field])
 
@@ -198,7 +211,10 @@ def serialize_excursion(excursion):
         "description": excursion.description,
         "duration": excursion.duration,
         "category": serialize_category(excursion.category),
-        "event_type": serialize_event_type(excursion.event_type),
+        "format_type": serialize_format_type(excursion.format_type),
+        "age_category": serialize_age_category(excursion.age_category),
+        "place": excursion.place,
+        "conducted_by": excursion.conducted_by,
         "is_active": excursion.is_active,
         "photos": serialize_photos(excursion.photos),
         "sessions": serialize_sessions(excursion.sessions),
@@ -211,8 +227,12 @@ def serialize_category(category):
     return category.to_dict() if category else None
 
 
-def serialize_event_type(event_type):
-    return event_type.to_dict() if event_type else None
+def serialize_format_type(format_type):
+    return format_type.to_dict() if format_type else None
+
+
+def serialize_age_category(age_category):
+    return age_category.to_dict() if age_category else None
 
 
 def serialize_photos(photos):
@@ -250,9 +270,13 @@ def list_excursions(filters, sort_key):
     if category:
         query = query.join(Category).filter(Category.category_name == category.strip())
 
-    event_type = filters.get("event_type")
-    if event_type:
-        query = query.join(EventType).filter(EventType.event_type_name == event_type.strip())
+    format_type = filters.get("format_type")
+    if format_type:
+        query = query.join(FormatType).filter(FormatType.format_type_name == format_type.strip())
+
+    age_category = filters.get("age_category")
+    if age_category:
+        query = query.join(AgeCategory).filter(AgeCategory.age_category_name == age_category.strip())
 
     tags = filters.get("tags")
     if tags:
@@ -326,6 +350,7 @@ def get_resident_excursion_analytics(resident_id):
         } if most_popular else None,
         "details": result
     }
+
 
 def get_detailed_excursion_with_reservations(excursion):
     result = excursion.to_dict()

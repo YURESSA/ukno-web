@@ -27,21 +27,39 @@ class Category(db.Model):
         }
 
 
-class EventType(db.Model):
-    __tablename__ = 'event_types'
+class FormatType(db.Model):
+    __tablename__ = 'format_types'
 
-    event_type_id = db.Column(db.Integer, primary_key=True)
-    event_type_name = db.Column(db.String(255), nullable=False)
+    format_type_id = db.Column(db.Integer, primary_key=True)
+    format_type_name = db.Column(db.String(255), nullable=False)
 
-    excursions = db.relationship("Excursion", back_populates="event_type", lazy=True)
+    excursions = db.relationship("Excursion", back_populates="format_type", lazy=True)
 
     def __str__(self):
-        return f"EventType(id={self.event_type_id}, name={self.event_type_name})"
+        return f"FormatType(id={self.format_type_id}, name={self.format_type_name})"
 
     def to_dict(self):
         return {
-            'event_type_id': self.event_type_id,
-            'event_type_name': self.event_type_name
+            'format_type_id': self.format_type_id,
+            'format_type_name': self.format_type_name
+        }
+
+
+class AgeCategory(db.Model):
+    __tablename__ = 'age_categories'
+
+    age_category_id = db.Column(db.Integer, primary_key=True)
+    age_category_name = db.Column(db.String(255), nullable=False)
+
+    excursions = db.relationship("Excursion", back_populates="age_category", lazy=True)
+
+    def __str__(self):
+        return f"AgeCategory(id={self.age_category_id}, name={self.age_category_name})"
+
+    def to_dict(self):
+        return {
+            'age_category_id': self.age_category_id,
+            'age_category_name': self.age_category_name
         }
 
 
@@ -52,26 +70,27 @@ class Excursion(db.Model):
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text, nullable=False)
     duration = db.Column(db.Integer, nullable=False)
+
     category_id = db.Column(db.Integer, db.ForeignKey('categories.category_id'), nullable=False)
-    event_type_id = db.Column(db.Integer, db.ForeignKey('event_types.event_type_id'), nullable=False)
+    format_type_id = db.Column(db.Integer, db.ForeignKey('format_types.format_type_id'), nullable=False)
+    age_category_id = db.Column(db.Integer, db.ForeignKey('age_categories.age_category_id'), nullable=False)
+
     created_by = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
+    place = db.Column(db.String(255), nullable=False)
+    conducted_by = db.Column(db.String(255), nullable=True)
 
     category = db.relationship("Category", back_populates="excursions")
-    event_type = db.relationship("EventType", back_populates="excursions")
+    format_type = db.relationship("FormatType", back_populates="excursions")
+    age_category = db.relationship("AgeCategory", back_populates="excursions")
+
     photos = db.relationship("ExcursionPhoto", back_populates="excursion", cascade="all, delete-orphan", lazy=True)
     sessions = db.relationship("ExcursionSession", back_populates="excursion", cascade="all, delete-orphan", lazy=True)
-    recurring_schedules = db.relationship("RecurringSchedule", back_populates="excursion", cascade="all, delete-orphan",
-                                          lazy=True)
+    recurring_schedules = db.relationship("RecurringSchedule", back_populates="excursion", cascade="all, delete-orphan", lazy=True)
     tags = db.relationship("Tag", secondary=excursion_tags, back_populates="excursions", lazy='subquery')
 
     def __str__(self):
-        return f"Excursion(id={self.excursion_id}, title={self.title}, description={self.description}, " \
-               f"duration={self.duration}, category_id={self.category_id}, event_type_id={self.event_type_id}, " \
-               f"created_by={self.created_by}, is_active={self.is_active})"
-
-    def get_all_reservations(self):
-        return [r for s in self.sessions for r in s.reservations]
+        return f"Excursion(id={self.excursion_id}, title={self.title})"
 
     def to_dict(self):
         return {
@@ -80,14 +99,18 @@ class Excursion(db.Model):
             'description': self.description,
             'duration': self.duration,
             'category': self.category.to_dict() if self.category else None,
-            'event_type': self.event_type.to_dict() if self.event_type else None,
+            'format_type': self.format_type.to_dict() if self.format_type else None,
+            'age_category': self.age_category.to_dict() if self.age_category else None,
             'created_by': self.created_by,
             'is_active': self.is_active,
+            'place': self.place,
+            'conducted_by': self.conducted_by,
             'photos': [photo.to_dict() for photo in self.photos],
             'sessions': [session.to_dict() for session in self.sessions],
             'recurring_schedules': [schedule.to_dict() for schedule in self.recurring_schedules],
             'tags': [tag.to_dict() for tag in self.tags]
         }
+
 
 
 class ExcursionPhoto(db.Model):
@@ -150,7 +173,7 @@ class Reservation(db.Model):
     reservation_id = db.Column(db.Integer, primary_key=True)
     session_id = db.Column(db.Integer, db.ForeignKey('excursion_sessions.session_id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
-    booked_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    booked_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
     session = db.relationship("ExcursionSession", back_populates="reservations")
     user = db.relationship("User", back_populates="reservations")

@@ -10,7 +10,7 @@ from . import user_ns
 from ..core.models.excursion_models import Reservation, ExcursionSession
 from ..core.models.news_models import News
 from ..core.schemas.excursion_schemas import reservation_model, cancel_model
-from ..core.services.excursion_service import list_excursions, serialize_excursion
+from ..core.services.excursion_service import list_excursions, serialize_excursion, get_excursion
 
 
 @user_ns.route('/register')
@@ -63,7 +63,8 @@ class UserExcursionsList(Resource):
         description="Список всех активных экскурсий (без авторизации)",
         params={
             'category': 'фильтр по имени категории',
-            'event_type': 'фильтр по имени типа события',
+            'format_type': 'фильтр по типу формата экскурсии',
+            'age_category': 'фильтр по возрастной категории',
             'tags': 'фильтр по тегам, через запятую',
             'min_duration': 'мин. продолжительность, минуты',
             'max_duration': 'макс. продолжительность, минуты',
@@ -75,7 +76,8 @@ class UserExcursionsList(Resource):
         args = request.args
         filters = {
             'category': args.get('category'),
-            'event_type': args.get('event_type'),
+            'format_type': args.get('format_type'),
+            'age_category': args.get('age_category'),
             'tags': args.get('tags'),
             'min_duration': args.get('min_duration'),
             'max_duration': args.get('max_duration'),
@@ -185,6 +187,17 @@ class NewsList(Resource):
         return {
             "news": [n.to_dict() for n in news_list]
         }, HTTPStatus.OK
+
+
+@user_ns.route('/excursions_detail/<int:excursion_id>')
+class DetailExcursion(Resource):
+    def get(self, excursion_id):
+        excursion = get_excursion(excursion_id)
+
+        if not excursion:
+            return {"message": "Экскурсия не найдена"}, HTTPStatus.NOT_FOUND
+
+        return excursion.to_dict(), HTTPStatus.OK
 
 
 @user_ns.route('/news/<int:news_id>')
