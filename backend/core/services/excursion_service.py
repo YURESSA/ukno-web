@@ -7,15 +7,16 @@ from backend.core.models.excursion_models import *
 from backend.core.services.utilits import save_image
 
 
-
 def get_excursion_for_resident(excursion_id, resident_id):
     return Excursion.query.filter_by(
         excursion_id=excursion_id,
         created_by=resident_id
     ).first()
 
+
 def get_excursion(excursion_id):
     return Excursion.query.filter_by(excursion_id=excursion_id).first()
+
 
 def get_excursions_for_resident(resident_id):
     return Excursion.query.filter_by(created_by=resident_id).all()
@@ -312,6 +313,9 @@ def list_excursions(filters, sort_key):
     return query.all()
 
 
+from sqlalchemy import func
+
+
 def get_resident_excursion_analytics(resident_id):
     excursions = db.session.query(Excursion).filter_by(created_by=resident_id).all()
 
@@ -321,24 +325,30 @@ def get_resident_excursion_analytics(resident_id):
     result = []
     total_visitors = 0
     most_popular = None
-    max_reservations = 0
+    max_participants = 0
 
     for excursion in excursions:
         sessions = excursion.sessions
         session_count = len(sessions)
-        excursion_total_reservations = sum(len(session.reservations) for session in sessions)
 
-        if excursion_total_reservations > max_reservations:
+        excursion_total_participants = db.session.query(
+            func.coalesce(func.sum(Reservation.participants_count), 0)
+        ).join(ExcursionSession).filter(
+            ExcursionSession.excursion_id == excursion.excursion_id,
+            Reservation.is_cancelled == False
+        ).scalar()
+
+        if excursion_total_participants > max_participants:
             most_popular = excursion
-            max_reservations = excursion_total_reservations
+            max_participants = excursion_total_participants
 
-        total_visitors += excursion_total_reservations
+        total_visitors += excursion_total_participants
 
         result.append({
             "excursion_id": excursion.excursion_id,
             "title": excursion.title,
             "session_count": session_count,
-            "total_reservations": excursion_total_reservations,
+            "total_participants": excursion_total_participants,
         })
 
     return {
@@ -346,7 +356,7 @@ def get_resident_excursion_analytics(resident_id):
         "total_visitors": total_visitors,
         "most_popular_excursion": {
             "title": most_popular.title,
-            "total_reservations": max_reservations
+            "total_participants": max_participants
         } if most_popular else None,
         "details": result
     }
@@ -361,10 +371,14 @@ def get_detailed_excursion_with_reservations(excursion):
         session_data['reservations'] = []
 
         for reservation in session.reservations:
+            if reservation.is_cancelled:
+                continue
+
             session_data['reservations'].append({
                 'reservation_id': reservation.reservation_id,
                 'user_id': reservation.user_id,
                 'booked_at': reservation.booked_at.isoformat(),
+                'participants_count': reservation.participants_count,
                 'user': {
                     'user_id': reservation.user.user_id,
                     'full_name': reservation.user.full_name,

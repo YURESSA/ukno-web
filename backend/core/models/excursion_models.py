@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from sqlalchemy import func
+
 from backend.core import db
 
 excursion_tags = db.Table(
@@ -157,13 +159,23 @@ class ExcursionSession(db.Model):
                f"start_datetime={self.start_datetime}, max_participants={self.max_participants}, " \
                f"cost={self.cost})"
 
+    def booked_count(self):
+        return db.session.query(
+            func.coalesce(func.sum(Reservation.participants_count), 0)
+        ).filter_by(
+            session_id=self.session_id,
+            is_cancelled=False
+        ).scalar()
+
     def to_dict(self):
+        booked = self.booked_count()
         return {
             'session_id': self.session_id,
             'start_datetime': self.start_datetime.isoformat(),
             'max_participants': self.max_participants,
             'cost': str(self.cost),
-            'booked': len(self.reservations)
+            'booked': booked,
+            'available': self.max_participants - booked
         }
 
 
@@ -175,19 +187,33 @@ class Reservation(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
     booked_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
+    # Новые поля
+    full_name = db.Column(db.String(255), nullable=False)
+    phone_number = db.Column(db.String(50), nullable=False)
+    email = db.Column(db.String(255), nullable=False)
+    participants_count = db.Column(db.Integer, nullable=False, default=1)
+    is_cancelled = db.Column(db.Boolean, default=False)
+
     session = db.relationship("ExcursionSession", back_populates="reservations")
     user = db.relationship("User", back_populates="reservations")
 
     def __str__(self):
         return (f"Reservation(id={self.reservation_id}, session_id={self.session_id}, "
-                f"user_id={self.user_id}, booked_at={self.booked_at})")
+                f"user_id={self.user_id}, full_name={self.full_name}, phone={self.phone_number}, "
+                f"email={self.email}, participants={self.participants_count}, cancelled={self.is_cancelled}, "
+                f"booked_at={self.booked_at})")
 
     def to_dict(self):
         return {
             'reservation_id': self.reservation_id,
             'session_id': self.session_id,
             'user_id': self.user_id,
-            'booked_at': self.booked_at.isoformat()
+            'booked_at': self.booked_at.isoformat(),
+            'full_name': self.full_name,
+            'phone_number': self.phone_number,
+            'email': self.email,
+            'participants_count': self.participants_count,
+            'is_cancelled': self.is_cancelled
         }
 
 

@@ -26,9 +26,14 @@ photos_param = {
     'multiple': True
 }
 
-reservation_model = api.model('ReservationRequest', {
-    'session_id': fields.Integer(required=True, description='ID сеанса')
+reservation_model = api.model("Reservation", {
+    "session_id": fields.Integer(required=True),
+    "full_name": fields.String(required=True),
+    "phone_number": fields.String(required=True),
+    "email": fields.String(required=True),
+    "participants_count": fields.Integer(required=True, min=1)
 })
+
 
 cancel_model = api.model('CancelReservationRequest', {
     'reservation_id': fields.Integer(required=True, description='ID бронирования')
