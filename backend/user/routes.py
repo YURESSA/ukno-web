@@ -3,6 +3,7 @@ from datetime import datetime
 from flask import request
 from flask_jwt_extended import jwt_required
 from flask_restx import Resource
+from sqlalchemy import func
 
 from backend.core.schemas.auth_schemas import login_model, user_model, change_password_model
 from backend.core.services.profile_service import *
@@ -112,7 +113,12 @@ class Reservations(Resource):
                     "excursion_title": r.session.excursion.title,
                     "start_datetime": r.session.start_datetime.isoformat(),
                     "cost": str(r.session.cost),
-                    "booked_at": r.booked_at.isoformat() if r.booked_at else None
+                    "booked_at": r.booked_at.isoformat() if r.booked_at else None,
+                    "full_name": r.full_name,
+                    "phone_number": r.phone_number,
+                    "email": r.email,
+                    "participants_count": r.participants_count,
+                    "is_cancelled": r.is_cancelled
                 }
                 for r in reservations
             ]
@@ -124,6 +130,11 @@ class Reservations(Resource):
     def post(self):
         data = request.get_json()
         session_id = data.get('session_id')
+        full_name = data.get('full_name')
+        phone_number = data.get('phone_number')
+        email = data.get('email')
+        participants_count = data.get('participants_count', 1)
+
         username = get_jwt_identity()
         user = User.query.filter_by(username=username).first()
 
@@ -137,23 +148,30 @@ class Reservations(Resource):
         if not session:
             return {"message": "Сеанс не найден"}, HTTPStatus.NOT_FOUND
 
-        # Проверка дубликата
-        if Reservation.query.filter_by(session_id=session_id, user_id=user.user_id).first():
-            return {"message": "Вы уже записаны на этот сеанс"}, HTTPStatus.CONFLICT
+        existing_participants = db.session.query(
+            func.coalesce(func.sum(Reservation.participants_count), 0)
+        ).filter_by(session_id=session_id, is_cancelled=False).scalar()
 
-        # Проверка доступных мест
-        if Reservation.query.filter_by(session_id=session_id).count() >= session.max_participants:
-            return {"message": "Мест на этот сеанс больше нет"}, HTTPStatus.BAD_REQUEST
+        if existing_participants + participants_count > session.max_participants:
+            return {"message": "Недостаточно свободных мест"}, HTTPStatus.BAD_REQUEST
 
-        # Создание бронирования
         r = Reservation(
             session_id=session_id,
             user_id=user.user_id,
-            booked_at=datetime.utcnow()
+            full_name=full_name,
+            phone_number=phone_number,
+            email=email,
+            participants_count=participants_count,
+            booked_at=datetime.utcnow(),
+            is_cancelled=False
         )
         db.session.add(r)
         db.session.commit()
-        return {"message": "Бронирование успешно", "reservation_id": r.reservation_id}, HTTPStatus.CREATED
+
+        return {
+            "message": "Бронирование успешно",
+            "reservation_id": r.reservation_id
+        }, HTTPStatus.CREATED
 
     @jwt_required()
     @user_ns.expect(cancel_model)
@@ -174,9 +192,11 @@ class Reservations(Resource):
         if not reservation or reservation.user_id != user.user_id:
             return {"message": "Бронирование не найдено или не принадлежит вам"}, HTTPStatus.NOT_FOUND
 
-        db.session.delete(reservation)
+        reservation.is_cancelled = True
         db.session.commit()
+
         return {"message": "Бронирование отменено"}, HTTPStatus.OK
+
 
 
 @user_ns.route('/news')
