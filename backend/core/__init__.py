@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask
 from flask_cors import CORS
 
@@ -10,7 +12,7 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
-
+    app.config['MEDIA_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'media', 'uploads')
     api.init_app(app)
     jwt.init_app(app)
 
