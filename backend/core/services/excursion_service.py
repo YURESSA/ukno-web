@@ -1,92 +1,99 @@
-import os
 from http import HTTPStatus
 
-from sqlalchemy import desc, asc
+from sqlalchemy import desc, asc, func
 
-from backend.core.models.excursion_models import *
-from backend.core.services.utilits import save_image
-
-
-def get_excursion_for_resident(excursion_id, resident_id):
-    return Excursion.query.filter_by(
-        excursion_id=excursion_id,
-        created_by=resident_id
-    ).first()
+from .excursion_photo_service import process_photos, add_photos
+from .excursion_session_service import clear_sessions_and_schedules, add_sessions
+from .utilits import get_model_by_name
+from .. import db
+from ..models.excursion_models import Excursion, Category, FormatType, AgeCategory, Tag, Reservation, ExcursionSession
 
 
-def get_excursion(excursion_id):
-    return Excursion.query.filter_by(excursion_id=excursion_id).first()
+def get_excursion(excursion_id, resident_id=None):
+    query = Excursion.query.filter_by(excursion_id=excursion_id)
+    if resident_id is not None:
+        query = query.filter_by(created_by=resident_id)
+    return query.first()
 
 
 def get_excursions_for_resident(resident_id):
     return Excursion.query.filter_by(created_by=resident_id).all()
 
 
-def clear_photos(excursion):
-    for photo in list(excursion.photos):
-        fs_path = photo.photo_url.lstrip('/')
-        if os.path.exists(fs_path):
-            os.remove(fs_path)
-        db.session.delete(photo)
+def create_excursion(data, created_by, files):
+    try:
+        category = get_model_by_name(Category, "category_name", data.get("category"), "Категория не найдена")
+        format_type = get_model_by_name(FormatType, "format_type_name", data.get("format_type"),
+                                        "Формат мероприятия не найден")
+        age_category = get_model_by_name(AgeCategory, "age_category_name", data.get("age_category"),
+                                         "Возрастная категория не найдена")
+
+        if not data.get("place"):
+            return None, {"message": "Место проведения обязательно"}, HTTPStatus.BAD_REQUEST
+
+        excursion = Excursion(
+            title=data.get("title"),
+            description=data.get("description"),
+            duration=data.get("duration"),
+            category_id=category.category_id,
+            format_type_id=format_type.format_type_id,
+            age_category_id=age_category.age_category_id,
+            place=data["place"],
+            conducted_by=data.get("conducted_by"),
+            is_active=data.get("is_active", True),
+            working_hours=data.get("working_hours"),
+            contact_email=data.get("contact_email"),
+            iframe_url=data.get("iframe_url"),
+            telegram=data.get("telegram"),
+            vk=data.get("vk"),
+            created_by=created_by,
+            distance_to_center=data.get("distance_to_center"),
+            distance_to_stop=data.get("time_to_nearest_stop")
+        )
+
+        db.session.add(excursion)
+        db.session.flush()
+
+        photos = process_photos(files or [])
+        add_photos(excursion, photos)
+
+        clear_sessions_and_schedules(excursion)
+        add_sessions(excursion, data.get("sessions", []))
+
+        add_tags(excursion, data.get("tags", []))
+
+        db.session.commit()
+        return excursion, {"message": "Событие создано"}, None
+
+    except ValueError as ve:
+        db.session.rollback()
+        return None, {"message": str(ve)}, HTTPStatus.BAD_REQUEST
+    except Exception as e:
+        db.session.rollback()
+        return None, {"message": f"Ошибка при создании экскурсии: {str(e)}"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-def clear_sessions_and_schedules(excursion):
-    ExcursionSession.query.filter_by(
-        excursion_id=excursion.excursion_id
-    ).delete()
-    RecurringSchedule.query.filter_by(
-        excursion_id=excursion.excursion_id
-    ).delete()
+def update_excursion(excursion_id, data):
+    excursion = Excursion.query.get(excursion_id)
+    if not excursion:
+        return None, {"message": "Экскурсия не найдена"}, HTTPStatus.NOT_FOUND
 
+    allowed_fields = [
+        'title', 'description', 'duration', 'place', 'conducted_by',
+        'is_active', 'working_hours', 'contact_email', 'iframe_url',
+        'telegram', 'vk', 'distance_to_center', 'time_to_nearest_stop'
+    ]
 
-def process_photos(files):
-    photos = []
-    for idx, file in enumerate(files):
-        if not file or not file.filename or not file.content_type:
-            continue
-        if not file.content_type.startswith("image/"):
-            raise ValueError("Файл должен быть изображением")
-        file.seek(0, os.SEEK_END)
-        size = file.tell()
-        file.seek(0)
-        if size > 5 * 1024 * 1024:
-            raise ValueError("Размер файла не должен превышать 5 MB")
-        rel_path = save_image(file, "excursion_photos")
-        photos.append({"photo_url": rel_path, "order_index": idx})
-    return photos
+    for field in allowed_fields:
+        if field in data:
+            setattr(excursion, field, data[field])
 
-
-def add_photos(excursion, photos):
-    for p in photos:
-        db.session.add(ExcursionPhoto(
-            excursion_id=excursion.excursion_id,
-            photo_url=p["photo_url"],
-            order_index=p.get("order_index", 0)
-        ))
-
-
-def add_sessions(excursion, sessions):
-    for s in sessions:
-        start_dt = datetime.fromisoformat(s["start_datetime"])
-        db.session.add(ExcursionSession(
-            excursion_id=excursion.excursion_id,
-            start_datetime=start_dt,
-            max_participants=s["max_participants"],
-            cost=s["cost"]
-        ))
-
-
-def add_schedules(excursion, schedules):
-    for r in schedules:
-        start_time = datetime.strptime(r["start_time"], "%H:%M").time()
-        db.session.add(RecurringSchedule(
-            excursion_id=excursion.excursion_id,
-            weekday=r["weekday"],
-            start_time=start_time,
-            repeats=r["repeats"],
-            max_participants=r["max_participants"],
-            cost=r["cost"]
-        ))
+    try:
+        db.session.commit()
+        return excursion, None, HTTPStatus.OK
+    except Exception as e:
+        db.session.rollback()
+        return None, {"message": f"Ошибка при обновлении экскурсии: {str(e)}"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 def add_tags(excursion, tag_names):
@@ -94,213 +101,41 @@ def add_tags(excursion, tag_names):
         name = raw.strip()
         if not name:
             continue
-
         tag = Tag.query.filter_by(name=name).first()
-
         if not tag:
             tag = Tag(name=name)
             db.session.add(tag)
             db.session.flush()
-
         if tag not in excursion.tags:
             excursion.tags.append(tag)
-
-
-def create_excursion(data, created_by, files):
-    cat = Category.query.filter_by(category_name=data.get("category")).first()
-    if not cat:
-        return None, {"message": "Категория не найдена"}, HTTPStatus.BAD_REQUEST
-    fmt = FormatType.query.filter_by(format_type_name=data.get("format_type")).first()
-    if not fmt:
-        return None, {"message": "Формат мероприятия не найден"}, HTTPStatus.BAD_REQUEST
-    age_cat = AgeCategory.query.filter_by(age_category_name=data.get("age_category")).first()
-    if not age_cat:
-        return None, {"message": "Возрастная категория не найдена"}, HTTPStatus.BAD_REQUEST
-    place = data.get("place")
-    if not place:
-        return None, {"message": "Место проведения обязательно"}, HTTPStatus.BAD_REQUEST
-    excursion = Excursion(
-        title=data.get("title"),
-        description=data.get("description"),
-        duration=data.get("duration"),
-        category_id=cat.category_id,
-        format_type_id=fmt.format_type_id,
-        age_category_id=age_cat.age_category_id,
-        place=place,
-        conducted_by=data.get("conducted_by"),
-        is_active=data.get("is_active"),
-        created_by=created_by
-    )
-    db.session.add(excursion)
-    db.session.flush()
-
-    add_photos(excursion, process_photos(files or []))
-    clear_sessions_and_schedules(excursion)
-    add_sessions(excursion, data.get("sessions", []))
-    add_schedules(excursion, data.get("recurring_schedule", []))
-
-    add_tags(excursion, data.get("tags", []))
-
-    db.session.commit()
-    return excursion, None, None
-
-
-def update_excursion(excursion, data, files):
-    for field in ['title', 'description', 'duration', 'category_id', 'format_type_id', 'age_category_id', 'place',
-                  'conducted_by', 'is_active']:
-        if field in data:
-            setattr(excursion, field, data[field])
-
-    clear_photos(excursion)
-    add_photos(excursion, process_photos(files or []))
-
-    incoming = data.get("sessions", [])
-    existing = {s.start_datetime.isoformat(): s for s in excursion.sessions}
-
-    for s_data in incoming:
-        dt_str = s_data["start_datetime"]
-        try:
-            dt = datetime.fromisoformat(dt_str)
-        except ValueError:
-            return {"message": f"Неверный формат даты: {dt_str}"}, HTTPStatus.BAD_REQUEST
-
-        max_p = s_data["max_participants"]
-        cost = s_data["cost"]
-
-        if dt_str in existing:
-            sess = existing.pop(dt_str)
-            booked = len(sess.reservations)
-            if max_p < booked:
-                return {
-                    "message": f"Нельзя уменьшить max_participants сеанса {dt_str} ниже уже забронированного ({booked})"
-                }, HTTPStatus.BAD_REQUEST
-
-            sess.max_participants = max_p
-            sess.cost = cost
-        else:
-            new_sess = ExcursionSession(
-                excursion_id=excursion.excursion_id,
-                start_datetime=dt,
-                max_participants=max_p,
-                cost=cost
-            )
-            db.session.add(new_sess)
-
-    for dt_str, sess in existing.items():
-        if sess.reservations:
-            return {
-                "message": (
-                    f"Нельзя удалить сеанс {dt_str}, "
-                    f"на который есть бронирования"
-                )
-            }, HTTPStatus.BAD_REQUEST
-        db.session.delete(sess)
-
-    RecurringSchedule.query.filter_by(excursion_id=excursion.excursion_id).delete()
-    add_schedules(excursion, data.get("recurring_schedule", []))
-
-    excursion.tags.clear()
-    add_tags(excursion, data.get("tags", []))
-    db.session.commit()
-    return {"message": "Экскурсия успешно обновлена"}, HTTPStatus.OK
-
-
-def serialize_excursion(excursion):
-    return {
-        "id": excursion.excursion_id,
-        "title": excursion.title,
-        "description": excursion.description,
-        "duration": excursion.duration,
-        "category": serialize_category(excursion.category),
-        "format_type": serialize_format_type(excursion.format_type),
-        "age_category": serialize_age_category(excursion.age_category),
-        "place": excursion.place,
-        "conducted_by": excursion.conducted_by,
-        "is_active": excursion.is_active,
-        "photos": serialize_photos(excursion.photos),
-        "sessions": serialize_sessions(excursion.sessions),
-        "recurring_schedule": serialize_recurring_schedule(excursion.recurring_schedules),
-        "tags": serialize_tags(excursion.tags)
-    }
-
-
-def serialize_category(category):
-    return category.to_dict() if category else None
-
-
-def serialize_format_type(format_type):
-    return format_type.to_dict() if format_type else None
-
-
-def serialize_age_category(age_category):
-    return age_category.to_dict() if age_category else None
-
-
-def serialize_photos(photos):
-    return [
-        p.to_dict()
-        for p in photos
-    ]
-
-
-def serialize_sessions(sessions):
-    return [
-        s.to_dict()
-        for s in sessions
-    ]
-
-
-def serialize_recurring_schedule(recurring_schedules):
-    return [
-        r.to_dict()
-        for r in recurring_schedules
-    ]
-
-
-def serialize_tags(tags):
-    return [
-        t.to_dict()
-        for t in tags
-    ]
 
 
 def list_excursions(filters, sort_key):
     query = Excursion.query
 
-    category = filters.get("category")
-    if category:
+    if category := filters.get("category"):
         query = query.join(Category).filter(Category.category_name == category.strip())
-
-    format_type = filters.get("format_type")
-    if format_type:
+    if format_type := filters.get("format_type"):
         query = query.join(FormatType).filter(FormatType.format_type_name == format_type.strip())
-
-    age_category = filters.get("age_category")
-    if age_category:
+    if age_category := filters.get("age_category"):
         query = query.join(AgeCategory).filter(AgeCategory.age_category_name == age_category.strip())
-
-    tags = filters.get("tags")
-    if tags:
+    if tags := filters.get("tags"):
         tag_list = [tag.strip() for tag in tags.split(",") if tag.strip()]
         if tag_list:
             query = query.filter(Excursion.tags.any(Tag.name.in_(tag_list)))
 
-    min_duration = filters.get("min_duration")
-    if min_duration:
-        try:
+    try:
+        if min_duration := filters.get("min_duration"):
             query = query.filter(Excursion.duration >= int(min_duration))
-        except ValueError:
-            pass
-
-    max_duration = filters.get("max_duration")
-    if max_duration:
-        try:
+    except ValueError:
+        pass
+    try:
+        if max_duration := filters.get("max_duration"):
             query = query.filter(Excursion.duration <= int(max_duration))
-        except ValueError:
-            pass
+    except ValueError:
+        pass
 
-    title = filters.get("title")
-    if title:
+    if title := filters.get("title"):
         query = query.filter(Excursion.title.ilike(f"%{title.strip()}%"))
 
     if sort_key:
@@ -311,9 +146,6 @@ def list_excursions(filters, sort_key):
             query = query.order_by(order)
 
     return query.all()
-
-
-from sqlalchemy import func
 
 
 def get_resident_excursion_analytics(resident_id):
@@ -328,9 +160,7 @@ def get_resident_excursion_analytics(resident_id):
     max_participants = 0
 
     for excursion in excursions:
-        sessions = excursion.sessions
-        session_count = len(sessions)
-
+        session_count = len(excursion.sessions)
         excursion_total_participants = db.session.query(
             func.coalesce(func.sum(Reservation.participants_count), 0)
         ).join(ExcursionSession).filter(
@@ -373,7 +203,6 @@ def get_detailed_excursion_with_reservations(excursion):
         for reservation in session.reservations:
             if reservation.is_cancelled:
                 continue
-
             session_data['reservations'].append({
                 'reservation_id': reservation.reservation_id,
                 'user_id': reservation.user_id,
