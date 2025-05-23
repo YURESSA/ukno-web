@@ -2,14 +2,20 @@ import json
 from functools import wraps
 
 from flask import request
-from flask_jwt_extended import jwt_required, get_jwt, verify_jwt_in_request
+from flask_jwt_extended import get_jwt, verify_jwt_in_request
 from flask_restx import Resource
 
-from backend.core.schemas.auth_schemas import *
-from backend.core.services.profile_service import *
 from . import resident_ns
+from ..core.schemas.auth_schemas import *
 from ..core.schemas.excursion_schemas import *
-from ..core.services.excursion_service import *
+from ..core.services.excursion_photo_service import add_photo_to_excursion, get_photos_for_excursion, \
+    delete_photo_from_excursion
+from ..core.services.excursion_service import create_excursion, update_excursion, get_excursions_for_resident, \
+    get_resident_excursion_analytics, get_excursion
+from ..core.services.excursion_session_service import create_excursion_session, update_excursion_session, \
+    delete_excursion_session, get_sessions_for_excursion
+from ..core.services.profile_service import *
+from ..core.services.utilits import send_email
 
 
 def resident_required(fn):
@@ -63,7 +69,7 @@ class ResidentProfile(Resource):
 class ExcursionsResource(Resource):
     @resident_required
     @resident_ns.doc(
-        description="Создание экскурсии с данными JSON (в поле 'data') и фотофайлами",
+        description="Создание экскурсии с JSON-данными (в поле 'data') и фотофайлами",
         params={
             'data': data_param,
             'photos': photos_param
@@ -75,11 +81,11 @@ class ExcursionsResource(Resource):
         try:
             data = json.loads(request.form['data'])
         except json.JSONDecodeError as e:
-            return {"message": f"Ошибка в JSON: {str(e)}"}, HTTPStatus.BAD_REQUEST
+            return {"message": f"Неверный JSON: {str(e)}"}, HTTPStatus.BAD_REQUEST
 
         files = request.files.getlist("photos")
-
         created_by = get_jwt_identity()
+
         excursion, error, status = create_excursion(data, created_by, files)
         if error:
             return error, status
@@ -92,66 +98,111 @@ class ExcursionsResource(Resource):
     @resident_required
     @resident_ns.doc(description="Получение всех экскурсий, созданных текущим резидентом")
     def get(self):
+        send_email("Тестовое письмо", "goshrenko@gmail.com", "Привет! Это тест через Brevo SMTP.")
         resident_id = get_jwt_identity()
         excursions = get_excursions_for_resident(resident_id)
-        return {"excursions": [serialize_excursion(ex) for ex in excursions]}, HTTPStatus.OK
+        return {"excursions": [excursion.to_dict() for excursion in excursions]}, HTTPStatus.OK
 
 
-@resident_ns.route('/excursions_detail/<int:excursion_id>')
-class DetailExcursion(Resource):
+@resident_ns.route('/excursions/<int:excursion_id>')
+class ExcursionResource(Resource):
+    @resident_required
+    @resident_ns.expect(excursion_model, validate=True)
+    @resident_ns.doc(description="Обновление экскурсии")
+    def patch(self, excursion_id):
+        data = request.get_json()
+        excursion, error, status = update_excursion(excursion_id, data)
+        if error:
+            return error, status
+        return {"message": "Экскурсия обновлена", "excursion": excursion.to_dict()}, status
+
+    @resident_required
+    @resident_ns.doc(description="Получение экскурсии с записями")
+    def get(self, excursion_id):
+        excursion = get_excursion(excursion_id)
+        if not excursion:
+            return {"message": "Экскурсия не найдена"}, 404
+
+        data = excursion.to_dict(include_related=True)
+        return {"excursion": data}, 20
+
+
+@resident_ns.route('/excursions/<int:excursion_id>/sessions')
+class ExcursionSessionsResource(Resource):
     @resident_required
     def get(self, excursion_id):
-        resident_id = get_jwt_identity()
-        excursion = get_excursion_for_resident(excursion_id, resident_id)
+        sessions = get_sessions_for_excursion(excursion_id)
+        return [s.to_dict() for s in sessions], 200
 
-        if not excursion:
-            return {"message": "Экскурсия не найдена или не принадлежит текущему резиденту"}, HTTPStatus.NOT_FOUND
+    @resident_required
+    @resident_ns.expect(session_model, validate=True)
+    def post(self, excursion_id):
+        data = request.get_json()
+        session, error, status = create_excursion_session(excursion_id, data)
+        if error:
+            return error, status
+        return session.to_dict(), status
 
-        return get_detailed_excursion_with_reservations(excursion), HTTPStatus.OK
+
+@resident_ns.route('/excursions/<int:excursion_id>/sessions/<int:session_id>')
+class ExcursionSessionResource(Resource):
+    @resident_required
+    @resident_ns.expect(session_patch_model)
+    @resident_ns.doc(description="Обновление конкретной сессии экскурсии")
+    def patch(self, excursion_id, session_id):
+        data = request.get_json()
+        session, error, status = update_excursion_session(excursion_id, session_id, data)
+        if error:
+            return error, status
+        return session.to_dict(), status
+
+    @resident_required
+    @resident_ns.doc(description="Удаление конкретной сессии экскурсии")
+    def delete(self, excursion_id, session_id):
+        result, status = delete_excursion_session(excursion_id, session_id)
+        return result, status
+
+
+@resident_ns.route('/excursions/<int:excursion_id>/photos')
+class ExcursionPhotosResource(Resource):
+    @resident_required
+    def get(self, excursion_id):
+        photos, error, status = get_photos_for_excursion(excursion_id)
+        if error:
+            return error, status
+        return {"photos": photos}, status
 
     @resident_required
     @resident_ns.doc(
-        description="Обновление экскурсии с JSON-данными (в поле 'data') и новыми фотофайлами",
+        description="Загрузка фото для экскурсии",
         params={
-            'data': data_param,
-            'photos': photos_param
+            'photo': {
+                'description': 'Файл фотографии',
+                'in': 'formData',
+                'type': 'file',
+                'required': True
+            }
         }
     )
-    def put(self, excursion_id):
-        resident_id = get_jwt_identity()
-        excursion = get_excursion_for_resident(excursion_id, resident_id)
+    def post(self, excursion_id):
+        if 'photo' not in request.files:
+            return {"message": "Фото не загружено"}, 400
+        photo_file = request.files['photo']
 
-        if not excursion:
-            return {"message": "Экскурсия не найдена или не принадлежит текущему резиденту"}, HTTPStatus.NOT_FOUND
+        photos, error, status = add_photo_to_excursion(excursion_id, photo_file)
+        if error:
+            return error, status
+        photos, error, status = get_photos_for_excursion(excursion_id)
+        return {"message": "Фото добавлено", "photos": photos}, status
 
-        if 'data' not in request.form:
-            return {"message": "Поле 'data' обязательно"}, HTTPStatus.BAD_REQUEST
 
-        try:
-            data = json.loads(request.form['data'])
-        except json.JSONDecodeError as e:
-            return {"message": f"Ошибка в JSON: {str(e)}"}, HTTPStatus.BAD_REQUEST
-        files = request.files.getlist("photos")
-        return update_excursion(excursion, data, files)
-
+@resident_ns.route('/excursions/<int:excursion_id>/photos/<int:photo_id>')
+class ExcursionPhotoResource(Resource):
     @resident_required
-    def delete(self, excursion_id):
-        resident_id = get_jwt_identity()
-        excursion = get_excursion_for_resident(excursion_id, resident_id)
+    def delete(self, excursion_id, photo_id):
+        result, status = delete_photo_from_excursion(excursion_id, photo_id)
+        return result, status
 
-        if not excursion:
-            return {"message": "Экскурсия не найдена или не принадлежит текущему резиденту"}, HTTPStatus.NOT_FOUND
-
-        try:
-            clear_photos(excursion)
-
-            db.session.delete(excursion)
-            db.session.commit()
-
-            return {"message": "Экскурсия успешно удалена"}, HTTPStatus.OK
-
-        except Exception as e:
-            return {"message": f"Ошибка при удалении экскурсии: {str(e)}"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 @resident_ns.route('/analytics')
 class ExcursionAnalytics(Resource):

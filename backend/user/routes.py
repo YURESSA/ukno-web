@@ -11,7 +11,7 @@ from . import user_ns
 from ..core.models.excursion_models import Reservation, ExcursionSession
 from ..core.models.news_models import News
 from ..core.schemas.excursion_schemas import reservation_model, cancel_model
-from ..core.services.excursion_service import list_excursions, serialize_excursion, get_excursion
+from ..core.services.excursion_service import list_excursions, get_excursion
 
 
 @user_ns.route('/register')
@@ -87,7 +87,7 @@ class UserExcursionsList(Resource):
         sort = args.get('sort')
         excursions = list_excursions(filters, sort)
         return {
-            "excursions": [serialize_excursion(excursion) for excursion in excursions]
+            "excursions": [excursion.to_dict() for excursion in excursions]
         }, HTTPStatus.OK
 
 
@@ -196,7 +196,6 @@ class Reservations(Resource):
         db.session.commit()
 
         return {"message": "Бронирование отменено"}, HTTPStatus.OK
-
 
 
 @user_ns.route('/news')

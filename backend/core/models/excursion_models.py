@@ -82,20 +82,28 @@ class Excursion(db.Model):
     place = db.Column(db.String(255), nullable=False)
     conducted_by = db.Column(db.String(255), nullable=True)
 
+    working_hours = db.Column(db.String(255), nullable=True)
+    contact_email = db.Column(db.String(255), nullable=True)
+    iframe_url = db.Column(db.Text, nullable=True)
+    telegram = db.Column(db.String(100), nullable=True)
+    vk = db.Column(db.String(100), nullable=True)
+
     category = db.relationship("Category", back_populates="excursions")
     format_type = db.relationship("FormatType", back_populates="excursions")
     age_category = db.relationship("AgeCategory", back_populates="excursions")
 
+    distance_to_center = db.Column(db.Float, nullable=True)
+    distance_to_stop = db.Column(db.Float, nullable=True)
+
     photos = db.relationship("ExcursionPhoto", back_populates="excursion", cascade="all, delete-orphan", lazy=True)
     sessions = db.relationship("ExcursionSession", back_populates="excursion", cascade="all, delete-orphan", lazy=True)
-    recurring_schedules = db.relationship("RecurringSchedule", back_populates="excursion", cascade="all, delete-orphan", lazy=True)
     tags = db.relationship("Tag", secondary=excursion_tags, back_populates="excursions", lazy='subquery')
 
     def __str__(self):
         return f"Excursion(id={self.excursion_id}, title={self.title})"
 
-    def to_dict(self):
-        return {
+    def to_dict(self, include_related=False):
+        data = {
             'excursion_id': self.excursion_id,
             'title': self.title,
             'description': self.description,
@@ -107,12 +115,25 @@ class Excursion(db.Model):
             'is_active': self.is_active,
             'place': self.place,
             'conducted_by': self.conducted_by,
+            'working_hours': self.working_hours,
+            'contact_email': self.contact_email,
+            'iframe_url': self.iframe_url,
+            'telegram': self.telegram,
+            'vk': self.vk,
+            "distance_to_center": self.distance_to_center,
+            "time_to_nearest_stop": self.distance_to_stop,
             'photos': [photo.to_dict() for photo in self.photos],
             'sessions': [session.to_dict() for session in self.sessions],
-            'recurring_schedules': [schedule.to_dict() for schedule in self.recurring_schedules],
             'tags': [tag.to_dict() for tag in self.tags]
         }
+        if include_related:
+            data['reservations'] = [
+                reservation.to_dict()
+                for session in self.sessions
+                for reservation in session.reservations
+            ]
 
+        return data
 
 
 class ExcursionPhoto(db.Model):
@@ -131,6 +152,7 @@ class ExcursionPhoto(db.Model):
 
     def to_dict(self):
         return {
+            'photo_id': self.photo_id,
             'excursion_id': self.excursion_id,
             'photo_url': self.photo_url,
             'order_index': self.order_index
@@ -215,37 +237,6 @@ class Reservation(db.Model):
             'participants_count': self.participants_count,
             'is_cancelled': self.is_cancelled
         }
-
-
-class RecurringSchedule(db.Model):
-    __tablename__ = 'recurring_schedules'
-
-    recurring_id = db.Column(db.Integer, primary_key=True)
-    excursion_id = db.Column(db.Integer, db.ForeignKey('excursions.excursion_id'), nullable=False)
-    weekday = db.Column(db.Integer, nullable=False)  # 0 = воскресенье, 6 = суббота
-    start_time = db.Column(db.Time, nullable=False)
-    count_of_repeats = db.Column(db.Integer, nullable=False, default=0)
-    repeats = db.Column(db.Integer, nullable=False)
-    max_participants = db.Column(db.Integer, nullable=False)
-    cost = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
-
-    excursion = db.relationship("Excursion", back_populates="recurring_schedules")
-
-    def __str__(self):
-        return f"RecurringSchedule(id={self.recurring_id}, excursion_id={self.excursion_id}, " \
-               f"weekday={self.weekday}, start_time={self.start_time}, count_of_repeats={self.count_of_repeats}, " \
-               f"repeats={self.repeats}, max_participants={self.max_participants}, cost={self.cost})"
-
-    def to_dict(self):
-        return {
-            'weekday': self.weekday,
-            'start_time': self.start_time.isoformat(),
-            'count_of_repeats': self.count_of_repeats,
-            'repeats': self.repeats,
-            'max_participants': self.max_participants,
-            'cost': str(self.cost)
-        }
-
 
 
 class Tag(db.Model):
