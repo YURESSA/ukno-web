@@ -124,7 +124,7 @@ class ExcursionResource(Resource):
             return {"message": "Экскурсия не найдена"}, 404
 
         data = excursion.to_dict(include_related=True)
-        return {"excursion": data}, 20
+        return {"excursion": data}, HTTPStatus.OK
 
 
 @resident_ns.route('/excursions/<int:excursion_id>/sessions')
@@ -132,7 +132,7 @@ class ExcursionSessionsResource(Resource):
     @resident_required
     def get(self, excursion_id):
         sessions = get_sessions_for_excursion(excursion_id)
-        return [s.to_dict() for s in sessions], 200
+        return [s.to_dict() for s in sessions], HTTPStatus.OK
 
     @resident_required
     @resident_ns.expect(session_model, validate=True)

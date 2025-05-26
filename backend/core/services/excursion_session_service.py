@@ -111,8 +111,6 @@ def delete_excursion_session(excursion_id, session_id):
         csv_data = output.read()
 
 
-
-    # Удаляем сессию
     try:
         db.session.delete(session)
         db.session.commit()
