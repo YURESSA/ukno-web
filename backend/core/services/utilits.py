@@ -47,9 +47,7 @@ from io import BytesIO
 
 
 def send_email(subject, recipient, body, attachments=None):
-    """
-    attachments: list of tuples (filename, content_str)
-    """
+
     msg = Message(subject=subject, recipients=[recipient], body=body)
 
     if attachments:

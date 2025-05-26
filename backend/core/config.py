@@ -24,10 +24,10 @@ class Config:
     UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER", "media/uploads")
     ALLOWED_EXTENSIONS = os.getenv("ALLOWED_EXTENSIONS", "png,jpg,jpeg,gif").split(',')
 
-    MAIL_SERVER = 'smtp-relay.brevo.com'
-    MAIL_PORT = 587
+    MAIL_SERVER = os.environ.get("MAIL_SERVER")
+    MAIL_PORT = os.environ.get("MAIL_PORT")
     MAIL_USE_TLS = True
-    MAIL_USERNAME = '8dc041001@smtp-brevo.com'
+    MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
     MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
-    MAIL_DEFAULT_SENDER = '8dc041001@smtp-brevo.com'
+    MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER")
 
