@@ -1,5 +1,4 @@
 from datetime import datetime
-from http import HTTPStatus
 
 from backend.core import db
 from backend.core.models.excursion_models import ExcursionSession
@@ -73,16 +72,15 @@ from http import HTTPStatus
 from io import StringIO
 import csv
 
+
 def delete_excursion_session(excursion_id, session_id):
     session = ExcursionSession.query.filter_by(excursion_id=excursion_id, session_id=session_id).first()
     if not session:
         return {"message": "Сессия не найдена"}, HTTPStatus.NOT_FOUND
 
-    # Находим активные (не отменённые) бронирования
     active_reservations = [r for r in session.reservations if not r.is_cancelled]
 
     if active_reservations:
-        # Уведомляем каждого участника
         for res in active_reservations:
             send_email(
                 subject="Отмена экскурсионной сессии",
@@ -109,7 +107,6 @@ def delete_excursion_session(excursion_id, session_id):
             ])
         output.seek(0)
         csv_data = output.read()
-
 
     try:
         db.session.delete(session)

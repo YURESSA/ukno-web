@@ -1,6 +1,8 @@
+from datetime import datetime
 from http import HTTPStatus
 
-from sqlalchemy import desc, asc, func
+from sqlalchemy import func
+from sqlalchemy.orm import aliased
 
 from .excursion_photo_service import process_photos, add_photos
 from .excursion_session_service import clear_sessions_and_schedules, add_sessions
@@ -48,7 +50,7 @@ def create_excursion(data, created_by, files):
             vk=data.get("vk"),
             created_by=created_by,
             distance_to_center=data.get("distance_to_center"),
-            distance_to_stop=data.get("time_to_nearest_stop")
+            time_to_nearest_stop=data.get("time_to_nearest_stop")
         )
 
         db.session.add(excursion)
@@ -110,20 +112,53 @@ def add_tags(excursion, tag_names):
             excursion.tags.append(tag)
 
 
-def list_excursions(filters, sort_key):
-    query = Excursion.query
+from sqlalchemy import asc, desc
 
+
+def list_excursions(filters, sort_key):
+    now = datetime.now()
+
+    # Alias для будущей сессии экскурсии
+    session_alias = aliased(ExcursionSession)
+
+    subquery = (
+        db.session.query(
+            session_alias.excursion_id,
+            func.min(session_alias.cost).label("min_cost"),
+            func.min(session_alias.start_datetime).label("min_date")
+        )
+        .filter(session_alias.start_datetime > now)
+        .group_by(session_alias.excursion_id)
+        .subquery()
+    )
+
+    query = Excursion.query.join(subquery, Excursion.excursion_id == subquery.c.excursion_id)
+
+    # Категория
     if category := filters.get("category"):
-        query = query.join(Category).filter(Category.category_name == category.strip())
+        category_list = [c.strip() for c in category.split(",") if c.strip()]
+        if category_list:
+            query = query.join(Category).filter(Category.category_name.in_(category_list))
+
+    # Формат
     if format_type := filters.get("format_type"):
-        query = query.join(FormatType).filter(FormatType.format_type_name == format_type.strip())
+        format_type_list = [f.strip() for f in format_type.split(",") if f.strip()]
+        if format_type_list:
+            query = query.join(FormatType).filter(FormatType.format_type_name.in_(format_type_list))
+
+    # Возраст
     if age_category := filters.get("age_category"):
-        query = query.join(AgeCategory).filter(AgeCategory.age_category_name == age_category.strip())
+        age_category_list = [a.strip() for a in age_category.split(",") if a.strip()]
+        if age_category_list:
+            query = query.join(AgeCategory).filter(AgeCategory.age_category_name.in_(age_category_list))
+
+    # Теги
     if tags := filters.get("tags"):
         tag_list = [tag.strip() for tag in tags.split(",") if tag.strip()]
         if tag_list:
             query = query.filter(Excursion.tags.any(Tag.name.in_(tag_list)))
 
+    # По длительности
     try:
         if min_duration := filters.get("min_duration"):
             query = query.filter(Excursion.duration >= int(min_duration))
@@ -135,17 +170,86 @@ def list_excursions(filters, sort_key):
     except ValueError:
         pass
 
+    # Название
     if title := filters.get("title"):
         query = query.filter(Excursion.title.ilike(f"%{title.strip()}%"))
 
-    if sort_key:
-        field_name = sort_key.lstrip("-")
-        if hasattr(Excursion, field_name):
-            column = getattr(Excursion, field_name)
-            order = desc(column) if sort_key.startswith("-") else asc(column)
-            query = query.order_by(order)
+    # Расстояние до центра
+    try:
+        if min_center_distance := filters.get("min_distance_to_center"):
+            query = query.filter(Excursion.distance_to_center >= float(min_center_distance))
+    except ValueError:
+        pass
+    try:
+        if max_center_distance := filters.get("max_distance_to_center"):
+            query = query.filter(Excursion.distance_to_center <= float(max_center_distance))
+    except ValueError:
+        pass
 
-    return query.all()
+    # Время до остановки
+    try:
+        if min_type_to_stop := filters.get("min_distance_to_stop"):
+            query = query.filter(Excursion.time_to_nearest_stop >= float(min_type_to_stop))
+    except ValueError:
+        pass
+    try:
+        if max_type_to_stop := filters.get("max_distance_to_stop"):
+            query = query.filter(Excursion.time_to_nearest_stop <= float(max_type_to_stop))
+    except ValueError:
+        pass
+
+    # Цена
+    try:
+        if min_price := filters.get("min_price"):
+            query = query.filter(subquery.c.min_cost >= float(min_price))
+    except ValueError:
+        pass
+    try:
+        if max_price := filters.get("max_price"):
+            query = query.filter(subquery.c.min_cost <= float(max_price))
+    except ValueError:
+        pass
+
+    # По дате
+    try:
+        if start_date := filters.get("start_date"):
+            start_dt = datetime.fromisoformat(start_date)
+            query = query.filter(subquery.c.min_date >= start_dt)
+    except ValueError:
+        pass
+    try:
+        if end_date := filters.get("end_date"):
+            end_dt = datetime.fromisoformat(end_date)
+            query = query.filter(subquery.c.min_date <= end_dt)
+    except ValueError:
+        pass
+
+    if sort_key:
+        sort_fields = [s.strip() for s in sort_key.split(",") if s.strip()]
+        order_criteria = []
+        for field in sort_fields:
+            is_desc = field.startswith("-")
+            field_name = field.lstrip("-")
+
+            if field_name == "price":
+                order = desc(subquery.c.min_cost) if is_desc else asc(subquery.c.min_cost)
+                order_criteria.append(order)
+            elif field_name == "time":
+                order = desc(subquery.c.min_date) if is_desc else asc(subquery.c.min_date)
+                order_criteria.append(order)
+            elif hasattr(Excursion, field_name):
+                column = getattr(Excursion, field_name)
+                order = desc(column) if is_desc else asc(column)
+                order_criteria.append(order)
+
+        if order_criteria:
+            query = query.order_by(*order_criteria)
+    excursions = query.all()
+
+    for excursion in excursions:
+        excursion.sessions = [s for s in excursion.sessions if s.start_datetime > now]
+
+    return excursions
 
 
 def get_resident_excursion_analytics(resident_id):

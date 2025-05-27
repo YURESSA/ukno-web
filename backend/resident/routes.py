@@ -98,7 +98,6 @@ class ExcursionsResource(Resource):
     @resident_required
     @resident_ns.doc(description="Получение всех экскурсий, созданных текущим резидентом")
     def get(self):
-        send_email("Тестовое письмо", "goshrenko@gmail.com", "Привет! Это тест через Brevo SMTP.")
         resident_id = get_jwt_identity()
         excursions = get_excursions_for_resident(resident_id)
         return {"excursions": [excursion.to_dict() for excursion in excursions]}, HTTPStatus.OK
