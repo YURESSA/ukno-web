@@ -33,3 +33,6 @@ def register_apps(app):
 
     from backend.resident import resident_ns
     api.add_namespace(resident_ns, path='/api/resident')
+
+    from backend.references import ref_ns
+    api.add_namespace(ref_ns, path='/api/references')

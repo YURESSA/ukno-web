@@ -63,14 +63,25 @@ class UserExcursionsList(Resource):
     @user_ns.doc(
         description="Список всех активных экскурсий (без авторизации)",
         params={
-            'category': 'фильтр по имени категории',
-            'format_type': 'фильтр по типу формата экскурсии',
-            'age_category': 'фильтр по возрастной категории',
-            'tags': 'фильтр по тегам, через запятую',
-            'min_duration': 'мин. продолжительность, минуты',
-            'max_duration': 'макс. продолжительность, минуты',
-            'title': 'часть названия',
-            'sort': 'имя поля для сортировки, допустимо "-duration", "title"'
+            'category': 'Фильтр по имени категории (можно несколько через запятую)',
+            'format_type': 'Фильтр по типу формата (можно несколько через запятую)',
+            'age_category': 'Фильтр по возрастной категории (можно несколько через запятую)',
+            'tags': 'Фильтр по тегам, через запятую',
+            'min_duration': 'Минимальная продолжительность, минуты',
+            'max_duration': 'Максимальная продолжительность, минуты',
+            'min_distance_to_center': 'Мин. расстояние до центра, км',
+            'max_distance_to_center': 'Макс. расстояние до центра, км',
+            'min_distance_to_stop': 'Мин. расстояние до остановки, мин',
+            'max_distance_to_stop': 'Макс. расстояние до остановки, мин',
+            'min_price': 'Минимальная стоимость ближайшей сессии',
+            'max_price': 'Максимальная стоимость ближайшей сессии',
+            'start_date': 'Дата начала периода (ISO 8601, например 2025-06-01)',
+            'end_date': 'Дата конца периода (ISO 8601, например 2025-06-30)',
+            'title': 'Поиск по названию',
+            'sort': (
+                    'Сортировка: title, duration, price, time. '
+                    'Можно с -, например: -price, -time'
+            )
         }
     )
     def get(self):
@@ -82,6 +93,14 @@ class UserExcursionsList(Resource):
             'tags': args.get('tags'),
             'min_duration': args.get('min_duration'),
             'max_duration': args.get('max_duration'),
+            'min_distance_to_center': args.get('min_distance_to_center'),
+            'max_distance_to_center': args.get('max_distance_to_center'),
+            'min_distance_to_stop': args.get('min_distance_to_stop'),
+            'max_distance_to_stop': args.get('max_distance_to_stop'),
+            'min_price': args.get('min_price'),
+            'max_price': args.get('max_price'),
+            'start_date': args.get('start_date'),
+            'end_date': args.get('end_date'),
             'title': args.get('title'),
         }
         sort = args.get('sort')
@@ -215,6 +234,9 @@ class DetailExcursion(Resource):
 
         if not excursion:
             return {"message": "Экскурсия не найдена"}, HTTPStatus.NOT_FOUND
+
+        now = datetime.now()
+        excursion.sessions = [s for s in excursion.sessions if s.start_datetime > now]
 
         return excursion.to_dict(), HTTPStatus.OK
 

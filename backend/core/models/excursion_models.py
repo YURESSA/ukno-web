@@ -93,7 +93,7 @@ class Excursion(db.Model):
     age_category = db.relationship("AgeCategory", back_populates="excursions")
 
     distance_to_center = db.Column(db.Float, nullable=True)
-    distance_to_stop = db.Column(db.Float, nullable=True)
+    time_to_nearest_stop = db.Column(db.Float, nullable=True)
 
     photos = db.relationship("ExcursionPhoto", back_populates="excursion", cascade="all, delete-orphan", lazy=True)
     sessions = db.relationship("ExcursionSession", back_populates="excursion", cascade="all, delete-orphan", lazy=True)
@@ -121,7 +121,7 @@ class Excursion(db.Model):
             'telegram': self.telegram,
             'vk': self.vk,
             "distance_to_center": self.distance_to_center,
-            "time_to_nearest_stop": self.distance_to_stop,
+            "time_to_nearest_stop": self.time_to_nearest_stop,
             'photos': [photo.to_dict() for photo in self.photos],
             'sessions': [session.to_dict() for session in self.sessions],
             'tags': [tag.to_dict() for tag in self.tags]
