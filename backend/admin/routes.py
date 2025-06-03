@@ -14,7 +14,8 @@ from ..core.schemas.auth_schemas import login_model, change_password_model, user
 from ..core.schemas.excursion_schemas import excursion_model, session_model, session_patch_model
 from ..core.services.excursion_photo_service import get_photos_for_excursion, add_photo_to_excursion, \
     delete_photo_from_excursion
-from ..core.services.excursion_service import update_excursion, create_excursion, get_excursion, get_all_excursions
+from ..core.services.excursion_service import update_excursion, create_excursion, get_excursion, get_all_excursions, \
+    delete_excursion
 from ..core.services.excursion_session_service import get_sessions_for_excursion, create_excursion_session, \
     update_excursion_session, delete_excursion_session
 from ..core.services.utilits import save_image
@@ -28,6 +29,7 @@ def admin_required(fn):
         if claims.get("role") != "admin":
             return {"message": AuthMessages.AUTH_ACCESS_DENIED}, HTTPStatus.FORBIDDEN
         return fn(*args, **kwargs)
+
     return wrapper
 
 
@@ -92,6 +94,7 @@ class AdminUserList(Resource):
         current_role = get_jwt().get('role')
         data = request.get_json()
         return register_user("user", data, current_role)
+
 
 @admin_ns.route('/users/detail/<string:username>')
 class AdminUserDetail(Resource):
@@ -227,6 +230,7 @@ class NewsDetailResource(Resource):
         db.session.commit()
         return {"message": "Новость удалена"}, HTTPStatus.OK
 
+
 @admin_ns.route('/excursions')
 class AdminExcursionsResource(Resource):
     @admin_required
@@ -278,6 +282,19 @@ class AdminExcursionResource(Resource):
             return {"message": "Экскурсия не найдена"}, HTTPStatus.NOT_FOUND
         return {"excursion": excursion.to_dict(include_related=True)}, HTTPStatus.OK
 
+    @admin_required
+    def delete(self, excursion_id):
+        excursion = get_excursion(excursion_id)
+        if not excursion:
+            return {"message": "Экскурсия не найдена"}, HTTPStatus.NOT_FOUND
+
+        try:
+            delete_excursion(excursion_id)
+        except Exception as e:
+            return {"message": f"Ошибка при удалении экскурсии: {str(e)}"}, HTTPStatus.INTERNAL_SERVER_ERROR
+
+        return {"message": "Экскурсия успешно удалена"}, HTTPStatus.NO_CONTENT
+
 
 @admin_ns.route('/excursions/<int:excursion_id>/sessions')
 class AdminExcursionSessionsResource(Resource):
@@ -323,6 +340,17 @@ class AdminExcursionPhotosResource(Resource):
         return {"photos": photos}, status
 
     @admin_required
+    @admin_ns.doc(
+        description="Загрузка фото для экскурсии",
+        params={
+            'photo': {
+                'description': 'Файл фотографии',
+                'in': 'formData',
+                'type': 'file',
+                'required': True
+            }
+        }
+    )
     def post(self, excursion_id):
         if 'photo' not in request.files:
             return {"message": "Фото не загружено"}, HTTPStatus.BAD_REQUEST

@@ -26,6 +26,20 @@ def get_excursions_for_resident(resident_id):
     return Excursion.query.filter_by(created_by=resident_id).all()
 
 
+def delete_excursion(excursion_id):
+    excursion = Excursion.query.get(excursion_id)
+    if not excursion:
+        return False, "Экскурсия не найдена", HTTPStatus.NOT_FOUND
+
+    try:
+        db.session.delete(excursion)
+        db.session.commit()
+        return True, None, HTTPStatus.NO_CONTENT
+    except Exception as e:
+        db.session.rollback()
+        return False, f"Ошибка при удалении экскурсии: {str(e)}", HTTPStatus.INTERNAL_SERVER_ERROR
+
+
 def create_excursion(data, created_by, files):
     try:
         category = get_model_by_name(Category, "category_name", data.get("category"), "Категория не найдена")
