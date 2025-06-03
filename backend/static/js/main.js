@@ -50,16 +50,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const sessionDatetimeModal = document.getElementById('sessionDatetimeModal');
     const sessionCostModal = document.getElementById('sessionCostModal');
     const sessionMaxParticipantsModal = document.getElementById('sessionMaxParticipantsModal');
-    const deleteSessionBtn = document.getElementById('deleteSessionBtn');
 
     btnAddSession.onclick = () => {
         editingSessionId.value = '';
         sessionDatetimeModal.value = '';
         sessionCostModal.value = '';
         sessionMaxParticipantsModal.value = '';
-
-        deleteSessionBtn.style.display = 'none';
-        window.sessionModal.show();
     };
 
 

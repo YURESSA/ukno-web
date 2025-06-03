@@ -1,6 +1,9 @@
 from datetime import datetime
 
+from flask_jwt_extended import get_jwt_identity
+
 from backend.core import db
+from backend.core.models.auth_models import User
 from backend.core.models.excursion_models import ExcursionSession
 from backend.core.services.utilits import send_email
 
@@ -74,11 +77,15 @@ import csv
 
 
 def delete_excursion_session(excursion_id, session_id):
+    username = get_jwt_identity()
+    user = User.query.filter_by(username=username).first()
+    deleter_email = user.email
     session = ExcursionSession.query.filter_by(excursion_id=excursion_id, session_id=session_id).first()
     if not session:
         return {"message": "Сессия не найдена"}, HTTPStatus.NOT_FOUND
 
     active_reservations = [r for r in session.reservations if not r.is_cancelled]
+    excursion_name = session.excursion.title if session.excursion else "экскурсии"
     if active_reservations:
         for res in active_reservations:
             send_email(
@@ -86,9 +93,11 @@ def delete_excursion_session(excursion_id, session_id):
                 recipient=res.email,
                 body=(
                     f"Здравствуйте, {res.full_name}!\n\n"
-                    f"К сожалению, сессия экскурсии (ID {session_id}) была отменена. "
-                    "Ваше бронирование аннулировано.\n\n"
-                    "Приносим извинения за неудобства."
+                    f"К сожалению, сессия экскурсии «{excursion_name}» (ID {session_id}), "
+                    f"которая была запланирована на {session.start_datetime.strftime('%d.%m.%Y %H:%M')}, отменена.\n"
+                    "Ваше бронирование было автоматически аннулировано.\n\n"
+                    "Приносим искренние извинения за возможные неудобства.\n"
+                    "Мы будем рады видеть вас на других наших мероприятиях!"
                 )
             )
 
@@ -106,6 +115,12 @@ def delete_excursion_session(excursion_id, session_id):
             ])
         output.seek(0)
         csv_data = output.read()
+        send_email(
+            subject="Список активных резервов после удаления сессии",
+            recipient=deleter_email,
+            body="В приложении вы найдете CSV-файл с информацией об активных резервированиях на удалённой сессии.",
+            attachments=[("active_reservations.csv", csv_data)]
+        )
 
     try:
         db.session.delete(session)

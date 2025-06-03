@@ -5,16 +5,21 @@ const btnAddPhoto = document.getElementById('btnAddPhoto')
 
 // Получаем элементы
 const excursionModalEl = document.getElementById('excursionModal');
-const sessionModalEl   = document.getElementById('sessionModal');
+const sessionModalEl = document.getElementById('sessionModal');
 
 // Создаём экземпляры Bootstrap.Modal
 const excursionModal = new bootstrap.Modal(excursionModalEl);
-const sessionModal   = new bootstrap.Modal(sessionModalEl);
+const sessionModal = new bootstrap.Modal(sessionModalEl);
 
 // Чтобы при закрытии sessionModal автоматически снова открывать excursionModal:
 sessionModalEl.addEventListener('hidden.bs.modal', () => {
-  excursionModal.show();
+    excursionModal.show();
 });
+
+document.querySelector('#sessionModal .btn-close').addEventListener('click', () => {
+    sessionModal.hide();
+});
+
 
 async function loadExcursions() {
     showCreateButton(true, 'excursion');
@@ -33,7 +38,7 @@ async function loadExcursions() {
             item.age_category?.age_category_name || '',
         ],
         actions: `
-          <button class="btn btn-danger btn-sm btn-delete-excursion" data-id="${item.excursion_id}">
+          <button class="btn btn-outline-danger btn-sm btn-delete-excursion" data-id="${item.excursion_id}">
             <i class="fas fa-trash"></i> Удалить
           </button>
         `
@@ -169,13 +174,27 @@ function openSessionModalForEdit(session) {
     document.getElementById('sessionDatetimeModal').value = session.start_datetime.slice(0, 16);
     document.getElementById('sessionCostModal').value = session.cost;
     document.getElementById('sessionMaxParticipantsModal').value = session.max_participants;
-
-    document.getElementById('deleteSessionBtn').style.display = 'inline-block';
     sessionModal.show();
 }
 
 async function deleteSession(sessionId) {
     if (!confirm('Удалить сессию?')) return;
+
+    // Удаление временной сессии (которая ещё не была сохранена на сервере)
+    if (String(sessionId).startsWith('temp_')) {
+        originalExcursionData.sessions = originalExcursionData.sessions.filter(s => String(s.session_id) !== String(sessionId));
+        console.log(originalExcursionData.sessions)
+        renderSessions(originalExcursionData.sessions);
+        showNotification('Сессия удалена (не сохранена)', 'success');
+        return;
+    }
+
+
+    // Защита от удаления до создания экскурсии
+    if (!currentExcursionId || !sessionId) {
+        showNotification('Нельзя удалить сессию до создания экскурсии', 'warning');
+        return;
+    }
 
     try {
         const res = await fetchWithAuth(`/api/admin/excursions/${currentExcursionId}/sessions/${sessionId}`, {
@@ -186,13 +205,12 @@ async function deleteSession(sessionId) {
             const err = await res.json();
             throw new Error(err.message || 'Ошибка удаления');
         }
-        alert(originalExcursionData.sessions)
+
         originalExcursionData.sessions = originalExcursionData.sessions.filter(s => s.session_id !== sessionId);
         renderSessions(originalExcursionData.sessions);
 
         showNotification('Сессия удалена', 'success');
     } catch (err) {
-        console.log(sessionId, originalExcursionData.sessions, )
         showNotification('Ошибка: ' + err.message, 'danger');
     }
 }
@@ -331,7 +349,7 @@ document.getElementById('modalSave').onclick = async () => {
             showNotification('Экскурсия успешно создана', 'success');
 
             currentExcursionId = data.excursion_id || data.id || null;
-            originalExcursionData = { ...excursionData, ...data };
+            originalExcursionData = {...excursionData, ...data};
 
             loadExcursions();
             excursionModal.hide()
@@ -352,7 +370,7 @@ document.getElementById('modalSave').onclick = async () => {
         try {
             const res = await fetchWithAuth(`${API_BASE}/excursions/${currentExcursionId}`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(changes),
             });
 
@@ -439,10 +457,11 @@ document.getElementById('saveSessionModalBtn').addEventListener('click', async (
             if (!originalExcursionData.sessions) {
                 originalExcursionData.sessions = [];
             }
-            originalExcursionData.sessions.push({...sessionData, id: tempId});
+            originalExcursionData.sessions.push({...sessionData, session_id: tempId});
         }
         renderSessions(originalExcursionData.sessions);
         showNotification('Сессия добавлена', 'success');
+
         sessionModal.hide();
         return;
     }
