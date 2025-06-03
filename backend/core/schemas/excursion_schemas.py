@@ -91,3 +91,7 @@ photo_model = api.model('Photo', {
     'filename': fields.String(description='Имя файла'),
     'photo_url': fields.String(description='URL фото'),
 })
+
+role_model = api.model('Role', {
+    'name': fields.String(required=True, description='Название роли')
+})

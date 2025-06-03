@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8"/>
     <title>{{ title }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
     <style>
         /* Минималистичные переменные */
         :root {
@@ -234,11 +237,13 @@
 
 
         }
+
         #excursionModal {
             display: none; /* по умолчанию скрыто */
             position: fixed;
             z-index: 1050;
-            top: 0; left: 0;
+            top: 0;
+            left: 0;
             width: 100vw;
             height: 100vh;
             background-color: rgba(0, 0, 0, 0.5); /* затемнение фона */
@@ -248,66 +253,75 @@
             align-items: center;
             padding: 20px; /* отступы для маленьких экранов */
             box-sizing: border-box;
-          }
+        }
 
-          /* Диалог модального окна */
-          #excursionModal .modal-dialog {
+        /* Диалог модального окна */
+        #excursionModal .modal-dialog {
             max-width: 900px;
             width: 100%;
             margin: 0; /* убрать отступы по умолчанию */
-          }
+        }
 
-          /* Содержимое модального окна */
-          #excursionModal .modal-content {
+        /* Содержимое модального окна */
+        #excursionModal .modal-content {
             background-color: #fff;
             border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.3);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
             border: 2px solid #007BFF; /* синяя рамка */
             max-height: 80vh;
             overflow-y: auto;
             padding: 20px;
             box-sizing: border-box;
-          }
+        }
 
-          /* Кнопка закрытия */
-          #modalClose {
+        /* Кнопка закрытия */
+        #modalClose {
             background: transparent;
             border: none;
             font-size: 1.5rem;
             cursor: pointer;
-          }
+        }
 
-          /* Кнопки и ссылки - чтобы выглядело аккуратно */
-          #excursionModal a {
+        /* Кнопки и ссылки - чтобы выглядело аккуратно */
+        #excursionModal a {
             color: #007BFF;
             text-decoration: none;
-          }
-          #excursionModal a:hover {
+        }
+
+        #excursionModal a:hover {
             text-decoration: underline;
-          }
+        }
     </style>
 </head>
 <body>
 <div class="wrapper">
     <nav id="sidebar" role="navigation" aria-label="Админ меню">
-         <a href="#" id="btnUsers" class="nav-link active"><i class="fas fa-users"></i> Пользователи</a>
-         <a href="#" id="btnRoles" class="nav-link"><i class="fas fa-shield-alt"></i> Роли</a>
-         <a href="#" id="btnCategories" class="nav-link"><i class="fas fa-folder"></i> Категории</a>
-         <a href="#" id="btnFormatTypes" class="nav-link"><i class="fas fa-file-alt"></i> Типы форматов</a>
-         <a href="#" id="btnAgeCategories" class="nav-link"><i class="fas fa-calendar"></i> Возрастные категории</a>
-         <a href="#" class="nav-link" id="btnExcursions"><i class="fas fa-map-marked-alt"></i> События</a>
-
+        <a href="#" id="btnUsers" class="nav-link active"><i class="fas fa-users"></i>
+            Пользователи</a>
+        <a href="#" id="btnRoles" class="nav-link"><i class="fas fa-shield-alt"></i> Роли</a>
+        <a href="#" id="btnCategories" class="nav-link"><i class="fas fa-folder"></i>
+            Категории</a>
+        <a href="#" id="btnFormatTypes" class="nav-link"><i class="fas fa-file-alt"></i>
+            Типы форматов</a>
+        <a href="#" id="btnAgeCategories" class="nav-link"><i
+                class="fas fa-calendar"></i> Возрастные категории</a>
+        <a href="#" id="btnExcursions" class="nav-link"><i
+                class="fas fa-map-marked-alt"></i> События</a>
 
     </nav>
 
     <div id="mainContent">
         <div id="topBar">
             <h1>Админ панель</h1>
-            <button id="btnCreateUser" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createUserModal">
+            <button id="btnCreateUser" class="btn btn-success" data-bs-toggle="modal"
+                    data-bs-target="#createUserModal">
                 <i class="fas fa-plus me-2"></i>Создать пользователя
             </button>
             <button id="btnCreateRef" class="btn btn-success" data-bs-toggle="modal">
                 <i class="fas fa-plus me-2"></i>Создать запись
+            </button>
+            <button id="btnCreateExcurs" class="btn btn-success" data-bs-toggle="modal">
+                <i class="fas fa-plus me-2"></i>Создать событие
             </button>
         </div>
 
@@ -319,34 +333,37 @@
 </div>
 
 <!-- Модальное окно создания пользователя -->
-<div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserModalLabel" aria-hidden="true">
+<div class="modal fade" id="createUserModal" tabindex="-1"
+     aria-labelledby="createUserModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <form id="createUserForm" class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="createUserModalLabel">Создать нового пользователя</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                <h5 class="modal-title" id="createUserModalLabel">Создать нового
+                    пользователя</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Закрыть"></button>
             </div>
             <div class="modal-body">
                 <!-- Поля формы -->
                 <div class="mb-3">
                     <label for="username" class="form-label">Имя пользователя</label>
-                    <input type="text" id="username" class="form-control" required />
+                    <input type="text" id="username" class="form-control" required/>
                 </div>
                 <div class="mb-3">
                     <label for="email" class="form-label">Email</label>
-                    <input type="email" id="email" class="form-control" required />
+                    <input type="email" id="email" class="form-control" required/>
                 </div>
                 <div class="mb-3">
                     <label for="password" class="form-label">Пароль</label>
-                    <input type="password" id="password" class="form-control" required />
+                    <input type="password" id="password" class="form-control" required/>
                 </div>
                 <div class="mb-3">
                     <label for="full_name" class="form-label">ФИО</label>
-                    <input type="text" id="full_name" class="form-control" />
+                    <input type="text" id="full_name" class="form-control"/>
                 </div>
                 <div class="mb-3">
                     <label for="phone" class="form-label">Телефон</label>
-                    <input type="text" id="phone" class="form-control" />
+                    <input type="text" id="phone" class="form-control"/>
                 </div>
                 <div class="mb-3">
                     <label for="role_name" class="form-label">Роль</label>
@@ -358,7 +375,9 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-outline-secondary"
+                        data-bs-dismiss="modal">Отмена
+                </button>
                 <button type="submit" class="btn btn-success">Создать</button>
             </div>
         </form>
@@ -366,154 +385,206 @@
 </div>
 
 <!-- Modal создания справочника -->
-<div class="modal fade" id="createRefModal" tabindex="-1" aria-labelledby="createRefModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form id="createRefForm" class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="createRefModalLabel">Создать новую запись</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-      </div>
-      <div class="modal-body">
-        <div class="mb-3">
-          <label for="refNameInput" class="form-label">Название</label>
-          <input type="text" class="form-control" id="refNameInput" required>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-primary">Создать</button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-      </div>
-    </form>
-  </div>
+<div class="modal fade" id="createRefModal" tabindex="-1"
+     aria-labelledby="createRefModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="createRefForm" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createRefModalLabel">Создать новую
+                    запись</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="refNameInput" class="form-label">Название</label>
+                    <input type="text" class="form-control" id="refNameInput" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Создать</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Отмена
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <div id="excursionModal" class="modal" tabindex="-1" style="display:none;">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable">
-    <div class="modal-content admin-modal">
-      <div class="modal-header">
-        <input type="text" id="modalTitle" class="form-control form-control-lg" placeholder="Название экскурсии" />
-        <button type="button" id="modalClose" class="btn-close" aria-label="Закрыть"></button>
-      </div>
-      <div class="modal-body">
-        <label>Описание</label>
-        <textarea id="modalDescription" class="form-control" rows="3" placeholder="Описание"></textarea>
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content admin-modal">
+            <div class="modal-header">
+                <input type="text" id="modalTitle" class="form-control form-control-lg"
+                       placeholder="Название экскурсии"/>
+                <button type="button" id="modalClose" class="btn-close"
+                        aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                <label>Описание</label>
+                <textarea id="modalDescription" class="form-control" rows="3"
+                          placeholder="Описание"></textarea>
 
-        <label>Категория</label>
-        <input type="text" id="modalCategory" class="form-control" placeholder="Категория" />
+                <label>Категория</label>
+                <input type="text" id="modalCategory" class="form-control"
+                       placeholder="Категория"/>
 
-        <label>Формат</label>
-        <input type="text" id="modalFormat" class="form-control" placeholder="Формат" />
+                <label>Формат</label>
+                <input type="text" id="modalFormat" class="form-control"
+                       placeholder="Формат"/>
 
-        <label>Возраст</label>
-        <input type="text" id="modalAgeCategory" class="form-control" placeholder="Возраст" />
+                <label>Возраст</label>
+                <input type="text" id="modalAgeCategory" class="form-control"
+                       placeholder="Возраст"/>
 
-        <div class="mb-3">
-          <label>Активна</label>
-          <select id="modalIsActive" class="form-select">
-            <option value="true">Да</option>
-            <option value="false">Нет</option>
-          </select>
+                <div class="mb-3">
+                    <label>Активна</label>
+                    <select id="modalIsActive" class="form-select">
+                        <option value="true">Да</option>
+                        <option value="false">Нет</option>
+                    </select>
+                </div>
+
+                <label>Продолжительность (мин)</label>
+                <input type="number" id="modalDuration" class="form-control"
+                       placeholder="Продолжительность в минутах" min="0"/>
+
+                <label>Место</label>
+                <input type="text" id="modalPlace" class="form-control"
+                       placeholder="Место"/>
+
+                <label>Проводит</label>
+                <input type="text" id="modalConductedBy" class="form-control"
+                       placeholder="Проводит"/>
+
+                <label>Часы работы</label>
+                <input type="text" id="modalWorkingHours" class="form-control"
+                       placeholder="Часы работы"/>
+
+                <label>Контактный email</label>
+                <input type="email" id="modalContactEmail" class="form-control"
+                       placeholder="Email"/>
+
+                <label>Telegram</label>
+                <input type="text" id="modalTelegram" class="form-control"
+                       placeholder="@telegram"/>
+
+                <label>VK</label>
+                <input type="text" id="modalVk" class="form-control"
+                       placeholder="VK ссылка"/>
+
+                <div class="mb-3">
+                    <label>Расстояние до центра (км)</label>
+                    <input type="number" id="modalDistance" class="form-control"
+                           step="0.1" placeholder="Пример: 2.5" min="0"/>
+                </div>
+
+                <div class="mb-3">
+                    <label>Время до ближайшей остановки (мин)</label>
+                    <input type="number" id="modalTimeToStop" class="form-control"
+                           step="1" placeholder="Пример: 10" min="0"/>
+                </div>
+
+                <div class="mb-3">
+                    <label>Ссылка на iframe</label>
+                    <input type="text" id="modalIframe" class="form-control"
+                           placeholder="Ссылка на iframe (например, карта)"/>
+                </div>
+
+                <h6>Фотографии</h6>
+                <div id="modalPhotos"
+                     style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom: 10px;">
+                    <!-- Здесь будут превью фото -->
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="file" id="modalPhotoUpload" accept="image/*"/>
+                    <button type="button" id="btnAddPhoto"
+                            class="btn btn-sm btn-success">Добавить фото
+                    </button>
+                </div>
+
+                <h6>Сессии</h6>
+                <div id="modalSessions" style="margin-bottom:1rem;">
+                    <!-- Сессии будут добавляться сюда -->
+                </div>
+                <button type="button" id="btnAddSession"
+                        class="btn btn-sm btn-primary mb-3">Добавить сессию
+                </button>
+
+                <h6>Теги</h6>
+                <div id="modalTags" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="modalSave" class="btn btn-primary">Сохранить
+                </button>
+                <button type="button" id="modalCloseFooter" class="btn btn-secondary">
+                    Закрыть
+                </button>
+            </div>
         </div>
-
-        <label>Продолжительность (мин)</label>
-        <input type="number" id="modalDuration" class="form-control" placeholder="Продолжительность в минутах" min="0" />
-
-        <label>Место</label>
-        <input type="text" id="modalPlace" class="form-control" placeholder="Место" />
-
-        <label>Проводит</label>
-        <input type="text" id="modalConductedBy" class="form-control" placeholder="Проводит" />
-
-        <label>Часы работы</label>
-        <input type="text" id="modalWorkingHours" class="form-control" placeholder="Часы работы" />
-
-        <label>Контактный email</label>
-        <input type="email" id="modalContactEmail" class="form-control" placeholder="Email" />
-
-        <label>Telegram</label>
-        <input type="text" id="modalTelegram" class="form-control" placeholder="@telegram" />
-
-        <label>VK</label>
-        <input type="text" id="modalVk" class="form-control" placeholder="VK ссылка" />
-
-        <div class="mb-3">
-          <label>Расстояние до центра (км)</label>
-          <input type="number" id="modalDistance" class="form-control" step="0.1" placeholder="Пример: 2.5" min="0" />
-        </div>
-
-        <div class="mb-3">
-          <label>Время до ближайшей остановки (мин)</label>
-          <input type="number" id="modalTimeToStop" class="form-control" step="1" placeholder="Пример: 10" min="0" />
-        </div>
-
-        <div class="mb-3">
-          <label>Ссылка на iframe</label>
-          <input type="text" id="modalIframe" class="form-control" placeholder="Ссылка на iframe (например, карта)" />
-        </div>
-
-        <h6>Фотографии</h6>
-        <div id="modalPhotos" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom: 10px;">
-        <!-- Здесь будут превью фото -->
-        </div>
-        <div style="display: flex; gap: 10px; align-items: center;">
-        <input type="file" id="modalPhotoUpload" accept="image/*" />
-        <button type="button" id="btnAddPhoto" class="btn btn-sm btn-success">Добавить фото</button>
-        </div>
-
-        <h6>Сессии</h6>
-        <div id="modalSessions" style="margin-bottom:1rem;">
-          <!-- Сессии будут добавляться сюда -->
-        </div>
-        <button type="button" id="btnAddSession" class="btn btn-sm btn-primary mb-3">Добавить сессию</button>
-
-        <h6>Теги</h6>
-        <div id="modalTags" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" id="modalSave" class="btn btn-primary">Сохранить</button>
-        <button type="button" id="modalCloseFooter" class="btn btn-secondary">Закрыть</button>
-      </div>
     </div>
-  </div>
 </div>
+
 
 <!-- Modal -->
-<div class="modal fade" id="sessionModal" tabindex="-1" role="dialog" aria-labelledby="sessionModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="sessionModalLabel">Добавить сессию</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-      </div>
-      <div class="modal-body">
-        <form id="sessionForm">
-          <!-- Скрытое поле для ID редактируемой сессии -->
-          <input type="hidden" id="editingSessionId">
+<div class="modal fade" id="sessionModal" tabindex="-1" role="dialog"
+     aria-labelledby="sessionModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="sessionModalLabel">Добавить сессию</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                <form id="sessionForm">
+                    <!-- Скрытое поле для ID редактируемой сессии -->
+                    <input type="hidden" id="editingSessionId">
 
-          <div class="mb-3">
-            <label for="sessionDatetimeModal" class="form-label">Дата и время</label>
-            <input type="datetime-local" class="form-control" id="sessionDatetimeModal" required>
-          </div>
-          <div class="mb-3">
-            <label for="sessionCostModal" class="form-label">Стоимость</label>
-            <input type="number" class="form-control" id="sessionCostModal" required>
-          </div>
-          <div class="mb-3">
-            <label for="sessionMaxParticipantsModal" class="form-label">Макс. участников</label>
-            <input type="number" class="form-control" id="sessionMaxParticipantsModal" required>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-danger me-auto" id="deleteSessionBtn" style="display: none;">Удалить</button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-        <button type="button" class="btn btn-primary" id="saveSessionModalBtn">Сохранить</button>
-      </div>
+                    <div class="mb-3">
+                        <label for="sessionDatetimeModal" class="form-label">Дата и
+                            время</label>
+                        <input type="datetime-local" class="form-control"
+                               id="sessionDatetimeModal" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="sessionCostModal"
+                               class="form-label">Стоимость</label>
+                        <input type="number" class="form-control" id="sessionCostModal"
+                               required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="sessionMaxParticipantsModal" class="form-label">Макс.
+                            участников</label>
+                        <input type="number" class="form-control"
+                               id="sessionMaxParticipantsModal" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger me-auto"
+                        id="deleteSessionBtn" style="display: none;">Удалить
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Отмена
+                </button>
+                <button type="button" class="btn btn-primary" id="saveSessionModalBtn">
+                    Сохранить
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
-<div id="notificationArea" class="position-fixed top-0 end-0 p-3" style="z-index: 1100;"></div>
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+<script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+<script src="{{ url_for('static', filename='js/users.js') }}"></script>
+<script src="{{ url_for('static', filename='js/references.js') }}"></script>
+<script src="{{ url_for('static', filename='js/excursions.js') }}"></script>
+<script src="{{ url_for('static', filename='js/modal.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<div id="notificationArea" class="position-fixed top-0 end-0 p-3"
+     style="z-index: 1100;"></div>
 </body>
 </html>

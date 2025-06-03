@@ -64,6 +64,7 @@ def get_user_info_response(user):
     if not user:
         return {"message": AuthMessages.USER_NOT_FOUND}, HTTPStatus.NOT_FOUND
     return {
+        "user_id": user.user_id,
         "username": user.username,
         "email": user.email,
         "full_name": user.full_name,

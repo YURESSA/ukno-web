@@ -3,7 +3,9 @@ from flask_restx import Resource, fields
 from sqlalchemy import func
 
 from backend.core import db
+from backend.core.models.auth_models import Role
 from backend.core.models.excursion_models import FormatType, Category, AgeCategory, Excursion, ExcursionSession
+from backend.core.schemas.excursion_schemas import role_model
 from backend.references import ref_ns
 
 # Для валидации и автодокументации сделаем модели (пример)
@@ -129,6 +131,46 @@ class AgeCategoryResource(Resource):
         db.session.delete(age_category)
         db.session.commit()
         return {'message': 'Возрастная категория удалена'}, 200
+
+
+
+
+@ref_ns.route('/roles')
+class RoleList(Resource):
+    @ref_ns.doc(description="Список всех ролей")
+    def get(self):
+        roles = Role.query.all()
+        return [r.to_dict() for r in roles], 200
+
+    @ref_ns.expect(role_model)
+    @ref_ns.doc(description="Создание новой роли")
+    def post(self):
+        data = request.json
+        name = data.get('name')
+        if not name:
+            return {'message': 'Поле name обязательно'}, 400
+
+        if Role.query.filter_by(role_name=name).first():
+            return {'message': 'Роль с таким именем уже существует'}, 400
+
+        role = Role(role_name=name)
+        db.session.add(role)
+        db.session.commit()
+        return role.to_dict(), 201
+
+
+@ref_ns.route('/roles/<int:id>')
+class RoleResource(Resource):
+    @ref_ns.doc(description="Удаление роли по ID")
+    def delete(self, id):
+        role = Role.query.get(id)
+        if not role:
+            return {'message': 'Роль не найдена'}, 404
+        db.session.delete(role)
+        db.session.commit()
+        return {'message': 'Роль удалена'}, 200
+
+
 
 
 @ref_ns.route('/excursion-stats')
