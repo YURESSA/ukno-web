@@ -79,7 +79,6 @@ def delete_excursion_session(excursion_id, session_id):
         return {"message": "Сессия не найдена"}, HTTPStatus.NOT_FOUND
 
     active_reservations = [r for r in session.reservations if not r.is_cancelled]
-
     if active_reservations:
         for res in active_reservations:
             send_email(
