@@ -14,9 +14,10 @@ async function loadUsers() {
             user.role
         ],
         actions: `
-      <button class="btn btn-danger btn-sm btn-delete-user" data-id="${user.username}">
-        <i class="fas fa-trash"></i> Удалить
-      </button>`
+      <button class="btn btn-outline-danger btn-sm btn-delete-user" data-id="${user.username}">
+          <i class="fas fa-trash me-1"></i> Удалить
+        </button>
+`
     }));
 
     renderTable('Пользователи', ['ID', 'Логин', 'Email', 'ФИО', 'Телефон', 'Роль'], rows);

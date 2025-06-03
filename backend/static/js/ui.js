@@ -1,7 +1,67 @@
 function renderTable(title, headers, rows) {
+    const pageTitle = document.getElementById('pageTitle');
+    if (pageTitle) {
+        pageTitle.textContent = title;
+    }
+
     let html = `
     <div class="container mt-4">
-      <h2 class="mb-3 text-primary">${title}</h2>`;
+      <style>
+        /* Минималистичный стиль таблицы */
+        #excursionsTable {
+          width: 100%;
+          border-collapse: collapse;
+          font-family: 'Segoe UI', sans-serif;
+          font-size: 14px;
+        }
+
+        #excursionsTable th,
+        #excursionsTable td {
+          padding: 10px 12px;
+          border: 1px solid #ddd;
+          text-align: left;
+        }
+
+        #excursionsTable thead {
+          background-color: #f8f9fa;
+          font-weight: 600;
+        }
+
+        #excursionsTable tbody tr:hover {
+          background-color: #f1f1f1;
+        }
+
+        .container h2 {
+          font-size: 20px;
+          font-weight: 500;
+          margin-bottom: 16px;
+          color: #333;
+        }
+
+        td:last-child {
+          text-align: center;
+        }
+
+        .action-btn {
+          background: none;
+          border: none;
+          color: #007bff;
+          cursor: pointer;
+          padding: 0;
+          font-size: 14px;
+        }
+
+        .action-btn:hover {
+          text-decoration: underline;
+        }
+
+        .alert {
+          font-family: 'Segoe UI', sans-serif;
+          font-size: 14px;
+        }
+      </style>
+
+      <h2 class="mb-3 text-primary"></h2>`;
 
     if (rows.length === 0) {
         html += `
@@ -11,8 +71,8 @@ function renderTable(title, headers, rows) {
     } else {
         html += `
       <div class="table-responsive">
-        <table id="excursionsTable" class="table table-hover table-bordered align-middle border-primary">
-          <thead class="table-primary">
+        <table id="excursionsTable" class="table">
+          <thead>
             <tr>`;
 
         for (const h of headers) {

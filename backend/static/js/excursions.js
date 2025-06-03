@@ -20,9 +20,10 @@ async function loadExcursions() {
             item.age_category?.age_category_name || '',
         ],
         actions: `
-          <button class="btn btn-danger btn-sm btn-delete-excursion" data-id="${item.excursion_id}">
-            <i class="fas fa-trash"></i> Удалить
-          </button>
+          <button class="btn btn-outline-danger btn-sm btn-delete-excursion" data-id="${item.excursion_id}">
+              <i class="fas fa-trash me-1"></i> Удалить
+            </button>
+
         `
     }));
 
@@ -63,7 +64,6 @@ async function loadExcursions() {
 }
 
 function showExcursionModal(excursion) {
-
     currentExcursionId = excursion.excursion_id || excursion.id || null;
     originalExcursionData = {...excursion};
 
@@ -109,7 +109,9 @@ function showExcursionModal(excursion) {
 
     // Показать модалку
     const modal = document.getElementById('excursionModal');
-    modal.style.display = 'flex';
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+
 }
 
 function getChangedFields() {
@@ -318,7 +320,7 @@ document.getElementById('modalSave').onclick = async () => {
             showNotification('Экскурсия успешно создана', 'success');
 
             currentExcursionId = data.excursion_id || data.id || null;
-            originalExcursionData = { ...excursionData, ...data };
+            originalExcursionData = {...excursionData, ...data};
 
             loadExcursions();
             document.getElementById('excursionModal').style.display = 'none';
@@ -339,7 +341,7 @@ document.getElementById('modalSave').onclick = async () => {
         try {
             const res = await fetchWithAuth(`${API_BASE}/excursions/${currentExcursionId}`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(changes),
             });
 
@@ -386,9 +388,10 @@ btnAddPhoto.onclick = async () => {
 
         const data = await res.json();
         showNotification('Фото добавлено', 'success');
-        photoInput.value = ''; а
+        photoInput.value = '';
         excursionPhotosRender(data.photos);
     } catch (e) {
+        console.log(e)
         showNotification('Ошибка сети при загрузке фото', 'danger');
     }
 };
