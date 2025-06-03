@@ -256,7 +256,7 @@ class AdminExcursionsResource(Resource):
             return {"message": f"Неверный JSON: {str(e)}"}, HTTPStatus.BAD_REQUEST
 
         files = request.files.getlist("photos")
-        created_by = None
+        created_by = get_jwt_identity()
 
         excursion, error, status = create_excursion(data, created_by, files)
         if error:

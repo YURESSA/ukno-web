@@ -13,6 +13,12 @@ class Role(db.Model):
     def __repr__(self):
         return f"<Role {self.role_name}>"
 
+    def to_dict(self):
+        return {
+            'role_id': self.role_id,
+            'role_name': self.role_name
+        }
+
 
 class User(db.Model):
     __tablename__ = 'users'
