@@ -28,3 +28,9 @@ username_model = api.model('Username', {
 user_type_model = api.model('UserType', {
     'role': fields.String(required=True, description='Роль пользователя (например, admin, user, resident)')
 })
+
+edit_profile_model = api.model("EditProfile", {
+    "full_name": fields.String(required=False, description="Полное имя"),
+    "email": fields.String(required=False, description="Email"),
+    "phone": fields.String(required=False, description="Номер телефона"),
+})

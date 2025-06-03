@@ -1,4 +1,6 @@
-from flask_jwt_extended import create_access_token
+from http import HTTPStatus
+
+from flask_jwt_extended import create_access_token, get_jwt_identity
 
 from backend.core import db
 from backend.core.models.auth_models import User, Role
@@ -69,3 +71,51 @@ def change_password(username, old_password, new_password):
         db.session.commit()
         return True
     return False
+
+def update_profile(data):
+    username = get_jwt_identity()
+    user = User.query.filter_by(username=username).first()
+
+    if not user:
+        return {"message": "Пользователь не найден"}, HTTPStatus.NOT_FOUND
+
+    new_email = data.get("email")
+    new_phone = data.get("phone")
+    new_full_name = data.get("full_name")
+
+
+    if new_email and new_email != user.email:
+        if User.query.filter_by(email=new_email).first():
+            return {"message": "Этот email уже используется"}, HTTPStatus.BAD_REQUEST
+        user.email = new_email
+
+    if new_phone:
+        user.phone = new_phone
+
+    if new_full_name:
+        user.full_name = new_full_name
+
+    db.session.commit()
+
+    return {"message": "Профиль обновлён успешно"}, HTTPStatus.OK
+
+def change_profile_password(data):
+    username = get_jwt_identity()
+    user = User.query.filter_by(username=username).first()
+
+    if not user:
+        return {"message": "Пользователь не найден"}, HTTPStatus.NOT_FOUND
+
+    old_password = data.get("old_password")
+    new_password = data.get("new_password")
+
+    if not old_password or not new_password:
+        return {"message": "Оба поля обязательны"}, HTTPStatus.BAD_REQUEST
+
+    if not user.check_password(old_password):
+        return {"message": "Неверный текущий пароль"}, HTTPStatus.UNAUTHORIZED
+
+    user.set_password(new_password)
+    db.session.commit()
+
+    return {"message": "Пароль успешно изменён"}, HTTPStatus.OK

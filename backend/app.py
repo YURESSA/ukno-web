@@ -1,6 +1,7 @@
 import os
 import sys
-from flask import send_from_directory
+
+from flask import send_from_directory, render_template  # импорт render_template добавлен
 
 from backend.core import create_app, db
 from backend.core.config import Config
@@ -23,6 +24,13 @@ def register_static_routes(app):
     @app.route('/media/uploads/<path:filename>')
     def uploaded_file(filename):
         return send_from_directory(str(upload_folder_abs), filename)
+
+    @app.route('/admin/', strict_slashes=False)
+    def admin_page():
+        return render_template('admin/admin_panel.html', title="Админ-панель")
+    @app.route('/login/', strict_slashes=False)
+    def login_page():
+        return render_template('login.html', title="Вход в систему")
 
 
 def main():

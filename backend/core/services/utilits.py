@@ -1,7 +1,8 @@
 import os
 import uuid
-
+from flask import current_app
 from werkzeug.utils import secure_filename
+
 
 from backend.core import mail
 from backend.core.config import Config
@@ -47,13 +48,42 @@ from io import BytesIO
 
 
 def send_email(subject, recipient, body, attachments=None):
-
     msg = Message(subject=subject, recipients=[recipient], body=body)
 
     if attachments:
         for filename, content in attachments:
-            # content — строка, конвертируем в байты
             data = BytesIO(content.encode('utf-8'))
             msg.attach(filename, "text/csv", data.read())
 
     mail.send(msg)
+
+
+def send_reset_email(user):
+    token = generate_reset_token(user.email)
+    reset_url = f"{Config.FRONTEND_URL}/reset-password?token={token}"
+
+    subject = "Сброс пароля"
+    body = f"""Здравствуйте, {user.full_name}!
+
+Для сброса пароля перейдите по ссылке ниже:
+{reset_url}
+
+Если вы не запрашивали сброс пароля, просто проигнорируйте это письмо."""
+
+    send_email(subject, user.email, body)
+
+
+from itsdangerous import URLSafeTimedSerializer
+
+
+def generate_reset_token(email, expires_sec=3600):
+    s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+    return s.dumps(email, salt='password-reset-salt')
+
+def verify_reset_token(token, max_age=3600):
+    s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+    try:
+        email = s.loads(token, salt='password-reset-salt', max_age=max_age)
+    except Exception:
+        return None
+    return email

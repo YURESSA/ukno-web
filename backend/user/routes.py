@@ -2,16 +2,17 @@ from datetime import datetime
 
 from flask import request
 from flask_jwt_extended import jwt_required
-from flask_restx import Resource
+from flask_restx import Resource, fields
 from sqlalchemy import func
 
-from backend.core.schemas.auth_schemas import login_model, user_model, change_password_model
+from backend.core.schemas.auth_schemas import login_model, user_model, change_password_model, edit_profile_model
 from backend.core.services.profile_service import *
 from . import user_ns
 from ..core.models.excursion_models import Reservation, ExcursionSession
 from ..core.models.news_models import News
 from ..core.schemas.excursion_schemas import reservation_model, cancel_model
 from ..core.services.excursion_service import list_excursions, get_excursion
+from ..core.services.utilits import send_email, send_reset_email, verify_reset_token
 
 
 @user_ns.route('/register')
@@ -46,16 +47,26 @@ class UserProfile(Resource):
         return get_user_info_response(user)
 
     @jwt_required()
-    @user_ns.expect(change_password_model)
-    @user_ns.doc(description="Изменение пароля")
+    @user_ns.expect(edit_profile_model)
+    @user_ns.doc(description="Редактирование профиля пользователя")
     def put(self):
         data = request.get_json()
-        return change_profile_password(data)
+        return update_profile(data)
 
     @jwt_required()
     @user_ns.doc(description="Удаление аккаунта")
     def delete(self):
         return delete_profile()
+
+
+@user_ns.route('/profile/password')
+class ChangePassword(Resource):
+    @jwt_required()
+    @user_ns.expect(change_password_model)
+    @user_ns.doc(description="Смена пароля пользователя")
+    def put(self):
+        data = request.get_json()
+        return change_profile_password(data)
 
 
 @user_ns.route('/excursions')
@@ -108,6 +119,50 @@ class UserExcursionsList(Resource):
         return {
             "excursions": [excursion.to_dict() for excursion in excursions]
         }, HTTPStatus.OK
+
+
+@user_ns.route('/password-reset-request')
+class PasswordResetRequest(Resource):
+    @user_ns.expect(user_ns.model("PasswordResetRequest", {
+        "email": fields.String(required=True, description="Email")
+    }))
+    @user_ns.doc(description="Запрос на сброс пароля (отправка email)")
+    def post(self):
+        data = request.get_json()
+        email = data.get("email")
+
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            return {"message": "Если пользователь существует, инструкция отправлена на почту"}, HTTPStatus.OK
+
+        send_reset_email(user)
+        return {"message": "Письмо для восстановления пароля отправлено"}, HTTPStatus.OK
+
+
+@user_ns.route('/password-reset')
+class PasswordReset(Resource):
+    @user_ns.expect(user_ns.model("PasswordReset", {
+        "token": fields.String(required=True, description="Токен из email"),
+        "new_password": fields.String(required=True, description="Новый пароль")
+    }))
+    @user_ns.doc(description="Сброс пароля по токену")
+    def post(self):
+        data = request.get_json()
+        token = data.get("token")
+        new_password = data.get("new_password")
+
+        email = verify_reset_token(token)
+        if not email:
+            return {"message": "Неверный или просроченный токен"}, HTTPStatus.BAD_REQUEST
+
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            return {"message": "Пользователь не найден"}, HTTPStatus.NOT_FOUND
+
+        user.set_password(new_password)
+        db.session.commit()
+
+        return {"message": "Пароль успешно сброшен"}, HTTPStatus.OK
 
 
 @user_ns.route('/reservations')
@@ -181,11 +236,34 @@ class Reservations(Resource):
             phone_number=phone_number,
             email=email,
             participants_count=participants_count,
-            booked_at=datetime.utcnow(),
+            booked_at=datetime.now(),
             is_cancelled=False
         )
         db.session.add(r)
         db.session.commit()
+
+        excursion = session.excursion
+        session_time = session.start_datetime.strftime("%d.%m.%Y %H:%M")
+
+        subject = "Подтверждение бронирования экскурсии"
+        recipient = email or user.email
+        body = f"""Здравствуйте, {full_name or user.username}!
+
+        Вы успешно записались на экскурсию:
+        Название: {excursion.title if excursion else 'Экскурсия'}
+        Дата и время: {session_time}
+        Количество участников: {participants_count}
+
+        Место проведения: {excursion.place if excursion else 'уточняется'}
+        Контактный email: {excursion.contact_email if excursion and excursion.contact_email else 'не указан'}
+
+        Спасибо за бронирование!
+        """
+
+        try:
+            send_email(subject, recipient, body)
+        except Exception as e:
+            print(e)
 
         return {
             "message": "Бронирование успешно",
