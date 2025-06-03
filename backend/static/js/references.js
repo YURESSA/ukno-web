@@ -42,9 +42,10 @@ async function loadReference(refName) {
     const rows = data.map(item => ({
         cells: [item[idFields[refName]], item[nameFields[refName]]],
         actions: `
-      <button class="btn btn-danger btn-sm btn-delete-ref" data-ref="${refName}" data-id="${item[idFields[refName]]}">
-        <i class="fas fa-trash"></i> Удалить
-      </button>`
+      <button class="btn btn-outline-danger btn-sm btn-delete-ref" data-ref="${refName}" data-id="${item[idFields[refName]]}">
+          <i class="fas fa-trash me-1"></i> Удалить
+        </button>
+`
     }));
 
     renderTable(titles[refName], ['ID', 'Название'], rows);
