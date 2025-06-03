@@ -9,6 +9,8 @@ load_dotenv()
 
 class Config:
     PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+    TEMPLATE_FOLDER = os.path.join(PROJECT_ROOT, 'templates')
+    STATIC_FOLDER = os.path.join(PROJECT_ROOT, 'static')
     DEBUG = True
     SECRET_KEY = os.getenv('SECRET_KEY')
 
@@ -23,7 +25,7 @@ class Config:
 
     UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER", "media/uploads")
     ALLOWED_EXTENSIONS = os.getenv("ALLOWED_EXTENSIONS", "png,jpg,jpeg,gif").split(',')
-
+    FRONTEND_URL = os.getenv("FRONTEND_URL")
     MAIL_SERVER = os.environ.get("MAIL_SERVER")
     MAIL_PORT = os.environ.get("MAIL_PORT")
     MAIL_USE_TLS = True

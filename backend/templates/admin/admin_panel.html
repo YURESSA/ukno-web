@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <title>{{ title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Минималистичные переменные */
+        :root {
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --bg-light: #f9fafb;
+            --bg-white: #ffffff;
+            --text-dark: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --radius: 8px;
+            --transition: all 0.2s ease;
+        }
+
+        /* Базовые стили */
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-dark);
+            background-color: var(--bg-light);
+        }
+
+        .wrapper {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Боковое меню слева */
+        #sidebar {
+            width: 240px;
+            background-color: var(--bg-white);
+            border-right: 1px solid var(--border-color);
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        #sidebar .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            border-radius: var(--radius);
+            text-decoration: none;
+            transition: var(--transition);
+            user-select: none;
+            cursor: pointer;
+        }
+
+        #sidebar .nav-link i {
+            margin-right: 0.75rem;
+            font-size: 0.875rem;
+            width: 1.25rem;
+            text-align: center;
+        }
+
+        #sidebar .nav-link:hover {
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+        }
+
+        #sidebar .nav-link.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        /* Основная часть справа */
+        #mainContent {
+            flex-grow: 1;
+            padding: 1.5rem 2rem;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: var(--bg-light);
+        }
+
+        /* Верхняя панель с заголовком и кнопкой */
+        #topBar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        #topBar h1 {
+            margin: 0;
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 1.5rem;
+        }
+
+        /* Таблица и контент */
+        #contentArea {
+            background-color: var(--bg-white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        table th {
+            background-color: var(--bg-light);
+            color: var(--text-muted);
+            font-weight: 500;
+            text-align: left;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.875rem;
+        }
+
+        table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-dark);
+            font-size: 0.875rem;
+        }
+
+        table tr:last-child td {
+            border-bottom: none;
+        }
+
+        table tr:hover {
+            background-color: var(--bg-light);
+        }
+
+        /* Кнопки */
+        .btn {
+            font-weight: 500;
+            border-radius: var(--radius);
+            transition: var(--transition);
+        }
+
+        .btn-success {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-success:hover {
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+        }
+
+        /* Модальное окно */
+        .modal-content {
+            border-radius: var(--radius);
+            border: none;
+            box-shadow: var(--shadow-md);
+        }
+
+        .modal-header {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 1.5rem;
+        }
+
+        .modal-title {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            border-top: 1px solid var(--border-color);
+            padding: 1rem 1.5rem;
+        }
+
+        /* Формы */
+        .form-label {
+            font-weight: 500;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control, .form-select {
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 0.625rem 0.75rem;
+            font-size: 0.875rem;
+            transition: var(--transition);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .wrapper {
+                flex-direction: column;
+            }
+
+            #sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                padding: 1rem;
+            }
+
+            #mainContent {
+                padding: 1rem;
+            }
+
+            #topBar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            #topBar button {
+                align-self: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <nav id="sidebar" role="navigation" aria-label="Админ меню">
+         <a href="#" id="btnUsers" class="nav-link active"><i class="fas fa-users"></i> Пользователи</a>
+         <a href="#" id="btnRoles" class="nav-link"><i class="fas fa-shield-alt"></i> Роли</a>
+         <a href="#" id="btnCategories" class="nav-link"><i class="fas fa-folder"></i> Категории</a>
+         <a href="#" id="btnFormatTypes" class="nav-link"><i class="fas fa-file-alt"></i> Типы форматов</a>
+         <a href="#" id="btnAgeCategories" class="nav-link"><i class="fas fa-calendar"></i> Возрастные категории</a>
+    </nav>
+
+    <div id="mainContent">
+        <div id="topBar">
+            <h1>Админ панель</h1>
+            <button id="btnCreateUser" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createUserModal">
+                <i class="fas fa-plus me-2"></i>Создать пользователя
+            </button>
+            <button id="btnCreateRef" class="btn btn-success" data-bs-toggle="modal">
+                <i class="fas fa-plus me-2"></i>Создать запись
+            </button>
+        </div>
+
+        <div id="contentArea" class="flex-grow-1 overflow-auto">
+            <!-- Здесь JS вставит таблицы -->
+
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно создания пользователя -->
+<div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="createUserForm" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createUserModalLabel">Создать нового пользователя</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Поля формы -->
+                <div class="mb-3">
+                    <label for="username" class="form-label">Имя пользователя</label>
+                    <input type="text" id="username" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" id="email" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Пароль</label>
+                    <input type="password" id="password" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label for="full_name" class="form-label">ФИО</label>
+                    <input type="text" id="full_name" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label for="phone" class="form-label">Телефон</label>
+                    <input type="text" id="phone" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label for="role_name" class="form-label">Роль</label>
+                    <select id="role_name" class="form-select" required>
+                        <option value="user">user</option>
+                        <option value="resident">resident</option>
+                        <option value="admin">admin</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="submit" class="btn btn-success">Создать</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal создания справочника -->
+<div class="modal fade" id="createRefModal" tabindex="-1" aria-labelledby="createRefModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="createRefForm" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="createRefModalLabel">Создать новую запись</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="refNameInput" class="form-label">Название</label>
+          <input type="text" class="form-control" id="refNameInput" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Создать</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // Пример кода для переключения активного пункта меню
+  const links = document.querySelectorAll('#sidebar .nav-link');
+  links.forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      links.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+      // Тут можно вызвать функцию загрузки для соответствующей секции
+      // например:
+      // if(link.id === 'btnUsers') loadUsers();
+      // ...
+    });
+  });
+</script>
+
+</body>
+</html>

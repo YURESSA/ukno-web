@@ -1,9 +1,23 @@
-from flask_restx import Resource
+from flask import request
+from flask_restx import Resource, fields
 from sqlalchemy import func
 
 from backend.core import db
 from backend.core.models.excursion_models import FormatType, Category, AgeCategory, Excursion, ExcursionSession
 from backend.references import ref_ns
+
+# Для валидации и автодокументации сделаем модели (пример)
+category_model = ref_ns.model('Category', {
+    'name': fields.String(required=True, description='Название категории'),
+})
+
+format_type_model = ref_ns.model('FormatType', {
+    'name': fields.String(required=True, description='Название типа формата'),
+})
+
+age_category_model = ref_ns.model('AgeCategory', {
+    'name': fields.String(required=True, description='Название возрастной категории'),
+})
 
 
 @ref_ns.route('/categories')
@@ -13,6 +27,36 @@ class CategoryList(Resource):
         categories = Category.query.all()
         return [c.to_dict() for c in categories], 200
 
+    @ref_ns.expect(category_model)
+    @ref_ns.doc(description="Создание новой категории")
+    def post(self):
+        data = request.json
+        name = data.get('name')
+        if not name:
+            return {'message': 'Поле name обязательно'}, 400
+
+        # Проверка на дубли
+        if Category.query.filter_by(category_name=name).first():
+            return {'message': 'Категория с таким именем уже существует'}, 400
+
+        category = Category(category_name=name)
+
+        db.session.add(category)
+        db.session.commit()
+        return category.to_dict(), 201
+
+
+@ref_ns.route('/categories/<int:id>')
+class CategoryResource(Resource):
+    @ref_ns.doc(description="Удаление категории по ID")
+    def delete(self, id):
+        category = Category.query.get(id)
+        if not category:
+            return {'message': 'Категория не найдена'}, 404
+        db.session.delete(category)
+        db.session.commit()
+        return {'message': 'Категория удалена'}, 200
+
 
 @ref_ns.route('/format-types')
 class FormatTypeList(Resource):
@@ -21,6 +65,34 @@ class FormatTypeList(Resource):
         format_types = FormatType.query.all()
         return [f.to_dict() for f in format_types], 200
 
+    @ref_ns.expect(format_type_model)
+    @ref_ns.doc(description="Создание нового типа формата")
+    def post(self):
+        data = request.json
+        name = data.get('name')
+        if not name:
+            return {'message': 'Поле name обязательно'}, 400
+
+        if FormatType.query.filter_by(format_type_name=name).first():
+            return {'message': 'Тип формата с таким именем уже существует'}, 400
+
+        format_type = FormatType(format_type_name=name)
+        db.session.add(format_type)
+        db.session.commit()
+        return format_type.to_dict(), 201
+
+
+@ref_ns.route('/format-types/<int:id>')
+class FormatTypeResource(Resource):
+    @ref_ns.doc(description="Удаление типа формата по ID")
+    def delete(self, id):
+        format_type = FormatType.query.get(id)
+        if not format_type:
+            return {'message': 'Тип формата не найден'}, 404
+        db.session.delete(format_type)
+        db.session.commit()
+        return {'message': 'Тип формата удалён'}, 200
+
 
 @ref_ns.route('/age-categories')
 class AgeCategoryList(Resource):
@@ -28,6 +100,35 @@ class AgeCategoryList(Resource):
     def get(self):
         age_categories = AgeCategory.query.all()
         return [a.to_dict() for a in age_categories], 200
+
+    @ref_ns.expect(age_category_model)
+    @ref_ns.doc(description="Создание новой возрастной категории")
+    def post(self):
+        data = request.json
+        name = data.get('name')
+        if not name:
+            return {'message': 'Поле name обязательно'}, 400
+
+        if AgeCategory.query.filter_by(age_category_name=name).first():
+            return {'message': 'Возрастная категория с таким именем уже существует'}, 400
+
+        age_category = AgeCategory(age_category_name=name)
+
+        db.session.add(age_category)
+        db.session.commit()
+        return age_category.to_dict(), 201
+
+
+@ref_ns.route('/age-categories/<int:id>')
+class AgeCategoryResource(Resource):
+    @ref_ns.doc(description="Удаление возрастной категории по ID")
+    def delete(self, id):
+        age_category = AgeCategory.query.get(id)
+        if not age_category:
+            return {'message': 'Возрастная категория не найдена'}, 404
+        db.session.delete(age_category)
+        db.session.commit()
+        return {'message': 'Возрастная категория удалена'}, 200
 
 
 @ref_ns.route('/excursion-stats')

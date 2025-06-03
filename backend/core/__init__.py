@@ -9,7 +9,7 @@ from .extensions import jwt, api, mail
 
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__, template_folder=Config.TEMPLATE_FOLDER, static_folder=Config.STATIC_FOLDER)
     app.config.from_object(Config)
     CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
     app.config['MEDIA_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'media', 'uploads')
