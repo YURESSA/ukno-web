@@ -3,6 +3,19 @@ let originalExcursionData = {};
 const photoInput = document.getElementById('modalPhotoUpload');
 const btnAddPhoto = document.getElementById('btnAddPhoto')
 
+// Получаем элементы
+const excursionModalEl = document.getElementById('excursionModal');
+const sessionModalEl   = document.getElementById('sessionModal');
+
+// Создаём экземпляры Bootstrap.Modal
+const excursionModal = new bootstrap.Modal(excursionModalEl);
+const sessionModal   = new bootstrap.Modal(sessionModalEl);
+
+// Чтобы при закрытии sessionModal автоматически снова открывать excursionModal:
+sessionModalEl.addEventListener('hidden.bs.modal', () => {
+  excursionModal.show();
+});
+
 async function loadExcursions() {
     showCreateButton(true, 'excursion');
     const res = await fetchWithAuth(`${API_BASE}/excursions`);
@@ -20,10 +33,9 @@ async function loadExcursions() {
             item.age_category?.age_category_name || '',
         ],
         actions: `
-          <button class="btn btn-outline-danger btn-sm btn-delete-excursion" data-id="${item.excursion_id}">
-              <i class="fas fa-trash me-1"></i> Удалить
-            </button>
-
+          <button class="btn btn-danger btn-sm btn-delete-excursion" data-id="${item.excursion_id}">
+            <i class="fas fa-trash"></i> Удалить
+          </button>
         `
     }));
 
@@ -107,10 +119,7 @@ function showExcursionModal(excursion) {
         tagsDiv.textContent = 'Теги отсутствуют.';
     }
 
-    // Показать модалку
-    const modal = document.getElementById('excursionModal');
-    const bsModal = new bootstrap.Modal(modal);
-    bsModal.show();
+    excursionModal.show()
 
 }
 
@@ -155,6 +164,7 @@ function getChangedFields() {
 }
 
 function openSessionModalForEdit(session) {
+    excursionModal.hide()
     document.getElementById('editingSessionId').value = session.session_id;
     document.getElementById('sessionDatetimeModal').value = session.start_datetime.slice(0, 16);
     document.getElementById('sessionCostModal').value = session.cost;
@@ -176,12 +186,13 @@ async function deleteSession(sessionId) {
             const err = await res.json();
             throw new Error(err.message || 'Ошибка удаления');
         }
-
+        alert(originalExcursionData.sessions)
         originalExcursionData.sessions = originalExcursionData.sessions.filter(s => s.session_id !== sessionId);
         renderSessions(originalExcursionData.sessions);
 
         showNotification('Сессия удалена', 'success');
     } catch (err) {
+        console.log(sessionId, originalExcursionData.sessions, )
         showNotification('Ошибка: ' + err.message, 'danger');
     }
 }
@@ -264,7 +275,7 @@ const renderSessions = (sessions) => {
     sessions.forEach(s => {
         const p = document.createElement('p');
         const date = new Date(s.start_datetime);
-        p.textContent = `${date.toLocaleString()} — Стоимость: ${s.cost} руб, Участников: ${s.booked}/${s.max_participants}`;
+        p.textContent = `${date.toLocaleString()} — Стоимость: ${s.cost} руб, Участников: ${s.booked ?? 0}/${s.max_participants}`;
 
         const editBtn = document.createElement('button');
         editBtn.textContent = '✎';
@@ -307,7 +318,7 @@ document.getElementById('modalSave').onclick = async () => {
         try {
             const res = await fetchWithAuth(`${API_BASE}/excursions`, {
                 method: 'POST',
-                body: formData, // НЕ ставим Content-Type — браузер сам выставит multipart/form-data с границами
+                body: formData,
             });
 
             if (!res.ok) {
@@ -320,10 +331,10 @@ document.getElementById('modalSave').onclick = async () => {
             showNotification('Экскурсия успешно создана', 'success');
 
             currentExcursionId = data.excursion_id || data.id || null;
-            originalExcursionData = {...excursionData, ...data};
+            originalExcursionData = { ...excursionData, ...data };
 
             loadExcursions();
-            document.getElementById('excursionModal').style.display = 'none';
+            excursionModal.hide()
 
         } catch (e) {
             showNotification('Ошибка сети при создании экскурсии', 'danger');
@@ -341,7 +352,7 @@ document.getElementById('modalSave').onclick = async () => {
         try {
             const res = await fetchWithAuth(`${API_BASE}/excursions/${currentExcursionId}`, {
                 method: 'PATCH',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(changes),
             });
 
@@ -352,6 +363,7 @@ document.getElementById('modalSave').onclick = async () => {
 
             showNotification('Экскурсия обновлена', 'success');
             loadExcursions();
+            excursionModal.hide()
             document.getElementById('excursionModal').style.display = 'none';
         } catch (e) {
             showNotification('Ошибка сети', 'danger');
@@ -431,7 +443,7 @@ document.getElementById('saveSessionModalBtn').addEventListener('click', async (
         }
         renderSessions(originalExcursionData.sessions);
         showNotification('Сессия добавлена', 'success');
-        window.sessionModal.hide();
+        sessionModal.hide();
         return;
     }
 
@@ -462,7 +474,7 @@ document.getElementById('saveSessionModalBtn').addEventListener('click', async (
         }
 
         showNotification('Сессия сохранена', 'success');
-        window.sessionModal.hide();
+        sessionModal.hide();
     } catch (err) {
         showNotification('Ошибка: ' + err.message, 'danger');
     }
@@ -496,7 +508,7 @@ document.getElementById('btnCreateExcurs').onclick = () => {
     document.getElementById('modalPhotos').innerHTML = '—';
 
     // Показать ту же модалку
-    document.getElementById('excursionModal').style.display = 'flex';
+    excursionModal.show();
 };
 
 function collectExcursionFormData() {
