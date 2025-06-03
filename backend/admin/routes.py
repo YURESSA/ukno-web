@@ -11,6 +11,12 @@ from . import admin_ns
 from ..core.messages import AuthMessages
 from ..core.models.news_models import News
 from ..core.schemas.auth_schemas import login_model, change_password_model, user_model
+from ..core.schemas.excursion_schemas import excursion_model, session_model, session_patch_model
+from ..core.services.excursion_photo_service import get_photos_for_excursion, add_photo_to_excursion, \
+    delete_photo_from_excursion
+from ..core.services.excursion_service import update_excursion, create_excursion, get_excursion, get_all_excursions
+from ..core.services.excursion_session_service import get_sessions_for_excursion, create_excursion_session, \
+    update_excursion_session, delete_excursion_session
 from ..core.services.utilits import save_image
 
 
@@ -220,3 +226,117 @@ class NewsDetailResource(Resource):
         db.session.delete(news)
         db.session.commit()
         return {"message": "Новость удалена"}, HTTPStatus.OK
+
+@admin_ns.route('/excursions')
+class AdminExcursionsResource(Resource):
+    @admin_required
+    @admin_ns.doc(description="Получить все экскурсии (админ)")
+    def get(self):
+        excursions = get_all_excursions()
+        return {"excursions": [e.to_dict() for e in excursions]}, HTTPStatus.OK
+
+    @admin_required
+    @admin_ns.doc(
+        description="Создание экскурсии (админ)",
+        params={
+            'data': {'description': 'JSON-данные экскурсии', 'in': 'formData', 'required': True},
+            'photos': {'description': 'Список фото', 'in': 'formData', 'type': 'file', 'required': False}
+        }
+    )
+    def post(self):
+        if 'data' not in request.form:
+            return {"message": "Поле 'data' обязательно"}, HTTPStatus.BAD_REQUEST
+        try:
+            data = json.loads(request.form['data'])
+        except json.JSONDecodeError as e:
+            return {"message": f"Неверный JSON: {str(e)}"}, HTTPStatus.BAD_REQUEST
+
+        files = request.files.getlist("photos")
+        created_by = None
+
+        excursion, error, status = create_excursion(data, created_by, files)
+        if error:
+            return error, status
+        return {"message": "Экскурсия создана", "excursion_id": excursion.excursion_id}, HTTPStatus.CREATED
+
+
+@admin_ns.route('/excursions/<int:excursion_id>')
+class AdminExcursionResource(Resource):
+    @admin_required
+    @admin_ns.expect(excursion_model, validate=True)
+    def patch(self, excursion_id):
+        data = request.get_json()
+        excursion, error, status = update_excursion(excursion_id, data)
+        if error:
+            return error, status
+        return {"message": "Экскурсия обновлена", "excursion": excursion.to_dict()}, status
+
+    @admin_required
+    def get(self, excursion_id):
+        excursion = get_excursion(excursion_id)
+        if not excursion:
+            return {"message": "Экскурсия не найдена"}, HTTPStatus.NOT_FOUND
+        return {"excursion": excursion.to_dict(include_related=True)}, HTTPStatus.OK
+
+
+@admin_ns.route('/excursions/<int:excursion_id>/sessions')
+class AdminExcursionSessionsResource(Resource):
+    @admin_required
+    def get(self, excursion_id):
+        sessions = get_sessions_for_excursion(excursion_id)
+        return [s.to_dict() for s in sessions], HTTPStatus.OK
+
+    @admin_required
+    @admin_ns.expect(session_model, validate=True)
+    def post(self, excursion_id):
+        data = request.get_json()
+        session, error, status = create_excursion_session(excursion_id, data)
+        if error:
+            return error, status
+        return session.to_dict(), status
+
+
+@admin_ns.route('/excursions/<int:excursion_id>/sessions/<int:session_id>')
+class AdminExcursionSessionResource(Resource):
+    @admin_required
+    @admin_ns.expect(session_patch_model)
+    def patch(self, excursion_id, session_id):
+        data = request.get_json()
+        session, error, status = update_excursion_session(excursion_id, session_id, data)
+        if error:
+            return error, status
+        return session.to_dict(), status
+
+    @admin_required
+    def delete(self, excursion_id, session_id):
+        result, status = delete_excursion_session(excursion_id, session_id)
+        return result, status
+
+
+@admin_ns.route('/excursions/<int:excursion_id>/photos')
+class AdminExcursionPhotosResource(Resource):
+    @admin_required
+    def get(self, excursion_id):
+        photos, error, status = get_photos_for_excursion(excursion_id)
+        if error:
+            return error, status
+        return {"photos": photos}, status
+
+    @admin_required
+    def post(self, excursion_id):
+        if 'photo' not in request.files:
+            return {"message": "Фото не загружено"}, HTTPStatus.BAD_REQUEST
+        photo_file = request.files['photo']
+        photos, error, status = add_photo_to_excursion(excursion_id, photo_file)
+        if error:
+            return error, status
+        photos, _, status = get_photos_for_excursion(excursion_id)
+        return {"message": "Фото добавлено", "photos": photos}, status
+
+
+@admin_ns.route('/excursions/<int:excursion_id>/photos/<int:photo_id>')
+class AdminExcursionPhotoResource(Resource):
+    @admin_required
+    def delete(self, excursion_id, photo_id):
+        result, status = delete_photo_from_excursion(excursion_id, photo_id)
+        return result, status

@@ -18,6 +18,10 @@ def get_excursion(excursion_id, resident_id=None):
     return query.first()
 
 
+def get_all_excursions():
+    return Excursion.query.all()
+
+
 def get_excursions_for_resident(resident_id):
     return Excursion.query.filter_by(created_by=resident_id).all()
 
