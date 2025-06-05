@@ -461,7 +461,6 @@ document.getElementById('saveSessionModalBtn').addEventListener('click', async (
         }
         renderSessions(originalExcursionData.sessions);
         showNotification('Сессия добавлена', 'success');
-
         sessionModal.hide();
         return;
     }
