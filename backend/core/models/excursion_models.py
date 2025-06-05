@@ -123,7 +123,10 @@ class Excursion(db.Model):
             "distance_to_center": self.distance_to_center,
             "time_to_nearest_stop": self.time_to_nearest_stop,
             'photos': [photo.to_dict() for photo in self.photos],
-            'sessions': [session.to_dict() for session in self.sessions],
+            'sessions': [
+                session.to_dict()
+                for session in sorted(self.sessions, key=lambda s: s.start_datetime)
+            ],
             'tags': [tag.to_dict() for tag in self.tags]
         }
         if include_related:

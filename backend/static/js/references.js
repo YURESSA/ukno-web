@@ -28,6 +28,8 @@ const nameFields = {
 
 let currentRef = null;
 
+const modal = new bootstrap.Modal(document.getElementById('createRefModal'));
+
 async function loadReference(refName) {
     showCreateButton(true, 'ref');
     currentRef = refName;
@@ -89,7 +91,6 @@ document.getElementById('createRefForm').onsubmit = async (e) => {
 
     if (res) {
         showNotification('Запись успешно создана');
-        const modal = bootstrap.Modal.getInstance(document.getElementById('createRefModal'));
         modal.hide();
         loadReference(currentRef);
     }
@@ -103,6 +104,6 @@ document.getElementById('btnCreateRef').onclick = () => {
     // Очистить поле ввода
     document.getElementById('refNameInput').value = '';
     // Показать модалку
-    const modal = new bootstrap.Modal(document.getElementById('createRefModal'));
+
     modal.show();
 };
