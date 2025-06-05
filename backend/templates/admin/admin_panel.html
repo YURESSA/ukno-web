@@ -964,14 +964,14 @@
                         <label for="sessionCostModal" class="form-label">
                             Стоимость
                         </label>
-                        <input type="number" class="form-control" id="sessionCostModal"
+                        <input type="number" step="100" min="0" class="form-control" id="sessionCostModal"
                                required/>
                     </div>
                     <div class="mb-3">
                         <label for="sessionMaxParticipantsModal" class="form-label">
                             Макс. участников
                         </label>
-                        <input type="number" class="form-control"
+                        <input type="number" min="1" class="form-control"
                                id="sessionMaxParticipantsModal" required/>
                     </div>
                 </form>
