@@ -1,7 +1,3 @@
-from http import HTTPStatus
-
-from flask_jwt_extended import get_jwt_identity
-
 from backend.core.messages import AuthMessages
 from backend.core.services.auth_service import *
 
@@ -71,3 +67,35 @@ def get_user_info_response(user):
         "phone": user.phone,
         "role": user.role.role_name
     }, HTTPStatus.OK
+
+
+def update_user(username, data):
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return None
+
+    # Проверка email на уникальность
+    if 'email' in data and data['email'] != user.email:
+        existing = User.query.filter_by(email=data['email']).first()
+        if existing:
+            raise ValueError("Email уже используется другим пользователем")
+        user.email = data['email']
+
+    if 'full_name' in data:
+        user.full_name = data['full_name']
+    if 'phone' in data:
+        user.phone = data['phone']
+    if 'password' in data and data['password']:
+        user.set_password(data['password'])
+
+    # Обновление роли по имени
+    if 'role_name' in data:
+        role_name = data['role_name']
+        role = Role.query.filter_by(role_name=role_name).first()
+        if not role:
+            raise ValueError(f"Роль '{role_name}' не найдена")
+        user.role_id = role.role_id
+
+    db.session.commit()
+    return user
+

@@ -9,7 +9,7 @@ from flask_restx import Resource
 from backend.core.services.profile_service import *
 from . import admin_ns
 from ..core.messages import AuthMessages
-from ..core.models.news_models import News
+from ..core.models.news_models import News, NewsImage
 from ..core.schemas.auth_schemas import login_model, change_password_model, user_model
 from ..core.schemas.excursion_schemas import excursion_model, session_model, session_patch_model
 from ..core.services.excursion_photo_service import get_photos_for_excursion, add_photo_to_excursion, \
@@ -18,7 +18,8 @@ from ..core.services.excursion_service import update_excursion, create_excursion
     delete_excursion
 from ..core.services.excursion_session_service import get_sessions_for_excursion, create_excursion_session, \
     update_excursion_session, delete_excursion_session
-from ..core.services.utilits import save_image
+from ..core.services.news_service import add_photo_to_news, get_photos_for_news, delete_photo_from_news
+from ..core.services.utilits import save_image, remove_file_if_exists
 
 
 def admin_required(fn):
@@ -115,18 +116,30 @@ class AdminUserDetail(Resource):
             return {"message": AuthMessages.USER_DELETED}, HTTPStatus.OK
         return {"message": AuthMessages.USER_NOT_FOUND}, HTTPStatus.NOT_FOUND
 
+    @jwt_required()
+    @admin_required
+    @admin_ns.doc(description="Редактирование пользователя по username (только для администратора)")
+    def put(self, username):
+        data = request.get_json()
+        if not data:
+            return {"message": "Пустой JSON"}, HTTPStatus.BAD_REQUEST
+
+        user = get_user_by_username(username)
+        if not user:
+            return {"message": AuthMessages.USER_NOT_FOUND}, HTTPStatus.NOT_FOUND
+
+        try:
+            updated_user = update_user(username, data)
+        except ValueError as e:
+            return {"message": str(e)}, HTTPStatus.BAD_REQUEST
+
+        return get_user_info_response(updated_user), HTTPStatus.OK
+
 
 @admin_ns.route('/news')
 class NewsResource(Resource):
     @jwt_required()
     @admin_required
-    @admin_ns.doc(
-        description="Создание новости с JSON-данными (в поле 'data') и изображением (в поле 'image')",
-        params={
-            'data': 'JSON-объект с полями title, content',
-            'image': 'Файл изображения (jpeg, png и т.д.)'
-        }
-    )
     def post(self):
         if 'data' not in request.form:
             return {"message": "Поле 'data' обязательно"}, HTTPStatus.BAD_REQUEST
@@ -140,8 +153,7 @@ class NewsResource(Resource):
         if not all([title, content]):
             return {"message": "Поля title и content обязательны"}, HTTPStatus.BAD_REQUEST
 
-        image = request.files.get("image")
-        image_path = save_image(image, "news") if image else None
+        images = request.files.getlist("image")  # Получаем список файлов
         username = get_jwt_identity()
         user = User.query.filter_by(username=username).first()
         if not user:
@@ -151,9 +163,16 @@ class NewsResource(Resource):
             title=title,
             content=content,
             author_id=user.user_id,
-            image_path=image_path
         )
         db.session.add(news)
+        db.session.flush()
+
+        for image_file in images:
+            if image_file:
+                image_path = save_image(image_file, "news")
+                news_image = NewsImage(news_id=news.news_id, image_path=image_path)
+                db.session.add(news_image)
+
         db.session.commit()
 
         return {
@@ -182,8 +201,6 @@ class NewsDetailResource(Resource):
 
     @jwt_required()
     @admin_required
-    @admin_ns.doc(description="Обновление новости по ID (только администратор)",
-                  params={'data': 'JSON с полями title и/или content', 'image': 'Новая картинка (опционально)'})
     def put(self, news_id):
         news = News.query.get(news_id)
         if not news:
@@ -195,6 +212,7 @@ class NewsDetailResource(Resource):
             data = json.loads(request.form['data'])
         except json.JSONDecodeError as e:
             return {"message": f"Ошибка в JSON: {str(e)}"}, HTTPStatus.BAD_REQUEST
+
         title = data.get("title")
         content = data.get("content")
 
@@ -203,9 +221,12 @@ class NewsDetailResource(Resource):
         if content:
             news.content = content
 
-        image = request.files.get("image")
-        if image:
-            news.image_path = save_image(image, "news")
+        images = request.files.getlist("image")
+        for image_file in images:
+            if image_file:
+                image_path = save_image(image_file, "news")
+                news_image = NewsImage(news_id=news.news_id, image_path=image_path)
+                db.session.add(news_image)
 
         db.session.commit()
         return {"message": "Новость обновлена", "news": news.to_dict()}, HTTPStatus.OK
@@ -218,17 +239,60 @@ class NewsDetailResource(Resource):
         if not news:
             return {"message": "Новость не найдена"}, HTTPStatus.NOT_FOUND
 
-        if news.image_path:
-            image_path = os.path.join(os.getcwd(), news.image_path)
-            if os.path.exists(image_path):
-                try:
-                    os.remove(image_path)
-                except Exception as e:
-                    return {"message": f"Ошибка при удалении изображения: {str(e)}"}, HTTPStatus.INTERNAL_SERVER_ERROR
+        # Удаляем файлы всех связанных фото
+        for image in news.images:  # news.images - список NewsImage объектов
+            image_path = os.path.join(os.getcwd(), image.image_path)
+            remove_file_if_exists(image_path)
 
+        # Удаляем все связанные записи фото
+        for image in news.images:
+            db.session.delete(image)
+
+        # Удаляем новость
         db.session.delete(news)
         db.session.commit()
+
         return {"message": "Новость удалена"}, HTTPStatus.OK
+
+
+@admin_ns.route('/news/<int:news_id>/photos')
+class AdminNewsPhotosResource(Resource):
+    @admin_required
+    def get(self, news_id):
+        photos, error, status = get_photos_for_news(news_id)
+        if error:
+            return error, status
+        return {"photos": photos}, status
+
+    @admin_required
+    @admin_ns.doc(
+        description="Загрузка фото для новости",
+        params={
+            'photo': {
+                'description': 'Файл фотографии',
+                'in': 'formData',
+                'type': 'file',
+                'required': True
+            }
+        }
+    )
+    def post(self, news_id):
+        if 'photo' not in request.files:
+            return {"message": "Фото не загружено"}, HTTPStatus.BAD_REQUEST
+        photo_file = request.files['photo']
+        photos, error, status = add_photo_to_news(news_id, photo_file)
+        if error:
+            return error, status
+        photos, _, status = get_photos_for_news(news_id)
+        return {"message": "Фото добавлено", "photos": photos}, status
+
+
+@admin_ns.route('/news/<int:news_id>/photos/<int:photo_id>')
+class AdminNewsPhotoResource(Resource):
+    @admin_required
+    def delete(self, news_id, photo_id):
+        result, status = delete_photo_from_news(news_id, photo_id)
+        return result, status
 
 
 @admin_ns.route('/excursions')

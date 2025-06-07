@@ -107,20 +107,30 @@ function showCreateButton(show, type) {
     const btnUser = document.getElementById('btnCreateUser');
     const btnRef = document.getElementById('btnCreateRef');
     const btnExcurs = document.getElementById('btnCreateExcurs');
+    const btnNews = document.getElementById('btnCreateNews');
 
     if (type === 'user') {
         btnUser.style.display = show ? 'inline-block' : 'none';
         btnRef.style.display = 'none';
         btnExcurs.style.display = 'none';
+        btnNews.style.display = 'none'
     } else if (type === 'ref') {
         btnUser.style.display = 'none';
         btnRef.style.display = show ? 'inline-block' : 'none';
         btnExcurs.style.display = 'none';
+        btnNews.style.display = 'none'
     } else if (type === 'excursion') {
         btnUser.style.display = 'none';
         btnRef.style.display = 'none';
         btnExcurs.style.display = show ? 'inline-block' : 'none';
-    } else {
+        btnNews.style.display = 'none'
+    } else if (type === 'news') {
+        btnUser.style.display = 'none';
+        btnRef.style.display = 'none';
+        btnExcurs.style.display = 'none';
+        btnNews.style.display = show ? 'inline-block' : 'none';
+    }
+    else {
         btnUser.style.display = 'none';
         btnRef.style.display = 'none';
         btnExcurs.style.display = 'none';

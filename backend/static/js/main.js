@@ -44,6 +44,13 @@ document.addEventListener('DOMContentLoaded', () => {
         loadExcursions();
     };
 
+    document.getElementById('btnNews').onclick = e => {
+        e.preventDefault();
+        setActiveMenu('btnNews');
+        localStorage.setItem('admin_current_section', 'news');
+        loadNewsTable();
+    };
+
 
     const btnAddSession = document.getElementById('btnAddSession');
     const editingSessionId = document.getElementById('editingSessionId');
@@ -85,6 +92,10 @@ document.addEventListener('DOMContentLoaded', () => {
         case 'excursions':
             setActiveMenu('btnExcursions');
             loadExcursions();
+            break;
+        case 'news':
+            setActiveMenu('btnNews');
+            loadNewsTable();
             break;
         default:
             setActiveMenu('btnUsers');
