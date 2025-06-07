@@ -154,7 +154,7 @@
         .main-header {
             background: var(--bg-white);
             border-bottom: 1px solid var(--border-color);
-            padding: 1.25rem 2rem;
+            padding: 1.05rem 2rem;
             position: sticky;
             top: 0;
             z-index: 100;
@@ -640,6 +640,10 @@
                 <i class="fas fa-map-marked-alt"></i>
                 <span>События</span>
             </a>
+            <a href="#" id="btnNews" class="nav-link">
+                <i class="fas fa-newspaper"></i>
+                <span>Новости</span>
+            </a>
         </div>
     </nav>
 
@@ -664,6 +668,10 @@
                     <button id="btnCreateExcurs" class="btn btn-success" style="display: none;"
                             data-bs-toggle="modal" data-bs-target="#excursionModal">
                         <i class="fas fa-plus"></i> Создать событие
+                    </button>
+                    <button id="btnCreateNews" class="btn btn-success" style="display: none;"
+                            data-bs-toggle="modal" data-bs-target="#newsModal">
+                        <i class="fas fa-plus"></i> Создать новость
                     </button>
                 </div>
             </div>
@@ -758,6 +766,77 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="editUserModal" tabindex="-1"
+     aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editUserModalLabel">
+                    <i class="fas fa-user-edit"></i> Редактировать пользователя
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Закрыть"></button>
+            </div>
+            <form id="editUserForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_username" class="form-label">
+                                Имя пользователя <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" id="edit_username" class="form-control" disabled />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_email" class="form-label">
+                                Email <span class="text-danger">*</span>
+                            </label>
+                            <input type="email" id="edit_email" class="form-control" required />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3" style="display: none;">
+                            <label for="edit_password" class="form-label">
+                                Пароль (оставьте пустым, если не меняете)
+                            </label>
+                            <input type="password" id="edit_password" class="form-control" placeholder="Введите новый пароль" />
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_role_name" class="form-label">
+                                Роль <span class="text-danger">*</span>
+                            </label>
+                            <select id="edit_role_name" class="form-select" required>
+                                <option value="">Выберите роль</option>
+                                <option value="user">Пользователь</option>
+                                <option value="resident">Резидент</option>
+                                <option value="admin">Администратор</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_full_name" class="form-label">ФИО</label>
+                        <input type="text" id="edit_full_name" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_phone" class="form-label">Телефон</label>
+                        <input type="text" id="edit_phone" class="form-control" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary"
+                            data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Отмена
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> Сохранить изменения
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 
 <!-- ===== Модалка: Создать запись (References) ===== -->
 <!-- Модалка «Создать запись» -->
@@ -985,13 +1064,47 @@
     </div>
 </div>
 
+<!-- Модалка -->
+<div class="modal fade" id="newsModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 id="newsModalTitle" class="modal-title">Создать новость</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="newsTitle" class="form-control mb-2" placeholder="Заголовок">
+        <textarea id="newsContent" class="form-control mb-2" placeholder="Содержимое"></textarea>
+
+        <!-- Новый блок для загрузки фото -->
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <input type="file" id="newsPhotoUpload" accept="image/*" class="form-control-file" />
+          <button type="button" id="btnUploadPhoto" class="btn btn-primary">
+            <i class="fas fa-camera"></i> Добавить фото
+          </button>
+        </div>
+
+
+        <input type="file" id="newsImages" class="form-control mb-2" multiple style="display:none;"> <!-- можно скрыть, если не нужен -->
+        <div id="newsPhotoPreview" class="d-flex flex-wrap gap-2"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="saveNewsBtn" class="btn btn-success">Сохранить</button>
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
 <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
 <script src="{{ url_for('static', filename='js/users.js') }}"></script>
 <script src="{{ url_for('static', filename='js/references.js') }}"></script>
 <script src="{{ url_for('static', filename='js/excursions.js') }}"></script>
-<script src="{{ url_for('static', filename='js/modal.js') }}"></script>
+<script src="{{ url_for('static', filename='js/news.js') }}"></script>
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 <div id="notificationArea" class="position-fixed top-0 end-0 p-3" style="z-index: 1100;"></div>
 </body>

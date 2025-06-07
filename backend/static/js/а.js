@@ -14,43 +14,38 @@ async function loadUsers() {
             user.role
         ],
         actions: `
-            <button class="btn btn-outline-danger btn-sm btn-delete-user" data-id="${user.username}">
-                <i class="fas fa-trash me-1"></i> Удалить
-            </button>
-        `
+      <button class="btn btn-outline-danger btn-sm btn-delete-user" data-id="${user.username}">
+          <i class="fas fa-trash me-1"></i> Удалить
+        </button>
+`
     }));
 
     renderTable('Пользователи', ['ID', 'Логин', 'Email', 'ФИО', 'Телефон', 'Роль'], rows);
 
-    // Навешиваем обработчики после отрисовки таблицы
-    const deleteButtons = document.querySelectorAll('.btn-delete-user');
-    deleteButtons.forEach(btn => {
-    btn.onclick = async (event) => {
-        event.stopPropagation(); // Остановить всплытие, чтобы не срабатывал клик по строке
-        const id = btn.dataset.id;
-        if (!confirm('Удалить пользователя ' + id + '?')) return;
+    document.querySelectorAll('.btn-delete-user').forEach(btn => {
+        btn.onclick = async () => {
+            const id = btn.dataset.id;
+            if (!confirm('Удалить пользователя ' + id + '?')) return;
 
-        const res = await fetchWithAuth(`${API_BASE}/users/detail/${id}`, {
-            method: 'DELETE',
-        });
-        if (res && res.ok) {
-            showNotification('Пользователь удалён');
-            await loadUsers();
-        }
-    };
-});
-
-    // Навешиваем клики по строкам
-    const tableRows = document.querySelectorAll('#excursionsTable tbody tr');
-    tableRows.forEach(row => {
-        row.onclick = () => {
-            const cells = row.querySelectorAll('td');
-            const username = cells[1].textContent;
-            openEditUserModal(username);
+            const res = await fetchWithAuth(`${API_BASE}/users/detail/${id}`, {
+                method: 'DELETE',
+            });
+            if (res) {
+                showNotification('Пользователь удалён');
+                loadUsers();
+            }
         };
     });
-}
 
+    document.querySelectorAll('#excursionsTable tbody tr').forEach(row => {
+        row.addEventListener('click', () => {
+            const cells = row.querySelectorAll('td');
+            const username = cells[1].textContent;
+
+            openEditUserModal(username);
+        });
+    });
+}
 
 document.getElementById('createUserForm').onsubmit = async (e) => {
     e.preventDefault();
@@ -87,19 +82,20 @@ document.getElementById('createUserForm').onsubmit = async (e) => {
 
 async function openEditUserModal(username) {
     const res = await fetchWithAuth(`${API_BASE}/users/detail/${username}`);
-    if (!res || !res.ok) {
-        showNotification('Не удалось загрузить пользователя');
+    if (!res.ok) {
+        showNotification('Не удалось загрузить данные пользователя');
         return;
     }
 
     const user = await res.json();
 
+    document.getElementById('edit_user_id').value = user.user_id;
     document.getElementById('edit_username').value = user.username;
     document.getElementById('edit_email').value = user.email;
     document.getElementById('edit_full_name').value = user.full_name || '';
     document.getElementById('edit_phone').value = user.phone || '';
     document.getElementById('edit_password').value = '';
-    document.getElementById('edit_role_name').value = user.role;
+    document.getElementById('edit_role_id').value = user.role_id;
 
     new bootstrap.Modal(document.getElementById('editUserModal')).show();
 }
@@ -107,33 +103,28 @@ async function openEditUserModal(username) {
 document.getElementById('editUserForm').onsubmit = async (e) => {
     e.preventDefault();
 
-    const username = document.getElementById('edit_username').value.trim();
+    const username = document.getElementById('edit_username').value;
     const email = document.getElementById('edit_email').value.trim();
-    const password = document.getElementById('edit_password').value;
     const full_name = document.getElementById('edit_full_name').value.trim();
     const phone = document.getElementById('edit_phone').value.trim();
-    const role_name = document.getElementById('edit_role_name').value;
+    const password = document.getElementById('edit_password').value;
+    const role_id = parseInt(document.getElementById('edit_role_id').value);
 
-    if (!username || !email || !role_name) {
-        showNotification('Пожалуйста, заполните обязательные поля.');
-        return;
-    }
-
-    const payload = { username, email, full_name, phone, role_name };
+    const payload = { email, full_name, phone, role_id };
     if (password) payload.password = password;
 
     const res = await fetchWithAuth(`${API_BASE}/users/detail/${username}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(payload),
     });
 
-    if (res && res.ok) {
+    if (res.ok) {
         showNotification('Пользователь обновлён');
         bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
         loadUsers();
     } else {
         const err = await res.json();
-        showNotification(err.message || 'Ошибка при обновлении пользователя');
+        showNotification(err.message || 'Ошибка при обновлении');
     }
 };
