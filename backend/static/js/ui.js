@@ -130,6 +130,12 @@ function showCreateButton(show, type) {
         btnExcurs.style.display = 'none';
         btnNews.style.display = show ? 'inline-block' : 'none';
     }
+    else if (type === 'reservations') {
+        btnUser.style.display = 'none';
+        btnRef.style.display = 'none';
+        btnExcurs.style.display = 'none';
+        btnNews.style.display = 'none';
+    }
     else {
         btnUser.style.display = 'none';
         btnRef.style.display = 'none';

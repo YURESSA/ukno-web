@@ -241,6 +241,21 @@ class Reservation(db.Model):
             'is_cancelled': self.is_cancelled
         }
 
+    def to_dict_detailed(self):
+        return {
+            'reservation_id': self.reservation_id,
+            'session_id': self.session_id,
+            'user_id': self.user_id,
+            'booked_at': self.booked_at.isoformat(),
+            'full_name': self.full_name,
+            'phone_number': self.phone_number,
+            'email': self.email,
+            'participants_count': self.participants_count,
+            'is_cancelled': self.is_cancelled,
+            'excursion_title': self.session.excursion.title if self.session and self.session.excursion else None,
+            'session_start_datetime': self.session.start_datetime.isoformat() if self.session else None,
+        }
+
 
 class Tag(db.Model):
     __tablename__ = 'tags'
