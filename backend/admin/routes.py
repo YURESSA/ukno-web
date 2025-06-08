@@ -9,6 +9,7 @@ from flask_restx import Resource
 from backend.core.services.profile_service import *
 from . import admin_ns
 from ..core.messages import AuthMessages
+from ..core.models.excursion_models import Reservation
 from ..core.models.news_models import News, NewsImage
 from ..core.schemas.auth_schemas import login_model, change_password_model, user_model
 from ..core.schemas.excursion_schemas import excursion_model, session_model, session_patch_model
@@ -432,3 +433,37 @@ class AdminExcursionPhotoResource(Resource):
     def delete(self, excursion_id, photo_id):
         result, status = delete_photo_from_excursion(excursion_id, photo_id)
         return result, status
+
+
+@admin_ns.route('/reservations')
+class AdminReservationsResource(Resource):
+    @admin_required
+    def get(self):
+        reservations = Reservation.query.all()
+        return {'reservations': [r.to_dict() for r in reservations]}, 200
+
+
+@admin_ns.route('/reservations/<int:reservation_id>')
+class AdminReservationDetailResource(Resource):
+    @admin_required
+    def get(self, reservation_id):
+        reservation = Reservation.query.get(reservation_id)
+        if not reservation:
+            return {'message': 'Бронь не найдена'}, 404
+        return {'reservation': reservation.to_dict_detailed()}, 200
+
+    @admin_required
+    def delete(self, reservation_id):
+        reservation = Reservation.query.get(reservation_id)
+        if not reservation:
+            return {'message': 'Бронь не найдена'}, 404
+
+        try:
+            # удаляем из базы
+            db.session.delete(reservation)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return {'message': 'Ошибка при удалении брони', 'error': str(e)}, 500
+
+        return {'message': 'Бронирование успешно удалено'}, 200

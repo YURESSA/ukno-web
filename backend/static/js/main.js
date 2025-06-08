@@ -51,6 +51,13 @@ document.addEventListener('DOMContentLoaded', () => {
         loadNewsTable();
     };
 
+    document.getElementById('btnReservations').onclick = e => {
+        e.preventDefault();
+        setActiveMenu('btnReservations');
+        localStorage.setItem('admin_current_section', 'reservation');
+        loadReservations();
+    };
+
 
     const btnAddSession = document.getElementById('btnAddSession');
     const editingSessionId = document.getElementById('editingSessionId');
@@ -67,7 +74,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     const section = localStorage.getItem('admin_current_section');
-
     switch (section) {
         case 'users':
             setActiveMenu('btnUsers');
@@ -96,6 +102,10 @@ document.addEventListener('DOMContentLoaded', () => {
         case 'news':
             setActiveMenu('btnNews');
             loadNewsTable();
+            break;
+        case 'reservation':
+            setActiveMenu('btnReservations');
+            loadReservations();
             break;
         default:
             setActiveMenu('btnUsers');
