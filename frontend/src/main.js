@@ -10,6 +10,9 @@ import router from './router/index.js'
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
 
+const pinia = createPinia()
+pinia.use(piniaPluginPersistedstate)
+
 const app = createApp(App)
 app.use(pinia)
 app.use(router)
