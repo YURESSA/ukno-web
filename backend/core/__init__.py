@@ -1,19 +1,21 @@
+import os
+
 from flask import Flask
 from flask_cors import CORS
 
 from .config import Config
 from .database import db, migrate
-from .extensions import jwt, api
+from .extensions import jwt, api, mail
 
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
-
+    app.config['MEDIA_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'media', 'uploads')
     api.init_app(app)
     jwt.init_app(app)
-
+    mail.init_app(app)
     db.init_app(app)
     migrate.init_app(app, db)
 
@@ -31,3 +33,6 @@ def register_apps(app):
 
     from backend.resident import resident_ns
     api.add_namespace(resident_ns, path='/api/resident')
+
+    from backend.references import ref_ns
+    api.add_namespace(ref_ns, path='/api/references')

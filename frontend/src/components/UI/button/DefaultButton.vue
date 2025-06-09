@@ -5,7 +5,6 @@
 <script setup>
 defineProps({
   text: String || null,
-  icon: String || null,
 })
 </script>
 

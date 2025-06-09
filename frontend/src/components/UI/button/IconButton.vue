@@ -40,7 +40,10 @@ button:active{
   text-align: center;
 }
 
-.slot-content {
-  margin-left: 16px;
+.slot-content{
+  max-width: max-content;
+  max-height: max-content;
+  display: flex;
+  align-items: center;
 }
 </style>
