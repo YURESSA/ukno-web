@@ -3,6 +3,8 @@ import axios from 'axios'
 
 export const baseUrl = ''
 
+// export const baseUrl = 'http://141.8.198.79/'
+
 export const useDataStore = defineStore('data', {
   state: () => ({
     auth_key: '',
