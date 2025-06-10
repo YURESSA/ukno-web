@@ -28,7 +28,9 @@ def admin_required(fn):
     def wrapper(*args, **kwargs):
         verify_jwt_in_request()
         claims = get_jwt()
-        if claims.get("role") != "admin":
+        username = get_jwt_identity()
+        user = get_user_by_username(username)
+        if claims.get("role") != "admin" or not user:
             return {"message": AuthMessages.AUTH_ACCESS_DENIED}, HTTPStatus.FORBIDDEN
         return fn(*args, **kwargs)
 
@@ -459,7 +461,6 @@ class AdminReservationDetailResource(Resource):
             return {'message': 'Бронь не найдена'}, 404
 
         try:
-            # удаляем из базы
             db.session.delete(reservation)
             db.session.commit()
         except Exception as e:

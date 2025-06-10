@@ -179,7 +179,7 @@
         localStorage.setItem('jwt_token', data.access_token);
 
         // Редирект в админку
-        window.location.href = '/admin/';
+        window.location.href = '/admin-panel/';
       } catch (error) {
         document.getElementById('errorMsg').textContent = 'Ошибка сети, попробуйте позже';
         console.error(error);

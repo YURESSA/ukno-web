@@ -1,7 +1,7 @@
 import os
 import sys
 
-from flask import send_from_directory, render_template  # импорт render_template добавлен
+from flask import send_from_directory, render_template
 
 from backend.core import create_app, db
 from backend.core.config import Config
@@ -23,11 +23,15 @@ def register_static_routes(app):
 
     @app.route('/media/uploads/<path:filename>')
     def uploaded_file(filename):
-        return send_from_directory(str(upload_folder_abs), filename)
+        if Config.PRODUCTION:
+            return send_from_directory('/app/media/uploads', filename)
+        else:
+            return send_from_directory(str(upload_folder_abs), filename)
 
-    @app.route('/admin/', strict_slashes=False)
+    @app.route('/admin-panel/', strict_slashes=False)
     def admin_page():
         return render_template('admin/admin_panel.html', title="Админ-панель")
+
     @app.route('/login/', strict_slashes=False)
     def login_page():
         return render_template('login.html', title="Вход в систему")
@@ -36,14 +40,21 @@ def register_static_routes(app):
 def main():
     app = create_app()
 
-    if len(sys.argv) > 1 and sys.argv[1] == "create_superuser":
-        with app.app_context():
-            create_superuser()
-        sys.exit(0)
+    if len(sys.argv) > 1:
+        cmd = sys.argv[1]
+
+        if cmd == "create_superuser":
+            with app.app_context():
+                create_superuser()
+            sys.exit(0)
+
+        elif cmd == "seed_reference_data":
+            with app.app_context():
+                seed_reference_data()
+            print("Данные успешно посеяны.")
+            sys.exit(0)
 
     register_static_routes(app)
-    with app.app_context():
-        seed_reference_data()
 
     app.run(debug=True, use_reloader=True)
 

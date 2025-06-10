@@ -438,7 +438,7 @@ document.getElementById('saveSessionModalBtn').addEventListener('click', async (
     }
 
     const sessionData = {
-        start_datetime: new Date(datetime).toISOString(),
+        start_datetime: datetime.replace('T', ' ') + ':00',
         cost: Number(cost),
         max_participants: Number(maxParticipants),
     };
