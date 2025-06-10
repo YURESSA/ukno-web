@@ -4,6 +4,7 @@ from http import HTTPStatus
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
 
+from .auth_service import get_user_by_username
 from .excursion_photo_service import process_photos, add_photos
 from .excursion_session_service import clear_sessions_and_schedules, add_sessions
 from .utilits import get_model_by_name
@@ -51,6 +52,8 @@ def create_excursion(data, created_by, files):
         if not data.get("place"):
             return None, {"message": "Место проведения обязательно"}, HTTPStatus.BAD_REQUEST
 
+        user = get_user_by_username(created_by)
+
         excursion = Excursion(
             title=data.get("title"),
             description=data.get("description"),
@@ -66,7 +69,7 @@ def create_excursion(data, created_by, files):
             iframe_url=data.get("iframe_url"),
             telegram=data.get("telegram"),
             vk=data.get("vk"),
-            created_by=created_by,
+            created_by=user.user_id,
             distance_to_center=data.get("distance_to_center"),
             time_to_nearest_stop=data.get("time_to_nearest_stop")
         )

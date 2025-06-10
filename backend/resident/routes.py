@@ -23,7 +23,9 @@ def resident_required(fn):
     def wrapper(*args, **kwargs):
         verify_jwt_in_request()
         claims = get_jwt()
-        if claims.get("role") != "resident":
+        username = get_jwt_identity()
+        user = get_user_by_username(username)
+        if claims.get("role") != "resident" or not user:
             return {"message": "Доступ запрещён"}, HTTPStatus.FORBIDDEN
         return fn(*args, **kwargs)
 

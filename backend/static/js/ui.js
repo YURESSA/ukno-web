@@ -1,107 +1,114 @@
 function renderTable(title, headers, rows) {
     const pageTitle = document.getElementById('pageTitle');
-    if (pageTitle) {
-        pageTitle.textContent = title;
-    }
+    if (pageTitle) pageTitle.textContent = title;
+
+    const originalRows = [...rows];
 
     let html = `
     <div class="container mt-4">
-      <style>
-        /* Минималистичный стиль таблицы */
-        #excursionsTable {
-          width: 100%;
-          border-collapse: collapse;
-          font-family: 'Segoe UI', sans-serif;
-          font-size: 14px;
-        }
-
-        #excursionsTable th,
-        #excursionsTable td {
-          padding: 10px 12px;
-          border: 1px solid #ddd;
-          text-align: left;
-        }
-
-        #excursionsTable thead {
-          background-color: #f8f9fa;
-          font-weight: 600;
-        }
-
-        #excursionsTable tbody tr:hover {
-          background-color: #f1f1f1;
-        }
-
-        .container h2 {
-          font-size: 20px;
-          font-weight: 500;
-          margin-bottom: 16px;
-          color: #333;
-        }
-
-        td:last-child {
-          text-align: center;
-        }
-
-        .action-btn {
-          background: none;
-          border: none;
-          color: #007bff;
-          cursor: pointer;
-          padding: 0;
-          font-size: 14px;
-        }
-
-        .action-btn:hover {
-          text-decoration: underline;
-        }
-
-        .alert {
-          font-family: 'Segoe UI', sans-serif;
-          font-size: 14px;
-        }
-      </style>
-
-      <h2 class="mb-3 text-primary"></h2>`;
-
-    if (rows.length === 0) {
-        html += `
-      <div class="alert alert-info" role="alert">
-        Данные отсутствуют.
-      </div>`;
-    } else {
-        html += `
+      <input id="tableFilterInput" type="text" class="form-control mb-2" placeholder="Поиск...">
+      <button id="resetSortBtn" class="btn btn-sm btn-outline-secondary mb-3">Сбросить сортировку</button>
       <div class="table-responsive">
-        <table id="excursionsTable" class="table">
+        <table id="excursionsTable" class="table table-bordered table-hover">
           <thead>
             <tr>`;
 
-        for (const h of headers) {
-            html += `<th scope="col">${h}</th>`;
-        }
-        html += `<th scope="col" style="width: 130px;">Действия</th>`;
-
-        html += `</tr>
-          </thead>
-          <tbody>`;
-
-        for (const row of rows) {
-            html += `<tr data-id="${row.id || ''}" style="cursor: pointer;">`;
-            for (const cell of row.cells) {
-                html += `<td>${cell}</td>`;
-            }
-            html += `<td>${row.actions}</td>`;
-            html += '</tr>';
-        }
-
+    headers.forEach((h, i) => {
         html += `
-          </tbody>
-        </table>
-      </div>`;
-    }
+      <th data-index="${i}" class="sortable" style="cursor:pointer; white-space:nowrap;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:4px;">
+          <span>${h}</span>
+          <span class="sort-indicator" style="font-size:0.8em;"></span>
+        </div>
+      </th>`;
+    });
 
-    html += `</div>`;
+    html += `<th style="width:130px;">Действия</th></tr></thead><tbody>`;
+
+    const renderBody = (dataRows) => {
+        return dataRows.map(row => {
+            const cellsHtml = row.cells.map(cell => `<td>${cell}</td>`).join('');
+            return `<tr data-id="${row.id || ''}" style="cursor:pointer;">${cellsHtml}<td>${row.actions}</td></tr>`;
+        }).join('');
+    };
+
+    html += renderBody(rows);
+    html += `</tbody></table></div></div>`;
+
     document.getElementById('contentArea').innerHTML = html;
+
+    // 🔍 Фильтрация
+    const input = document.getElementById('tableFilterInput');
+    input.addEventListener('input', () => {
+        const filter = input.value.toLowerCase();
+        const trs = document.querySelectorAll('#excursionsTable tbody tr');
+        trs.forEach(tr => {
+            const tds = Array.from(tr.querySelectorAll('td')).map(td => td.textContent.toLowerCase());
+            tr.style.display = tds.some(text => text.includes(filter)) ? '' : 'none';
+        });
+    });
+
+    // 🔃 Мультисортировка
+    const sortState = [];
+
+    document.querySelectorAll('#excursionsTable th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            const index = +th.dataset.index;
+            const existing = sortState.find(s => s.index === index);
+
+            if (existing) {
+                existing.asc = !existing.asc;
+            } else {
+                sortState.unshift({index, asc: true});
+            }
+
+            // Сброс иконок
+            document.querySelectorAll('.sort-indicator').forEach(el => {
+                el.textContent = '';
+            });
+
+            // Установка стрелок
+            sortState.forEach(({index, asc}) => {
+                const th = document.querySelector(`#excursionsTable th[data-index="${index}"]`);
+                if (th) {
+                    const indicator = th.querySelector('.sort-indicator');
+                    if (indicator) indicator.textContent = asc ? '▲' : '▼';
+                }
+            });
+
+            const tbody = document.querySelector('#excursionsTable tbody');
+            const rowsArray = Array.from(tbody.querySelectorAll('tr'));
+
+            rowsArray.sort((a, b) => {
+                for (const {index, asc} of sortState) {
+                    const aText = a.children[index].innerText;
+                    const bText = b.children[index].innerText;
+                    const cmp = aText.localeCompare(bText, 'ru', {numeric: true});
+                    if (cmp !== 0) return asc ? cmp : -cmp;
+                }
+                return 0;
+            });
+
+            tbody.innerHTML = '';
+            rowsArray.forEach(tr => tbody.appendChild(tr));
+        });
+    });
+
+    // 🔁 Кнопка сброса сортировки
+    document.getElementById('resetSortBtn').addEventListener('click', () => {
+        sortState.length = 0;
+
+        // Убираем стрелки
+        document.querySelectorAll('.sort-indicator').forEach(el => {
+            el.textContent = '';
+        });
+
+        // Восстановление оригинального порядка
+        const tbody = document.querySelector('#excursionsTable tbody');
+        tbody.innerHTML = renderBody(originalRows);
+    });
 }
+
 
 function showCreateButton(show, type) {
     const btnUser = document.getElementById('btnCreateUser');
@@ -129,14 +136,12 @@ function showCreateButton(show, type) {
         btnRef.style.display = 'none';
         btnExcurs.style.display = 'none';
         btnNews.style.display = show ? 'inline-block' : 'none';
-    }
-    else if (type === 'reservations') {
+    } else if (type === 'reservations') {
         btnUser.style.display = 'none';
         btnRef.style.display = 'none';
         btnExcurs.style.display = 'none';
         btnNews.style.display = 'none';
-    }
-    else {
+    } else {
         btnUser.style.display = 'none';
         btnRef.style.display = 'none';
         btnExcurs.style.display = 'none';

@@ -45,7 +45,13 @@ async function fetchWithAuth(url, options = {}) {
 
     try {
         const res = await fetch(url, options);
+        console.log(res.status)
         if (res.status === 401) {
+            showNotification('Сессия истекла. Пожалуйста, войдите заново.');
+            window.location.href = '/login';
+            return null;
+        }
+        if (res.status === 403) {
             showNotification('Сессия истекла. Пожалуйста, войдите заново.');
             window.location.href = '/login';
             return null;

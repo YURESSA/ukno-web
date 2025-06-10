@@ -1,0 +1,47 @@
+services:
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: flask-backend
+    volumes:
+      - ../backend/media:/app/media
+      - ../backend/static:/app/static
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+
+
+
+  nginx:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    volumes:
+      - ../backend/media:/app/media:ro
+      - ../backend/static:/app/static:ro
+    restart: unless-stopped
+
+
+  db:
+    image: postgres:14
+    container_name: postgres-db
+    restart: always
+    environment:
+      POSTGRES_DB: ukno
+      POSTGRES_USER: ukno_user
+      POSTGRES_PASSWORD: ukno_pass
+      POSTGRES_HOST_AUTH_METHOD: md5
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+volumes:
+  pgdata:
