@@ -15,7 +15,6 @@ from ..core.services.excursion_service import create_excursion, update_excursion
 from ..core.services.excursion_session_service import create_excursion_session, update_excursion_session, \
     delete_excursion_session, get_sessions_for_excursion
 from ..core.services.profile_service import *
-from ..core.services.utilits import send_email
 
 
 def resident_required(fn):

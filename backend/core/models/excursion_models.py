@@ -99,6 +99,8 @@ class Excursion(db.Model):
     sessions = db.relationship("ExcursionSession", back_populates="excursion", cascade="all, delete-orphan", lazy=True)
     tags = db.relationship("Tag", secondary=excursion_tags, back_populates="excursions", lazy='subquery')
 
+    creator = db.relationship("User", backref="excursions_created", foreign_keys=[created_by])
+
     def __str__(self):
         return f"Excursion(id={self.excursion_id}, title={self.title})"
 
@@ -111,7 +113,7 @@ class Excursion(db.Model):
             'category': self.category.to_dict() if self.category else None,
             'format_type': self.format_type.to_dict() if self.format_type else None,
             'age_category': self.age_category.to_dict() if self.age_category else None,
-            'created_by': self.created_by,
+            'created_by': self.creator.username if self.creator else None,
             'is_active': self.is_active,
             'place': self.place,
             'conducted_by': self.conducted_by,
