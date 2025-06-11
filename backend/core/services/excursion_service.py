@@ -41,7 +41,7 @@ def delete_excursion(excursion_id):
         return False, f"Ошибка при удалении экскурсии: {str(e)}", HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-def create_excursion(data, created_by, files):
+def create_excursion(data, username, files):
     try:
         category = get_model_by_name(Category, "category_name", data.get("category"), "Категория не найдена")
         format_type = get_model_by_name(FormatType, "format_type_name", data.get("format_type"),
@@ -52,7 +52,7 @@ def create_excursion(data, created_by, files):
         if not data.get("place"):
             return None, {"message": "Место проведения обязательно"}, HTTPStatus.BAD_REQUEST
 
-        user = get_user_by_username(created_by)
+        user = get_user_by_username(username)
 
         excursion = Excursion(
             title=data.get("title"),
@@ -134,6 +134,14 @@ def add_tags(excursion, tag_names):
 
 
 from sqlalchemy import asc, desc
+
+def verify_resident_owns_excursion(resident_id, excursion_id):
+    excursion = Excursion.query.get(excursion_id)
+    if not excursion:
+        return None, {"message": "Экскурсия не найдена"}, HTTPStatus.NOT_FOUND
+    if excursion.created_by != resident_id:
+        return None, {"message": "У вас нет доступа к этой экскурсии"}, HTTPStatus.FORBIDDEN
+    return excursion, None, None
 
 
 def list_excursions(filters, sort_key):

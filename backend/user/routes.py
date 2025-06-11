@@ -59,6 +59,7 @@ class UserProfile(Resource):
         return delete_profile()
 
 
+
 @user_ns.route('/profile/password')
 class ChangePassword(Resource):
     @jwt_required()
