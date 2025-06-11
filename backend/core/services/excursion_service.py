@@ -200,8 +200,8 @@ def list_excursions(filters, sort_key):
         pass
 
     # Название
-    if title := filters.get("title"):
-        query = query.filter(Excursion.title.ilike(f"%{title.strip()}%"))
+    # if title := filters.get("title"):
+    #     query = query.filter(Excursion.title.ilike(f"%{title.strip()}%"))
 
     # Расстояние до центра
     try:
@@ -274,6 +274,13 @@ def list_excursions(filters, sort_key):
         if order_criteria:
             query = query.order_by(*order_criteria)
     excursions = query.all()
+
+    if title := filters.get("title"):
+        clean_title = title.strip().lower()
+        excursions = [
+            excursion for excursion in excursions
+            if clean_title in excursion.title.lower()
+        ]
 
     for excursion in excursions:
         excursion.sessions = [s for s in excursion.sessions if s.start_datetime > now]
