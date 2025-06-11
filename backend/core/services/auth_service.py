@@ -63,6 +63,7 @@ def authenticate_user(username, password, required_role=None):
     return create_access_token(identity=user.username, additional_claims={"role": user.role.role_name})
 
 
+
 def change_password(username, old_password, new_password):
     user = get_user_by_username(username)
     if user and user.check_password(old_password):
