@@ -11,8 +11,8 @@ services:
       - "5000:5000"
     depends_on:
       - db
-
-
+    env_file:
+      - ../.env
 
   nginx:
     build:
@@ -27,21 +27,19 @@ services:
       - ../backend/media:/app/media:ro
       - ../backend/static:/app/static:ro
     restart: unless-stopped
-
+    env_file:
+      - ../.env
 
   db:
     image: postgres:14
     container_name: postgres-db
     restart: always
-    environment:
-      POSTGRES_DB: ukno
-      POSTGRES_USER: ukno_user
-      POSTGRES_PASSWORD: ukno_pass
-      POSTGRES_HOST_AUTH_METHOD: md5
+    env_file:
+      - ../.env
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
-      - 5432:5432
+      - "5432:5432"
 
 volumes:
   pgdata:
