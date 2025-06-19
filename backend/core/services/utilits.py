@@ -1,8 +1,8 @@
 import os
 import uuid
+
 from flask import current_app
 from werkzeug.utils import secure_filename
-
 
 from backend.core import mail
 from backend.core.config import Config
@@ -79,6 +79,7 @@ from itsdangerous import URLSafeTimedSerializer
 def generate_reset_token(email, expires_sec=3600):
     s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
     return s.dumps(email, salt='password-reset-salt')
+
 
 def verify_reset_token(token, max_age=3600):
     s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])

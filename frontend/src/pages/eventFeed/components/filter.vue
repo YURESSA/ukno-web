@@ -11,8 +11,7 @@
     <div class="filter-main">
       <div class="filter-component">
         <h5>Формат</h5>
-        {{ formData.format_type }}
-        <n-checkbox-group v-model:value="formData.format_type">
+        <n-checkbox-group v-model:value="formData.category">
           <n-space class="checkbox-group" item-style="display: flex;">
             <n-checkbox
               v-for="option in allFormatOptions"
@@ -27,9 +26,8 @@
       <div class="filter-component">
         <h5>Даты</h5>
         <n-date-picker v-model:value="range" type="daterange" clearable />
-        {{ range }}
       </div>
-      <div class="filter-component participants-filter">
+      <!-- <div class="filter-component participants-filter">
         <h5>Количество участников</h5>
         <div class="participants-input">
           <div class="participants">
@@ -38,12 +36,10 @@
             <IconButton class="participants--btn right--btn" type="button" @click="plusParticipants" text="+"/>
           </div>
         </div>
-        {{ formData.participants_count }}
-      </div>
+      </div> -->
       <div class="filter-component">
         <h5>Тип экскурсии</h5>
-        {{ formData.type }}
-        <n-checkbox-group v-model:value="formData.type">
+        <n-checkbox-group v-model:value="formData.format_type">
           <n-space class="checkbox-group" item-style="display: flex;">
             <n-checkbox size="large" value="Индивидуальная">
               Индивидуальная<br>
@@ -72,7 +68,6 @@
       </div>
       <div class="filter-component">
         <h5>Возрастная категория</h5>
-        {{ formData.age_category }}
         <n-checkbox-group v-model:value="formData.age_category" @update:value="handleFormatTypeChange">
           <n-space class="checkbox-group" item-style="display: flex;">
             <n-checkbox size="large" value="Для детей (0-6 лет)">
@@ -104,40 +99,41 @@ import { NCheckbox, NCheckboxGroup, NSpace, NInputNumber, NSlider, NDatePicker }
 import BaseButton from '@UI/button/BaseButton.vue'
 import DefaultButton from '@UI/button/DefaultButton.vue'
 import IconButton from '@/components/UI/button/IconButton.vue'
+import { useDataStore } from '@/stores/counter';
 
 const allFormatOptions = [
   "Все варианты",
-  "Экскурсии",
-  "Мастер-классы",
-  "Воркшопы",
-  "Выставки",
-  "Концерты"
+  "Экскурсия",
+  "Мастер Класс",
+  "Воркшоп",
+  "Выставка",
+  "Концерт"
 ];
-const format = ref(null);
-const type = ref(null);
+
 const priceRange = ref([0, 2000])
-const AgeCategory = ref(null);
 const range = ref([Date.now(), Date.now() + 7 * 24 * 60 * 60 * 1000]);
 
+const store = useDataStore();
+
 const formData = ref({
-  format_type: [],
+  category: [],
   start_date: '',
   end_date: '',
   participants_count: 1,
-  type: '',
+  format_type: '',
   min_price: '',
   max_price: '',
   age_category: '',
 });
 
-watch(() => formData.value.format_type, (newVal) => {
+watch(() => formData.value.category, (newVal) => {
   // Если выбран "Все варианты"
   if (newVal.includes("Все варианты")) {
-    formData.value.format_type = allFormatOptions;
+    formData.value.category = allFormatOptions;
   }
   // Если сняли "Все варианты" при полном выборе
   else if (newVal.length === allFormatOptions.length - 1 && !newVal.includes("Все варианты")) {
-    formData.value.format_type = [];
+    formData.value.category = [];
   }
 }, { deep: true });
 
@@ -157,25 +153,47 @@ function plusParticipants(){
   formData.value.participants_count += 1;
 }
 
-const formattedDates = range.value.map(timestamp => {
-  const date = new Date(timestamp);
-  return date.toISOString().split('T')[0]; // Берём только дату (без времени)
-});
-
 const emit = defineEmits(['close']);
 
 function closeFilter(){
   emit('close')
 }
 
-function sendFilter (){
-  range.value = formattedDates;
-  formData.value.start_date = range.value[0]
-  formData.value.end_date = range.value[1]
-  formData.value.min_price = priceRange.value[0]
-  formData.value.max_price = priceRange.value[1]
+function buildQueryString(formData) {
+  const [startDate, endDate] = range.value.map(timestamp => {
+    return new Date(timestamp).toISOString().split('T')[0];
+  });
+  formData.value.start_date = startDate;
+  formData.value.end_date = endDate;
+  formData.value.min_price = priceRange.value[0];
+  formData.value.max_price = priceRange.value[1];
 
-  console.log(formData.value)
+  const params = new URLSearchParams();
+
+  // Используем formData.value, а не formData!
+  for (const [key, value] of Object.entries(formData.value)) {
+    if (value === null || value === undefined || value === '') continue;
+
+    if (Array.isArray(value)) {
+      if (value.length > 0) {
+        params.append(key, value.join(','));
+      }
+    } else {
+      params.append(key, value);
+    }
+  }
+
+  console.log(params.toString());
+  return params.toString();
+}
+
+const sendFilter = async () => {
+  const queryString = buildQueryString(formData);
+  try {
+    await store.GetFilterExcursions(queryString);
+  } catch (error) {
+    console.error('Ошибка при загрузке экскурсий:', error);
+  }
 }
 </script>
 

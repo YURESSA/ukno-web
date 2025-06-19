@@ -19,8 +19,6 @@ class Config:
     JWT_TOKEN_LOCATION = ["headers"]
 
     if str_to_bool(os.getenv("USE_POSTGRESS")):
-        SQLALCHEMY_DATABASE_URI = os.getenv("POSTGRES_URL", "sqlite:///db.sqlite3")
-    else:
         POSTGRES_USER = os.getenv("POSTGRES_USER", "ukno_user")
         POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "ukno_pass")
         POSTGRES_DB = os.getenv("POSTGRES_DB", "ukno")
@@ -29,6 +27,8 @@ class Config:
         SQLALCHEMY_DATABASE_URI = (
             f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
         )
+    else:
+        SQLALCHEMY_DATABASE_URI = os.getenv("SQLITE_URL", "sqlite:///db.sqlite3")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     ALLOWED_ORIGINS = ["*"]

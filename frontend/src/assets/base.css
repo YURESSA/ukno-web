@@ -24,8 +24,26 @@ p {
   margin: 0;
 }
 
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-family: 'Roboto Flex', Arial, Helvetica, sans-serif;
+}
+
+.text-medium {
+  font-weight: 500;
+  line-height: 140%;
+}
+
+.text-l {
+  font-size: 24px;
+}
+
 h1 {
   font-size: 94px;
+  font-weight: 700;
 }
 
 h2 {
@@ -39,6 +57,7 @@ h3 {
 
 h4 {
   font-size: 32px;
+  font-weight: 600;
 }
 
 h5 {
@@ -52,8 +71,10 @@ a {
 
 html,
 body {
+  font-family: 'Manrope', Arial, Helvetica, sans-serif;
   margin: 0;
   font-size: 20px;
+  font-weight: 400;
   color: #333333;
 }
 
