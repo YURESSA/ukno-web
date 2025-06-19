@@ -11,7 +11,13 @@
             <img src="/icon/header/iconamoon_profile-fill.svg" alt="">
           </button>
         </RouterLink>
-        <RouterLink to="/profile" v-if="!hasToken">
+        <RouterLink to="/profile" v-else-if="!hasToken & role === 'user'">
+          <button>
+            Личный кабинет
+            <img src="/icon/header/iconamoon_profile-fill.svg" alt="">
+          </button>
+        </RouterLink>
+        <RouterLink to="/resident-profile" v-else-if="!hasToken & role === 'resident'">
           <button>
             Личный кабинет
             <img src="/icon/header/iconamoon_profile-fill.svg" alt="">
@@ -41,7 +47,9 @@ const hasToken = computed(() => {
   return !store.auth_key;
 });
 
-
+const role = computed(() => {
+  return store.role;
+});
 
 </script>
 

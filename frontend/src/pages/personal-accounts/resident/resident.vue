@@ -6,40 +6,71 @@
       <Userdata
         :email="profileData.email"
         :phone="profileData.phone"
+        @open="openChange"
       />
-      <NearestEvents :reservationsData="reservationsData"/>
-      <!-- <DefaultButton class="profie__btn" text="История записей"/> -->
-      <DefaultButton @click="logOut" class="profie__btn" text="Выйти"/>
+      <DefaultButton @click="openEvents" class="profie__btn" text="Управление событиями"/>
+      <div class="bottom-btn">
+        <DefaultButton @click="logOut" class="profie__btn exit--btn" text="Выйти"/>
+        <BaseButton @click="pushToCreateEvent" class="exit--btn" text="Создать событие" />
+      </div>
     </div>
   </div>
+  <ChangePassword @close="closeChange" v-if="openPasswordModal"/>
+  <EventsModal @close="closeEvents" v-if="openEventsModal"/>
 </template>
 
 <script setup>
 import Header from '@/components/shared/header.vue';
+import ChangePassword from '../_shared/changePassword.vue';
+import EventsModal from '../_shared/EventsModal.vue';
 import Username from '../_shared/username.vue';
 import Userdata from '../_shared/userdata.vue';
-import NearestEvents from './components/nearestEvents.vue';
 import DefaultButton from '@/components/UI/button/DefaultButton.vue';
-import { onMounted, computed } from 'vue';
+import BaseButton from '@/components/UI/button/BaseButton.vue';
+import { onMounted, computed, ref } from 'vue';
 import { useDataStore } from '@/stores/counter';
 import router from '@/router';
 
 const store = useDataStore();
 const profileData = computed(() => store.profileData);
-const reservationsData = computed(() => store.reservationsData);
+const openPasswordModal = ref(false);
+const openEventsModal = ref(false);
+
+function openChange(){
+  document.body.style.overflowY = 'hidden'
+  openPasswordModal.value = true;
+}
+
+function closeChange(){
+  document.body.style.overflowY = 'auto'
+  openPasswordModal.value = false;
+}
+
+function openEvents(){
+  document.body.style.overflowY = 'hidden'
+  openEventsModal.value = true;
+}
+
+function closeEvents(){
+  document.body.style.overflowY = 'auto'
+  openEventsModal.value = false;
+}
 
 onMounted(async () => {
   try {
-    await store.GetProfile();
-    await store.GetUserReservations();
+    await store.GetResidentProfile();
   } catch (error) {
     console.error('Ошибка при загрузке:', error);
   }
 });
 
+function pushToCreateEvent(){
+  router.push('/newEvent')
+}
+
 async function logOut(){
   await store.clearTokenRole();
-  router.push('/');
+  router.push('/login');
 }
 </script>
 
@@ -77,5 +108,17 @@ async function logOut(){
   width: 100%;
   border-radius: 30px;
   border: 1px solid #33333329
+}
+
+.bottom-btn{
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.exit--btn{
+  width: 50%;
+  border-radius: 30px;
 }
 </style>

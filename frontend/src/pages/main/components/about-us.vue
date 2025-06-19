@@ -1,8 +1,13 @@
 <template>
   <div class="page-wrapper" id="about">
-    <div class="container">
+    <div class="container text-medium">
+      <div class="design-img">
+        <!-- <img class="absolut--img left-ear" src="/icon/main/leftEar.png" alt=""> -->
+        <!-- <img class="absolut--img bottom-ear" src="/icon/main/bottomEar.png" alt=""> -->
+      </div>
       <div class="title">
         <h3>Молодежное бюро 5 этаж -</h3>
+        <img class="absolut--img flower-big" src="/icon/main/flower-big.png" alt="">
       </div>
       <div class="about-content">
         <div class="content-wrapper">
@@ -11,6 +16,7 @@
               идей, вдохновения и развития.</p>
           </div>
           <div class="content">
+            <img class="absolut--img flower-small" src="/icon/main/flower-small.png" alt="">
             <p>Мы находимся на территории бывшего <br>
               хлебозавода №6, который работал с 1978 года. <br>
               Сегодня мы сохраняем дух прошлого, создавая <br> новое будущее.</p>
@@ -18,11 +24,14 @@
         </div>
         <div class="content-wrapper">
           <div class="content">
+            <img class="absolut--img mouse" src="/icon/main/mouse.png" alt="">
           </div>
           <div class="content border">
+            <img class="absolut--img ear" src="/icon/main/ear.png" alt="">
             <p>С 2024 года мы открыли новое <br> пространство для молодежных инициатив, <br> образовательных мероприятий и <br> творческих проектов.</p>
           </div>
           <div class="content">
+            <img class="absolut--img bread" src="/icon/main/bread1.png" alt="">
           </div>
         </div>
       </div>
@@ -40,6 +49,44 @@ import UsResult from './us-result.vue';
   background-color: #FFD6BD;
   padding-bottom: 0;
 }
+
+.title{
+  position: relative;
+}
+
+.absolut--img{
+  position: absolute;
+}
+
+.ear{
+  bottom: -260px;
+  left: -290px;
+}
+
+.flower-big{
+  top: -130px;
+  right: 10px;
+}
+
+.flower-small{
+  bottom: 0px;
+  right: 20px;
+}
+
+.bread{
+  bottom: -250px;
+  left: -120px;
+}
+
+/* .left-ear{
+  z-index: -1;
+  left: 0px;
+}
+
+.bottom-ear{
+  z-index: -1;
+  bottom: -230px;
+} */
 
 .container{
   margin: 0 auto;
@@ -63,8 +110,9 @@ import UsResult from './us-result.vue';
   align-items: center;
   text-align: left;
   width: 50%;
-  height: 150px;
+  height: 220px;
   padding-left: 30px;
+  position: relative;
 }
 
 .right-border{

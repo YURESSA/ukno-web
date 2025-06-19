@@ -8,6 +8,7 @@
           placeholder="Найти событие"
           round
           clearable
+          @keydown.enter="sendSearch"
         >
           <template #prefix>
             <n-icon :component="SearchOutline" />
@@ -15,8 +16,26 @@
         </n-input>
         <div class="feed-setting">
           <div class="sorting">
-            <IconButton class="sort--btn" text="По названию"><img src="/icon/downArrow.svg" alt=""></IconButton>
-            <IconButton class="sort--btn" text="По цене"><img src="/icon/downArrow.svg" alt=""></IconButton>
+            <DropDown
+              v-model="sortByTitle"
+              :options="[
+                { label: 'От А до Я', value: 'title' },
+                { label: 'От Я до А', value: '-title' }
+              ]"
+              title="По названию"
+              name="sort-by-name"
+              @update:modelValue="handleTitleSortChange"
+            />
+            <DropDown
+              v-model="sortByPrice"
+              :options="[
+                { label: 'По возрастанию', value: 'price' },
+                { label: 'По убыванию', value: '-price' },
+              ]"
+              title="По цене"
+              name="sort-by-price"
+              @update:modelValue="handleTitleSortChange"
+            />
           </div>
           <div class="filter">
             <IconButton class="sort--btn" text="Фильрты" @click="openFilter"><img src="/icon/filter/filter.svg" alt=""></IconButton>
@@ -44,10 +63,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { NInput, NIcon } from 'naive-ui';
 import { SearchOutline } from "@vicons/ionicons5";
+import { storeToRefs } from 'pinia';
 import IconButton from '@/components/UI/button/IconButton.vue';
+import DropDown from '@/components/UI/dropDown/dropDown.vue';
 import EventCard from './components/event-card.vue';
 import Filter from './components/filter.vue';
 import { useDataStore } from '@/stores/counter';
@@ -55,10 +76,17 @@ import { useDataStore } from '@/stores/counter';
 const store = useDataStore();
 
 const searchQuery = ref('');
+const sortByTitle = ref('');
+const sortByPrice = ref('');
 const filterStatus = ref(false);
 const isFilterOpen = ref(false);
-const excursions = computed(() => store.getExcursions);
+const { excursions } = storeToRefs(store);
 console.log(excursions.value)
+
+// Отслеживаем изменения excursions
+watch(excursions, (newVal) => {
+  console.log('Экскурсии обновились:', newVal);
+}, { deep: true });
 
 onMounted(async () => {
   try {
@@ -81,6 +109,45 @@ function openFilter() {
 function closeFilter(){
   document.body.style.overflow = 'auto'
   isFilterOpen.value = false;
+}
+
+const handleTitleSortChange = (value) => {
+  console.log('Выбрана сортировка:', value);
+  sendSort();
+};
+
+const sendSort = async () => {
+  const params = new URLSearchParams();
+  const sortValues = [];
+
+  if (sortByPrice.value) {
+    sortValues.push(sortByPrice.value);
+  }
+
+  if (sortByTitle.value) {
+    sortValues.push(sortByTitle.value);
+  }
+
+  if (sortValues.length > 0) {
+    params.append('sort', sortValues.join(','));
+  }
+  console.log(sortValues)
+  try {
+    await store.GetFilterExcursions(params.toString());
+  } catch (error) {
+    console.error('Ошибка при загрузке экскурсий:', error);
+  }
+}
+
+const sendSearch = async () => {
+  const params = new URLSearchParams();
+  params.append('title', searchQuery.value);
+  const queryString = params.toString();
+  try {
+    await store.GetFilterExcursions(queryString);
+  } catch (error) {
+    console.error('Ошибка при загрузке экскурсий:', error);
+  }
 }
 </script>
 
@@ -125,6 +192,7 @@ function closeFilter(){
 .feed-wrapper {
   display: flex;
   flex-direction: column;
+  width: 100%;
   max-width: 1400px;
   position: relative;
 }

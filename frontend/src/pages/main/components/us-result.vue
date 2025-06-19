@@ -1,51 +1,51 @@
 <template>
   <div class="result-wrapper">
     <div class="title">
-      <h3>Наш результат — ваше вдохновение</h3>
+      <h3>Ваше культурное пространство — это</h3>
     </div>
-    <div class="result-list">
+    <div class="result-list text-l">
       <ul>
         <li>
           <div class="content solo orange">
-            <p class="large-text">Выставки</p>
+            <p>Выставки</p>
           </div>
         </li>
         <li>
           <div class="content">
-            <p class="large-text">Развитие</p>
+            <p>Развитие</p>
           </div>
           <div class="content">
-            <p class="large-text">240 м² возможностей</p>
-          </div>
-        </li>
-        <li>
-          <div class="content">
-            <p class="large-text">Сообщество мечтателей</p>
-          </div>
-          <div class="content">
-            <p class="large-text">Арт-пространство для всех</p>
+            <p >240 м² возможностей</p>
           </div>
         </li>
         <li>
           <div class="content">
-            <p class="large-text">История с 1978 года</p>
+            <p>Сообщество мечтателей</p>
           </div>
           <div class="content">
-            <p class="large-text">Творчество без границ</p>
-          </div>
-          <div class="content">
-            <p class="large-text">Новое в старом</p>
+            <p>Арт-пространство для всех</p>
           </div>
         </li>
         <li>
           <div class="content">
-            <p class="large-text">Мастер-классы будущего</p>
+            <p>История с 1978 года</p>
           </div>
           <div class="content">
-            <p class="large-text">Экскурсии в прошлое</p>
+            <p>Творчество без границ</p>
+          </div>
+          <div class="content">
+            <p>Новое в старом</p>
+          </div>
+        </li>
+        <li>
+          <div class="content">
+            <p>Мастер-классы будущего</p>
+          </div>
+          <div class="content">
+            <p>Экскурсии в прошлое</p>
           </div>
           <div class="content custom">
-            <p class="large-text">90 м² уюта</p>
+            <p>90 м² уюта</p>
           </div>
         </li>
       </ul>
@@ -90,7 +90,6 @@ li{
   border: 2px solid #333333;
   border-radius: 30px;
 }
-
 
 .solo{
   width: 220px;

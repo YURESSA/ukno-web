@@ -2,15 +2,15 @@
   <div class="card-wrapper">
     <h5>Номер телефона</h5>
     <div class="data-wrapper">
-      <p>89038489389</p> <IconButton class="edit__btn"><img src="/icon/pencil.svg" alt=""></IconButton>
+      <p>{{ phone }}</p> <!-- <IconButton class="edit__btn"><img src="/icon/pencil.svg" alt=""></IconButton> -->
     </div>
     <h5>Электронная почта</h5>
     <div class="data-wrapper">
-      <p>ajjsj112@mail.ru</p> <IconButton class="edit__btn"><img src="/icon/pencil.svg" alt=""></IconButton>
+      <p>{{ email }}</p> <!-- <IconButton class="edit__btn"><img src="/icon/pencil.svg" alt=""></IconButton> -->
     </div>
     <h5>Пароль</h5>
     <div class="password-data-wrapper">
-      <DefaultButton class="change__btn" text="Сменить пароль"></DefaultButton>
+      <DefaultButton class="change__btn" text="Сменить пароль" @click="$emit('open')"></DefaultButton>
     </div>
   </div>
 </template>
@@ -19,6 +19,11 @@
 <script setup>
 import IconButton from '@/components/UI/button/IconButton.vue';
 import DefaultButton from '@/components/UI/button/DefaultButton.vue';
+
+const props = defineProps({
+  email: String,
+  phone: String
+})
 </script>
 
 <style scoped>
