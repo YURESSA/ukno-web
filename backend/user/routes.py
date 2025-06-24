@@ -59,7 +59,6 @@ class UserProfile(Resource):
         return delete_profile()
 
 
-
 @user_ns.route('/profile/password')
 class ChangePassword(Resource):
     @jwt_required()
@@ -132,7 +131,7 @@ class PasswordResetRequest(Resource):
         data = request.get_json()
         email = data.get("email")
 
-        user = User.query.filter_by(email=email).first()
+        user = get_user_by_email(email)
         if not user:
             return {"message": "Если пользователь существует, инструкция отправлена на почту"}, HTTPStatus.OK
 
@@ -156,7 +155,7 @@ class PasswordReset(Resource):
         if not email:
             return {"message": "Неверный или просроченный токен"}, HTTPStatus.BAD_REQUEST
 
-        user = User.query.filter_by(email=email).first()
+        user = get_user_by_email()
         if not user:
             return {"message": "Пользователь не найден"}, HTTPStatus.NOT_FOUND
 
@@ -171,8 +170,8 @@ class Reservations(Resource):
     @jwt_required()
     @user_ns.doc(description="Список своих бронирований")
     def get(self):
-        username = get_jwt_identity()
-        user = User.query.filter_by(username=username).first()
+        email = get_jwt_identity()
+        user = get_user_by_email(email)
 
         if not user:
             return {"message": "Пользователь не найден"}, HTTPStatus.UNAUTHORIZED
@@ -210,8 +209,8 @@ class Reservations(Resource):
         email = data.get('email')
         participants_count = data.get('participants_count', 1)
 
-        username = get_jwt_identity()
-        user = User.query.filter_by(username=username).first()
+        email_account = get_jwt_identity()
+        user = get_user_by_email(email_account)
 
         if not user:
             return {"message": "Пользователь не найден"}, HTTPStatus.UNAUTHORIZED
@@ -248,7 +247,7 @@ class Reservations(Resource):
 
         subject = "Подтверждение бронирования экскурсии"
         recipient = email or user.email
-        body = f"""Здравствуйте, {full_name or user.username}!
+        body = f"""Здравствуйте, {full_name or user.email}!
 
         Вы успешно записались на экскурсию:
         Название: {excursion.title if excursion else 'Экскурсия'}
@@ -277,8 +276,8 @@ class Reservations(Resource):
     def delete(self):
         data = request.get_json() or {}
         reservation_id = data.get('reservation_id')
-        username = get_jwt_identity()
-        user = User.query.filter_by(username=username).first()
+        email = get_jwt_identity()
+        user = get_user_by_email(email)
 
         if not user:
             return {"message": "Пользователь не найден"}, HTTPStatus.UNAUTHORIZED

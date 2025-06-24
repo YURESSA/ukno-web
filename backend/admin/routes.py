@@ -28,8 +28,8 @@ def admin_required(fn):
     def wrapper(*args, **kwargs):
         verify_jwt_in_request()
         claims = get_jwt()
-        username = get_jwt_identity()
-        user = get_user_by_username(username)
+        email = get_jwt_identity()
+        user = get_user_by_email(email)
         if claims.get("role") != "admin" or not user:
             return {"message": AuthMessages.AUTH_ACCESS_DENIED}, HTTPStatus.FORBIDDEN
         return fn(*args, **kwargs)
@@ -43,13 +43,13 @@ class AdminLogin(Resource):
     @admin_ns.doc(description="Аутентификация администратора для получения токена доступа")
     def post(self):
         data = request.get_json()
-        username = data.get("username")
+        email = data.get("email")
         password = data.get("password")
-        user = get_user_by_username(username)
+        user = get_user_by_email(email)
         if not user or not user.check_password(password) or user.role.role_name != "admin":
             return {"message": AuthMessages.AUTH_INVALID_CREDENTIALS}, HTTPStatus.UNAUTHORIZED
 
-        access_token = authenticate_user(username, password)
+        access_token = authenticate_user(email, password)
         if access_token:
             return {"access_token": access_token, "role": "admin"}, HTTPStatus.OK
         return {"message": AuthMessages.AUTH_INVALID_CREDENTIALS}, HTTPStatus.UNAUTHORIZED
@@ -61,8 +61,8 @@ class AdminProfile(Resource):
     @admin_required
     @admin_ns.doc(description="Получение информации о пользователе (только для администратора)")
     def get(self):
-        current_username = get_jwt_identity()
-        user = get_user_by_username(current_username)
+        current_email = get_jwt_identity()
+        user = get_user_by_email(current_email)
         return get_user_info_response(user)
 
     @jwt_required()
@@ -70,9 +70,9 @@ class AdminProfile(Resource):
     @admin_ns.expect(change_password_model)
     @admin_ns.doc(description="Изменение пароля администратора")
     def put(self):
-        current_username = get_jwt_identity()
+        current_email = get_jwt_identity()
         data = request.get_json()
-        if change_password(current_username, data.get("old_password"), data.get("new_password")):
+        if change_password(current_email, data.get("old_password"), data.get("new_password")):
             return {"message": AuthMessages.PASSWORD_CHANGED}, HTTPStatus.OK
         return {"message": AuthMessages.PASSWORD_INVALID_OLD}, HTTPStatus.BAD_REQUEST
 
@@ -100,39 +100,39 @@ class AdminUserList(Resource):
         return register_user("user", data, current_role)
 
 
-@admin_ns.route('/users/detail/<string:username>')
+@admin_ns.route('/users/detail/<string:email>')
 class AdminUserDetail(Resource):
     @jwt_required()
     @admin_required
-    @admin_ns.doc(description="Получение информации о пользователе по username (только для администратора)")
-    def get(self, username):
-        user = get_user_by_username(username)
+    @admin_ns.doc(description="Получение информации о пользователе по email (только для администратора)")
+    def get(self, email):
+        user = get_user_by_email(email)
         if user:
             return get_user_info_response(user)
         return {"message": AuthMessages.USER_NOT_FOUND}, HTTPStatus.NOT_FOUND
 
     @jwt_required()
     @admin_required
-    @admin_ns.doc(description="Удаление пользователя по username (только для администратора)")
-    def delete(self, username):
-        if delete_user(username):
+    @admin_ns.doc(description="Удаление пользователя по email (только для администратора)")
+    def delete(self, email):
+        if delete_user(email):
             return {"message": AuthMessages.USER_DELETED}, HTTPStatus.OK
         return {"message": AuthMessages.USER_NOT_FOUND}, HTTPStatus.NOT_FOUND
 
     @jwt_required()
     @admin_required
-    @admin_ns.doc(description="Редактирование пользователя по username (только для администратора)")
-    def put(self, username):
+    @admin_ns.doc(description="Редактирование пользователя по email (только для администратора)")
+    def put(self, email):
         data = request.get_json()
         if not data:
             return {"message": "Пустой JSON"}, HTTPStatus.BAD_REQUEST
 
-        user = get_user_by_username(username)
+        user = get_user_by_email(email)
         if not user:
             return {"message": AuthMessages.USER_NOT_FOUND}, HTTPStatus.NOT_FOUND
 
         try:
-            updated_user = update_user(username, data)
+            updated_user = update_user(email, data)
         except ValueError as e:
             return {"message": str(e)}, HTTPStatus.BAD_REQUEST
 
@@ -156,9 +156,9 @@ class NewsResource(Resource):
         if not all([title, content]):
             return {"message": "Поля title и content обязательны"}, HTTPStatus.BAD_REQUEST
 
-        images = request.files.getlist("image")  # Получаем список файлов
-        username = get_jwt_identity()
-        user = User.query.filter_by(username=username).first()
+        images = request.files.getlist("image")
+        email = get_jwt_identity()
+        user = get_user_by_email(email)
         if not user:
             return {"message": "Пользователь не найден"}, HTTPStatus.NOT_FOUND
 

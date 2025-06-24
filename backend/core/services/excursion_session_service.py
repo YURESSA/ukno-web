@@ -3,8 +3,8 @@ from datetime import datetime
 from flask_jwt_extended import get_jwt_identity
 
 from backend.core import db
-from backend.core.models.auth_models import User
 from backend.core.models.excursion_models import ExcursionSession
+from backend.core.services.auth_service import get_user_by_email
 from backend.core.services.utilits import send_email
 
 
@@ -77,8 +77,8 @@ import csv
 
 
 def delete_excursion_session(excursion_id, session_id):
-    username = get_jwt_identity()
-    user = User.query.filter_by(username=username).first()
+    email = get_jwt_identity()
+    user = get_user_by_email(email)
     deleter_email = user.email
     session = ExcursionSession.query.filter_by(excursion_id=excursion_id, session_id=session_id).first()
     if not session:

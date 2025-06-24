@@ -130,55 +130,47 @@
 <body>
   <div class="login-container">
     <h2>Вход в систему</h2>
-    <form id="loginForm">
-      <div class="mb-3">
-        <label for="username" class="form-label">Имя пользователя</label>
-        <input type="text" class="form-control" id="username" required />
-      </div>
-      <div class="mb-3">
-        <label for="password" class="form-label">Пароль</label>
-        <input type="password" class="form-control" id="password" required />
-      </div>
-      <button type="submit" class="btn btn-primary">Войти</button>
-    </form>
+      <form id="loginForm">
+        <div class="mb-3">
+          <label for="email" class="form-label">Электронная почта</label>
+          <input type="email" class="form-control" id="email" required />
+        </div>
+        <div class="mb-3">
+          <label for="password" class="form-label">Пароль</label>
+          <input type="password" class="form-control" id="password" required />
+        </div>
+        <button type="submit" class="btn btn-primary">Войти</button>
+      </form>
     <div id="errorMsg" class="text-danger mt-3"></div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    const API_LOGIN = '/api/admin/login'; // путь к API логина — подкорректируй под свой
-
+    const API_LOGIN = '/api/admin/login'; // путь к API логина
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const username = document.getElementById('username').value.trim();
+      const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
-
-      // Очистим сообщение об ошибке
       document.getElementById('errorMsg').textContent = '';
 
       try {
         const res = await fetch(API_LOGIN, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password }),
+          body: JSON.stringify({ email, password }),
         });
 
         if (!res.ok) {
-          if (res.status === 401) {
-            document.getElementById('errorMsg').textContent = 'Неверное имя пользователя или пароль';
-          } else {
-            document.getElementById('errorMsg').textContent = 'Ошибка сервера, попробуйте позже';
-          }
+          document.getElementById('errorMsg').textContent =
+            res.status === 401
+              ? 'Неверный email или пароль'
+              : 'Ошибка сервера, попробуйте позже';
           return;
         }
 
         const data = await res.json();
-
-        // Предполагается, что токен приходит в data.access_token, подкорректируй если иначе
         localStorage.setItem('jwt_token', data.access_token);
-
-        // Редирект в админку
         window.location.href = '/admin-panel/';
       } catch (error) {
         document.getElementById('errorMsg').textContent = 'Ошибка сети, попробуйте позже';

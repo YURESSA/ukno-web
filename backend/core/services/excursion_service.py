@@ -4,7 +4,7 @@ from http import HTTPStatus
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
 
-from .auth_service import get_user_by_username
+from .auth_service import get_user_by_email
 from .excursion_photo_service import process_photos, add_photos
 from .excursion_session_service import clear_sessions_and_schedules, add_sessions
 from .utilits import get_model_by_name
@@ -41,7 +41,7 @@ def delete_excursion(excursion_id):
         return False, f"Ошибка при удалении экскурсии: {str(e)}", HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-def create_excursion(data, username, files):
+def create_excursion(data, email, files):
     try:
         category = get_model_by_name(Category, "category_name", data.get("category"), "Категория не найдена")
         format_type = get_model_by_name(FormatType, "format_type_name", data.get("format_type"),
@@ -52,7 +52,7 @@ def create_excursion(data, username, files):
         if not data.get("place"):
             return None, {"message": "Место проведения обязательно"}, HTTPStatus.BAD_REQUEST
 
-        user = get_user_by_username(username)
+        user = get_user_by_email(email)
 
         excursion = Excursion(
             title=data.get("title"),
