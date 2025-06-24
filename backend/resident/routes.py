@@ -22,8 +22,8 @@ def resident_required(fn):
     def wrapper(*args, **kwargs):
         verify_jwt_in_request()
         claims = get_jwt()
-        username = get_jwt_identity()
-        user = get_user_by_username(username)
+        email = get_jwt_identity()
+        user = get_user_by_email(email)
         if claims.get("role") != "resident" or not user:
             return {"message": "Доступ запрещён"}, HTTPStatus.FORBIDDEN
         return fn(*args, **kwargs)
@@ -85,9 +85,9 @@ class ExcursionsResource(Resource):
             return {"message": f"Неверный JSON: {str(e)}"}, HTTPStatus.BAD_REQUEST
 
         files = request.files.getlist("photos")
-        username = get_jwt_identity()
+        email = get_jwt_identity()
 
-        excursion, error, status = create_excursion(data, username, files)
+        excursion, error, status = create_excursion(data, email, files)
         if error:
             return error, status
 
@@ -99,8 +99,8 @@ class ExcursionsResource(Resource):
     @resident_required
     @resident_ns.doc(description="Получение всех экскурсий, созданных текущим резидентом")
     def get(self):
-        resident_username = get_jwt_identity()
-        resident = get_user_by_username(resident_username)
+        resident_email = get_jwt_identity()
+        resident = get_user_by_email(resident_email)
         excursions = get_excursions_for_resident(resident.user_id)
         return {"excursions": [excursion.to_dict() for excursion in excursions]}, HTTPStatus.OK
 
@@ -112,7 +112,7 @@ class ExcursionResource(Resource):
     @resident_ns.doc(description="Обновление экскурсии")
     def patch(self, excursion_id):
         data = request.get_json()
-        resident_id = get_user_by_username(get_jwt_identity()).user_id
+        resident_id = get_user_by_email(get_jwt_identity()).user_id
         excursion, error, status = verify_resident_owns_excursion(resident_id, excursion_id)
         if error:
             return error, status
@@ -124,7 +124,7 @@ class ExcursionResource(Resource):
     @resident_required
     @resident_ns.doc(description="Получение экскурсии с записями")
     def get(self, excursion_id):
-        resident_id = get_user_by_username(get_jwt_identity()).user_id
+        resident_id = get_user_by_email(get_jwt_identity()).user_id
         excursion, error, status = verify_resident_owns_excursion(resident_id, excursion_id)
         if error:
             return error, status
@@ -140,7 +140,7 @@ class ExcursionResource(Resource):
 class ExcursionSessionsResource(Resource):
     @resident_required
     def get(self, excursion_id):
-        resident_id = get_user_by_username(get_jwt_identity()).user_id
+        resident_id = get_user_by_email(get_jwt_identity()).user_id
         excursion, error, status = verify_resident_owns_excursion(resident_id, excursion_id)
         if error:
             return error, status
@@ -150,7 +150,7 @@ class ExcursionSessionsResource(Resource):
     @resident_required
     @resident_ns.expect(session_model, validate=True)
     def post(self, excursion_id):
-        resident_id = get_user_by_username(get_jwt_identity()).user_id
+        resident_id = get_user_by_email(get_jwt_identity()).user_id
         excursion, error, status = verify_resident_owns_excursion(resident_id, excursion_id)
         if error:
             return error, status
@@ -167,7 +167,7 @@ class ExcursionSessionResource(Resource):
     @resident_ns.expect(session_patch_model)
     @resident_ns.doc(description="Обновление конкретной сессии экскурсии")
     def patch(self, excursion_id, session_id):
-        resident_id = get_user_by_username(get_jwt_identity()).user_id
+        resident_id = get_user_by_email(get_jwt_identity()).user_id
         excursion, error, status = verify_resident_owns_excursion(resident_id, excursion_id)
         if error:
             return error, status
@@ -180,7 +180,7 @@ class ExcursionSessionResource(Resource):
     @resident_required
     @resident_ns.doc(description="Удаление конкретной сессии экскурсии")
     def delete(self, excursion_id, session_id):
-        resident_id = get_user_by_username(get_jwt_identity()).user_id
+        resident_id = get_user_by_email(get_jwt_identity()).user_id
         excursion, error, status = verify_resident_owns_excursion(resident_id, excursion_id)
         if error:
             return error, status
@@ -192,7 +192,7 @@ class ExcursionSessionResource(Resource):
 class ExcursionPhotosResource(Resource):
     @resident_required
     def get(self, excursion_id):
-        resident_id = get_user_by_username(get_jwt_identity()).user_id
+        resident_id = get_user_by_email(get_jwt_identity()).user_id
         excursion, error, status = verify_resident_owns_excursion(resident_id, excursion_id)
         if error:
             return error, status
@@ -214,7 +214,7 @@ class ExcursionPhotosResource(Resource):
         }
     )
     def post(self, excursion_id):
-        resident_id = get_user_by_username(get_jwt_identity()).user_id
+        resident_id = get_user_by_email(get_jwt_identity()).user_id
         excursion, error, status = verify_resident_owns_excursion(resident_id, excursion_id)
         if error:
             return error, status
@@ -233,7 +233,7 @@ class ExcursionPhotosResource(Resource):
 class ExcursionPhotoResource(Resource):
     @resident_required
     def delete(self, excursion_id, photo_id):
-        resident_id = get_user_by_username(get_jwt_identity()).user_id
+        resident_id = get_user_by_email(get_jwt_identity()).user_id
         excursion, error, status = verify_resident_owns_excursion(resident_id, excursion_id)
         if error:
             return error, status
@@ -246,6 +246,6 @@ class ExcursionAnalytics(Resource):
     @resident_required
     @resident_ns.doc(description="Аналитика по экскурсиям резидента (кол-во посетителей, популярность и т.д.)")
     def get(self):
-        resident_id = get_jwt_identity()
+        resident_id = get_user_by_email(get_jwt_identity()).user_id
         analytics_data = get_resident_excursion_analytics(resident_id)
         return analytics_data, HTTPStatus.OK

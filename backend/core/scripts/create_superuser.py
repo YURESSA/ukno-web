@@ -10,7 +10,6 @@ from backend.core.models.auth_models import Role, User
 
 def create_superuser():
     print("=== Создание суперпользователя ===")
-    username = input("Имя пользователя: ").strip()
     full_name = input("Полное имя: ").strip()
     email = input("Email: ").strip()
     phone = input("Телефон (необязательно): ").strip()
@@ -21,8 +20,8 @@ def create_superuser():
         print("❌ Пароли не совпадают.")
         return
 
-    if User.query.filter((User.username == username) | (User.email == email)).first():
-        print("❌ Пользователь с таким именем или email уже существует.")
+    if User.query.filter_by(email=email).first():
+        print("❌ Пользователь с таким email уже существует.")
         return
 
     admin_role = Role.query.filter_by(role_name='admin').first()
@@ -31,7 +30,6 @@ def create_superuser():
         return
 
     new_user = User(
-        username=username,
         full_name=full_name,
         email=email,
         phone=phone,
@@ -41,7 +39,7 @@ def create_superuser():
 
     db.session.add(new_user)
     db.session.commit()
-    print(f"✅ Суперпользователь '{username}' успешно создан.")
+    print(f"✅ Суперпользователь с email '{email}' успешно создан.")
 
 if __name__ == '__main__':
     app = create_app()

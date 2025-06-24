@@ -36,6 +36,6 @@ class News(db.Model):
             "author": {
                 "user_id": self.author.user_id,
                 "full_name": self.author.full_name,
-                "username": self.author.username
+                "email": self.author.email
             }
         }

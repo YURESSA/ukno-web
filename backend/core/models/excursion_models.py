@@ -113,7 +113,7 @@ class Excursion(db.Model):
             'category': self.category.to_dict() if self.category else None,
             'format_type': self.format_type.to_dict() if self.format_type else None,
             'age_category': self.age_category.to_dict() if self.age_category else None,
-            'created_by': self.creator.username if self.creator else None,
+            'created_by': self.creator.email if self.creator else None,
             'is_active': self.is_active,
             'place': self.place,
             'conducted_by': self.conducted_by,
