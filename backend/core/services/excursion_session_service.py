@@ -1,11 +1,13 @@
 from datetime import datetime
+from urllib.parse import quote
 
+from flask import make_response
 from flask_jwt_extended import get_jwt_identity
 
 from backend.core import db
 from backend.core.models.excursion_models import ExcursionSession
 from backend.core.services.auth_service import get_user_by_email
-from backend.core.services.utilits import send_email
+from backend.core.services.utilits import send_email, generate_reservations_csv
 
 
 def clear_sessions_and_schedules(excursion):
@@ -72,11 +74,9 @@ def update_excursion_session(excursion_id, session_id, data):
 
 
 from http import HTTPStatus
-from io import StringIO
-import csv
 
 
-def delete_excursion_session(excursion_id, session_id):
+def delete_excursion_session(excursion_id, session_id, notify_resident=True):
     email = get_jwt_identity()
     user = get_user_by_email(email)
     deleter_email = user.email
@@ -86,46 +86,61 @@ def delete_excursion_session(excursion_id, session_id):
 
     active_reservations = [r for r in session.reservations if not r.is_cancelled]
     excursion_name = session.excursion.title if session.excursion else "экскурсии"
-    if active_reservations:
-        for res in active_reservations:
-            send_email(
-                subject="Отмена экскурсионной сессии",
-                recipient=res.email,
-                body=(
-                    f"Здравствуйте, {res.full_name}!\n\n"
-                    f"К сожалению, сессия экскурсии «{excursion_name}» (ID {session_id}), "
-                    f"которая была запланирована на {session.start_datetime.strftime('%d.%m.%Y %H:%M')}, отменена.\n"
-                    "Ваше бронирование было автоматически аннулировано.\n\n"
-                    "Приносим искренние извинения за возможные неудобства.\n"
-                    "Мы будем рады видеть вас на других наших мероприятиях!"
-                )
-            )
 
-        output = StringIO()
-        writer = csv.writer(output)
-        writer.writerow(['Reservation ID', 'Full Name', 'Email', 'Phone Number', 'Participants Count', 'Booked At'])
-        for res in active_reservations:
-            writer.writerow([
-                res.reservation_id,
-                res.full_name,
-                res.email,
-                res.phone_number,
-                res.participants_count,
-                res.booked_at.strftime("%Y-%m-%d %H:%M")
-            ])
-        output.seek(0)
-        csv_data = output.read()
+    # Письма клиентам
+    for res in active_reservations:
         send_email(
-            subject="Список активных резервов после удаления сессии",
-            recipient=deleter_email,
-            body="В приложении вы найдете CSV-файл с информацией об активных резервированиях на удалённой сессии.",
-            attachments=[("active_reservations.csv", csv_data)]
+            subject="Отмена экскурсионной сессии",
+            recipient=res.email,
+            body=(
+                f"Здравствуйте, {res.full_name}!\n\n"
+                f"Сессия экскурсии «{excursion_name}» (ID {session_id}) на {session.start_datetime.strftime('%d.%m.%Y %H:%M')} отменена.\n"
+                "Ваше бронирование автоматически аннулировано.\n\n"
+                "Приносим извинения за возможные неудобства."
+            )
         )
+
+    cancelled_reservations = [
+        {
+            "reservation_id": res.reservation_id,
+            "full_name": res.full_name,
+            "email": res.email,
+            "phone_number": res.phone_number,
+            "participants_count": res.participants_count,
+            "booked_at": res.booked_at.strftime("%Y-%m-%d %H:%M"),
+            "session_datetime": session.start_datetime.strftime("%d.%m.%Y %H:%M"),
+            "excursion_title": excursion_name
+        }
+        for res in active_reservations
+    ]
+
+    if notify_resident and cancelled_reservations:
+        csv_data = generate_reservations_csv(cancelled_reservations)
+        send_email(
+            subject="Список отменённых бронирований по сессии",
+            recipient=deleter_email,
+            body=(
+                f"Сессия экскурсии «{excursion_name}» (ID {session_id}) была удалена.\n"
+                "В приложении — список бронирований, которые были отменены."
+            ),
+            attachments=[("cancelled_reservations.csv", csv_data)]
+        )
+    else:
+        csv_data = None
 
     try:
         db.session.delete(session)
         db.session.commit()
-        return {"message": "Сессия удалена"}, HTTPStatus.NO_CONTENT
+
+        if notify_resident and csv_data:
+            response = make_response(csv_data)
+            filename = f"отмененные_бронирования_сессия_{session_id}.csv"
+            encoded_filename = quote(filename)
+            response.headers["Content-Disposition"] = f"attachment; filename*=UTF-8''{encoded_filename}"
+            response.headers["Content-Type"] = "text/csv; charset=utf-8"
+            return response
+
+        return {"message": "Сессия удалена", "cancelled_reservations": cancelled_reservations}, HTTPStatus.NO_CONTENT
     except Exception as e:
         db.session.rollback()
         return {"message": f"Ошибка при удалении сессии: {str(e)}"}, HTTPStatus.INTERNAL_SERVER_ERROR

@@ -11,7 +11,7 @@ from ..core.schemas.excursion_schemas import *
 from ..core.services.excursion_photo_service import add_photo_to_excursion, get_photos_for_excursion, \
     delete_photo_from_excursion
 from ..core.services.excursion_service import create_excursion, update_excursion, get_excursions_for_resident, \
-    get_resident_excursion_analytics, get_excursion, verify_resident_owns_excursion
+    get_resident_excursion_analytics, get_excursion, verify_resident_owns_excursion, delete_excursion
 from ..core.services.excursion_session_service import create_excursion_session, update_excursion_session, \
     delete_excursion_session, get_sessions_for_excursion
 from ..core.services.profile_service import *
@@ -135,6 +135,17 @@ class ExcursionResource(Resource):
         data = excursion.to_dict(include_related=True)
         return {"excursion": data}, HTTPStatus.OK
 
+    @resident_required
+    @resident_ns.doc(description="Полное удаление экскурсии вместе с сессиями")
+    def delete(self, excursion_id):
+        resident = get_user_by_email(get_jwt_identity())
+
+        excursion, error, status = verify_resident_owns_excursion(resident.user_id, excursion_id)
+        if error:
+            return error, status
+
+        return delete_excursion(excursion_id, resident, return_csv=True)
+
 
 @resident_ns.route('/excursions/<int:excursion_id>/sessions')
 class ExcursionSessionsResource(Resource):
@@ -184,8 +195,7 @@ class ExcursionSessionResource(Resource):
         excursion, error, status = verify_resident_owns_excursion(resident_id, excursion_id)
         if error:
             return error, status
-        result, status = delete_excursion_session(excursion_id, session_id)
-        return result, status
+        return delete_excursion_session(excursion_id, session_id, notify_resident=True)
 
 
 @resident_ns.route('/excursions/<int:excursion_id>/photos')

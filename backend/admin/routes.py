@@ -2,7 +2,7 @@ import json
 import os
 from functools import wraps
 
-from flask import request
+from flask import request, Response
 from flask_jwt_extended import jwt_required, get_jwt, verify_jwt_in_request
 from flask_restx import Resource
 
@@ -351,16 +351,16 @@ class AdminExcursionResource(Resource):
 
     @admin_required
     def delete(self, excursion_id):
-        excursion = get_excursion(excursion_id)
-        if not excursion:
-            return {"message": "Экскурсия не найдена"}, HTTPStatus.NOT_FOUND
+        admin = get_user_by_email(get_jwt_identity())
+        response = delete_excursion(excursion_id, admin, return_csv=True)
 
-        try:
-            delete_excursion(excursion_id)
-        except Exception as e:
-            return {"message": f"Ошибка при удалении экскурсии: {str(e)}"}, HTTPStatus.INTERNAL_SERVER_ERROR
+        # Если это Response (CSV), просто возвращаем его
+        if isinstance(response, Response):
+            return response
 
-        return {"message": "Экскурсия успешно удалена"}, HTTPStatus.NO_CONTENT
+        # Если это обычный (dict, status), то распаковываем и возвращаем
+        result, status = response
+        return result, status
 
 
 @admin_ns.route('/excursions/<int:excursion_id>/sessions')
@@ -393,7 +393,14 @@ class AdminExcursionSessionResource(Resource):
 
     @admin_required
     def delete(self, excursion_id, session_id):
-        result, status = delete_excursion_session(excursion_id, session_id)
+        response = delete_excursion_session(excursion_id, session_id, notify_resident=True)
+
+        # Если вернулся объект Flask Response (например, для скачивания CSV), сразу вернуть его
+        if isinstance(response, Response):
+            return response
+
+        # Иначе — обычный JSON и статус
+        result, status = response
         return result, status
 
 

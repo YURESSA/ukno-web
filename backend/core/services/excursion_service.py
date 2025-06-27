@@ -1,13 +1,14 @@
 from datetime import datetime
 from http import HTTPStatus
 
+from flask import make_response
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
 
 from .auth_service import get_user_by_email
 from .excursion_photo_service import process_photos, add_photos
-from .excursion_session_service import clear_sessions_and_schedules, add_sessions
-from .utilits import get_model_by_name
+from .excursion_session_service import clear_sessions_and_schedules, add_sessions, delete_excursion_session
+from .utilits import get_model_by_name, generate_reservations_csv, send_email, remove_file_if_exists
 from .. import db
 from ..models.excursion_models import Excursion, Category, FormatType, AgeCategory, Tag, Reservation, ExcursionSession
 
@@ -27,18 +28,57 @@ def get_excursions_for_resident(resident_id):
     return Excursion.query.filter_by(created_by=resident_id).all()
 
 
-def delete_excursion(excursion_id):
-    excursion = Excursion.query.get(excursion_id)
+def delete_excursion(excursion_id, resident, return_csv=False):
+    excursion = Excursion.query.filter_by(excursion_id=excursion_id).first()
     if not excursion:
-        return False, "Экскурсия не найдена", HTTPStatus.NOT_FOUND
+        return {"message": "Экскурсия не найдена"}, HTTPStatus.NOT_FOUND
+
+    all_reservations = []
+    sessions = excursion.sessions[:]
+
+    for session in sessions:
+        result, status = delete_excursion_session(excursion_id, session.session_id, notify_resident=False)
+        if status >= 400:
+            db.session.rollback()
+            return {
+                "message": f"Ошибка при удалении сессии ID {session.session_id}: {result.get('message', '')}"
+            }, status
+        all_reservations.extend(result.get("cancelled_reservations", []))
 
     try:
+        for photo in excursion.photos:
+            remove_file_if_exists(photo.photo_url)
+            db.session.delete(photo)
         db.session.delete(excursion)
         db.session.commit()
-        return True, None, HTTPStatus.NO_CONTENT
     except Exception as e:
         db.session.rollback()
-        return False, f"Ошибка при удалении экскурсии: {str(e)}", HTTPStatus.INTERNAL_SERVER_ERROR
+        return {"message": f"Ошибка при удалении экскурсии: {str(e)}"}, HTTPStatus.INTERNAL_SERVER_ERROR
+
+    if all_reservations:
+        csv_data = generate_reservations_csv(all_reservations)
+
+        # Отправка по e-mail
+        send_email(
+            subject="Удалена экскурсия и отменены сессии",
+            recipient=resident.email,
+            body=(
+                f"Здравствуйте!\n\n"
+                f"Экскурсия «{excursion.title}» и все её сессии были удалены.\n"
+                "В приложении — список всех отменённых бронирований.\n"
+                "Спасибо за использование платформы!"
+            ),
+            attachments=[("cancelled_reservations.csv", csv_data)]
+        )
+
+        # Если запрошено — возвращаем CSV как ответ
+        if return_csv:
+            response = make_response(csv_data)
+            response.headers["Content-Disposition"] = "attachment; filename=cancelled_reservations.csv"
+            response.headers["Content-Type"] = "text/csv; charset=utf-8"
+            return response
+
+    return {"message": "Экскурсия и все связанные сессии удалены"}, HTTPStatus.NO_CONTENT
 
 
 def create_excursion(data, email, files):
@@ -134,6 +174,7 @@ def add_tags(excursion, tag_names):
 
 
 from sqlalchemy import asc, desc
+
 
 def verify_resident_owns_excursion(resident_id, excursion_id):
     excursion = Excursion.query.get(excursion_id)
