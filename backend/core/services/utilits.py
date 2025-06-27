@@ -1,7 +1,10 @@
+import csv
 import os
 import uuid
+from io import BytesIO, TextIOWrapper
 
 from flask import current_app
+from flask_mail import Message
 from werkzeug.utils import secure_filename
 
 from backend.core import mail
@@ -42,18 +45,14 @@ def remove_file_if_exists(file_path):
             print(f"Ошибка при удалении файла {file_path}: {e}")
 
 
-from flask_mail import Message
-
-from io import BytesIO
-
-
 def send_email(subject, recipient, body, attachments=None):
     msg = Message(subject=subject, recipients=[recipient], body=body)
 
     if attachments:
-        for filename, content in attachments:
-            data = BytesIO(content.encode('utf-8'))
-            msg.attach(filename, "text/csv", data.read())
+        for filename, content_bytes in attachments:
+            from io import BytesIO
+            data = BytesIO(content_bytes)
+            msg.attach(filename, "text/csv; charset=utf-8", data.read())
 
     mail.send(msg)
 
@@ -88,3 +87,35 @@ def verify_reset_token(token, max_age=3600):
     except Exception:
         return None
     return email
+
+
+def to_str(value):
+    if isinstance(value, bytes):
+        return value.decode('utf-8')
+    return str(value)
+
+
+def generate_reservations_csv(reservations):
+    output = BytesIO()
+    writer_stream = TextIOWrapper(output, encoding='utf-8-sig', newline='')
+
+    writer = csv.writer(writer_stream, delimiter=';')
+    writer.writerow([
+        'ID бронирования', 'ФИО', 'Электронная почта', 'Телефон',
+        'Количество участников', 'Дата бронирования', 'Время сессии', 'Название экскурсии'
+    ])
+    for r in reservations:
+        writer.writerow([
+            to_str(r['reservation_id']),
+            to_str(r['full_name']),
+            to_str(r['email']),
+            to_str(r['phone_number']),
+            to_str(r['participants_count']),
+            to_str(r['booked_at']),
+            to_str(r['session_datetime']),
+            to_str(r['excursion_title'])
+        ])
+
+    writer_stream.flush()
+    output.seek(0)
+    return output.read()
