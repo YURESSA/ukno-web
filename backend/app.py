@@ -2,6 +2,7 @@ import os
 import sys
 
 from flask import send_from_directory, render_template
+from apscheduler.schedulers.background import BackgroundScheduler
 
 from backend.core import create_app, db
 from backend.core.config import Config
@@ -9,6 +10,7 @@ from backend.core.models.auth_models import Role
 from backend.core.models.excursion_models import Category, AgeCategory, FormatType
 from backend.core.scripts.create_superuser import create_superuser
 from backend.core.scripts.ensure_data import ensure_data_exists
+from backend.core.scripts.clear_unpaid import cleanup_unpaid_reservations
 
 
 def seed_reference_data():
@@ -37,8 +39,22 @@ def register_static_routes(app):
         return render_template('login.html', title="Вход в систему")
 
 
+def run_cleanup(app):
+    with app.app_context():
+        cleanup_unpaid_reservations()
+
+
 def main():
     app = create_app()
+
+    # Запускаем планировщик задач
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(func=lambda: run_cleanup(app), trigger="interval", minutes=15,)
+    scheduler.start()
+
+    # Гарантируем корректное завершение планировщика при остановке Flask
+    import atexit
+    atexit.register(lambda: scheduler.shutdown())
 
     if len(sys.argv) > 1:
         cmd = sys.argv[1]
@@ -54,10 +70,16 @@ def main():
             print("Данные успешно посеяны.")
             sys.exit(0)
 
+        elif cmd == "clear_unpaid_reservations":
+            with app.app_context():
+                cleanup_unpaid_reservations()
+            sys.exit(0)
+
     register_static_routes(app)
 
     app.run(debug=True, use_reloader=True)
 
 
 if __name__ == '__main__':
+
     main()

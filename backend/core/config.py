@@ -1,6 +1,7 @@
 import os
 
 from dotenv import load_dotenv
+from yookassa import Configuration
 
 load_dotenv()
 
@@ -42,7 +43,8 @@ class Config:
     MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
     MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
     MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER")
-
+    Configuration.account_id = os.environ.get("ACCOUNT_ID")
+    Configuration.secret_key = os.environ.get("YOOKASSA_SECRET_KEY")
 
 
     PRODUCTION = str_to_bool(os.getenv("PRODUCTION", "False"))

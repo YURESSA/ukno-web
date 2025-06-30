@@ -8,11 +8,12 @@ from sqlalchemy import func
 from backend.core.schemas.auth_schemas import login_model, user_model, change_password_model, edit_profile_model
 from backend.core.services.profile_service import *
 from . import user_ns
-from ..core.models.excursion_models import Reservation, ExcursionSession
+from ..core.models.excursion_models import Reservation, ExcursionSession, Payment
 from ..core.models.news_models import News
 from ..core.schemas.excursion_schemas import reservation_model, cancel_model
 from ..core.services.excursion_service import list_excursions, get_excursion
 from ..core.services.utilits import send_email, send_reset_email, verify_reset_token
+from ..core.services.yookassa_service import create_yookassa_payment
 
 
 @user_ns.route('/register')
@@ -293,6 +294,90 @@ class Reservations(Resource):
         db.session.commit()
 
         return {"message": "Бронирование отменено"}, HTTPStatus.OK
+
+
+@user_ns.route('/v2/reservations')
+class Reservations(Resource):
+    @jwt_required()
+    @user_ns.expect(reservation_model)
+    @user_ns.doc(description="Запись на сеанс экскурсии через оплату")
+    def post(self):
+        data = request.get_json()
+        session_id = data.get('session_id')
+        full_name = data.get('full_name')
+        phone_number = data.get('phone_number')
+        email = data.get('email')
+        participants_count = data.get('participants_count', 1)
+
+        email_account = get_jwt_identity()
+        user = get_user_by_email(email_account)
+        if not user:
+            return {"message": "Пользователь не найден"}, HTTPStatus.UNAUTHORIZED
+
+        if not session_id:
+            return {"message": "session_id is required"}, HTTPStatus.BAD_REQUEST
+
+        session = ExcursionSession.query.get(session_id)
+        if not session:
+            return {"message": "Сеанс не найден"}, HTTPStatus.NOT_FOUND
+
+        # Учитываем только оплаченные и неотменённые брони
+        existing_participants = db.session.query(
+            func.coalesce(func.sum(Reservation.participants_count), 0)
+        ).filter_by(session_id=session_id, is_cancelled=False, is_paid=True).scalar()
+
+        if existing_participants + participants_count > session.max_participants:
+            return {"message": "Недостаточно свободных мест"}, HTTPStatus.BAD_REQUEST
+
+        # Создаём бронь со статусом is_paid=False
+        reservation = Reservation(
+            session_id=session_id,
+            user_id=user.user_id,
+            full_name=full_name,
+            phone_number=phone_number,
+            email=email,
+            participants_count=participants_count,
+            is_paid=False,
+            is_cancelled=False
+        )
+        db.session.add(reservation)
+        db.session.commit()
+
+        amount = session.cost * participants_count
+
+        payment_response = create_yookassa_payment(
+            amount=amount,
+            email=email_account,
+            description=f"Оплата экскурсии «{session.excursion.title}» на {session.start_datetime}",
+            quantity=participants_count,
+            metadata={
+                "reservation_id": reservation.reservation_id,
+                "session_id": session_id,
+                "email": email_account
+            }
+        )
+
+        # Сохраняем платёж
+        payment = Payment(
+            payment_id=payment_response.id,
+            session_id=session_id,
+            reservation_id=reservation.reservation_id,
+            participants_count=participants_count,
+            email=email_account,
+            amount=amount,
+            currency='RUB',
+            status=payment_response.status
+        )
+        db.session.add(payment)
+        db.session.commit()
+
+        return {
+            "message": "Перейдите по ссылке для оплаты",
+            "payment_id": payment.payment_id,
+            "payment_url": payment_response.confirmation.confirmation_url
+        }, HTTPStatus.CREATED
+
+
 
 
 @user_ns.route('/news')

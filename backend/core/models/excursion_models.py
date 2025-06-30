@@ -180,6 +180,7 @@ class ExcursionSession(db.Model):
         cascade="all, delete-orphan",
         lazy=True
     )
+    payments = db.relationship("Payment", back_populates="session")
 
     def __str__(self):
         return f"ExcursionSession(id={self.session_id}, excursion_id={self.excursion_id}, " \
@@ -220,9 +221,11 @@ class Reservation(db.Model):
     email = db.Column(db.String(255), nullable=False)
     participants_count = db.Column(db.Integer, nullable=False, default=1)
     is_cancelled = db.Column(db.Boolean, default=False)
-
+    is_paid = db.Column(db.Boolean, default=False)
+    
     session = db.relationship("ExcursionSession", back_populates="reservations")
     user = db.relationship("User", back_populates="reservations")
+    payment = db.relationship("Payment", back_populates="reservation", uselist=False)
 
     def __str__(self):
         return (f"Reservation(id={self.reservation_id}, session_id={self.session_id}, "
@@ -257,6 +260,28 @@ class Reservation(db.Model):
             'excursion_title': self.session.excursion.title if self.session and self.session.excursion else None,
             'session_start_datetime': self.session.start_datetime.isoformat() if self.session else None,
         }
+
+
+class Payment(db.Model):
+    __tablename__ = 'payments'
+
+    payment_id = db.Column(db.String(100), primary_key=True)
+    reservation_id = db.Column(db.Integer, db.ForeignKey('reservations.reservation_id'), nullable=True)
+
+    session_id = db.Column(db.Integer, db.ForeignKey('excursion_sessions.session_id'), nullable=False)
+    participants_count = db.Column(db.Integer, nullable=False)
+    email = db.Column(db.String(255), nullable=False)
+
+    amount = db.Column(db.Numeric(10, 2), nullable=False)
+    currency = db.Column(db.String(10), default='RUB')
+    status = db.Column(db.String(50), nullable=False, default='pending')
+    method = db.Column(db.String(50), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    paid_at = db.Column(db.DateTime, nullable=True)
+    error_message = db.Column(db.Text, nullable=True)
+
+    reservation = db.relationship("Reservation", back_populates="payment", uselist=False)
+    session = db.relationship("ExcursionSession", back_populates="payments")
 
 
 class Tag(db.Model):
