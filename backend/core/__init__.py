@@ -36,3 +36,6 @@ def register_apps(app):
 
     from backend.references import ref_ns
     api.add_namespace(ref_ns, path='/api/references')
+
+    from backend.webhook import webhook_ns
+    api.add_namespace(webhook_ns, path='/api/webhook')
