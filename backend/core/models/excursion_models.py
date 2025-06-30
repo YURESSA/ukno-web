@@ -222,7 +222,7 @@ class Reservation(db.Model):
     participants_count = db.Column(db.Integer, nullable=False, default=1)
     is_cancelled = db.Column(db.Boolean, default=False)
     is_paid = db.Column(db.Boolean, default=False)
-    
+
     session = db.relationship("ExcursionSession", back_populates="reservations")
     user = db.relationship("User", back_populates="reservations")
     payment = db.relationship("Payment", back_populates="reservation", uselist=False)
@@ -277,8 +277,7 @@ class Payment(db.Model):
     status = db.Column(db.String(50), nullable=False, default='pending')
     method = db.Column(db.String(50), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    paid_at = db.Column(db.DateTime, nullable=True)
-    error_message = db.Column(db.Text, nullable=True)
+
 
     reservation = db.relationship("Reservation", back_populates="payment", uselist=False)
     session = db.relationship("ExcursionSession", back_populates="payments")
