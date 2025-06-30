@@ -49,7 +49,7 @@ def main():
 
     # Запускаем планировщик задач
     scheduler = BackgroundScheduler()
-    scheduler.add_job(func=lambda: run_cleanup(app), trigger="interval", minutes=15,)
+    scheduler.add_job(func=lambda: run_cleanup(app), trigger="interval", minutes=5,)
     scheduler.start()
 
     # Гарантируем корректное завершение планировщика при остановке Flask

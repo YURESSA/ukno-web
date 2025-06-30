@@ -276,7 +276,7 @@ class Payment(db.Model):
     currency = db.Column(db.String(10), default='RUB')
     status = db.Column(db.String(50), nullable=False, default='pending')
     method = db.Column(db.String(50), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
 
     reservation = db.relationship("Reservation", back_populates="payment", uselist=False)
