@@ -6,7 +6,7 @@ from backend.core.models.excursion_models import Reservation
 
 
 def cleanup_unpaid_reservations():
-    threshold = datetime.utcnow() - timedelta(minutes=15)
+    threshold = datetime.now() - timedelta(minutes=15)
     unpaid_old = Reservation.query.filter(
         Reservation.is_paid == False,
         Reservation.booked_at < threshold,
