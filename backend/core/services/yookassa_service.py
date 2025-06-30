@@ -1,6 +1,9 @@
+import uuid
+
+from yookassa import Refund, Payment
+
+
 def create_yookassa_payment(amount, email, description, quantity=1, metadata=None, currency='RUB'):
-    from yookassa import Payment
-    import uuid
 
     try:
         payment = Payment.create({
@@ -10,7 +13,7 @@ def create_yookassa_payment(amount, email, description, quantity=1, metadata=Non
             },
             "confirmation": {
                 "type": "redirect",
-                "return_url": "https://ваш-сайт/оплата/возврат"
+                "return_url": "https://yuressa.uxp.ru/profile"
             },
             "capture": True,
             "description": description,
@@ -18,7 +21,6 @@ def create_yookassa_payment(amount, email, description, quantity=1, metadata=Non
                 "customer": {
                     "email": email
                 },
-                "tax_system_code": 1,
                 "items": [
                     {
                         "description": description,
@@ -41,3 +43,23 @@ def create_yookassa_payment(amount, email, description, quantity=1, metadata=Non
     except Exception as e:
         print(f"Ошибка создания платежа YooKassa: {e}")
         raise e
+
+def refund_yookassa_payment(payment_id: str, amount: float, currency: str = "RUB") -> Refund:
+    """
+    Делает возврат средств через YooKassa.
+
+    :param payment_id: ID платежа в YooKassa
+    :param amount: сумма возврата
+    :param currency: валюта (по умолчанию RUB)
+    :return: объект Refund
+    :raises Exception: если возврат не удался
+    """
+    refund = Refund.create({
+        "payment_id": payment_id,
+        "amount": {
+            "value": f"{amount:.2f}",
+            "currency": currency
+        },
+        "comment": "Возврат за отменённое бронирование"
+    }, uuid.uuid4())
+    return refund

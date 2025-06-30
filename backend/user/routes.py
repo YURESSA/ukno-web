@@ -13,7 +13,7 @@ from ..core.models.news_models import News
 from ..core.schemas.excursion_schemas import reservation_model, cancel_model
 from ..core.services.excursion_service import list_excursions, get_excursion
 from ..core.services.utilits import send_email, send_reset_email, verify_reset_token
-from ..core.services.yookassa_service import create_yookassa_payment
+from ..core.services.yookassa_service import create_yookassa_payment, refund_yookassa_payment
 
 
 @user_ns.route('/register')
@@ -329,7 +329,28 @@ class Reservations(Resource):
         if existing_participants + participants_count > session.max_participants:
             return {"message": "Недостаточно свободных мест"}, HTTPStatus.BAD_REQUEST
 
-        # Создаём бронь со статусом is_paid=False
+        amount = session.cost * participants_count
+
+        if amount == 0:
+            reservation = Reservation(
+                session_id=session_id,
+                user_id=user.user_id,
+                full_name=full_name,
+                phone_number=phone_number,
+                email=email,
+                participants_count=participants_count,
+                is_paid=True,
+                is_cancelled=False
+            )
+            db.session.add(reservation)
+            db.session.commit()
+
+            return {
+                "message": "Бронирование успешно создано (бесплатно)",
+                "reservation_id": reservation.reservation_id,
+            }, HTTPStatus.CREATED
+
+        # Для платной брони создаём запись со статусом is_paid=False
         reservation = Reservation(
             session_id=session_id,
             user_id=user.user_id,
@@ -342,8 +363,6 @@ class Reservations(Resource):
         )
         db.session.add(reservation)
         db.session.commit()
-
-        amount = session.cost * participants_count
 
         payment_response = create_yookassa_payment(
             amount=amount,
@@ -366,7 +385,8 @@ class Reservations(Resource):
             email=email_account,
             amount=amount,
             currency='RUB',
-            status=payment_response.status
+            status=payment_response.status,
+            method=payment_response.payment_method.type
         )
         db.session.add(payment)
         db.session.commit()
@@ -377,7 +397,68 @@ class Reservations(Resource):
             "payment_url": payment_response.confirmation.confirmation_url
         }, HTTPStatus.CREATED
 
+    @jwt_required()
+    @user_ns.expect(cancel_model)
+    @user_ns.doc(description="Отмена своего бронирования с возвратом средств")
+    def delete(self):
+        data = request.get_json() or {}
+        reservation_id = data.get('reservation_id')
+        email = get_jwt_identity()
+        user = get_user_by_email(email)
 
+        if not user:
+            return {"message": "Пользователь не найден"}, HTTPStatus.UNAUTHORIZED
+
+        if not reservation_id:
+            return {"message": "reservation_id is required"}, HTTPStatus.BAD_REQUEST
+
+        reservation = Reservation.query.get(reservation_id)
+        if not reservation or reservation.user_id != user.user_id:
+            return {"message": "Бронирование не найдено или не принадлежит вам"}, HTTPStatus.NOT_FOUND
+
+        if reservation.is_cancelled:
+            return {"message": "Бронирование уже отменено"}, HTTPStatus.BAD_REQUEST
+
+        if reservation.is_paid:
+            if not reservation.payment:
+                return {"message": "Платеж для бронирования не найден"}, HTTPStatus.INTERNAL_SERVER_ERROR
+
+            try:
+                refund_yookassa_payment(reservation.payment.payment_id, float(reservation.payment.amount))
+            except Exception as e:
+                print(f"Ошибка возврата средств YooKassa: {e}")
+                return {"message": "Не удалось сделать возврат средств"}, HTTPStatus.INTERNAL_SERVER_ERROR
+
+        reservation.is_cancelled = True
+        db.session.commit()
+
+        subject = "Отмена бронирования и возврат средств"
+
+        body = (
+            f"Здравствуйте, {reservation.full_name}!\n\n"
+            f"Ваше бронирование №{reservation.reservation_id} на экскурсию "
+            f"«{reservation.session.excursion.title}» на дату "
+            f"{reservation.session.start_datetime.strftime('%d.%m.%Y %H:%M')} было успешно отменено.\n\n"
+            f"Детали бронирования:\n"
+            f"- Количество участников: {reservation.participants_count}\n"
+            f"- ФИО: {reservation.full_name}\n"
+            f"- Контактный телефон: {reservation.phone_number}\n"
+            f"- Электронная почта: {reservation.email}\n\n"
+            f"Сумма возврата: {reservation.payment.amount} {reservation.payment.currency if reservation.payment else 'RUB'}\n"
+            f"Средства будут возвращены на тот же способ оплаты, который вы использовали при покупке.\n\n"
+            f"Если у вас возникли вопросы или вы считаете, что отмена произошла ошибочно, "
+            f"пожалуйста, свяжитесь с нашей службой поддержки.\n\n"
+            f"Спасибо, что выбираете нас!\n"
+            f"С уважением,\n"
+            f"Команда поддержки"
+        )
+
+        try:
+            send_email(subject, user.email, body)
+        except Exception as e:
+            print(f"Ошибка отправки email: {e}")
+
+        return {"message": "Бронирование отменено, средства возвращены"}, HTTPStatus.OK
 
 
 @user_ns.route('/news')
