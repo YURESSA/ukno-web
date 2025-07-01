@@ -8,11 +8,11 @@ from flask_restx import Resource
 from . import resident_ns
 from ..core.schemas.auth_schemas import *
 from ..core.schemas.excursion_schemas import *
-from ..core.services.excursion_photo_service import add_photo_to_excursion, get_photos_for_excursion, \
+from backend.core.services.excursion_services.excursion_photo_service import add_photo_to_excursion, get_photos_for_excursion, \
     delete_photo_from_excursion
-from ..core.services.excursion_service import create_excursion, update_excursion, get_excursions_for_resident, \
+from backend.core.services.excursion_services.excursion_service import create_excursion, update_excursion, get_excursions_for_resident, \
     get_resident_excursion_analytics, get_excursion, verify_resident_owns_excursion, delete_excursion
-from ..core.services.excursion_session_service import create_excursion_session, update_excursion_session, \
+from backend.core.services.excursion_services.excursion_session_service import create_excursion_session, update_excursion_session, \
     delete_excursion_session, get_sessions_for_excursion
 from ..core.services.profile_service import *
 

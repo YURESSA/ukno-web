@@ -11,7 +11,8 @@ from . import user_ns
 from ..core.models.excursion_models import Reservation, ExcursionSession, Payment
 from ..core.models.news_models import News
 from ..core.schemas.excursion_schemas import reservation_model, cancel_model
-from ..core.services.excursion_service import list_excursions, get_excursion
+from ..core.services.email_service import send_reservation_confirmation_email
+from backend.core.services.excursion_services.excursion_service import list_excursions, get_excursion
 from ..core.services.utilits import send_email, send_reset_email, verify_reset_token
 from ..core.services.yookassa_service import create_yookassa_payment, refund_yookassa_payment
 
@@ -344,6 +345,11 @@ class Reservations(Resource):
             )
             db.session.add(reservation)
             db.session.commit()
+
+            try:
+                send_reservation_confirmation_email(reservation, user)
+            except Exception as e:
+                print(f"Ошибка при отправке письма: {e}")
 
             return {
                 "message": "Бронирование успешно создано (бесплатно)",

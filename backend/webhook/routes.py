@@ -1,10 +1,13 @@
+from http import HTTPStatus
+
 from flask import request
 from flask_restx import Resource
-from http import HTTPStatus
 
 from . import webhook_ns
 from ..core import db
+from ..core.models.auth_models import User
 from ..core.models.excursion_models import Reservation, Payment
+from ..core.services.email_service import send_reservation_confirmation_email
 
 
 @webhook_ns.route('/yookassa')
@@ -26,6 +29,11 @@ class YooKassaWebhook(Resource):
             if reservation and not reservation.is_paid:
                 reservation.is_paid = True
                 db.session.commit()
+                try:
+                    user = User.query.get(reservation.user_id)
+                    send_reservation_confirmation_email(reservation, user)
+                except Exception as e:
+                    print(f"Ошибка при отправке письма: {e}")
 
             payment = Payment.query.filter_by(payment_id=payment_id).first()
             if payment:
@@ -44,6 +52,5 @@ class YooKassaWebhook(Resource):
             if payment:
                 payment.status = 'refunded'
                 db.session.commit()
-
 
         return {"message": "Webhook обработан"}, HTTPStatus.OK
