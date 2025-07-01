@@ -38,4 +38,12 @@ class YooKassaWebhook(Resource):
                 payment.status = 'canceled'
                 db.session.commit()
 
+        elif event == 'refund.succeeded':
+            payment_id = object_data.get('payment_id')
+            payment = Payment.query.filter_by(payment_id=payment_id).first()
+            if payment:
+                payment.status = 'refunded'
+                db.session.commit()
+
+
         return {"message": "Webhook обработан"}, HTTPStatus.OK

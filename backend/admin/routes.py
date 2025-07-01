@@ -394,8 +394,6 @@ class AdminExcursionSessionResource(Resource):
     @admin_required
     def delete(self, excursion_id, session_id):
         response = delete_excursion_session(excursion_id, session_id, notify_resident=True)
-
-        # Если вернулся объект Flask Response (например, для скачивания CSV), сразу вернуть его
         if isinstance(response, Response):
             return response
 

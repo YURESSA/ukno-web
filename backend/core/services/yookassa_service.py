@@ -4,7 +4,6 @@ from yookassa import Refund, Payment
 
 
 def create_yookassa_payment(amount, email, description, quantity=1, metadata=None, currency='RUB'):
-
     try:
         payment = Payment.create({
             "amount": {
@@ -45,15 +44,6 @@ def create_yookassa_payment(amount, email, description, quantity=1, metadata=Non
         raise e
 
 def refund_yookassa_payment(payment_id: str, amount: float, currency: str = "RUB") -> Refund:
-    """
-    Делает возврат средств через YooKassa.
-
-    :param payment_id: ID платежа в YooKassa
-    :param amount: сумма возврата
-    :param currency: валюта (по умолчанию RUB)
-    :return: объект Refund
-    :raises Exception: если возврат не удался
-    """
     refund = Refund.create({
         "payment_id": payment_id,
         "amount": {

@@ -8,6 +8,7 @@ from backend.core import db
 from backend.core.models.excursion_models import ExcursionSession
 from backend.core.services.auth_service import get_user_by_email
 from backend.core.services.utilits import send_email, generate_reservations_csv
+from backend.core.services.yookassa_service import refund_yookassa_payment
 
 
 def clear_sessions_and_schedules(excursion):
@@ -87,16 +88,31 @@ def delete_excursion_session(excursion_id, session_id, notify_resident=True):
     active_reservations = [r for r in session.reservations if not r.is_cancelled]
     excursion_name = session.excursion.title if session.excursion else "экскурсии"
 
-    # Письма клиентам
+    refunded = []  # список возвратов
+
     for res in active_reservations:
+        if res.is_paid and res.payment and session.cost > 0 and res.payment.status == "succeeded":
+            try:
+                refund_yookassa_payment(
+                    payment_id=res.payment.payment_id,
+                    amount=float(res.payment.amount),
+                    currency=res.payment.currency
+                )
+                refunded.append(res.reservation_id)
+            except Exception as e:
+                db.session.rollback()
+                return {"message": f"Ошибка возврата по брони {res.reservation_id}: {str(e)}"}, HTTPStatus.BAD_REQUEST
+
+        # Письмо клиенту
         send_email(
             subject="Отмена экскурсионной сессии",
             recipient=res.email,
             body=(
                 f"Здравствуйте, {res.full_name}!\n\n"
                 f"Сессия экскурсии «{excursion_name}» (ID {session_id}) на {session.start_datetime.strftime('%d.%m.%Y %H:%M')} отменена.\n"
-                "Ваше бронирование автоматически аннулировано.\n\n"
-                "Приносим извинения за возможные неудобства."
+                "Ваше бронирование автоматически аннулировано."
+                + ("\nСредства будут возвращены в ближайшее время." if res.payment and res.payment.status == "succeeded" else "")
+                + "\n\nПриносим извинения за возможные неудобства."
             )
         )
 
@@ -116,23 +132,29 @@ def delete_excursion_session(excursion_id, session_id, notify_resident=True):
 
     if notify_resident and cancelled_reservations:
         csv_data = generate_reservations_csv(cancelled_reservations)
-        send_email(
-            subject="Список отменённых бронирований по сессии",
-            recipient=deleter_email,
-            body=(
-                f"Сессия экскурсии «{excursion_name}» (ID {session_id}) была удалена.\n"
-                "В приложении — список бронирований, которые были отменены."
-            ),
-            attachments=[("cancelled_reservations.csv", csv_data)]
-        )
     else:
         csv_data = None
 
     try:
+        # Удаление всех платежей, чтобы не нарушить целостность
+        for res in active_reservations:
+            if res.payment:
+                db.session.delete(res.payment)
+
         db.session.delete(session)
         db.session.commit()
 
         if notify_resident and csv_data:
+            send_email(
+                subject="Список отменённых бронирований по сессии",
+                recipient=deleter_email,
+                body=(
+                    f"Сессия экскурсии «{excursion_name}» (ID {session_id}) была удалена.\n"
+                    "В приложении — список бронирований, которые были отменены."
+                ),
+                attachments=[("cancelled_reservations.csv", csv_data)]
+            )
+            # Также вернуть CSV в ответе
             response = make_response(csv_data)
             filename = f"отмененные_бронирования_сессия_{session_id}.csv"
             encoded_filename = quote(filename)
@@ -140,7 +162,12 @@ def delete_excursion_session(excursion_id, session_id, notify_resident=True):
             response.headers["Content-Type"] = "text/csv; charset=utf-8"
             return response
 
-        return {"message": "Сессия удалена", "cancelled_reservations": cancelled_reservations}, HTTPStatus.NO_CONTENT
+        return {
+            "message": "Сессия удалена",
+            "cancelled_reservations": cancelled_reservations,
+            "refunded": refunded
+        }, HTTPStatus.OK
+
     except Exception as e:
         db.session.rollback()
         return {"message": f"Ошибка при удалении сессии: {str(e)}"}, HTTPStatus.INTERNAL_SERVER_ERROR
