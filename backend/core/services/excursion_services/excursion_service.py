@@ -5,12 +5,12 @@ from flask import make_response
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
 
-from .auth_service import get_user_by_email
-from .excursion_photo_service import process_photos, add_photos
-from .excursion_session_service import clear_sessions_and_schedules, add_sessions, delete_excursion_session
-from .utilits import get_model_by_name, generate_reservations_csv, send_email, remove_file_if_exists
-from .. import db
-from ..models.excursion_models import Excursion, Category, FormatType, AgeCategory, Tag, Reservation, ExcursionSession
+from backend.core.services.auth_service import get_user_by_email
+from backend.core.services.excursion_services.excursion_photo_service import process_photos, add_photos
+from backend.core.services.excursion_services.excursion_session_service import clear_sessions_and_schedules, add_sessions, delete_excursion_session
+from backend.core.services.utilits import get_model_by_name, generate_reservations_csv, send_email, remove_file_if_exists
+from backend.core import db
+from backend.core.models.excursion_models import Excursion, Category, FormatType, AgeCategory, Tag, Reservation, ExcursionSession
 
 
 def get_excursion(excursion_id, resident_id=None):

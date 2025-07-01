@@ -13,14 +13,15 @@ from ..core.models.excursion_models import Reservation
 from ..core.models.news_models import News, NewsImage
 from ..core.schemas.auth_schemas import login_model, change_password_model, user_model
 from ..core.schemas.excursion_schemas import excursion_model, session_model, session_patch_model
-from ..core.services.excursion_photo_service import get_photos_for_excursion, add_photo_to_excursion, \
+from backend.core.services.excursion_services.excursion_photo_service import get_photos_for_excursion, add_photo_to_excursion, \
     delete_photo_from_excursion
-from ..core.services.excursion_service import update_excursion, create_excursion, get_excursion, get_all_excursions, \
+from backend.core.services.excursion_services.excursion_service import update_excursion, create_excursion, get_excursion, get_all_excursions, \
     delete_excursion
-from ..core.services.excursion_session_service import get_sessions_for_excursion, create_excursion_session, \
+from backend.core.services.excursion_services.excursion_session_service import get_sessions_for_excursion, create_excursion_session, \
     update_excursion_session, delete_excursion_session
 from ..core.services.news_service import add_photo_to_news, get_photos_for_news, delete_photo_from_news
-from ..core.services.utilits import save_image, remove_file_if_exists
+from ..core.services.utilits import save_image, remove_file_if_exists, send_email
+from ..core.services.yookassa_service import refund_yookassa_payment
 
 
 def admin_required(fn):
@@ -464,6 +465,54 @@ class AdminReservationDetailResource(Resource):
         reservation = Reservation.query.get(reservation_id)
         if not reservation:
             return {'message': 'Бронь не найдена'}, 404
+
+        user = reservation.user
+        session = reservation.session
+        excursion = session.excursion
+
+        # Если бронь оплачена и есть связанный платёж
+        if reservation.is_paid and reservation.payment:
+            try:
+                refund = refund_yookassa_payment(
+                    payment_id=reservation.payment.payment_id,
+                    amount=reservation.payment.amount,
+                    currency="RUB"
+                )
+
+                if refund.status != "succeeded":
+                    return {
+                        "message": "Не удалось вернуть средства",
+                        "refund_status": refund.status
+                    }, 400
+
+            except Exception as e:
+                return {
+                    "message": "Ошибка при попытке возврата средств",
+                    "error": str(e)
+                }, 500
+
+
+        try:
+            send_email(
+                subject="Бронирование аннулировано",
+                recipient=user.email,
+                body=(
+                        f"Здравствуйте, {user.full_name}!\n\n"
+                        f"Ваше бронирование на экскурсию «{excursion.title}» "
+                        f"(ID сессии: {session.session_id}), запланированную на "
+                        f"{session.start_datetime.strftime('%d.%m.%Y %H:%M')}, было аннулировано администратором.\n"
+                        + (
+                            "\nСредства за бронирование будут возвращены в ближайшее время."
+                            if reservation.payment and reservation.payment.status == "succeeded"
+                            else ""
+                        )
+                        + "\n\nПриносим извинения за возможные неудобства.\n"
+                          "Если у вас возникли вопросы, пожалуйста, свяжитесь с нами по указанным контактам."
+                )
+            )
+
+        except Exception as e:
+            print(f"Ошибка при отправке email: {e}")
 
         try:
             db.session.delete(reservation)
