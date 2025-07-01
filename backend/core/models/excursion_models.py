@@ -268,7 +268,7 @@ class Payment(db.Model):
     payment_id = db.Column(db.String(100), primary_key=True)
     reservation_id = db.Column(db.Integer, db.ForeignKey('reservations.reservation_id'), nullable=True)
 
-    session_id = db.Column(db.Integer, db.ForeignKey('excursion_sessions.session_id'), nullable=False)
+    session_id = db.Column(db.Integer, db.ForeignKey('excursion_sessions.session_id'), nullable=True)
     participants_count = db.Column(db.Integer, nullable=False)
     email = db.Column(db.String(255), nullable=False)
 

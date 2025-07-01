@@ -1,7 +1,9 @@
 import csv
 import os
+import re
 import uuid
 from io import BytesIO, TextIOWrapper
+
 
 from flask import current_app
 from flask_mail import Message
@@ -45,7 +47,15 @@ def remove_file_if_exists(file_path):
             print(f"Ошибка при удалении файла {file_path}: {e}")
 
 
+def is_valid_email(email):
+    # Простая проверка email через regex
+    return bool(re.match(r"[^@]+@[^@]+\.[^@]+", email))
+
 def send_email(subject, recipient, body, attachments=None):
+    if not recipient or not is_valid_email(recipient):
+        print(f"Попытка отправить email на невалидный адрес: {recipient}")
+        return
+
     msg = Message(subject=subject, recipients=[recipient], body=body)
 
     if attachments:
