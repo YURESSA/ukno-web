@@ -1,5 +1,5 @@
 from backend.core.messages import AuthMessages
-from backend.core.services.auth_service import *
+from backend.core.services.user_services.auth_service import *
 
 
 def parse_user_data(data, default_role):

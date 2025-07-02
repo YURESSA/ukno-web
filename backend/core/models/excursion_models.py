@@ -234,19 +234,8 @@ class Reservation(db.Model):
                 f"booked_at={self.booked_at})")
 
     def to_dict(self):
-        return {
-            'reservation_id': self.reservation_id,
-            'session_id': self.session_id,
-            'user_id': self.user_id,
-            'booked_at': self.booked_at.isoformat(),
-            'full_name': self.full_name,
-            'phone_number': self.phone_number,
-            'email': self.email,
-            'participants_count': self.participants_count,
-            'is_cancelled': self.is_cancelled
-        }
-
-    def to_dict_detailed(self):
+        cost = float(self.session.cost) if self.session and self.session.cost is not None else None
+        total = float(cost * self.participants_count) if cost is not None else None
         return {
             'reservation_id': self.reservation_id,
             'session_id': self.session_id,
@@ -257,8 +246,45 @@ class Reservation(db.Model):
             'email': self.email,
             'participants_count': self.participants_count,
             'is_cancelled': self.is_cancelled,
-            'excursion_title': self.session.excursion.title if self.session and self.session.excursion else None,
-            'session_start_datetime': self.session.start_datetime.isoformat() if self.session else None,
+            'is_paid': self.is_paid,
+            'excursion_title': (
+                self.session.excursion.title
+                if self.session and self.session.excursion else None
+            ),
+            'total_cost': total,
+            'payment_status': (
+                self.payment.status
+                if self.payment else 'unpaid'
+            )
+        }
+
+    def to_dict_detailed(self):
+        cost = float(self.session.cost) if self.session and self.session.cost is not None else None
+        total = float(cost * self.participants_count) if cost is not None else None
+        return {
+            'reservation_id': self.reservation_id,
+            'session_id': self.session_id,
+            'user_id': self.user_id,
+            'booked_at': self.booked_at.isoformat(),
+            'full_name': self.full_name,
+            'phone_number': self.phone_number,
+            'email': self.email,
+            'participants_count': self.participants_count,
+            'is_cancelled': self.is_cancelled,
+            'is_paid': self.is_paid,
+            'excursion_title': (
+                self.session.excursion.title
+                if self.session and self.session.excursion else None
+            ),
+            'session_start_datetime': (
+                self.session.start_datetime.isoformat()
+                if self.session else None
+            ),
+            'total_cost': total,
+            'payment_status': (
+                self.payment.status
+                if self.payment else 'unpaid'
+            )
         }
 
 

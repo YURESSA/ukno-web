@@ -14,7 +14,7 @@ from backend.core.services.excursion_services.excursion_service import create_ex
     get_resident_excursion_analytics, get_excursion, verify_resident_owns_excursion, delete_excursion
 from backend.core.services.excursion_services.excursion_session_service import create_excursion_session, update_excursion_session, \
     delete_excursion_session, get_sessions_for_excursion
-from ..core.services.profile_service import *
+from backend.core.services.user_services.profile_service import *
 
 
 def resident_required(fn):

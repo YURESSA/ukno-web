@@ -6,8 +6,9 @@ from flask_jwt_extended import get_jwt_identity
 
 from backend.core import db
 from backend.core.models.excursion_models import ExcursionSession
-from backend.core.services.auth_service import get_user_by_email
-from backend.core.services.utilits import send_email, generate_reservations_csv
+from backend.core.services.user_services.auth_service import get_user_by_email
+from backend.core.services.email_service import send_session_cancellation_email, send_session_deletion_email
+from backend.core.services.utilits import generate_reservations_csv
 from backend.core.services.yookassa_service import refund_yookassa_payment
 
 
@@ -104,17 +105,7 @@ def delete_excursion_session(excursion_id, session_id, notify_resident=True):
                 return {"message": f"Ошибка возврата по брони {res.reservation_id}: {str(e)}"}, HTTPStatus.BAD_REQUEST
 
         # Письмо клиенту
-        send_email(
-            subject="Отмена экскурсионной сессии",
-            recipient=res.email,
-            body=(
-                f"Здравствуйте, {res.full_name}!\n\n"
-                f"Сессия экскурсии «{excursion_name}» (ID {session_id}) на {session.start_datetime.strftime('%d.%m.%Y %H:%M')} отменена.\n"
-                "Ваше бронирование автоматически аннулировано."
-                + ("\nСредства будут возвращены в ближайшее время." if res.payment and res.payment.status == "succeeded" else "")
-                + "\n\nПриносим извинения за возможные неудобства."
-            )
-        )
+        send_session_cancellation_email(reservation=res, excursion_name=excursion_name, session=session)
 
     cancelled_reservations = [
         {
@@ -145,15 +136,8 @@ def delete_excursion_session(excursion_id, session_id, notify_resident=True):
         db.session.commit()
 
         if notify_resident and csv_data:
-            send_email(
-                subject="Список отменённых бронирований по сессии",
-                recipient=deleter_email,
-                body=(
-                    f"Сессия экскурсии «{excursion_name}» (ID {session_id}) была удалена.\n"
-                    "В приложении — список бронирований, которые были отменены."
-                ),
-                attachments=[("cancelled_reservations.csv", csv_data)]
-            )
+            send_session_deletion_email(deleter_email, excursion_name, session_id, csv_data)
+
             # Также вернуть CSV в ответе
             response = make_response(csv_data)
             filename = f"отмененные_бронирования_сессия_{session_id}.csv"
