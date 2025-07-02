@@ -1,16 +1,16 @@
 import os
 import sys
 
-from flask import send_from_directory, render_template
 from apscheduler.schedulers.background import BackgroundScheduler
+from flask import send_from_directory, render_template
 
 from backend.core import create_app, db
 from backend.core.config import Config
 from backend.core.models.auth_models import Role
 from backend.core.models.excursion_models import Category, AgeCategory, FormatType
+from backend.core.scripts.clear_unpaid import cleanup_unpaid_reservations
 from backend.core.scripts.create_superuser import create_superuser
 from backend.core.scripts.ensure_data import ensure_data_exists
-from backend.core.scripts.clear_unpaid import cleanup_unpaid_reservations
 
 
 def seed_reference_data():
@@ -47,12 +47,10 @@ def run_cleanup(app):
 def main():
     app = create_app()
 
-    # Запускаем планировщик задач
     scheduler = BackgroundScheduler()
-    scheduler.add_job(func=lambda: run_cleanup(app), trigger="interval", minutes=5,)
+    scheduler.add_job(func=lambda: run_cleanup(app), trigger="interval", minutes=5, )
     scheduler.start()
 
-    # Гарантируем корректное завершение планировщика при остановке Flask
     import atexit
     atexit.register(lambda: scheduler.shutdown())
 
@@ -81,5 +79,4 @@ def main():
 
 
 if __name__ == '__main__':
-
     main()

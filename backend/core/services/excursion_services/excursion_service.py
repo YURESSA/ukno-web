@@ -5,12 +5,15 @@ from flask import make_response
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
 
-from backend.core.services.auth_service import get_user_by_email
-from backend.core.services.excursion_services.excursion_photo_service import process_photos, add_photos
-from backend.core.services.excursion_services.excursion_session_service import clear_sessions_and_schedules, add_sessions, delete_excursion_session
-from backend.core.services.utilits import get_model_by_name, generate_reservations_csv, send_email, remove_file_if_exists
 from backend.core import db
-from backend.core.models.excursion_models import Excursion, Category, FormatType, AgeCategory, Tag, Reservation, ExcursionSession
+from backend.core.models.excursion_models import Excursion, Category, FormatType, AgeCategory, Tag, Reservation, \
+    ExcursionSession
+from backend.core.services.user_services.auth_service import get_user_by_email
+from backend.core.services.email_service import send_excursion_deletion_email
+from backend.core.services.excursion_services.excursion_photo_service import process_photos, add_photos
+from backend.core.services.excursion_services.excursion_session_service import clear_sessions_and_schedules, \
+    add_sessions, delete_excursion_session
+from backend.core.services.utilits import get_model_by_name, generate_reservations_csv, remove_file_if_exists
 
 
 def get_excursion(excursion_id, resident_id=None):
@@ -58,18 +61,7 @@ def delete_excursion(excursion_id, resident, return_csv=False):
     if all_reservations:
         csv_data = generate_reservations_csv(all_reservations)
 
-        # Отправка по e-mail
-        send_email(
-            subject="Удалена экскурсия и отменены сессии",
-            recipient=resident.email,
-            body=(
-                f"Здравствуйте!\n\n"
-                f"Экскурсия «{excursion.title}» и все её сессии были удалены.\n"
-                "В приложении — список всех отменённых бронирований.\n"
-                "Спасибо за использование платформы!"
-            ),
-            attachments=[("cancelled_reservations.csv", csv_data)]
-        )
+        send_excursion_deletion_email(resident, excursion, csv_data)
 
         # Если запрошено — возвращаем CSV как ответ
         if return_csv:
