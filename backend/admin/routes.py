@@ -1,27 +1,28 @@
 import json
-import os
 from functools import wraps
 
 from flask import request, Response
 from flask_jwt_extended import jwt_required, get_jwt, verify_jwt_in_request
 from flask_restx import Resource
 
-from backend.core.services.profile_service import *
+from backend.core.services.excursion_services.excursion_photo_service import get_photos_for_excursion, \
+    add_photo_to_excursion, \
+    delete_photo_from_excursion
+from backend.core.services.excursion_services.excursion_service import update_excursion, create_excursion, \
+    get_excursion, get_all_excursions, \
+    delete_excursion
+from backend.core.services.excursion_services.excursion_session_service import get_sessions_for_excursion, \
+    create_excursion_session, \
+    update_excursion_session, delete_excursion_session
+from backend.core.services.user_services.profile_service import *
 from . import admin_ns
 from ..core.messages import AuthMessages
-from ..core.models.excursion_models import Reservation
-from ..core.models.news_models import News, NewsImage
 from ..core.schemas.auth_schemas import login_model, change_password_model, user_model
 from ..core.schemas.excursion_schemas import excursion_model, session_model, session_patch_model
-from backend.core.services.excursion_services.excursion_photo_service import get_photos_for_excursion, add_photo_to_excursion, \
-    delete_photo_from_excursion
-from backend.core.services.excursion_services.excursion_service import update_excursion, create_excursion, get_excursion, get_all_excursions, \
-    delete_excursion
-from backend.core.services.excursion_services.excursion_session_service import get_sessions_for_excursion, create_excursion_session, \
-    update_excursion_session, delete_excursion_session
-from ..core.services.news_service import add_photo_to_news, get_photos_for_news, delete_photo_from_news
-from ..core.services.utilits import save_image, remove_file_if_exists, send_email
-from ..core.services.yookassa_service import refund_yookassa_payment
+from ..core.services.news_service import add_photo_to_news, get_photos_for_news, delete_photo_from_news, \
+    create_news_with_images, get_all_news, get_news_by_id, update_news, delete_news
+from ..core.services.reservation_service import delete_reservation_with_refund, get_all_reservations, \
+    get_reservation_by_id
 
 
 def admin_required(fn):
@@ -145,51 +146,19 @@ class NewsResource(Resource):
     @jwt_required()
     @admin_required
     def post(self):
-        if 'data' not in request.form:
-            return {"message": "Поле 'data' обязательно"}, HTTPStatus.BAD_REQUEST
-        try:
-            data = json.loads(request.form['data'])
-        except json.JSONDecodeError as e:
-            return {"message": f"Ошибка в JSON: {str(e)}"}, HTTPStatus.BAD_REQUEST
-
-        title = data.get("title")
-        content = data.get("content")
-        if not all([title, content]):
-            return {"message": "Поля title и content обязательны"}, HTTPStatus.BAD_REQUEST
-
+        data_str = request.form.get("data")
         images = request.files.getlist("image")
-        email = get_jwt_identity()
-        user = get_user_by_email(email)
-        if not user:
-            return {"message": "Пользователь не найден"}, HTTPStatus.NOT_FOUND
+        user_email = get_jwt_identity()
 
-        news = News(
-            title=title,
-            content=content,
-            author_id=user.user_id,
-        )
-        db.session.add(news)
-        db.session.flush()
-
-        for image_file in images:
-            if image_file:
-                image_path = save_image(image_file, "news")
-                news_image = NewsImage(news_id=news.news_id, image_path=image_path)
-                db.session.add(news_image)
-
-        db.session.commit()
-
-        return {
-            "message": "Новость успешно создана",
-            "news_id": news.news_id
-        }, HTTPStatus.CREATED
+        response, status = create_news_with_images(user_email, data_str, images)
+        return response, status
 
     @jwt_required()
     @admin_required
     @admin_ns.doc(description="Получение всех новостей")
     def get(self):
-        news_list = News.query.order_by(News.created_at.desc()).all()
-        return {"news": [n.to_dict() for n in news_list]}, HTTPStatus.OK
+        news_data = get_all_news()
+        return {"news": news_data}, HTTPStatus.OK
 
 
 @admin_ns.route('/news/<int:news_id>')
@@ -198,7 +167,7 @@ class NewsDetailResource(Resource):
     @admin_required
     @admin_ns.doc(description="Получение конкретной новости по ID")
     def get(self, news_id):
-        news = News.query.get(news_id)
+        news = get_news_by_id(news_id)
         if not news:
             return {"message": "Новость не найдена"}, HTTPStatus.NOT_FOUND
         return news.to_dict(), HTTPStatus.OK
@@ -206,56 +175,19 @@ class NewsDetailResource(Resource):
     @jwt_required()
     @admin_required
     def put(self, news_id):
-        news = News.query.get(news_id)
-        if not news:
-            return {"message": "Новость не найдена"}, HTTPStatus.NOT_FOUND
-
-        if 'data' not in request.form:
-            return {"message": "Поле 'data' обязательно"}, HTTPStatus.BAD_REQUEST
-        try:
-            data = json.loads(request.form['data'])
-        except json.JSONDecodeError as e:
-            return {"message": f"Ошибка в JSON: {str(e)}"}, HTTPStatus.BAD_REQUEST
-
-        title = data.get("title")
-        content = data.get("content")
-
-        if title:
-            news.title = title
-        if content:
-            news.content = content
-
-        images = request.files.getlist("image")
-        for image_file in images:
-            if image_file:
-                image_path = save_image(image_file, "news")
-                news_image = NewsImage(news_id=news.news_id, image_path=image_path)
-                db.session.add(news_image)
-
-        db.session.commit()
+        news, error = update_news(news_id, request.form, request.files)
+        if error:
+            return {
+                "message": error}, HTTPStatus.BAD_REQUEST if "JSON" in error or "обязательно" in error else HTTPStatus.NOT_FOUND
         return {"message": "Новость обновлена", "news": news.to_dict()}, HTTPStatus.OK
 
     @jwt_required()
     @admin_required
     @admin_ns.doc(description="Удаление новости по ID (только администратор)")
     def delete(self, news_id):
-        news = News.query.get(news_id)
-        if not news:
-            return {"message": "Новость не найдена"}, HTTPStatus.NOT_FOUND
-
-        # Удаляем файлы всех связанных фото
-        for image in news.images:  # news.images - список NewsImage объектов
-            image_path = os.path.join(os.getcwd(), image.image_path)
-            remove_file_if_exists(image_path)
-
-        # Удаляем все связанные записи фото
-        for image in news.images:
-            db.session.delete(image)
-
-        # Удаляем новость
-        db.session.delete(news)
-        db.session.commit()
-
+        success, error = delete_news(news_id)
+        if not success:
+            return {"message": error}, HTTPStatus.NOT_FOUND
         return {"message": "Новость удалена"}, HTTPStatus.OK
 
 
@@ -447,78 +379,21 @@ class AdminExcursionPhotoResource(Resource):
 class AdminReservationsResource(Resource):
     @admin_required
     def get(self):
-        reservations = Reservation.query.all()
-        return {'reservations': [r.to_dict() for r in reservations]}, 200
+        reservations_data = get_all_reservations()
+        return {'reservations': reservations_data}, 200
 
 
 @admin_ns.route('/reservations/<int:reservation_id>')
 class AdminReservationDetailResource(Resource):
     @admin_required
     def get(self, reservation_id):
-        reservation = Reservation.query.get(reservation_id)
-        if not reservation:
+        reservation_data = get_reservation_by_id(reservation_id)
+        if not reservation_data:
             return {'message': 'Бронь не найдена'}, 404
-        return {'reservation': reservation.to_dict_detailed()}, 200
+        return {'reservation': reservation_data}, 200
 
+    @jwt_required()
     @admin_required
     def delete(self, reservation_id):
-        reservation = Reservation.query.get(reservation_id)
-        if not reservation:
-            return {'message': 'Бронь не найдена'}, 404
-
-        user = reservation.user
-        session = reservation.session
-        excursion = session.excursion
-
-        # Если бронь оплачена и есть связанный платёж
-        if reservation.is_paid and reservation.payment:
-            try:
-                refund = refund_yookassa_payment(
-                    payment_id=reservation.payment.payment_id,
-                    amount=reservation.payment.amount,
-                    currency="RUB"
-                )
-
-                if refund.status != "succeeded":
-                    return {
-                        "message": "Не удалось вернуть средства",
-                        "refund_status": refund.status
-                    }, 400
-
-            except Exception as e:
-                return {
-                    "message": "Ошибка при попытке возврата средств",
-                    "error": str(e)
-                }, 500
-
-
-        try:
-            send_email(
-                subject="Бронирование аннулировано",
-                recipient=user.email,
-                body=(
-                        f"Здравствуйте, {user.full_name}!\n\n"
-                        f"Ваше бронирование на экскурсию «{excursion.title}» "
-                        f"(ID сессии: {session.session_id}), запланированную на "
-                        f"{session.start_datetime.strftime('%d.%m.%Y %H:%M')}, было аннулировано администратором.\n"
-                        + (
-                            "\nСредства за бронирование будут возвращены в ближайшее время."
-                            if reservation.payment and reservation.payment.status == "succeeded"
-                            else ""
-                        )
-                        + "\n\nПриносим извинения за возможные неудобства.\n"
-                          "Если у вас возникли вопросы, пожалуйста, свяжитесь с нами по указанным контактам."
-                )
-            )
-
-        except Exception as e:
-            print(f"Ошибка при отправке email: {e}")
-
-        try:
-            db.session.delete(reservation)
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            return {'message': 'Ошибка при удалении брони', 'error': str(e)}, 500
-
-        return {'message': 'Бронирование успешно удалено'}, 200
+        success, message, status_code = delete_reservation_with_refund(reservation_id)
+        return {"message": message}, status_code
