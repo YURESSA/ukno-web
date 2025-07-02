@@ -3,18 +3,16 @@ from datetime import datetime
 from flask import request
 from flask_jwt_extended import jwt_required
 from flask_restx import Resource, fields
-from sqlalchemy import func
 
 from backend.core.schemas.auth_schemas import login_model, user_model, change_password_model, edit_profile_model
-from backend.core.services.profile_service import *
+from backend.core.services.excursion_services.excursion_service import list_excursions, get_excursion
+from backend.core.services.user_services.profile_service import *
 from . import user_ns
-from ..core.models.excursion_models import Reservation, ExcursionSession, Payment
 from ..core.models.news_models import News
 from ..core.schemas.excursion_schemas import reservation_model, cancel_model
-from ..core.services.email_service import send_reservation_confirmation_email
-from backend.core.services.excursion_services.excursion_service import list_excursions, get_excursion
-from ..core.services.utilits import send_email, send_reset_email, verify_reset_token
-from ..core.services.yookassa_service import create_yookassa_payment, refund_yookassa_payment
+from ..core.services.reservation_service import get_reservations_by_user_email, create_reservation_with_payment, \
+    cancel_user_reservation
+from ..core.services.utilits import send_reset_email, verify_reset_token
 
 
 @user_ns.route('/register')
@@ -173,128 +171,13 @@ class Reservations(Resource):
     @user_ns.doc(description="Список своих бронирований")
     def get(self):
         email = get_jwt_identity()
-        user = get_user_by_email(email)
+        reservations, user = get_reservations_by_user_email(email)
 
         if not user:
             return {"message": "Пользователь не найден"}, HTTPStatus.UNAUTHORIZED
-
-        reservations = Reservation.query.filter_by(user_id=user.user_id).all()
-
         return {
-            "reservations": [
-                {
-                    "reservation_id": r.reservation_id,
-                    "excursion_id": r.session.excursion.excursion_id,
-                    "session_id": r.session_id,
-                    "excursion_title": r.session.excursion.title,
-                    "start_datetime": r.session.start_datetime.isoformat(),
-                    "cost": str(r.session.cost),
-                    "booked_at": r.booked_at.isoformat() if r.booked_at else None,
-                    "full_name": r.full_name,
-                    "phone_number": r.phone_number,
-                    "email": r.email,
-                    "participants_count": r.participants_count,
-                    "is_cancelled": r.is_cancelled
-                }
-                for r in reservations
-            ]
+            "reservations": [r.to_dict_detailed() for r in reservations]
         }, HTTPStatus.OK
-
-    @jwt_required()
-    @user_ns.expect(reservation_model)
-    @user_ns.doc(description="Запись на сеанс экскурсии")
-    def post(self):
-        data = request.get_json()
-        session_id = data.get('session_id')
-        full_name = data.get('full_name')
-        phone_number = data.get('phone_number')
-        email = data.get('email')
-        participants_count = data.get('participants_count', 1)
-
-        email_account = get_jwt_identity()
-        user = get_user_by_email(email_account)
-
-        if not user:
-            return {"message": "Пользователь не найден"}, HTTPStatus.UNAUTHORIZED
-
-        if not session_id:
-            return {"message": "session_id is required"}, HTTPStatus.BAD_REQUEST
-
-        session = ExcursionSession.query.get(session_id)
-        if not session:
-            return {"message": "Сеанс не найден"}, HTTPStatus.NOT_FOUND
-
-        existing_participants = db.session.query(
-            func.coalesce(func.sum(Reservation.participants_count), 0)
-        ).filter_by(session_id=session_id, is_cancelled=False).scalar()
-
-        if existing_participants + participants_count > session.max_participants:
-            return {"message": "Недостаточно свободных мест"}, HTTPStatus.BAD_REQUEST
-
-        r = Reservation(
-            session_id=session_id,
-            user_id=user.user_id,
-            full_name=full_name,
-            phone_number=phone_number,
-            email=email,
-            participants_count=participants_count,
-            booked_at=datetime.now(),
-            is_cancelled=False
-        )
-        db.session.add(r)
-        db.session.commit()
-
-        excursion = session.excursion
-        session_time = session.start_datetime.strftime("%d.%m.%Y %H:%M")
-
-        subject = "Подтверждение бронирования экскурсии"
-        recipient = email or user.email
-        body = f"""Здравствуйте, {full_name or user.email}!
-
-        Вы успешно записались на экскурсию:
-        Название: {excursion.title if excursion else 'Экскурсия'}
-        Дата и время: {session_time}
-        Количество участников: {participants_count}
-
-        Место проведения: {excursion.place if excursion else 'уточняется'}
-        Контактный email: {excursion.contact_email if excursion and excursion.contact_email else 'не указан'}
-
-        Спасибо за бронирование!
-        """
-
-        try:
-            send_email(subject, recipient, body)
-        except Exception as e:
-            print(e)
-
-        return {
-            "message": "Бронирование успешно",
-            "reservation_id": r.reservation_id
-        }, HTTPStatus.CREATED
-
-    @jwt_required()
-    @user_ns.expect(cancel_model)
-    @user_ns.doc(description="Отмена своего бронирования")
-    def delete(self):
-        data = request.get_json() or {}
-        reservation_id = data.get('reservation_id')
-        email = get_jwt_identity()
-        user = get_user_by_email(email)
-
-        if not user:
-            return {"message": "Пользователь не найден"}, HTTPStatus.UNAUTHORIZED
-
-        if not reservation_id:
-            return {"message": "reservation_id is required"}, HTTPStatus.BAD_REQUEST
-
-        reservation = Reservation.query.get(reservation_id)
-        if not reservation or reservation.user_id != user.user_id:
-            return {"message": "Бронирование не найдено или не принадлежит вам"}, HTTPStatus.NOT_FOUND
-
-        reservation.is_cancelled = True
-        db.session.commit()
-
-        return {"message": "Бронирование отменено"}, HTTPStatus.OK
 
 
 @user_ns.route('/v2/reservations')
@@ -304,104 +187,17 @@ class Reservations(Resource):
     @user_ns.doc(description="Запись на сеанс экскурсии через оплату")
     def post(self):
         data = request.get_json()
-        session_id = data.get('session_id')
-        full_name = data.get('full_name')
-        phone_number = data.get('phone_number')
-        email = data.get('email')
-        participants_count = data.get('participants_count', 1)
 
-        email_account = get_jwt_identity()
-        user = get_user_by_email(email_account)
-        if not user:
-            return {"message": "Пользователь не найден"}, HTTPStatus.UNAUTHORIZED
-
-        if not session_id:
-            return {"message": "session_id is required"}, HTTPStatus.BAD_REQUEST
-
-        session = ExcursionSession.query.get(session_id)
-        if not session:
-            return {"message": "Сеанс не найден"}, HTTPStatus.NOT_FOUND
-
-        # Учитываем только оплаченные и неотменённые брони
-        existing_participants = db.session.query(
-            func.coalesce(func.sum(Reservation.participants_count), 0)
-        ).filter_by(session_id=session_id, is_cancelled=False, is_paid=True).scalar()
-
-        if existing_participants + participants_count > session.max_participants:
-            return {"message": "Недостаточно свободных мест"}, HTTPStatus.BAD_REQUEST
-
-        amount = session.cost * participants_count
-
-        if amount == 0:
-            reservation = Reservation(
-                session_id=session_id,
-                user_id=user.user_id,
-                full_name=full_name,
-                phone_number=phone_number,
-                email=email,
-                participants_count=participants_count,
-                is_paid=True,
-                is_cancelled=False
-            )
-            db.session.add(reservation)
-            db.session.commit()
-
-            try:
-                send_reservation_confirmation_email(reservation, user)
-            except Exception as e:
-                print(f"Ошибка при отправке письма: {e}")
-
-            return {
-                "message": "Бронирование успешно создано (бесплатно)",
-                "reservation_id": reservation.reservation_id,
-            }, HTTPStatus.CREATED
-
-        # Для платной брони создаём запись со статусом is_paid=False
-        reservation = Reservation(
-            session_id=session_id,
-            user_id=user.user_id,
-            full_name=full_name,
-            phone_number=phone_number,
-            email=email,
-            participants_count=participants_count,
-            is_paid=False,
-            is_cancelled=False
-        )
-        db.session.add(reservation)
-        db.session.commit()
-
-        payment_response = create_yookassa_payment(
-            amount=amount,
-            email=email_account,
-            description=f"Оплата экскурсии «{session.excursion.title}» на {session.start_datetime}",
-            quantity=participants_count,
-            metadata={
-                "reservation_id": reservation.reservation_id,
-                "session_id": session_id,
-                "email": email_account
-            }
+        response, status = create_reservation_with_payment(
+            user_email=get_jwt_identity(),
+            session_id=data.get('session_id'),
+            full_name=data.get('full_name'),
+            phone_number=data.get('phone_number'),
+            email=data.get('email'),
+            participants_count=data.get('participants_count', 1)
         )
 
-        # Сохраняем платёж
-        payment = Payment(
-            payment_id=payment_response.id,
-            session_id=session_id,
-            reservation_id=reservation.reservation_id,
-            participants_count=participants_count,
-            email=email_account,
-            amount=amount,
-            currency='RUB',
-            status=payment_response.status,
-            method=payment_response.payment_method.type
-        )
-        db.session.add(payment)
-        db.session.commit()
-
-        return {
-            "message": "Перейдите по ссылке для оплаты",
-            "payment_id": payment.payment_id,
-            "payment_url": payment_response.confirmation.confirmation_url
-        }, HTTPStatus.CREATED
+        return response, status
 
     @jwt_required()
     @user_ns.expect(cancel_model)
@@ -409,62 +205,13 @@ class Reservations(Resource):
     def delete(self):
         data = request.get_json() or {}
         reservation_id = data.get('reservation_id')
-        email = get_jwt_identity()
-        user = get_user_by_email(email)
 
-        if not user:
-            return {"message": "Пользователь не найден"}, HTTPStatus.UNAUTHORIZED
-
-        if not reservation_id:
-            return {"message": "reservation_id is required"}, HTTPStatus.BAD_REQUEST
-
-        reservation = Reservation.query.get(reservation_id)
-        if not reservation or reservation.user_id != user.user_id:
-            return {"message": "Бронирование не найдено или не принадлежит вам"}, HTTPStatus.NOT_FOUND
-
-        if reservation.is_cancelled:
-            return {"message": "Бронирование уже отменено"}, HTTPStatus.BAD_REQUEST
-
-        if reservation.is_paid:
-            if not reservation.payment:
-                return {"message": "Платеж для бронирования не найден"}, HTTPStatus.INTERNAL_SERVER_ERROR
-
-            try:
-                refund_yookassa_payment(reservation.payment.payment_id, float(reservation.payment.amount))
-            except Exception as e:
-                print(f"Ошибка возврата средств YooKassa: {e}")
-                return {"message": "Не удалось сделать возврат средств"}, HTTPStatus.INTERNAL_SERVER_ERROR
-
-        reservation.is_cancelled = True
-        db.session.commit()
-
-        subject = "Отмена бронирования и возврат средств"
-
-        body = (
-            f"Здравствуйте, {reservation.full_name}!\n\n"
-            f"Ваше бронирование №{reservation.reservation_id} на экскурсию "
-            f"«{reservation.session.excursion.title}» на дату "
-            f"{reservation.session.start_datetime.strftime('%d.%m.%Y %H:%M')} было успешно отменено.\n\n"
-            f"Детали бронирования:\n"
-            f"- Количество участников: {reservation.participants_count}\n"
-            f"- ФИО: {reservation.full_name}\n"
-            f"- Контактный телефон: {reservation.phone_number}\n"
-            f"- Электронная почта: {reservation.email}\n\n"
-            f"Сумма возврата: {reservation.payment.amount} {reservation.payment.currency if reservation.payment else 'RUB'}\n"
-            f"Средства будут возвращены на тот же способ оплаты, который вы использовали при покупке.\n\n"
-            f"Если у вас возникли вопросы или вы считаете, что отмена произошла ошибочно, "
-            f"пожалуйста, свяжитесь с нашей службой поддержки.\n\n"
-            f"Спасибо, что выбираете нас!\n"
-            f"С уважением,\n"
-            f"Команда поддержки"
+        response, status = cancel_user_reservation(
+            user_email=get_jwt_identity(),
+            reservation_id=reservation_id
         )
 
-        try:
-            send_email(subject, user.email, body)
-        except Exception as e:
-            print(f"Ошибка отправки email: {e}")
-
-        return {"message": "Бронирование отменено, средства возвращены"}, HTTPStatus.OK
+        return response, status
 
 
 @user_ns.route('/news')
