@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
+import router from '@/router'
 
 export const baseUrl = 'http://127.0.0.1:5000/'
 
@@ -132,13 +133,13 @@ export const useDataStore = defineStore('data', {
     },
     async PostReservation(jsonData) {
       try {
-        const response = await axios.post(`${baseUrl}/api/user/reservations`, jsonData, {
+        const response = await axios.post(`${baseUrl}/api/user/v2/reservations`, jsonData, {
           headers: {
             Authorization: `Bearer ${this.auth_key}`,
             'Content-Type': 'application/json',
           },
         })
-        console.log('Успешно забронировано:', response.data)
+        window.location.href = response.data.payment_url;
       } catch (error) {
         console.log(this.auth_key)
         console.error('Ошибка при бронировании:', error.response?.data || error.message)

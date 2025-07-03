@@ -165,7 +165,7 @@ const handleSubmit = async () => {
   try {
     await store.PostReservation(JSON.stringify(formData.value));
     alert('Бронирование прошло успешно!');
-    router.push('/');
+    // router.push('/');
   } catch (error) {
     console.error('Ошибка бронировании', error);
   }
