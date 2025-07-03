@@ -8,9 +8,10 @@ cd backend
 if [ ! -d "migrations" ]; then
   echo "Инициализация миграций..."
   flask db init
+  flask db migrate
 fi
 
-flask db migrate
+
 flask db upgrade
 
 cd ..

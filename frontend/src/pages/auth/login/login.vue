@@ -7,12 +7,12 @@
           type="email"
           name="email"
           placeholder="e-mail *"
-          v-model="formData.username"
+          v-model="formData.email"
           required
           autocomplete="email"
           @input="clearError('email')"
         >
-        <span class="error-message" v-if="showErrors && errors.username">{{ errors.username }}</span>
+        <span class="error-message" v-if="showErrors && errors.email">{{ errors.email }}</span>
         <input
           type="password"
           name="password"
@@ -41,12 +41,12 @@ const store = useDataStore();
 const showErrors = ref(false);
 
 const formData = ref({
-  username: '',
+  email: '',
   password: ''
 });
 
 const errors = ref({
-  username: '',
+  email: '',
   password: '',
 });
 
@@ -57,8 +57,8 @@ const clearError = (field) => {
 // Валидация email
 const validateEmail = () => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(formData.value.username)) {
-    errors.value.username = 'Введите корректный email';
+  if (!emailRegex.test(formData.value.email)) {
+    errors.value.email = 'Введите корректный email';
     return false;
   }
   return true;

@@ -7,7 +7,7 @@
           type="username"
           name="username"
           placeholder="e-mail *"
-          v-model="formData.username"
+          v-model="formData.email"
           required
           autocomplete="email"
         >
@@ -35,7 +35,7 @@ import router from '@/router';
 const store = useDataStore();
 
 const formData = ref({
-  username: '',
+  email: '',
   password: ''
 });
 
