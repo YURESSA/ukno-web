@@ -193,22 +193,28 @@ export const useDataStore = defineStore('data', {
     },
     async DeletReservation(jsonData) {
       try {
-        const response = await axios.delete(`${baseUrl}/api/user/reservations`, jsonData, {
+        console.log(jsonData)
+        console.log(`Bearer ${this.auth_key}`)
+        const response = await axios.delete(`${baseUrl}api/user/v2/reservations`, {
           headers: {
             Authorization: `Bearer ${this.auth_key}`,
             'Content-Type': 'application/json',
           },
-        })
+          data: jsonData, // <-- data должен быть внутри config!
+        });
         console.log('Данные бронирования успешно удалены:', response.data)
-        // this.reservationsData = response.data
+        this.reservationsData = this.reservationsData.filter(
+          reservation => reservation.reservation_id !== jsonData.reservation_id
+        );
       } catch (error) {
         console.error(
           'Ошибка при удалении данных бронирования:',
           error.response?.data || error.message,
-        )
-        throw error
+        );
+        throw error;
       }
     },
+
     async PostNewEvent(formData) {
       try {
         const response = await axios.post(`${baseUrl}/api/resident/excursions`, formData, {

@@ -20,10 +20,10 @@
           <div class="card-wrapper">
             <h5>{{ reservation.excursion_title }}</h5>
             <!-- <p>{{ getExcursionDescription(reservation.excursion_id) }}</p> -->
-            <p>{{ formatDateTime(reservation.start_datetime) }} | Старт у фонтана</p>
+            <p>{{ formatDateTime(reservation.session_start_datetime) }} | Старт у фонтана</p>
             <p>Участников: {{ reservation.participants_count }}</p>
             <div class="price">
-              <span>{{ formatPrice(reservation.cost) }} ₽</span>
+              <span>{{ formatPrice(reservation.total_cost) }} ₽</span>
             </div>
             <BaseButton @click="deletReserv(reservation.reservation_id)" class="delet--btn" text="Отменить бронь"/>
           </div>
@@ -50,10 +50,13 @@ const filteredReservations = computed(() => {
   if (!props.reservationsData?.reservations) return []
 
   const now = new Date()
-  return props.reservationsData.reservations.filter(res =>
-    !res.is_cancelled && new Date(res.start_datetime) > now
-  ).sort((a, b) => new Date(a.start_datetime) - new Date(b.start_datetime))
+  console.log(props.reservationsData.reservations)
+  const filterReservations = props.reservationsData.reservations.filter(res =>
+    !res.is_cancelled && new Date(res.session_start_datetime) > now
+  ).sort((a, b) => new Date(a.session_start_datetime) - new Date(b.session_start_datetime))
+  return filterReservations
 })
+
 
 // Форматируем дату и время
 const formatDateTime = (datetime) => {
@@ -68,7 +71,9 @@ const formatPrice = (price) => {
 
 
 async function deletReserv(id){
+
   const delet_id = {reservation_id: id}
+    console.log(delet_id)
   try {
     await store.DeletReservation(JSON.stringify(delet_id));
   } catch (error) {
@@ -82,6 +87,9 @@ async function deletReserv(id){
 .nearest-events {
   width: 70%;
   overflow: visible;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 /* Стили для карусели */
@@ -102,9 +110,24 @@ async function deletReserv(id){
   transform: translateY(-50%)!important;
   top: 50%!important;
   left: 18px!important;
-  background-color: black!important;
+  background-color: none!important;
   width: max-content!important;
   height: max-content!important;
+}
+
+:deep(.n-carousel__slide){
+  top: 50%;
+  left: 50%!important;
+  transform: translateY(-50%) translateX(-40%)!important;
+}
+
+:deep(.n-carousel__dot){
+  background-color: #333333!important;
+}
+
+
+:deep(.n-carousel__dot--active){
+  background-color: #F25C03!important;
 }
 
 .card-wrapper{

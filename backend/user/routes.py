@@ -203,6 +203,7 @@ class Reservations(Resource):
     @user_ns.expect(cancel_model)
     @user_ns.doc(description="Отмена своего бронирования с возвратом средств")
     def delete(self):
+        print(1)
         data = request.get_json() or {}
         reservation_id = data.get('reservation_id')
 

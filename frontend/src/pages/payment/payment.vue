@@ -41,6 +41,7 @@
                 <IconButton class="participants--btn right--btn" type="button" @click="plusParticipants" text="+"/>
               </div>
             </div>
+            <h5>Итого к оплате: {{ formData.participants_count * excursion.sessions[0].cost }}</h5>
             <BaseButton type="submit" class="sumbit--btn" text="Забронировать"/>
             <span class="offer">Нажимая «Забронировать», вы соглашаетесь с условиями приобретения и офертой</span>
           </form>
