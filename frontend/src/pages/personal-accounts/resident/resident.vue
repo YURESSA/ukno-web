@@ -15,7 +15,7 @@
       </div>
     </div>
   </div>
-  <ChangePassword @close="closeChange" v-if="openPasswordModal"/>
+  <ChangePassword @close="closeChange" :role="profileData.role" v-if="openPasswordModal"/>
   <EventsModal @close="closeEvents" v-if="openEventsModal"/>
 </template>
 

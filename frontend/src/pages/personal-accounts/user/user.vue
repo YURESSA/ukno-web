@@ -6,12 +6,14 @@
       <Userdata
         :email="profileData.email"
         :phone="profileData.phone"
+        @open="openChange"
       />
       <NearestEvents :reservationsData="reservationsData"/>
-      <!-- <DefaultButton class="profie__btn" text="История записей"/> -->
+      <DefaultButton class="profie__btn" text="История записей"/>
       <DefaultButton @click="logOut" class="profie__btn" text="Выйти"/>
     </div>
   </div>
+  <ChangePassword @close="closeChange" :role="profileData.role" v-if="openPasswordModal"/>
 </template>
 
 <script setup>
@@ -20,13 +22,15 @@ import Username from '../_shared/username.vue';
 import Userdata from '../_shared/userdata.vue';
 import NearestEvents from './components/nearestEvents.vue';
 import DefaultButton from '@/components/UI/button/DefaultButton.vue';
-import { onMounted, computed } from 'vue';
+import { onMounted, computed, ref } from 'vue';
 import { useDataStore } from '@/stores/counter';
 import router from '@/router';
+import ChangePassword from '../_shared/changePassword.vue';
 
 const store = useDataStore();
 const profileData = computed(() => store.profileData);
 const reservationsData = computed(() => store.reservationsData);
+const openPasswordModal = ref(false);
 
 onMounted(async () => {
   try {
@@ -40,6 +44,16 @@ onMounted(async () => {
 async function logOut(){
   await store.clearTokenRole();
   router.push('/');
+}
+
+function openChange(){
+  document.body.style.overflowY = 'hidden'
+  openPasswordModal.value = true;
+}
+
+function closeChange(){
+  document.body.style.overflowY = 'auto'
+  openPasswordModal.value = false;
 }
 </script>
 

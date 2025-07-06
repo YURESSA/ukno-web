@@ -71,9 +71,9 @@ export const useDataStore = defineStore('data', {
         throw error
       }
     },
-    async PutPassword(jsonData) {
+    async PutPassword(jsonData, url) {
       try {
-        const response = await axios.put(`${baseUrl}/api/resident/profile`, jsonData, {
+        const response = await axios.put(`${baseUrl}${url}`, jsonData, {
           headers: {
             Authorization: `Bearer ${this.auth_key}`,
             'Content-Type': 'application/json',
@@ -191,17 +191,16 @@ export const useDataStore = defineStore('data', {
         throw error
       }
     },
-    async DeletReservation(jsonData) {
+    async DeleteReservation(jsonData) {
       try {
         console.log(jsonData)
         console.log(`Bearer ${this.auth_key}`)
-        const response = await axios.delete(`${baseUrl}api/user/v2/reservations`, {
+        const response = await axios.delete(`${baseUrl}/api/user/v2/reservations`, jsonData, {
           headers: {
             Authorization: `Bearer ${this.auth_key}`,
             'Content-Type': 'application/json',
           },
-          data: jsonData, // <-- data должен быть внутри config!
-        });
+        })
         console.log('Данные бронирования успешно удалены:', response.data)
         this.reservationsData = this.reservationsData.filter(
           reservation => reservation.reservation_id !== jsonData.reservation_id
@@ -210,11 +209,10 @@ export const useDataStore = defineStore('data', {
         console.error(
           'Ошибка при удалении данных бронирования:',
           error.response?.data || error.message,
-        );
-        throw error;
+        )
+        throw error
       }
     },
-
     async PostNewEvent(formData) {
       try {
         const response = await axios.post(`${baseUrl}/api/resident/excursions`, formData, {
@@ -262,6 +260,7 @@ export const useDataStore = defineStore('data', {
     },
   },
   getters: {
+    getProfileData: (state) => state.profileData,
     getExcursions: (state) => state.excursions,
     getExcursionDetail: (state) => state.excursionDetail,
     getResidentEvents: (state) => state.residentExcursions,
