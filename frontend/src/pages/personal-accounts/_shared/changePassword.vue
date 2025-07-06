@@ -40,7 +40,7 @@
         <span class="error-message" v-if="showErrors && errors.passwordConfirmation">{{ errors.passwordConfirmation }}</span>
         <div class="button-wrapper">
           <BaseButton text="Сохранить" />
-          <DefaultButton class="reset-button" text="Сбросить" icon="" />
+          <DefaultButton class="reset-button" text="Сбросить" @click="resetForm" type="button" />
         </div>
       </form>
     </div>
@@ -58,6 +58,10 @@ const store = useDataStore();
 const passwordConfirmation = ref('');
 const showErrors = ref(true);
 const emit = defineEmits(['close']);
+
+const props = defineProps({
+  role: String,
+})
 
 const formData = ref({
   old_password: '',
@@ -105,8 +109,28 @@ const handleSubmit = async () => {
     return;
   }
 
+  let url = ''
+
+  switch(props.role) {
+  case 'user':
+    url = '/api/user/profile/password'
+    break;
+
+  case 'resident':
+    url = '/api/resident/profile'
+    break;
+
+  case 'admin':
+    url = '/api/admin/profile'
+    break;
+
+  default:
+    console.warn(`Неизвестная роль: ${props.role}`);
+    break;
+}
+
   try {
-    await store.PutPassword(JSON.stringify(formData.value));
+    await store.PutPassword(JSON.stringify(formData.value), url);
     alert('Пароль успешно изменён!');
     emit('close')
   } catch (error) {
@@ -118,6 +142,12 @@ const handleSubmit = async () => {
     console.error('Ошибка при смене пароля', error);
   }
 };
+
+function resetForm(){
+  formData.value.old_password = '';
+  formData.value.new_password = '';
+  passwordConfirmation.value = '';
+}
 </script>
 
 <style scoped>
