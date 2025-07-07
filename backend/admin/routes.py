@@ -17,6 +17,7 @@ from backend.core.services.excursion_services.excursion_session_service import g
 from backend.core.services.user_services.profile_service import *
 from . import admin_ns
 from ..core.messages import AuthMessages
+from ..core.models.excursion_models import Reservation
 from ..core.schemas.auth_schemas import login_model, change_password_model, user_model
 from ..core.schemas.excursion_schemas import excursion_model, session_model, session_patch_model
 from ..core.services.news_service import add_photo_to_news, get_photos_for_news, delete_photo_from_news, \
@@ -333,6 +334,14 @@ class AdminExcursionSessionResource(Resource):
         # Иначе — обычный JSON и статус
         result, status = response
         return result, status
+
+    @admin_required
+    def get(self, excursion_id, session_id):
+        reservations = Reservation.query.filter_by(session_id=session_id).all()
+
+        participants = [r.to_dict_detailed() for r in reservations]
+
+        return {'participants': participants}, 200
 
 
 @admin_ns.route('/excursions/<int:excursion_id>/photos')

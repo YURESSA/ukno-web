@@ -70,6 +70,18 @@ document.addEventListener('DOMContentLoaded', () => {
         sessionDatetimeModal.value = '';
         sessionCostModal.value = '';
         sessionMaxParticipantsModal.value = '';
+
+        const label = document.getElementById('sessionModalLabel');
+        label.textContent = 'Добавить сессию';
+
+        const icon = label.previousElementSibling;
+        if (icon && icon.tagName === 'I') icon.style.display = 'inline-block';
+
+        const header = document.querySelector('#sessionModal .modal-header');
+        header.classList.remove('bg-primary', 'bg-opacity-10');
+        header.classList.add('bg-success', 'bg-opacity-10');
+
+        sessionModal.show();
     };
 
 

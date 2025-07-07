@@ -1060,44 +1060,49 @@
 <!-- ===== Модалка: Сессия ===== -->
 <div class="modal fade" id="sessionModal" tabindex="-1" role="dialog"
      aria-labelledby="sessionModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="sessionModalLabel">
-                    <i class="fas fa-calendar-plus"></i> Добавить сессию
+    <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+        <div class="modal-content shadow-sm border-0 rounded-4">
+            <div class="modal-header bg-success bg-opacity-10 rounded-top d-flex align-items-center gap-2">
+                <i class="fas fa-calendar-plus text-success fs-4"></i>
+                <h5 class="modal-title fw-bold mb-0" id="sessionModalLabel">
+                    Добавить сессию
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                        aria-label="Закрыть"></button>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Закрыть"></button>
             </div>
+
             <div class="modal-body">
                 <form id="sessionForm">
-                    <!-- Скрытое поле для ID редактируемой сессии -->
                     <input type="hidden" id="editingSessionId"/>
 
                     <div class="mb-3">
-                        <label for="sessionDatetimeModal" class="form-label">
+                        <label for="sessionDatetimeModal" class="form-label fw-semibold">
                             Дата и время
                         </label>
-                        <input type="datetime-local" class="form-control"
-                               id="sessionDatetimeModal" required/>
+                        <input type="datetime-local" class="form-control" id="sessionDatetimeModal" required/>
                     </div>
+
                     <div class="mb-3">
-                        <label for="sessionCostModal" class="form-label">
-                            Стоимость
+                        <label for="sessionCostModal" class="form-label fw-semibold">
+                            Стоимость (₽)
                         </label>
                         <input type="number" step="100" min="0" class="form-control" id="sessionCostModal"
-                               required/>
+                               placeholder="Введите стоимость" required/>
                     </div>
+
                     <div class="mb-3">
-                        <label for="sessionMaxParticipantsModal" class="form-label">
-                            Макс. участников
+                        <label for="sessionMaxParticipantsModal" class="form-label fw-semibold">
+                            Максимум участников
                         </label>
-                        <input type="number" min="1" class="form-control"
-                               id="sessionMaxParticipantsModal" required/>
+                        <input type="number" min="1" class="form-control" id="sessionMaxParticipantsModal"
+                               placeholder="Например, 15" required/>
                     </div>
                 </form>
             </div>
+
             <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Отмена
+                </button>
                 <button type="button" class="btn btn-success" id="saveSessionModalBtn">
                     <i class="fas fa-save"></i> Сохранить
                 </button>
@@ -1105,6 +1110,7 @@
         </div>
     </div>
 </div>
+
 
 <div class="modal fade" id="newsModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -1146,32 +1152,55 @@
     </div>
 </div>
 
-<!-- ===== Модальное окно: Детали бронирования ===== -->
 <div class="modal fade" id="reservationModal" tabindex="-1"
      aria-labelledby="reservationModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow rounded-4">
+            <div class="modal-header bg-primary bg-opacity-10 rounded-top-4 d-flex align-items-center">
+                <i class="fas fa-ticket-alt text-primary fs-4 me-2"></i>
                 <h5 class="modal-title fw-bold mb-0" id="reservationModalLabel">
-                    <i class="fas fa-info-circle"></i> Детали бронирования
+                    Детали бронирования
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"
                         aria-label="Закрыть"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body bg-light bg-opacity-25 px-4 py-3">
                 <!-- Контент для деталей брони будет сюда динамически вставляться -->
-                <div id="reservationDetails">
+                <div id="reservationDetails" class="small">
                     <p>Загрузка данных...</p>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    Закрыть
+            <div class="modal-footer bg-white rounded-bottom-4">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> Закрыть
                 </button>
             </div>
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="participantsModal" tabindex="-1" aria-labelledby="participantsModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary bg-opacity-10 rounded-top d-flex align-items-center gap-2">
+                <i class="fas fa-user-circle text-primary fs-4"></i>
+                <h5 class="modal-title fw-bold mb-0">Участник сессии</h5>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+
+            <div class="modal-body">
+                <ul id="participantsList" class="list-group">
+                    <!-- Сюда динамически вставляем участников -->
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <div id="notificationArea" class="position-fixed top-0 end-0 p-3" style="z-index: 1100;"></div>
 

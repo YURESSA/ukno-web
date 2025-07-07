@@ -29,14 +29,7 @@ async function loadExcursions() {
 
     const rows = data.excursions.map(item => ({
         id: item.excursion_id,  // добавляем id
-        cells: [
-            item.excursion_id,
-            item.title,
-            (item.description ? item.description.slice(0, 100) + '...' : ''),
-            item.category?.category_name || '',
-            item.format_type?.format_type_name || '',
-            item.age_category?.age_category_name || '',
-        ],
+        cells: [item.excursion_id, item.title, (item.description ? item.description.slice(0, 100) + '...' : ''), item.category?.category_name || '', item.format_type?.format_type_name || '', item.age_category?.age_category_name || '',],
         actions: `
           <button class="btn btn-outline-danger btn-sm btn-delete-excursion" data-id="${item.excursion_id}">
             <i class="fas fa-trash"></i> Удалить
@@ -134,13 +127,7 @@ function getChangedFields() {
     const updated = collectExcursionFormData();
     const changed = {};
 
-    const fieldsToCheck = [
-        'title', 'description', 'duration', 'place', 'conducted_by',
-        'working_hours', 'contact_email', 'iframe_url',
-        'telegram', 'vk', 'distance_to_center', 'time_to_nearest_stop',
-        'is_active',
-        'category', 'format_type', 'age_category'
-    ];
+    const fieldsToCheck = ['title', 'description', 'duration', 'place', 'conducted_by', 'working_hours', 'contact_email', 'iframe_url', 'telegram', 'vk', 'distance_to_center', 'time_to_nearest_stop', 'is_active', 'category', 'format_type', 'age_category'];
 
     for (const field of fieldsToCheck) {
         const original = originalExcursionData[field];
@@ -172,13 +159,32 @@ function getChangedFields() {
 }
 
 function openSessionModalForEdit(session) {
-    excursionModal.hide()
+    excursionModal.hide();
+    console.log(session);
+    // Заполнение полей
     document.getElementById('editingSessionId').value = session.session_id;
     document.getElementById('sessionDatetimeModal').value = session.start_datetime.slice(0, 16);
     document.getElementById('sessionCostModal').value = session.cost;
     document.getElementById('sessionMaxParticipantsModal').value = session.max_participants;
+
+    // Обновляем только текст заголовка
+    const label = document.getElementById('sessionModalLabel');
+    label.innerHTML = `<i class="fas fa-pen-to-square text-primary fs-4 me-2"></i> Редактировать сессию`;
+
+    // Скрываем иконку, если она есть (она вне заголовка)
+    const icon = label.previousElementSibling;
+    if (icon && icon.tagName === 'I') {
+        icon.style.display = 'none';
+    }
+
+    // Меняем фон
+    const header = document.querySelector('#sessionModal .modal-header');
+    header.classList.remove('bg-success', 'bg-opacity-10');
+    header.classList.add('bg-primary', 'bg-opacity-10');
+
     sessionModal.show();
 }
+
 
 async function deleteSession(sessionId) {
     if (!confirm('Удалить сессию?')) return;
@@ -353,11 +359,104 @@ const renderSessions = (sessions) => {
         deleteBtn.className = 'btn btn-sm btn-outline-danger ms-1';
         deleteBtn.onclick = () => deleteSession(s.session_id);
 
+        const participantsBtn = document.createElement('button');
+        participantsBtn.textContent = '👥';
+        participantsBtn.className = 'btn btn-sm btn-outline-info ms-1';
+        participantsBtn.title = 'Показать участников';
+        participantsBtn.onclick = () => showSessionParticipants(currentExcursionId, s.session_id);
+
         p.appendChild(editBtn);
         p.appendChild(deleteBtn);
+        p.appendChild(participantsBtn);
         sessionsDiv.appendChild(p);
     });
 };
+
+
+const participantsModalEl = document.getElementById('participantsModal');
+const participantsModal = new bootstrap.Modal(participantsModalEl);
+const participantsList = document.getElementById('participantsList');
+
+participantsModalEl.addEventListener('hidden.bs.modal', () => {
+    excursionModal.show();
+});
+
+async function showSessionParticipants(excursion_id, session_id) {
+    const modals = document.querySelectorAll('.modal.show');
+    modals.forEach(m => {
+        if (m !== participantsModalEl) {
+            bootstrap.Modal.getInstance(m)?.hide();
+        }
+    });
+
+    participantsList.innerHTML = '<li class="list-group-item text-center text-muted">Загрузка...</li>';
+    participantsModal.show();
+
+    try {
+        const response = await fetchWithAuth(`/api/admin/excursions/${excursion_id}/sessions/${session_id}`);
+        if (!response.ok) throw new Error('Ошибка загрузки участников');
+
+        const data = await response.json();
+        // Фильтруем только НЕ отменённых участников
+        const participants = (data.participants || []).filter(p => !p.is_cancelled);
+
+        if (participants.length === 0) {
+            participantsList.innerHTML = '<li class="list-group-item text-center text-muted">Участников нет.</li>';
+            return;
+        }
+
+        participantsList.innerHTML = '';
+        participants.forEach(user => {
+    const li = document.createElement('li');
+    li.className = 'list-group-item';
+
+    const bookedAtDate = new Date(user.booked_at);
+    const bookedAtStr = bookedAtDate.toLocaleString();
+
+    const paymentClass = user.is_paid ? 'text-success' : 'text-warning';
+    const paymentText = user.is_paid ? 'Оплачено' : 'Не оплачено';
+
+    const cancelClass = user.is_cancelled ? 'text-danger' : 'text-secondary';
+    const cancelText = user.is_cancelled ? 'Отменена' : 'Активна';
+
+    li.innerHTML = `
+      <div class="participant-info">
+        <p><strong>${user.full_name}</strong> (${user.email || 'нет email'})</p>
+        <p>Телефон: ${user.phone_number || 'нет номера'}</p>
+        <p>Забронировано: ${bookedAtStr}</p>
+        <p>Сумма оплаты: <strong>${user.total_cost} руб.</strong></p>
+        <p>Кол-во участников: <strong>${user.participants_count}</strong></p>
+        <p>Статус оплаты: <span class="${paymentClass} participant-status">${paymentText}</span></p>
+        <p>Статус брони: <span class="${cancelClass} participant-status">${cancelText}</span></p>
+      </div>
+      <div class="participant-actions">
+        <button class="btn btn-sm btn-danger">Удалить</button>
+      </div>
+    `;
+
+    li.querySelector('button').onclick = async () => {
+        if (!confirm(`Удалить бронь участника ${user.full_name}?`)) return;
+
+        try {
+            const delResp = await fetchWithAuth(`/api/admin/reservations/${user.reservation_id}`, {
+                method: 'DELETE',
+            });
+            if (!delResp.ok) throw new Error('Ошибка удаления брони');
+            li.remove();
+        } catch (err) {
+            alert(`Ошибка: ${err.message}`);
+        }
+    };
+
+    participantsList.appendChild(li);
+});
+
+
+
+    } catch (error) {
+        participantsList.innerHTML = `<li class="list-group-item text-danger text-center">Ошибка: ${error.message}</li>`;
+    }
+}
 
 
 document.getElementById('modalSave').onclick = async () => {
@@ -383,8 +482,7 @@ document.getElementById('modalSave').onclick = async () => {
 
         try {
             const res = await fetchWithAuth(`${API_BASE}/excursions`, {
-                method: 'POST',
-                body: formData,
+                method: 'POST', body: formData,
             });
 
             if (!res.ok) {
@@ -417,9 +515,7 @@ document.getElementById('modalSave').onclick = async () => {
 
         try {
             const res = await fetchWithAuth(`${API_BASE}/excursions/${currentExcursionId}`, {
-                method: 'PATCH',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(changes),
+                method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(changes),
             });
 
             if (!res.ok) {
@@ -455,8 +551,7 @@ btnAddPhoto.onclick = async () => {
             formData.append('photo', file); // ключ 'photo' как было раньше
 
             const res = await fetchWithAuth(`${API_BASE}/excursions/${currentExcursionId}/photos`, {
-                method: 'POST',
-                body: formData,
+                method: 'POST', body: formData,
             });
 
             if (!res.ok) {
@@ -524,15 +619,11 @@ document.getElementById('saveSessionModalBtn').addEventListener('click', async (
     // Если экскурсия уже создана, делаем запросы к API
 
     const method = sessionId ? 'PATCH' : 'POST';
-    const url = sessionId
-        ? `/api/admin/excursions/${currentExcursionId}/sessions/${sessionId}`
-        : `/api/admin/excursions/${currentExcursionId}/sessions`;
+    const url = sessionId ? `/api/admin/excursions/${currentExcursionId}/sessions/${sessionId}` : `/api/admin/excursions/${currentExcursionId}/sessions`;
 
     try {
         const res = await fetchWithAuth(url, {
-            method,
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(sessionData),
+            method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(sessionData),
         });
 
         if (!res.ok) {
@@ -653,8 +744,7 @@ async function handleFiles(files) {
             formData.append('photo', file);
 
             const res = await fetchWithAuth(`${API_BASE}/excursions/${currentExcursionId}/photos`, {
-                method: 'POST',
-                body: formData,
+                method: 'POST', body: formData,
             });
 
             if (!res.ok) {
