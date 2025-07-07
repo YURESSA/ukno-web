@@ -27,7 +27,7 @@ async function loadNewsTable() {
     // Назначение обработчиков клика по строке
     document.querySelectorAll('#excursionsTable tbody tr').forEach(row => {
         row.onclick = async (e) => {
-            if (e.target.closest('button')) return;
+            if (e.target.closest('button')) return; // если нажали на кнопку — не открываем
 
             const id = row.getAttribute('data-id');
             if (!id) return;
@@ -39,38 +39,60 @@ async function loadNewsTable() {
             }
 
             const data = await res.json();
-            showNewsModal(data);
+            await showNewsModal(data); // передаём объект новости
         };
     });
 }
 
+const newsModalEl = document.getElementById('newsModal');
+const newsModal = new bootstrap.Modal(newsModalEl);
+
 async function showNewsModal(news) {
-    currentNewsId = news.news_id;
-    document.querySelector('#newsModalTitle').textContent = 'Редактировать новость';
-    document.querySelector('#newsTitle').value = news.title;
-    document.querySelector('#newsContent').value = news.content;
-    document.querySelector('#newsPhotoUpload').value = '';
+    const header = document.getElementById('newsModalHeader');
+    const icon = document.getElementById('newsModalIcon');
+    const text = document.getElementById('newsModalText');
 
-    const previewContainer = document.querySelector('#newsPhotoPreview');
-    previewContainer.innerHTML = '';
+    if (!news) {
+        currentNewsId = null;
+        text.textContent = 'Создать новость';
 
-    const photos = await loadNewsPhotos(news.news_id);
-    photos.forEach(photo => {
-        addPhotoToPreview(previewContainer, photo, news.news_id);
-    });
+        // Зеленый фон с прозрачностью
+        header.className = 'modal-header bg-success bg-opacity-10 rounded-top';
 
-    const modal = new bootstrap.Modal(document.getElementById('newsModal'));
-    modal.show();
-}
+        // Зеленая иконка
+        icon.className = 'fas fa-plus-circle fs-4 text-success';
 
-async function loadNewsPhotos(newsId) {
-    const res = await fetchWithAuth(`${API_BASE}/news/${newsId}/photos`);
-    if (res.ok) {
-        const data = await res.json();
-        return data.photos;
+        // Черный текст всегда
+        text.className = '';
+    } else {
+        currentNewsId = news.news_id;
+        text.textContent = 'Редактировать новость';
+
+        // Синий фон с прозрачностью (например)
+        header.className = 'modal-header bg-primary bg-opacity-10 rounded-top';
+
+        // Синяя иконка
+        icon.className = 'fas fa-newspaper fs-4 text-primary';
+
+        // Черный текст всегда
+        text.className = '';
     }
-    return [];
+
+    document.querySelector('#newsTitle').value = news ? news.title : '';
+    document.querySelector('#newsContent').value = news ? news.content : '';
+    document.querySelector('#newsPhotoUpload').value = '';
+    document.querySelector('#newsPhotoPreview').innerHTML = '';
+
+    if (news) {
+        const photos = await loadNewsPhotos(news.news_id);
+        const previewContainer = document.querySelector('#newsPhotoPreview');
+        photos.forEach(photo => addPhotoToPreview(previewContainer, photo, news.news_id));
+    }
+
+    newsModal.show();
 }
+
+
 
 function addPhotoToPreview(container, photo, newsId) {
     const wrapper = document.createElement('div');
@@ -189,10 +211,11 @@ document.addEventListener('click', async (e) => {
     }
 });
 
-document.getElementById('btnUploadPhoto').addEventListener('click', async () => {
+document.getElementById('btnUploadPhotoNews').addEventListener('click', async () => {
     const input = document.getElementById('newsPhotoUpload');
-    const files = input.files;
-    if (!files.length) {
+    const files = Array.from(input.files);
+
+    if (files.length === 0) {
         showNotification('Выберите фото для загрузки', 'warning');
         return;
     }
@@ -202,23 +225,19 @@ document.getElementById('btnUploadPhoto').addEventListener('click', async () => 
         return;
     }
 
-    const photoFile = files[0];
-    try {
-        const res = await addPhotoToNews(currentNewsId, photoFile);
-        if (res) {
-            showNotification('Фото успешно добавлено', 'success');
-            const previewContainer = document.querySelector('#newsPhotoPreview');
-            // Перезагрузим все фото с сервера
-            const photos = await loadNewsPhotos(currentNewsId);
-            previewContainer.innerHTML = '';
-            photos.forEach(photo => addPhotoToPreview(previewContainer, photo, currentNewsId));
-            input.value = ''; // очистить выбор файла
-        }
-    } catch (e) {
-        showNotification('Ошибка при добавлении фото', 'danger');
-        console.error(e);
+    for (const photoFile of files) {
+        await addPhotoToNews(currentNewsId, photoFile);
     }
+
+    showNotification('Фото успешно добавлены', 'success');
+
+    const previewContainer = document.querySelector('#newsPhotoPreview');
+    const photos = await loadNewsPhotos(currentNewsId);
+    previewContainer.innerHTML = '';
+    photos.forEach(photo => addPhotoToPreview(previewContainer, photo, currentNewsId));
+    input.value = ''; // очистить выбор файла
 });
+
 
 document.getElementById('saveNewsBtn').addEventListener('click', async () => {
     const title = document.getElementById('newsTitle').value.trim();
@@ -272,7 +291,7 @@ document.getElementById('saveNewsBtn').addEventListener('click', async () => {
 
 async function updateNews(newsId, title, content) {
     const formData = new FormData();
-    formData.append('data', JSON.stringify({ title, content }));
+    formData.append('data', JSON.stringify({title, content}));
 
     const res = await fetchWithAuth(`${API_BASE}/news/${newsId}`, {
         method: 'PUT',
@@ -285,3 +304,56 @@ async function updateNews(newsId, title, content) {
         throw new Error('Ошибка обновления новости');
     }
 }
+
+const dropZoneNews = document.getElementById('photoDropZoneNews');
+
+dropZoneNews.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZoneNews.style.backgroundColor = '#e9ecef';
+    dropZoneNews.style.borderColor = '#007bff';
+});
+
+dropZoneNews.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    dropZoneNews.style.backgroundColor = '';
+    dropZoneNews.style.borderColor = '';
+});
+
+
+dropZoneNews.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    dropZoneNews.classList.remove('bg-light');
+
+    if (!currentNewsId) {
+        showNotification('Сначала выберите или создайте новость', 'warning');
+        return;
+    }
+
+    const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+
+    if (files.length === 0) {
+        showNotification('Пожалуйста, перетащите только изображения', 'warning');
+        return;
+    }
+
+    for (const file of files) {
+        await addPhotoToNews(currentNewsId, file);
+    }
+
+    const previewContainer = document.querySelector('#newsPhotoPreview');
+    const photos = await loadNewsPhotos(currentNewsId);
+    previewContainer.innerHTML = '';
+    photos.forEach(photo => addPhotoToPreview(previewContainer, photo, currentNewsId));
+});
+
+newsModalEl.addEventListener('hidden.bs.modal', () => {
+    currentNewsId = null;
+    document.getElementById('newsTitle').value = '';
+    document.getElementById('newsContent').value = '';
+    document.getElementById('newsPhotoUpload').value = '';
+    document.querySelector('#newsPhotoPreview').innerHTML = '';
+});
+
+document.getElementById('btnCreateNews').addEventListener('click', () => {
+    showNewsModal(null); // открываем модалку для создания новости, без новости
+});

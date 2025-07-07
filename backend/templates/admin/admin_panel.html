@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>{{ title }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
@@ -14,19 +14,19 @@
     <style>
         /* ===== Переменные цветов/теней/радиуса ===== */
         :root {
-            --primary: #3b82f6;        /* Blue 500 */
-            --primary-hover: #2563eb;  /* Blue 600 */
-            --success: #10b981;        /* Green 500 */
-            --danger: #ef4444;         /* Red 500 */
-            --warning: #f59e0b;        /* Amber 500 */
-            --info: #0ea5e9;           /* Sky 500 */
-            --bg-light: #f8fafc;       /* Slate 50 */
+            --primary: #3b82f6; /* Blue 500 */
+            --primary-hover: #2563eb; /* Blue 600 */
+            --success: #10b981; /* Green 500 */
+            --danger: #ef4444; /* Red 500 */
+            --warning: #f59e0b; /* Amber 500 */
+            --info: #0ea5e9; /* Sky 500 */
+            --bg-light: #f8fafc; /* Slate 50 */
             --bg-white: #ffffff;
-            --text-dark: #1e293b;      /* Slate 900 */
-            --text-muted: #64748b;     /* Slate 500 */
-            --border-color: #e2e8f0;   /* Slate 200 */
+            --text-dark: #1e293b; /* Slate 900 */
+            --text-muted: #64748b; /* Slate 500 */
+            --border-color: #e2e8f0; /* Slate 200 */
             --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.03),
-                             0 1px 2px rgba(0, 0, 0, 0.02);
+            0 1px 2px rgba(0, 0, 0, 0.02);
             --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.05);
             --radius-sm: 4px;
             --radius-md: 8px;
@@ -49,6 +49,7 @@
         a {
             text-decoration: none;
         }
+
         a:hover {
             text-decoration: none;
         }
@@ -257,6 +258,7 @@
             background: var(--primary);
             color: white;
         }
+
         .btn-primary:hover {
             background: var(--primary-hover);
             color: white;
@@ -266,6 +268,7 @@
             background: var(--success);
             color: white;
         }
+
         .btn-success:hover {
             background: #059669; /* Darker green */
             color: white;
@@ -275,6 +278,7 @@
             background: var(--danger);
             color: white;
         }
+
         .btn-danger:hover {
             background: #dc2626; /* Darker red */
             color: white;
@@ -285,6 +289,7 @@
             color: var(--text-muted);
             background: transparent;
         }
+
         .btn-outline-secondary:hover {
             background: var(--bg-light);
             color: var(--text-dark);
@@ -346,6 +351,7 @@
             background: var(--bg-white);
             font-size: 0.875rem;
         }
+
         .form-control:focus, .form-select:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
@@ -359,12 +365,14 @@
             color: var(--text-muted);
             font-size: 0.9375rem;
         }
+
         .empty-state i {
             font-size: 3rem;
             margin-bottom: 0.75rem;
             opacity: 0.3;
             color: var(--border-color);
         }
+
         .empty-state h3 {
             font-size: 1.375rem;
             font-weight: 600;
@@ -382,6 +390,7 @@
             color: var(--text-muted);
             font-size: 0.9375rem;
         }
+
         .spinner {
             width: 2rem;
             height: 2rem;
@@ -391,9 +400,14 @@
             animation: spin 1s linear infinite;
             margin-bottom: 0.75rem;
         }
+
         @keyframes spin {
-            0%   { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         /* ===== Бейджи для ролей ===== */
@@ -411,15 +425,28 @@
             border-radius: var(--radius-sm);
             text-transform: capitalize;
         }
-        .badge.bg-danger   { background-color: var(--danger)   !important; }
-        .badge.bg-primary  { background-color: var(--primary)  !important; }
-        .badge.bg-success  { background-color: var(--success)  !important; }
-        .badge.bg-secondary { background-color: var(--text-muted) !important; }
+
+        .badge.bg-danger {
+            background-color: var(--danger) !important;
+        }
+
+        .badge.bg-primary {
+            background-color: var(--primary) !important;
+        }
+
+        .badge.bg-success {
+            background-color: var(--success) !important;
+        }
+
+        .badge.bg-secondary {
+            background-color: var(--text-muted) !important;
+        }
 
         /* ===== Специальные стили для Excursion Modal ===== */
         .modal-xl {
             --bs-modal-width: 900px; /* ширина extra large модалки */
         }
+
         .form-group-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -432,6 +459,7 @@
             gap: 0.5rem;
             margin-bottom: 1rem;
         }
+
         .photo-preview {
             position: relative;
             width: 100px;
@@ -440,11 +468,13 @@
             overflow: hidden;
             border: 1px solid var(--border-color);
         }
+
         .photo-preview img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
+
         .photo-preview .remove-photo {
             position: absolute;
             top: 5px;
@@ -462,6 +492,7 @@
             cursor: pointer;
             transition: background 0.2s ease;
         }
+
         .photo-preview .remove-photo:hover {
             background: var(--danger);
         }
@@ -477,14 +508,17 @@
             margin-bottom: 0.5rem;
             font-size: 0.875rem;
         }
+
         .session-item .session-info {
             flex-grow: 1;
             color: var(--text-dark);
         }
+
         .session-item .session-actions {
             display: flex;
             gap: 0.5rem;
         }
+
         .session-item .session-actions .btn-sm {
             padding: 0.3rem 0.5rem;
         }
@@ -499,6 +533,7 @@
             align-items: center;
             gap: 0.5rem;
         }
+
         .tag-item .remove-tag {
             background: none;
             border: none;
@@ -508,6 +543,7 @@
             opacity: 0.8;
             transition: opacity 0.2s ease;
         }
+
         .tag-item .remove-tag:hover {
             opacity: 1;
         }
@@ -520,6 +556,7 @@
             font-size: 0.875rem;
             color: var(--text-muted);
         }
+
         input[type="file"]::-webkit-file-upload-button {
             background: var(--primary);
             color: white;
@@ -532,6 +569,7 @@
             font-size: 0.875rem;
             margin-right: 1rem;
         }
+
         input[type="file"]::-webkit-file-upload-button:hover {
             background: var(--primary-hover);
         }
@@ -541,19 +579,24 @@
             #sidebar {
                 width: 200px;
             }
+
             #mainContent {
                 margin-left: 200px;
             }
+
             .main-header, .content-area {
                 padding: 1rem 1.25rem;
             }
+
             .header-title h1 {
                 font-size: 1.375rem;
             }
+
             .btn {
                 padding: 0.5rem 0.8rem;
                 font-size: 0.8125rem;
             }
+
             .modal-xl {
                 --bs-modal-width: 95%; /* подгонка под небольшой экран */
             }
@@ -565,34 +608,43 @@
                 transition: transform 0.3s ease;
                 box-shadow: none;
             }
+
             #sidebar.show {
                 transform: translateX(0);
                 box-shadow: var(--shadow-card);
             }
+
             #mainContent {
                 margin-left: 0;
             }
+
             .header-content {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 0.75rem;
             }
+
             .header-actions {
                 width: 100%;
                 justify-content: flex-end;
             }
+
             .modal-dialog {
                 margin: 0.5rem;
             }
+
             .modal-body {
                 padding: 1.25rem;
             }
+
             .modal-footer {
                 padding: 1rem 1.25rem;
             }
+
             .table th, .table td {
                 padding: 0.75rem 1rem;
             }
+
             .form-group-grid {
                 grid-template-columns: 1fr; /* все поля одна колонка */
             }
@@ -698,65 +750,62 @@
 </div>
 
 <!-- ===== Модальное окно: Создать пользователя ===== -->
-<div class="modal fade" id="createUserModal" tabindex="-1"
-     aria-labelledby="createUserModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="createUserModalLabel">
-                    <i class="fas fa-user-plus"></i> Создать нового пользователя
+<div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow-sm border-0 rounded-4">
+            <div class="modal-header bg-success bg-opacity-10 rounded-top">
+                <h5 class="modal-title fw-bold mb-0 d-flex align-items-center gap-2" id="createUserModalLabel">
+                    <i class="fas fa-user-plus text-success fs-4"></i>
+                    Создать нового пользователя
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                        aria-label="Закрыть"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
             </div>
-            <form id="createUserForm">
+            <form id="createUserForm" novalidate>
                 <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="email" class="form-label">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="email" class="form-label fw-semibold">
                                 Email <span class="text-danger">*</span>
                             </label>
-                            <input type="email" id="email" class="form-control"
-                                   placeholder="user@example.com" required/>
+                            <input type="email" id="email" class="form-control" placeholder="user@example.com"
+                                   required/>
+                            <div class="invalid-feedback">Пожалуйста, введите корректный Email.</div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="password" class="form-label">
-                                Пароль <span class="text-danger">*</span>
-                            </label>
-                            <input type="password" id="password" class="form-control"
-                                   placeholder="Введите пароль" required/>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="role_name" class="form-label">
+                        <div class="col-md-6">
+                            <label for="role_name" class="form-label fw-semibold">
                                 Роль <span class="text-danger">*</span>
                             </label>
                             <select id="role_name" class="form-select" required>
-                                <option value="">Выберите роль</option>
+                                <option value="" selected disabled>Выберите роль</option>
                                 <option value="user">Пользователь</option>
                                 <option value="resident">Резидент</option>
                                 <option value="admin">Администратор</option>
                             </select>
+                            <div class="invalid-feedback">Пожалуйста, выберите роль.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="password" class="form-label fw-semibold">
+                                Пароль <span class="text-danger">*</span>
+                            </label>
+                            <input type="password" id="password" class="form-control" placeholder="Введите пароль"
+                                   required/>
+                            <div class="invalid-feedback">Пароль обязателен.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="full_name" class="form-label fw-semibold">ФИО</label>
+                            <input type="text" id="full_name" class="form-control" placeholder="Полное имя"/>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label fw-semibold">Телефон</label>
+                            <input type="tel" id="phone" class="form-control" placeholder="+7 (999) 123-45-67"/>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="full_name" class="form-label">ФИО</label>
-                        <input type="text" id="full_name" class="form-control"
-                               placeholder="Полное имя"/>
-                    </div>
-                    <div class="mb-3">
-                        <label for="phone" class="form-label">Телефон</label>
-                        <input type="text" id="phone" class="form-control"
-                               placeholder="+7 (999) 123-45-67"/>
-                    </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary"
-                            data-bs-dismiss="modal">
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
                         <i class="fas fa-times"></i> Отмена
                     </button>
-                    <button type="submit" class="btn btn-success">
+                    <button type="submit" class="btn btn-success d-flex align-items-center gap-2">
                         <i class="fas fa-save"></i> Создать пользователя
                     </button>
                 </div>
@@ -765,63 +814,60 @@
     </div>
 </div>
 
-<div class="modal fade" id="editUserModal" tabindex="-1"
-     aria-labelledby="editUserModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editUserModalLabel">
-                    <i class="fas fa-user-edit"></i> Редактировать пользователя
+<!-- ===== Модальное окно: Редактировать пользователя ===== -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow-sm border-0 rounded-4">
+            <div class="modal-header bg-primary bg-opacity-10 rounded-top">
+                <h5 class="modal-title fw-bold mb-0 d-flex align-items-center gap-2" id="editUserModalLabel">
+                    <i class="fas fa-user-edit text-primary fs-4"></i>
+                    Редактировать пользователя
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                        aria-label="Закрыть"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
             </div>
-            <form id="editUserForm">
+            <form id="editUserForm" novalidate>
                 <div class="modal-body">
-                    <div class="row">
-
-                        <div class="col-md-6 mb-3">
-                            <label for="edit_email" class="form-label">
-                                Email <span class="text-danger">*</span>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="edit_email" class="form-label fw-semibold">
+                                Email
                             </label>
-                            <input type="email" id="edit_email" class="form-control" disabled />
+                            <input type="email" id="edit_email" class="form-control" disabled/>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3" style="display: none;">
-                            <label for="edit_password" class="form-label">
-                                Пароль (оставьте пустым, если не меняете)
-                            </label>
-                            <input type="password" id="edit_password" class="form-control" placeholder="Введите новый пароль" />
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label for="edit_role_name" class="form-label">
+                        <div class="col-md-6">
+                            <label for="edit_role_name" class="form-label fw-semibold">
                                 Роль <span class="text-danger">*</span>
                             </label>
                             <select id="edit_role_name" class="form-select" required>
-                                <option value="">Выберите роль</option>
+                                <option value="" selected disabled>Выберите роль</option>
                                 <option value="user">Пользователь</option>
                                 <option value="resident">Резидент</option>
                                 <option value="admin">Администратор</option>
                             </select>
+                            <div class="invalid-feedback">Пожалуйста, выберите роль.</div>
+                        </div>
+                        <div class="col-md-6" style="display: none;">
+                            <label for="edit_password" class="form-label fw-semibold">
+                                Пароль (оставьте пустым, если не меняете)
+                            </label>
+                            <input type="password" id="edit_password" class="form-control"
+                                   placeholder="Введите новый пароль"/>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_full_name" class="form-label fw-semibold">ФИО</label>
+                            <input type="text" id="edit_full_name" class="form-control"/>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_phone" class="form-label fw-semibold">Телефон</label>
+                            <input type="tel" id="edit_phone" class="form-control"/>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="edit_full_name" class="form-label">ФИО</label>
-                        <input type="text" id="edit_full_name" class="form-control" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="edit_phone" class="form-label">Телефон</label>
-                        <input type="text" id="edit_phone" class="form-control" />
-                    </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary"
-                            data-bs-dismiss="modal">
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
                         <i class="fas fa-times"></i> Отмена
                     </button>
-                    <button type="submit" class="btn btn-success">
+                    <button type="submit" class="btn btn-primary d-flex align-items-center gap-2">
                         <i class="fas fa-save"></i> Сохранить изменения
                     </button>
                 </div>
@@ -832,172 +878,174 @@
 
 
 <!-- ===== Модалка: Создать запись (References) ===== -->
-<!-- Модалка «Создать запись» -->
 <div class="modal fade" id="createRefModal" tabindex="-1"
      aria-labelledby="createRefModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form id="createRefForm" class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="createRefModalLabel">Создать новую запись</h5>
-        <!-- 1) Добавляем data-bs-dismiss="modal" -->
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-      </div>
-      <div class="modal-body">
-        <div class="mb-3">
-          <label for="refNameInput" class="form-label">Название</label>
-          <input type="text" class="form-control" id="refNameInput" required>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary"
-                data-bs-dismiss="modal">
-          Отмена
-        </button>
-        <button type="submit" class="btn btn-success">Создать</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-
-<!-- ===== Модалка: Создать/Редактировать Событие (Excursion) ===== -->
-<div class="modal fade" id="excursionModal" tabindex="-1" role="dialog"
-     aria-labelledby="excursionModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <!-- Поле названия экскурсии -->
-                <input type="text" id="modalTitle" class="form-control form-control-lg"
-                       placeholder="Название экскурсии"/>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                        aria-label="Закрыть"></button>
+    <div class="modal-dialog modal-dialog-centered"> <!-- Центрирование модалки -->
+        <form id="createRefForm" class="modal-content shadow-sm border-0 rounded-4">
+            <div class="modal-header bg-success bg-opacity-10 rounded-top d-flex align-items-center gap-2">
+                <i class="fas fa-plus-circle text-success fs-4"></i>
+                <h5 class="modal-title fw-bold mb-0" id="createRefModalLabel">Создать новую запись</h5>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Закрыть"></button>
             </div>
             <div class="modal-body">
-                <!-- Описание -->
                 <div class="mb-3">
-                    <label for="modalDescription" class="form-label">Описание</label>
-                    <textarea id="modalDescription" class="form-control" rows="3"
-                              placeholder="Описание"></textarea>
-                </div>
-
-                <!-- Сеточная группа полей -->
-                <div class="form-group-grid mb-3">
-                    <div>
-                        <label for="modalCategory" class="form-label">Категория</label>
-                        <input type="text" id="modalCategory" class="form-control"
-                               placeholder="Категория"/>
-                    </div>
-                    <div>
-                        <label for="modalFormat" class="form-label">Формат</label>
-                        <input type="text" id="modalFormat" class="form-control"
-                               placeholder="Формат"/>
-                    </div>
-                    <div>
-                        <label for="modalAgeCategory" class="form-label">Возраст</label>
-                        <input type="text" id="modalAgeCategory" class="form-control"
-                               placeholder="Возраст"/>
-                    </div>
-                    <div>
-                        <label for="modalIsActive" class="form-label">Активна</label>
-                        <select id="modalIsActive" class="form-select">
-                            <option value="true">Да</option>
-                            <option value="false">Нет</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="modalDuration" class="form-label">
-                            Продолжительность (мин)
-                        </label>
-                        <input type="number" id="modalDuration" class="form-control"
-                               placeholder="Продолжительность в минутах" min="0"/>
-                    </div>
-                    <div>
-                        <label for="modalPlace" class="form-label">Место</label>
-                        <input type="text" id="modalPlace" class="form-control"
-                               placeholder="Место"/>
-                    </div>
-                    <div>
-                        <label for="modalConductedBy" class="form-label">Проводит</label>
-                        <input type="text" id="modalConductedBy" class="form-control"
-                               placeholder="Проводит"/>
-                    </div>
-                    <div>
-                        <label for="modalWorkingHours" class="form-label">Часы работы</label>
-                        <input type="text" id="modalWorkingHours" class="form-control"
-                               placeholder="Часы работы"/>
-                    </div>
-                    <div>
-                        <label for="modalContactEmail" class="form-label">
-                            Контактный email
-                        </label>
-                        <input type="email" id="modalContactEmail" class="form-control"
-                               placeholder="Email"/>
-                    </div>
-                    <div>
-                        <label for="modalTelegram" class="form-label">Telegram</label>
-                        <input type="text" id="modalTelegram" class="form-control"
-                               placeholder="@telegram"/>
-                    </div>
-                    <div>
-                        <label for="modalVk" class="form-label">VK</label>
-                        <input type="text" id="modalVk" class="form-control"
-                               placeholder="VK ссылка"/>
-                    </div>
-                    <div>
-                        <label for="modalDistance" class="form-label">
-                            Расстояние до центра (км)
-                        </label>
-                        <input type="number" id="modalDistance" class="form-control"
-                               step="0.1" placeholder="Пример: 2.5" min="0"/>
-                    </div>
-                    <div>
-                        <label for="modalTimeToStop" class="form-label">
-                            Время до ближайшей остановки (мин)
-                        </label>
-                        <input type="number" id="modalTimeToStop" class="form-control"
-                               step="1" placeholder="Пример: 10" min="0"/>
-                    </div>
-                </div>
-
-                <!-- Ссылка на iframe -->
-                <div class="mb-3">
-                    <label for="modalIframe" class="form-label">Ссылка на iframe</label>
-                    <input type="text" id="modalIframe" class="form-control"
-                           placeholder="Ссылка на iframe (например, карта)"/>
-                </div>
-
-                <!-- ===== Фотографии ===== -->
-                <h6 class="mb-2">Фотографии</h6>
-                <div id="modalPhotos" class="photo-preview-container">
-                    <!-- Здесь JS добавит .photo-preview -->
-                </div>
-                <div class="d-flex align-items-center gap-3 mb-4">
-                    <input type="file" id="modalPhotoUpload" accept="image/*"
-                           class="form-control-file"/>
-                    <button type="button" id="btnAddPhoto" class="btn btn-primary">
-                        <i class="fas fa-camera"></i> Добавить фото
-                    </button>
-                </div>
-
-                <!-- ===== Сессии ===== -->
-                <h6 class="mb-2">Сессии</h6>
-                <div id="modalSessions" class="mb-4">
-                    <!-- Здесь JS добавит .session-item -->
-                </div>
-                <button type="button" id="btnAddSession" class="btn btn-primary mb-3"
-                        data-bs-toggle="modal" data-bs-target="#sessionModal">
-                    <i class="fas fa-plus"></i> Добавить сессию
-                </button>
-
-                <!-- ===== Теги ===== -->
-                <h6 class="mb-2">Теги</h6>
-                <div id="modalTags" class="d-flex flex-wrap gap-2">
-                    <!-- Здесь JS добавит .tag-item -->
+                    <label for="refNameInput" class="form-label fw-semibold">Название</label>
+                    <input type="text" class="form-control" id="refNameInput" required placeholder="Введите название">
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary"
                         data-bs-dismiss="modal">
+                    Отмена
+                </button>
+                <button type="submit" class="btn btn-success">
+                    Создать
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- ===== Модалка: Создать/Редактировать Событие (Excursion) ===== -->
+<div class="modal fade" id="excursionModal" tabindex="-1" role="dialog" aria-labelledby="excursionModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
+        <div class="modal-content shadow-sm border-0 rounded-4">
+            <div class="modal-header bg-primary bg-opacity-10 rounded-top d-flex align-items-center gap-2">
+                <i class="fas fa-route text-primary fs-4"></i>
+                <h5 class="modal-title fw-bold mb-0">Экскурсия</h5>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Название -->
+                <div class="mb-4">
+                    <label for="modalTitle" class="form-label fw-semibold">Название экскурсии</label>
+                    <input type="text" id="modalTitle" class="form-control form-control-lg"
+                           placeholder="Название экскурсии"/>
+                </div>
+
+                <!-- Описание -->
+                <div class="mb-4">
+                    <label for="modalDescription" class="form-label fw-semibold">Описание</label>
+                    <textarea id="modalDescription" class="form-control" rows="3" placeholder="Описание"></textarea>
+                </div>
+
+                <!-- Основная информация -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label for="modalCategory" class="form-label fw-semibold">Категория</label>
+                        <select id="modalCategory" class="form-select">
+                            <option value="" disabled selected>Выберите категорию</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="modalFormat" class="form-label fw-semibold">Формат</label>
+                        <select id="modalFormat" class="form-select">
+                            <option value="" disabled selected>Выберите формат</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="modalAgeCategory" class="form-label fw-semibold">Возраст</label>
+                        <select id="modalAgeCategory" class="form-select">
+                            <option value="" disabled selected>Выберите возраст</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="modalIsActive" class="form-label fw-semibold">Активна</label>
+                        <select id="modalIsActive" class="form-select">
+                            <option value="true">Да</option>
+                            <option value="false">Нет</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="modalDuration" class="form-label fw-semibold">Продолжительность (мин)</label>
+                        <input type="number" id="modalDuration" class="form-control" placeholder="Продолжительность"
+                               min="0"/>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="modalPlace" class="form-label fw-semibold">Место</label>
+                        <input type="text" id="modalPlace" class="form-control" placeholder="Место проведения"/>
+                    </div>
+                </div>
+
+                <!-- Контакты и логистика -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label for="modalConductedBy" class="form-label fw-semibold">Проводит</label>
+                        <input type="text" id="modalConductedBy" class="form-control" placeholder="ФИО организатора"/>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="modalWorkingHours" class="form-label fw-semibold">Часы работы</label>
+                        <input type="text" id="modalWorkingHours" class="form-control" placeholder="Напр. 10:00-18:00"/>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="modalContactEmail" class="form-label fw-semibold">Email</label>
+                        <input type="email" id="modalContactEmail" class="form-control" placeholder="Контактный email"/>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="modalTelegram" class="form-label fw-semibold">Telegram</label>
+                        <input type="text" id="modalTelegram" class="form-control" placeholder="@example"/>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="modalVk" class="form-label fw-semibold">VK</label>
+                        <input type="text" id="modalVk" class="form-control" placeholder="Ссылка на VK"/>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="modalDistance" class="form-label fw-semibold">До центра (км)</label>
+                        <input type="number" id="modalDistance" class="form-control" step="0.1" placeholder="0.0"
+                               min="0"/>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="modalTimeToStop" class="form-label fw-semibold">До остановки (мин)</label>
+                        <input type="number" id="modalTimeToStop" class="form-control" step="1" placeholder="0"
+                               min="0"/>
+                    </div>
+                </div>
+
+                <!-- Iframe -->
+                <div class="mb-4">
+                    <label for="modalIframe" class="form-label fw-semibold">Ссылка на iframe</label>
+                    <input type="text" id="modalIframe" class="form-control"
+                           placeholder="Ссылка на карту/видео и т.д."/>
+                </div>
+
+                <!-- Фотографии -->
+                <h6 class="fw-bold mb-2">Фотографии</h6>
+                <div id="modalPhotos"
+                     class="photo-preview-container mb-3 rounded border border-secondary border-opacity-25 p-2">
+                    <!-- JS сюда добавит .photo-preview -->
+                </div>
+                <div id="photoDropZone" class="d-flex align-items-center gap-3 border rounded p-3 mb-2"
+                     style="border-style: dashed;">
+                    <input type="file" id="modalPhotoUpload" multiple accept="image/*"
+                           class="form-control-file flex-grow-1"/>
+                    <button type="button" id="btnAddPhoto" class="btn btn-primary">
+                        <i class="fas fa-camera"></i> Добавить фото
+                    </button>
+                </div>
+                <div id="dropMessage" class="text-muted small mb-4">Или перетащите фотографии сюда</div>
+
+                <!-- Сессии -->
+                <h6 class="fw-bold mb-2">Сессии</h6>
+                <div id="modalSessions" class="mb-3">
+                    <!-- JS добавит .session-item -->
+                </div>
+                <button type="button" id="btnAddSession" class="btn btn-outline-primary mb-4" data-bs-toggle="modal"
+                        data-bs-target="#sessionModal">
+                    <i class="fas fa-plus"></i> Добавить сессию
+                </button>
+
+                <!-- Теги -->
+                <h6 class="fw-bold mb-2">Теги</h6>
+                <div id="modalTags" class="d-flex flex-wrap gap-2 mb-4">
+                    <!-- JS добавит .tag-item -->
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times"></i> Отмена
                 </button>
                 <button type="button" id="modalSave" class="btn btn-success">
@@ -1007,6 +1055,7 @@
         </div>
     </div>
 </div>
+
 
 <!-- ===== Модалка: Сессия ===== -->
 <div class="modal fade" id="sessionModal" tabindex="-1" role="dialog"
@@ -1057,63 +1106,71 @@
     </div>
 </div>
 
-<!-- Модалка -->
 <div class="modal fade" id="newsModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 id="newsModalTitle" class="modal-title">Создать новость</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <input type="text" id="newsTitle" class="form-control mb-2" placeholder="Заголовок">
-        <textarea id="newsContent" class="form-control mb-2" placeholder="Содержимое"></textarea>
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header rounded-top" id="newsModalHeader">
+                <h5 class="modal-title fw-bold mb-0 d-flex align-items-center gap-2" id="newsModalTitle">
+                    <i id="newsModalIcon" class="fas fa-newspaper fs-4"></i>
+                    <span id="newsModalText">Создать новость</span>
+                </h5>
 
-        <!-- Новый блок для загрузки фото -->
-        <div class="d-flex align-items-center gap-3 mb-3">
-          <input type="file" id="newsPhotoUpload" accept="image/*" class="form-control-file" />
-          <button type="button" id="btnUploadPhoto" class="btn btn-primary">
-            <i class="fas fa-camera"></i> Добавить фото
-          </button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <input type="text" id="newsTitle" class="form-control mb-2" placeholder="Заголовок">
+                <textarea id="newsContent" class="form-control mb-2" placeholder="Содержимое"></textarea>
+
+                <input type="file" id="newsImages" class="form-control mb-2" multiple style="display:none;">
+                <!-- можно скрыть, если не нужен -->
+                <div id="newsPhotoPreview" class="d-flex flex-wrap gap-2"></div>
+
+                <!-- Новый блок для загрузки фото -->
+                <div id="photoDropZoneNews" class="d-flex align-items-center gap-3 border rounded p-3 mb-2"
+                     style="border-style: dashed;">
+                    <input type="file" id="newsPhotoUpload" multiple accept="image/*"
+                           class="form-control-file flex-grow-1"/>
+                    <button type="button" id="btnUploadPhotoNews" class="btn btn-primary">
+                        <i class="fas fa-camera"></i> Добавить фото
+                    </button>
+                </div>
+                <div id="dropMessage" class="text-muted small mb-4">Или перетащите фотографии сюда</div>
+            </div>
+
+            <div class="modal-footer">
+                <button id="saveNewsBtn" class="btn btn-success">Сохранить</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
         </div>
-
-
-        <input type="file" id="newsImages" class="form-control mb-2" multiple style="display:none;"> <!-- можно скрыть, если не нужен -->
-        <div id="newsPhotoPreview" class="d-flex flex-wrap gap-2"></div>
-      </div>
-      <div class="modal-footer">
-        <button id="saveNewsBtn" class="btn btn-success">Сохранить</button>
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-      </div>
     </div>
-  </div>
 </div>
 
 <!-- ===== Модальное окно: Детали бронирования ===== -->
 <div class="modal fade" id="reservationModal" tabindex="-1"
      aria-labelledby="reservationModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="reservationModalLabel">
-          <i class="fas fa-info-circle"></i> Детали бронирования
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                aria-label="Закрыть"></button>
-      </div>
-      <div class="modal-body">
-        <!-- Контент для деталей брони будет сюда динамически вставляться -->
-        <div id="reservationDetails">
-          <p>Загрузка данных...</p>
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold mb-0" id="reservationModalLabel">
+                    <i class="fas fa-info-circle"></i> Детали бронирования
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Контент для деталей брони будет сюда динамически вставляться -->
+                <div id="reservationDetails">
+                    <p>Загрузка данных...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Закрыть
+                </button>
+            </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-          Закрыть
-        </button>
-      </div>
     </div>
-  </div>
 </div>
 
 <div id="notificationArea" class="position-fixed top-0 end-0 p-3" style="z-index: 1100;"></div>
