@@ -78,6 +78,8 @@ async function loadExcursions() {
             }
         };
     });
+    // Вызвать при загрузке модального окна или страницы
+    await loadDropdowns();
 }
 
 function showExcursionModal(excursion) {
@@ -136,7 +138,8 @@ function getChangedFields() {
         'title', 'description', 'duration', 'place', 'conducted_by',
         'working_hours', 'contact_email', 'iframe_url',
         'telegram', 'vk', 'distance_to_center', 'time_to_nearest_stop',
-        'is_active'
+        'is_active',
+        'category', 'format_type', 'age_category'
     ];
 
     for (const field of fieldsToCheck) {
@@ -224,11 +227,56 @@ function excursionPhotosRender(photos) {
         return;
     }
 
-    photos.forEach(photo => {
+    photos.forEach((photo, index) => {
         const div = document.createElement('div');
         div.style.position = 'relative';
         div.style.display = 'inline-block';
         div.style.margin = '5px';
+        div.draggable = true;  // Включаем возможность перетаскивания
+
+        // Чтобы можно было понять, какой элемент перетаскиваем
+        div.dataset.index = index;
+
+        div.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', e.target.dataset.index);
+            e.dataTransfer.effectAllowed = 'move';
+            e.target.style.opacity = '0.5';
+        });
+
+        div.addEventListener('dragend', (e) => {
+            e.target.style.opacity = '1';
+        });
+
+        div.addEventListener('dragover', (e) => {
+            e.preventDefault(); // обязательно для разрешения drop
+            e.dataTransfer.dropEffect = 'move';
+            div.style.border = '2px dashed #000';
+        });
+
+        div.addEventListener('dragleave', (e) => {
+            div.style.border = 'none';
+        });
+
+        div.addEventListener('drop', (e) => {
+            e.preventDefault();
+            div.style.border = 'none';
+
+            const draggedIndex = e.dataTransfer.getData('text/plain');
+            const targetIndex = div.dataset.index;
+
+            if (draggedIndex === targetIndex) return;
+
+            // меняем местами фото в массиве
+            const draggedPhoto = photos[draggedIndex];
+            photos.splice(draggedIndex, 1);
+            photos.splice(targetIndex, 0, draggedPhoto);
+
+            // Обновляем оригинальные данные, если нужно
+            originalExcursionData.photos = photos;
+
+            // Перерисовываем
+            excursionPhotosRender(photos);
+        });
 
         const img = document.createElement('img');
         img.src = photo.photo_url.startsWith('/') ? photo.photo_url : '/' + photo.photo_url;
@@ -395,33 +443,41 @@ btnAddPhoto.onclick = async () => {
         return;
     }
 
-    const file = photoInput.files[0];
-    if (!file) {
+    const files = photoInput.files;
+    if (!files || files.length === 0) {
         showNotification('Выберите фото для загрузки', 'warning');
         return;
     }
 
-    const formData = new FormData();
-    formData.append('photo', file);
-
     try {
-        const res = await fetchWithAuth(`${API_BASE}/excursions/${currentExcursionId}/photos`, {
-            method: 'POST',
-            body: formData,
-        });
+        for (const file of files) {
+            const formData = new FormData();
+            formData.append('photo', file); // ключ 'photo' как было раньше
 
-        if (!res.ok) {
-            const errorData = await res.json();
-            showNotification(errorData.message || 'Ошибка загрузки фото', 'danger');
-            return;
+            const res = await fetchWithAuth(`${API_BASE}/excursions/${currentExcursionId}/photos`, {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                showNotification(errorData.message || `Ошибка загрузки фото ${file.name}`, 'danger');
+                return; // Можно прервать цикл, если один файл не загрузился
+            }
         }
 
-        const data = await res.json();
-        showNotification('Фото добавлено', 'success');
-        photoInput.value = '';
-        excursionPhotosRender(data.photos);
+        // После успешной загрузки всех файлов запросим обновлённый список фото
+        const resPhotos = await fetchWithAuth(`${API_BASE}/excursions/${currentExcursionId}/photos`);
+        if (resPhotos.ok) {
+            const data = await resPhotos.json();
+            showNotification('Все фото успешно загружены', 'success');
+            photoInput.value = '';  // очистка поля выбора
+            excursionPhotosRender(data.photos);
+        } else {
+            showNotification('Ошибка получения обновлённого списка фото', 'warning');
+        }
     } catch (e) {
-        console.log(e)
+        console.error(e);
         showNotification('Ошибка сети при загрузке фото', 'danger');
     }
 };
@@ -551,3 +607,98 @@ function collectExcursionFormData() {
         sessions: originalExcursionData.sessions || [],  // сюда добавляем массив сессий
     };
 }
+
+excursionModalEl.addEventListener('hidden.bs.modal', () => {
+    photoInput.value = '';
+});
+
+const dropZone = document.getElementById('photoDropZone');
+
+
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.style.backgroundColor = '#e9ecef';
+    dropZone.style.borderColor = '#007bff';
+});
+
+dropZone.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    dropZone.style.backgroundColor = '';
+    dropZone.style.borderColor = '';
+});
+
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.style.backgroundColor = '';
+    dropZone.style.borderColor = '';
+
+    const files = e.dataTransfer.files;
+    if (!files || files.length === 0) return;
+
+
+    handleFiles(files);
+});
+
+async function handleFiles(files) {
+    // Загрузим файлы сразу на сервер
+    if (!currentExcursionId) {
+        showNotification('Сначала сохраните экскурсию', 'warning');
+        console.log(currentExcursionId)
+        return;
+    }
+
+    try {
+        for (const file of files) {
+            const formData = new FormData();
+            formData.append('photo', file);
+
+            const res = await fetchWithAuth(`${API_BASE}/excursions/${currentExcursionId}/photos`, {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                showNotification(errorData.message || `Ошибка загрузки фото ${file.name}`, 'danger');
+                return;
+            }
+        }
+
+        // Обновляем список фото после загрузки
+        const resPhotos = await fetchWithAuth(`${API_BASE}/excursions/${currentExcursionId}/photos`);
+        if (resPhotos.ok) {
+            const data = await resPhotos.json();
+            showNotification('Все фото успешно загружены', 'success');
+            photoInput.value = '';  // очистка выбора
+            excursionPhotosRender(data.photos);
+        } else {
+            showNotification('Ошибка получения обновлённого списка фото', 'warning');
+        }
+    } catch (e) {
+        console.error(e);
+        showNotification('Ошибка сети при загрузке фото', 'danger');
+    }
+}
+
+async function loadDropdowns() {
+    const response = await fetch('/api/references/excursion-stats');
+    const data = await response.json();
+
+    function fillSelect(id, options, labelField) {
+        const select = document.getElementById(id);
+        select.innerHTML = '<option value="" disabled selected>Выберите...</option>';
+        options.forEach(opt => {
+            const option = document.createElement('option');
+            option.value = opt[labelField];
+            option.textContent = opt[labelField];
+            select.appendChild(option);
+        });
+    }
+
+
+    fillSelect('modalCategory', data.categories, 'category_name');
+    fillSelect('modalFormat', data.format_types, 'format_type_name');
+    fillSelect('modalAgeCategory', data.age_categories, 'age_category_name');
+}
+
+

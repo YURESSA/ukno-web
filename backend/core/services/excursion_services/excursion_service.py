@@ -8,11 +8,11 @@ from sqlalchemy.orm import aliased
 from backend.core import db
 from backend.core.models.excursion_models import Excursion, Category, FormatType, AgeCategory, Tag, Reservation, \
     ExcursionSession
-from backend.core.services.user_services.auth_service import get_user_by_email
 from backend.core.services.email_service import send_excursion_deletion_email
 from backend.core.services.excursion_services.excursion_photo_service import process_photos, add_photos
 from backend.core.services.excursion_services.excursion_session_service import clear_sessions_and_schedules, \
     add_sessions, delete_excursion_session
+from backend.core.services.user_services.auth_service import get_user_by_email
 from backend.core.services.utilits import get_model_by_name, generate_reservations_csv, remove_file_if_exists
 
 
@@ -142,6 +142,25 @@ def update_excursion(excursion_id, data):
     for field in allowed_fields:
         if field in data:
             setattr(excursion, field, data[field])
+
+    if 'category' in data:
+        category = Category.query.filter_by(category_name=data['category']).first()
+        if not category:
+            return None, {"message": f"Категория '{data['category']}' не найдена"}, HTTPStatus.BAD_REQUEST
+        excursion.category = category
+
+    if 'format_type' in data:
+        format_type = FormatType.query.filter_by(format_type_name=data['format_type']).first()
+        if not format_type:
+            return None, {"message": f"Формат '{data['format_type']}' не найден"}, HTTPStatus.BAD_REQUEST
+        excursion.format_type = format_type
+
+    if 'age_category' in data:
+        age_category = AgeCategory.query.filter_by(age_category_name=data['age_category']).first()
+        if not age_category:
+            return None, {
+                "message": f"Возрастная категория '{data['age_category']}' не найдена"}, HTTPStatus.BAD_REQUEST
+        excursion.age_category = age_category
 
     try:
         db.session.commit()

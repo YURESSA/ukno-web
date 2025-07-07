@@ -4,12 +4,19 @@ function renderTable(title, headers, rows) {
 
     const originalRows = [...rows];
 
+    const renderBody = (dataRows) => {
+        return dataRows.map(row => {
+            const cellsHtml = row.cells.map(cell => `<td>${cell}</td>`).join('');
+            return `<tr data-id="${row.id || ''}" style="cursor:pointer;">${cellsHtml}<td>${row.actions}</td></tr>`;
+        }).join('');
+    };
+
     let html = `
-    <div class="container mt-4">
+    <div class="container mt-4 mb-4">
       <input id="tableFilterInput" type="text" class="form-control mb-2" placeholder="Поиск...">
       <button id="resetSortBtn" class="btn btn-sm btn-outline-secondary mb-3">Сбросить сортировку</button>
       <div class="table-responsive">
-        <table id="excursionsTable" class="table table-bordered table-hover">
+        <table id="excursionsTable" class="table table-bordered table-hover" style="border-collapse: collapse;">
           <thead>
             <tr>`;
 
@@ -24,19 +31,16 @@ function renderTable(title, headers, rows) {
     });
 
     html += `<th style="width:130px;">Действия</th></tr></thead><tbody>`;
-
-    const renderBody = (dataRows) => {
-        return dataRows.map(row => {
-            const cellsHtml = row.cells.map(cell => `<td>${cell}</td>`).join('');
-            return `<tr data-id="${row.id || ''}" style="cursor:pointer;">${cellsHtml}<td>${row.actions}</td></tr>`;
-        }).join('');
-    };
-
     html += renderBody(rows);
     html += `</tbody></table></div></div>`;
 
     document.getElementById('contentArea').innerHTML = html;
 
+    // Инициализация фильтра, сортировки и кнопки сброса
+    initTableFeatures(originalRows, renderBody);
+}
+
+function initTableFeatures(originalRows, renderBody) {
     // 🔍 Фильтрация
     const input = document.getElementById('tableFilterInput');
     input.addEventListener('input', () => {
@@ -51,7 +55,8 @@ function renderTable(title, headers, rows) {
     // 🔃 Мультисортировка
     const sortState = [];
 
-    document.querySelectorAll('#excursionsTable th.sortable').forEach(th => {
+    const thElements = document.querySelectorAll('#excursionsTable th.sortable');
+    thElements.forEach(th => {
         th.addEventListener('click', () => {
             const index = +th.dataset.index;
             const existing = sortState.find(s => s.index === index);
@@ -63,9 +68,7 @@ function renderTable(title, headers, rows) {
             }
 
             // Сброс иконок
-            document.querySelectorAll('.sort-indicator').forEach(el => {
-                el.textContent = '';
-            });
+            document.querySelectorAll('.sort-indicator').forEach(el => el.textContent = '');
 
             // Установка стрелок
             sortState.forEach(({index, asc}) => {
@@ -106,8 +109,13 @@ function renderTable(title, headers, rows) {
         // Восстановление оригинального порядка
         const tbody = document.querySelector('#excursionsTable tbody');
         tbody.innerHTML = renderBody(originalRows);
+
+        // После замены tbody — заново навесить фильтр (если нужно)
+        // Повторно вызываем фильтрацию, чтобы скрытые строки сразу появились корректно
+        input.dispatchEvent(new Event('input'));
     });
 }
+
 
 
 function showCreateButton(show, type) {
