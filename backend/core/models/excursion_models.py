@@ -251,6 +251,10 @@ class Reservation(db.Model):
                 self.session.excursion.title
                 if self.session and self.session.excursion else None
             ),
+            'place': (
+                self.session.excursion.place
+                if self.session and self.session.excursion else None
+            ),
             'total_cost': total,
             'payment_status': (
                 self.payment.status
@@ -280,6 +284,10 @@ class Reservation(db.Model):
                 self.session.start_datetime.isoformat()
                 if self.session else None
             ),
+            'place': (
+                self.session.excursion.place
+                if self.session and self.session.excursion else None
+            ),
             'total_cost': total,
             'payment_status': (
                 self.payment.status
@@ -303,7 +311,6 @@ class Payment(db.Model):
     status = db.Column(db.String(50), nullable=False, default='pending')
     method = db.Column(db.String(50), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.now)
-
 
     reservation = db.relationship("Reservation", back_populates="payment", uselist=False)
     session = db.relationship("ExcursionSession", back_populates="payments")
