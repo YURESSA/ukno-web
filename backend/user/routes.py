@@ -10,9 +10,10 @@ from backend.core.services.user_services.profile_service import *
 from . import user_ns
 from ..core.models.news_models import News
 from ..core.schemas.excursion_schemas import reservation_model, cancel_model
+from ..core.services.email_service import send_reset_email
 from ..core.services.reservation_service import get_reservations_by_user_email, create_reservation_with_payment, \
     cancel_user_reservation
-from ..core.services.utilits import send_reset_email, verify_reset_token
+from ..core.services.utilits import verify_reset_token
 
 
 @user_ns.route('/register')
@@ -155,7 +156,7 @@ class PasswordReset(Resource):
         if not email:
             return {"message": "Неверный или просроченный токен"}, HTTPStatus.BAD_REQUEST
 
-        user = get_user_by_email()
+        user = get_user_by_email(get_jwt_identity())
         if not user:
             return {"message": "Пользователь не найден"}, HTTPStatus.NOT_FOUND
 
