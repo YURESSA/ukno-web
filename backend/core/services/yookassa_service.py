@@ -43,13 +43,10 @@ def create_yookassa_payment(amount, email, description, quantity=1, metadata=Non
         print(f"Ошибка создания платежа YooKassa: {e}")
         raise e
 
-def refund_yookassa_payment(payment_id: str, amount: float, currency: str = "RUB") -> Refund:
+
+def refund_yookassa_payment(payment_id, amount, currency="RUB"):
     refund = Refund.create({
         "payment_id": payment_id,
-        "amount": {
-            "value": f"{amount:.2f}",
-            "currency": currency
-        },
-        "comment": "Возврат за отменённое бронирование"
+        "comment": "Полный возврат за отменённое бронирование"
     }, uuid.uuid4())
     return refund
