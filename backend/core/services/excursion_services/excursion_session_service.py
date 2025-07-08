@@ -127,7 +127,6 @@ def delete_excursion_session(excursion_id, session_id, notify_resident=True):
         csv_data = None
 
     try:
-        # Удаление всех платежей, чтобы не нарушить целостность
         for res in active_reservations:
             if res.payment:
                 db.session.delete(res.payment)

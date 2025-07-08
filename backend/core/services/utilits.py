@@ -2,11 +2,8 @@ import csv
 import os
 import re
 import uuid
-from io import BytesIO, TextIOWrapper
+from io import TextIOWrapper
 
-
-from flask import current_app
-from flask_mail import Message
 from werkzeug.utils import secure_filename
 
 from backend.core import mail
@@ -51,35 +48,37 @@ def is_valid_email(email):
     # Простая проверка email через regex
     return bool(re.match(r"[^@]+@[^@]+\.[^@]+", email))
 
-def send_email(subject, recipient, body, attachments=None):
+
+from flask_mail import Message
+from flask import current_app
+from io import BytesIO
+
+
+def send_email(subject, recipient, body, body_html=None, attachments=None):
     if not recipient or not is_valid_email(recipient):
         print(f"Попытка отправить email на невалидный адрес: {recipient}")
         return
 
-    msg = Message(subject=subject, recipients=[recipient], body=body)
+    msg = Message(
+        subject=subject,
+        recipients=[recipient],
+        body=body,
+        html=body_html
+    )
 
     if attachments:
-        for filename, content_bytes in attachments:
-            from io import BytesIO
-            data = BytesIO(content_bytes)
-            msg.attach(filename, "text/csv; charset=utf-8", data.read())
+        for attachment in attachments:
+            if isinstance(attachment, tuple) and len(attachment) == 2:
+                filename, content_bytes = attachment
+                data = BytesIO(content_bytes)
+                msg.attach(filename, "text/csv; charset=utf-8", data.read())
+            else:
+                print(f"Некорректный формат вложения: {attachment}")
 
-    mail.send(msg)
-
-
-def send_reset_email(user):
-    token = generate_reset_token(user.email)
-    reset_url = f"{Config.FRONTEND_URL}/reset-password?token={token}"
-
-    subject = "Сброс пароля"
-    body = f"""Здравствуйте, {user.full_name}!
-
-Для сброса пароля перейдите по ссылке ниже:
-{reset_url}
-
-Если вы не запрашивали сброс пароля, просто проигнорируйте это письмо."""
-
-    send_email(subject, user.email, body)
+    try:
+        mail.send(msg)
+    except Exception as e:
+        print(f"Ошибка при отправке email: {e}")
 
 
 from itsdangerous import URLSafeTimedSerializer
