@@ -12,6 +12,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"/>
     <style>
+          .spinner-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.4); /* затемнение */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+          }
         /* ===== Переменные цветов/теней/радиуса ===== */
         :root {
             --primary: #3b82f6; /* Blue 500 */
@@ -1201,6 +1213,32 @@
     </div>
 </div>
 
+<div id="loading-spinner" style="display: none;">
+  <div class="spinner-overlay">
+    <div class="spinner-border text-light" role="status">
+      <span class="visually-hidden">Загрузка...</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .spinner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+</style>
+
+
+
+
 
 <div id="notificationArea" class="position-fixed top-0 end-0 p-3" style="z-index: 1100;"></div>
 
@@ -1217,3 +1255,4 @@
 <script src="https://unpkg.com/tabulator-tables@5.6.1/dist/js/tabulator.min.js"></script>
 </body>
 </html>
+
