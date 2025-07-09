@@ -13,7 +13,7 @@ from backend.core.services.yookassa_service import create_yookassa_payment, refu
 def get_reservations_by_user_email(email: str):
     user = get_user_by_email(email)
     if not user:
-        return None, None  #
+        return None, None
 
     reservations = Reservation.query.filter_by(user_id=user.user_id).all()
     return reservations, user
@@ -40,7 +40,6 @@ def create_reservation_with_payment(user_email, session_id, full_name, phone_num
 
     amount = session.cost * participants_count
 
-    # Бесплатная бронь
     if amount == 0:
         reservation = Reservation(
             session_id=session_id,
@@ -65,7 +64,6 @@ def create_reservation_with_payment(user_email, session_id, full_name, phone_num
             "reservation_id": reservation.reservation_id,
         }, HTTPStatus.CREATED
 
-    # Платная бронь (is_paid=False, создаём платёж)
     reservation = Reservation(
         session_id=session_id,
         user_id=user.user_id,
@@ -127,15 +125,17 @@ def cancel_user_reservation(user_email, reservation_id):
     if reservation.is_cancelled:
         return {"message": "Бронирование уже отменено"}, HTTPStatus.BAD_REQUEST
 
+    refund_done = False
     if reservation.is_paid:
-        if not reservation.payment:
-            return {"message": "Платеж для бронирования не найден"}, HTTPStatus.INTERNAL_SERVER_ERROR
-
-        try:
-            refund_yookassa_payment(reservation.payment.payment_id, float(reservation.payment.amount))
-        except Exception as e:
-            print(f"Ошибка возврата средств YooKassa: {e}")
-            return {"message": "Не удалось сделать возврат средств"}, HTTPStatus.INTERNAL_SERVER_ERROR
+        if reservation.payment:
+            try:
+                refund_yookassa_payment(reservation.payment.payment_id, float(reservation.payment.amount))
+                refund_done = True
+            except Exception as e:
+                print(f"Ошибка возврата средств YooKassa: {e}")
+                return {"message": "Не удалось сделать возврат средств"}, HTTPStatus.INTERNAL_SERVER_ERROR
+        else:
+            refund_done = False
 
     reservation.is_cancelled = True
     db.session.commit()
@@ -145,7 +145,11 @@ def cancel_user_reservation(user_email, reservation_id):
     except Exception as e:
         print(f"Ошибка отправки email: {e}")
 
-    return {"message": "Бронирование отменено, средства возвращены"}, HTTPStatus.OK
+    if refund_done:
+        return {"message": "Бронирование отменено, средства возвращены"}, HTTPStatus.OK
+    else:
+        return {"message": "Бронирование отменено"}, HTTPStatus.OK
+
 
 def delete_reservation_with_refund(reservation_id):
     reservation = Reservation.query.get(reservation_id)
@@ -180,6 +184,7 @@ def delete_reservation_with_refund(reservation_id):
         return False, f"Ошибка при удалении брони: {str(e)}", 500
 
     return True, "Бронирование успешно удалено", 200
+
 
 def get_all_reservations():
     reservations = Reservation.query.all()

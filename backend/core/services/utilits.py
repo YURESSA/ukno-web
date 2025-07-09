@@ -1,9 +1,13 @@
-import csv
 import os
 import re
+import threading
 import uuid
-from io import TextIOWrapper
+from io import BytesIO
 
+from flask import current_app
+from flask_mail import Message
+from openpyxl import Workbook
+from openpyxl.utils import get_column_letter
 from werkzeug.utils import secure_filename
 
 from backend.core import mail
@@ -45,13 +49,15 @@ def remove_file_if_exists(file_path):
 
 
 def is_valid_email(email):
-    # Простая проверка email через regex
     return bool(re.match(r"[^@]+@[^@]+\.[^@]+", email))
 
 
-from flask_mail import Message
-from flask import current_app
-from io import BytesIO
+def send_async_email(app, msg):
+    with app.app_context():
+        try:
+            mail.send(msg)
+        except Exception as e:
+            print(f"Ошибка при отправке email: {e}")
 
 
 def send_email(subject, recipient, body, body_html=None, attachments=None):
@@ -75,10 +81,7 @@ def send_email(subject, recipient, body, body_html=None, attachments=None):
             else:
                 print(f"Некорректный формат вложения: {attachment}")
 
-    try:
-        mail.send(msg)
-    except Exception as e:
-        print(f"Ошибка при отправке email: {e}")
+    threading.Thread(target=send_async_email, args=(current_app._get_current_object(), msg)).start()
 
 
 from itsdangerous import URLSafeTimedSerializer
@@ -104,27 +107,57 @@ def to_str(value):
     return str(value)
 
 
-def generate_reservations_csv(reservations):
-    output = BytesIO()
-    writer_stream = TextIOWrapper(output, encoding='utf-8-sig', newline='')
+from datetime import datetime
 
-    writer = csv.writer(writer_stream, delimiter=';')
-    writer.writerow([
-        'ID бронирования', 'ФИО', 'Электронная почта', 'Телефон',
-        'Количество участников', 'Дата бронирования', 'Время сессии', 'Название экскурсии'
-    ])
+
+def format_datetime(value):
+    if isinstance(value, datetime):
+        return value.strftime('%d.%m.%Y %H:%M')
+    return str(value)  # если не datetime, вернуть как есть
+
+
+def generate_reservations_csv(reservations):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Отменённые бронирования"
+
+    headers = [
+        ('reservation_id', 'ID бронирования'),
+        ('full_name', 'ФИО'),
+        ('email', 'Электронная почта'),
+        ('phone_number', 'Телефон'),
+        ('participants_count', 'Количество участников'),
+        ('booked_at', 'Дата бронирования'),
+        ('session_datetime', 'Время сессии'),
+        ('excursion_title', 'Название экскурсии'),
+        ('place', 'Место экскурсии'),
+        ('total_cost', 'Общая стоимость'),
+        ('is_paid', 'Оплачена'),
+        ('is_cancelled', 'Отменена'),
+    ]
+    ws.append([h[1] for h in headers])
+
     for r in reservations:
-        writer.writerow([
-            to_str(r['reservation_id']),
-            to_str(r['full_name']),
-            to_str(r['email']),
-            to_str(r['phone_number']),
-            to_str(r['participants_count']),
-            to_str(r['booked_at']),
-            to_str(r['session_datetime']),
-            to_str(r['excursion_title'])
+        ws.append([
+            str(r.get('reservation_id', '')),
+            str(r.get('full_name', '')),
+            str(r.get('email', '')),
+            str(r.get('phone_number', '')),
+            str(r.get('participants_count', '')),
+            format_datetime(r.get('booked_at', '')),
+            format_datetime(r.get('session_datetime', '')),
+            str(r.get('excursion_title', '')),
+            str(r.get('place', '')),
+            str(r.get('total_cost', '')),
+            'Да' if r.get('is_paid') else 'Нет',
+            'Да' if r.get('is_cancelled') else 'Нет',
         ])
 
-    writer_stream.flush()
+    for col_idx, column_cells in enumerate(ws.columns, 1):
+        max_length = max((len(str(cell.value)) if cell.value else 0) for cell in column_cells)
+        ws.column_dimensions[get_column_letter(col_idx)].width = max_length + 2
+
+    output = BytesIO()
+    wb.save(output)
     output.seek(0)
     return output.read()

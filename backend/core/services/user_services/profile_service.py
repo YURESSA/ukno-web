@@ -72,7 +72,6 @@ def update_user(email, data):
     if not user:
         return None
 
-    # Проверка нового email на уникальность
     if 'email' in data and data['email'] != user.email:
         existing = User.query.filter_by(email=data['email']).first()
         if existing:
