@@ -3,17 +3,32 @@ let originalExcursionData = {};
 const photoInput = document.getElementById('modalPhotoUpload');
 const btnAddPhoto = document.getElementById('btnAddPhoto')
 
-// Получаем элементы
+
 const excursionModalEl = document.getElementById('excursionModal');
 const sessionModalEl = document.getElementById('sessionModal');
 
-// Создаём экземпляры Bootstrap.Modal
-const excursionModal = new bootstrap.Modal(excursionModalEl);
-const sessionModal = new bootstrap.Modal(sessionModalEl);
 
-// Чтобы при закрытии sessionModal автоматически снова открывать excursionModal:
+const excursionModal = new bootstrap.Modal(excursionModalEl);
+const sessionModal = new bootstrap.Modal(sessionModalEl, {
+    backdrop: true,
+    keyboard: true
+});
+
+excursionModalEl.addEventListener('hidden.bs.modal', () => {
+    const anyModalStillVisible = document.querySelector('.modal.show');
+    if (!anyModalStillVisible) {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    }
+});
+
+
 sessionModalEl.addEventListener('hidden.bs.modal', () => {
     excursionModal.show();
+
+    setTimeout(() => {
+        const titleInput = document.getElementById('modalTitle');
+        if (titleInput) titleInput.focus();
+    }, 150);
 });
 
 document.querySelector('#sessionModal .btn-close').addEventListener('click', () => {
@@ -407,19 +422,19 @@ async function showSessionParticipants(excursion_id, session_id) {
 
         participantsList.innerHTML = '';
         participants.forEach(user => {
-    const li = document.createElement('li');
-    li.className = 'list-group-item';
+            const li = document.createElement('li');
+            li.className = 'list-group-item';
 
-    const bookedAtDate = new Date(user.booked_at);
-    const bookedAtStr = bookedAtDate.toLocaleString();
+            const bookedAtDate = new Date(user.booked_at);
+            const bookedAtStr = bookedAtDate.toLocaleString();
 
-    const paymentClass = user.is_paid ? 'text-success' : 'text-warning';
-    const paymentText = user.is_paid ? 'Оплачено' : 'Не оплачено';
+            const paymentClass = user.is_paid ? 'text-success' : 'text-warning';
+            const paymentText = user.is_paid ? 'Оплачено' : 'Не оплачено';
 
-    const cancelClass = user.is_cancelled ? 'text-danger' : 'text-secondary';
-    const cancelText = user.is_cancelled ? 'Отменена' : 'Активна';
+            const cancelClass = user.is_cancelled ? 'text-danger' : 'text-secondary';
+            const cancelText = user.is_cancelled ? 'Отменена' : 'Активна';
 
-    li.innerHTML = `
+            li.innerHTML = `
       <div class="participant-info">
         <p><strong>${user.full_name}</strong> (${user.email || 'нет email'})</p>
         <p>Телефон: ${user.phone_number || 'нет номера'}</p>
@@ -434,23 +449,22 @@ async function showSessionParticipants(excursion_id, session_id) {
       </div>
     `;
 
-    li.querySelector('button').onclick = async () => {
-        if (!confirm(`Удалить бронь участника ${user.full_name}?`)) return;
+            li.querySelector('button').onclick = async () => {
+                if (!confirm(`Удалить бронь участника ${user.full_name}?`)) return;
 
-        try {
-            const delResp = await fetchWithAuth(`/api/admin/reservations/${user.reservation_id}`, {
-                method: 'DELETE',
-            });
-            if (!delResp.ok) throw new Error('Ошибка удаления брони');
-            li.remove();
-        } catch (err) {
-            alert(`Ошибка: ${err.message}`);
-        }
-    };
+                try {
+                    const delResp = await fetchWithAuth(`/api/admin/reservations/${user.reservation_id}`, {
+                        method: 'DELETE',
+                    });
+                    if (!delResp.ok) throw new Error('Ошибка удаления брони');
+                    li.remove();
+                } catch (err) {
+                    alert(`Ошибка: ${err.message}`);
+                }
+            };
 
-    participantsList.appendChild(li);
-});
-
+            participantsList.appendChild(li);
+        });
 
 
     } catch (error) {
@@ -612,6 +626,7 @@ document.getElementById('saveSessionModalBtn').addEventListener('click', async (
         }
         renderSessions(originalExcursionData.sessions);
         showNotification('Сессия добавлена', 'success');
+        document.activeElement.blur();  // снимает фокус с текущего элемента
         sessionModal.hide();
         return;
     }
