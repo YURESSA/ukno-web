@@ -51,9 +51,23 @@ def refund_yookassa_payment(payment_id: str, amount: float, currency: str = "RUB
             "value": f"{amount:.2f}",
             "currency": currency
         },
-        "comment": "Возврат за отменённое бронирование"
+        "comment": "Возврат за отменённое бронирование",
+        "receipt": {
+            "items": [
+                {
+                    "description": "Билет на экскурсию",
+                    "quantity": 1,
+                    "amount": {
+                        "value": f"{amount:.2f}",
+                        "currency": currency
+                    },
+                    "vat_code": 1  # 1 = без НДС (наиболее часто)
+                }
+            ]
+        }
     }, uuid.uuid4())
     return refund
+
 
 # def refund_yookassa_payment(payment_id, amount, currency="RUB"):
 #     refund = Refund.create({
