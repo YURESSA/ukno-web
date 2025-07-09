@@ -14,6 +14,14 @@ const sessionModal = new bootstrap.Modal(sessionModalEl, {
     keyboard: true
 });
 
+function showSpinner() {
+    document.getElementById('loading-spinner').style.display = 'block';
+}
+
+function hideSpinner() {
+    document.getElementById('loading-spinner').style.display = 'none';
+}
+
 excursionModalEl.addEventListener('hidden.bs.modal', () => {
     const anyModalStillVisible = document.querySelector('.modal.show');
     if (!anyModalStillVisible) {
@@ -75,14 +83,22 @@ async function loadExcursions() {
     // Обработчик удаления экскурсии
     document.querySelectorAll('.btn-delete-excursion').forEach(btn => {
         btn.onclick = async (e) => {
-            e.stopPropagation();  // чтобы не срабатывал клик по строке
+            e.stopPropagation();
             const id = btn.dataset.id;
             if (!confirm(`Удалить экскурсию #${id}?`)) return;
 
-            const res = await fetchWithAuth(`${API_BASE}/excursions/${id}`, {method: 'DELETE'});
-            if (res) {
-                showNotification('Экскурсия удалена', 'success');
-                loadExcursions(); // перезагрузить список
+            showSpinner();
+            try {
+                const res = await fetchWithAuth(`${API_BASE}/excursions/${id}`, {method: 'DELETE'});
+                if (res) {
+                    showNotification('Экскурсия удалена', 'success');
+                    await loadExcursions();
+                }
+            } catch (err) {
+                showNotification('Ошибка при удалении', 'error');
+                console.error(err);
+            } finally {
+                hideSpinner();
             }
         };
     });
@@ -204,21 +220,22 @@ function openSessionModalForEdit(session) {
 async function deleteSession(sessionId) {
     if (!confirm('Удалить сессию?')) return;
 
-    // Удаление временной сессии (которая ещё не была сохранена на сервере)
+    // Удаление временной сессии
     if (String(sessionId).startsWith('temp_')) {
         originalExcursionData.sessions = originalExcursionData.sessions.filter(s => String(s.session_id) !== String(sessionId));
-        console.log(originalExcursionData.sessions)
         renderSessions(originalExcursionData.sessions);
         showNotification('Сессия удалена (не сохранена)', 'success');
         return;
     }
-
 
     // Защита от удаления до создания экскурсии
     if (!currentExcursionId || !sessionId) {
         showNotification('Нельзя удалить сессию до создания экскурсии', 'warning');
         return;
     }
+
+    showSpinner()
+    console.log(11)
 
     try {
         const res = await fetchWithAuth(`/api/admin/excursions/${currentExcursionId}/sessions/${sessionId}`, {
@@ -236,6 +253,8 @@ async function deleteSession(sessionId) {
         showNotification('Сессия удалена', 'success');
     } catch (err) {
         showNotification('Ошибка: ' + err.message, 'danger');
+    } finally {
+        hideSpinner();
     }
 }
 
