@@ -44,34 +44,34 @@ def create_yookassa_payment(amount, email, description, quantity=1, metadata=Non
         raise e
 
 
-def refund_yookassa_payment(payment_id: str, amount: float, currency: str = "RUB") -> Refund:
-    refund = Refund.create({
-        "payment_id": payment_id,
-        "amount": {
-            "value": f"{amount:.2f}",
-            "currency": currency
-        },
-        "comment": "Возврат за отменённое бронирование",
-        "receipt": {
-            "items": [
-                {
-                    "description": "Билет на экскурсию",
-                    "quantity": 1,
-                    "amount": {
-                        "value": f"{amount:.2f}",
-                        "currency": currency
-                    },
-                    "vat_code": 1  # 1 = без НДС (наиболее часто)
-                }
-            ]
-        }
-    }, uuid.uuid4())
-    return refund
-
-
-# def refund_yookassa_payment(payment_id, amount, currency="RUB"):
+# def refund_yookassa_payment(payment_id: str, amount: float, currency: str = "RUB") -> Refund:
 #     refund = Refund.create({
 #         "payment_id": payment_id,
-#         "comment": "Полный возврат за отменённое бронирование"
+#         "amount": {
+#             "value": f"{amount:.2f}",
+#             "currency": currency
+#         },
+#         "comment": "Возврат за отменённое бронирование",
+#         "receipt": {
+#             "items": [
+#                 {
+#                     "description": "Билет на экскурсию",
+#                     "quantity": 1,
+#                     "amount": {
+#                         "value": f"{amount:.2f}",
+#                         "currency": currency
+#                     },
+#                     "vat_code": 1  # 1 = без НДС (наиболее часто)
+#                 }
+#             ]
+#         }
 #     }, uuid.uuid4())
 #     return refund
+
+
+def refund_yookassa_payment(payment_id, amount, currency="RUB"):
+    refund = Refund.create({
+        "payment_id": payment_id,
+        "comment": "Полный возврат за отменённое бронирование"
+    }, uuid.uuid4())
+    return refund
