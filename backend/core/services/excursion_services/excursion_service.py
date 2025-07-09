@@ -1,5 +1,6 @@
 from datetime import datetime
 from http import HTTPStatus
+from urllib.parse import quote
 
 from flask import make_response
 from sqlalchemy import func
@@ -63,10 +64,11 @@ def delete_excursion(excursion_id, resident, return_csv=False):
 
         send_excursion_deletion_email(resident, excursion, csv_data)
 
-        # Если запрошено — возвращаем CSV как ответ
         if return_csv:
             response = make_response(csv_data)
-            response.headers["Content-Disposition"] = "attachment; filename=cancelled_reservations.csv"
+            filename = f"отменённые_бронирования_экскурсия_{excursion.excursion_id}.csv"
+            encoded_filename = quote(filename)
+            response.headers["Content-Disposition"] = f"attachment; filename*=UTF-8''{encoded_filename}"
             response.headers["Content-Type"] = "text/csv; charset=utf-8"
             return response
 
@@ -199,7 +201,6 @@ def verify_resident_owns_excursion(resident_id, excursion_id):
 def list_excursions(filters, sort_key):
     now = datetime.now()
 
-    # Alias для будущей сессии экскурсии
     session_alias = aliased(ExcursionSession)
 
     subquery = (
@@ -215,31 +216,26 @@ def list_excursions(filters, sort_key):
 
     query = Excursion.query.join(subquery, Excursion.excursion_id == subquery.c.excursion_id)
 
-    # Категория
     if category := filters.get("category"):
         category_list = [c.strip() for c in category.split(",") if c.strip()]
         if category_list:
             query = query.join(Category).filter(Category.category_name.in_(category_list))
 
-    # Формат
     if format_type := filters.get("format_type"):
         format_type_list = [f.strip() for f in format_type.split(",") if f.strip()]
         if format_type_list:
             query = query.join(FormatType).filter(FormatType.format_type_name.in_(format_type_list))
 
-    # Возраст
     if age_category := filters.get("age_category"):
         age_category_list = [a.strip() for a in age_category.split(",") if a.strip()]
         if age_category_list:
             query = query.join(AgeCategory).filter(AgeCategory.age_category_name.in_(age_category_list))
 
-    # Теги
     if tags := filters.get("tags"):
         tag_list = [tag.strip() for tag in tags.split(",") if tag.strip()]
         if tag_list:
             query = query.filter(Excursion.tags.any(Tag.name.in_(tag_list)))
 
-    # По длительности
     try:
         if min_duration := filters.get("min_duration"):
             query = query.filter(Excursion.duration >= int(min_duration))
@@ -251,11 +247,6 @@ def list_excursions(filters, sort_key):
     except ValueError:
         pass
 
-    # Название
-    # if title := filters.get("title"):
-    #     query = query.filter(Excursion.title.ilike(f"%{title.strip()}%"))
-
-    # Расстояние до центра
     try:
         if min_center_distance := filters.get("min_distance_to_center"):
             query = query.filter(Excursion.distance_to_center >= float(min_center_distance))
@@ -267,7 +258,6 @@ def list_excursions(filters, sort_key):
     except ValueError:
         pass
 
-    # Время до остановки
     try:
         if min_type_to_stop := filters.get("min_distance_to_stop"):
             query = query.filter(Excursion.time_to_nearest_stop >= float(min_type_to_stop))
@@ -279,7 +269,6 @@ def list_excursions(filters, sort_key):
     except ValueError:
         pass
 
-    # Цена
     try:
         if min_price := filters.get("min_price"):
             query = query.filter(subquery.c.min_cost >= float(min_price))
@@ -291,7 +280,6 @@ def list_excursions(filters, sort_key):
     except ValueError:
         pass
 
-    # По дате
     try:
         if start_date := filters.get("start_date"):
             start_dt = datetime.fromisoformat(start_date)

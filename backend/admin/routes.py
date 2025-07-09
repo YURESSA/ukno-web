@@ -288,11 +288,9 @@ class AdminExcursionResource(Resource):
         admin = get_user_by_email(get_jwt_identity())
         response = delete_excursion(excursion_id, admin, return_csv=True)
 
-        # Если это Response (CSV), просто возвращаем его
         if isinstance(response, Response):
             return response
 
-        # Если это обычный (dict, status), то распаковываем и возвращаем
         result, status = response
         return result, status
 
@@ -331,7 +329,6 @@ class AdminExcursionSessionResource(Resource):
         if isinstance(response, Response):
             return response
 
-        # Иначе — обычный JSON и статус
         result, status = response
         return result, status
 

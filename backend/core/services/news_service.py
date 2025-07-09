@@ -21,7 +21,7 @@ def add_photo_to_news(news_id, photo_file):
     if not news:
         return None, {"message": "Новость не найдена"}, HTTPStatus.NOT_FOUND
     try:
-        image_path = save_image(photo_file, "news")  # твоя функция сохранения файла
+        image_path = save_image(photo_file, "news")
         photo = NewsImage(news_id=news_id, image_path=image_path)
         db.session.add(photo)
         db.session.commit()
@@ -70,7 +70,7 @@ def create_news_with_images(user_email, data_str, image_files):
         author_id=user.user_id
     )
     db.session.add(news)
-    db.session.flush()  # Чтобы получить news_id до коммита
+    db.session.flush()
 
     for image_file in image_files:
         if image_file:
@@ -131,16 +131,13 @@ def delete_news(news_id):
     if not news:
         return False, "Новость не найдена"
 
-    # Удаляем файлы всех связанных фото
     for image in news.images:
         image_path = os.path.join(os.getcwd(), image.image_path)
         remove_file_if_exists(image_path)
 
-    # Удаляем все связанные записи фото
     for image in news.images:
         db.session.delete(image)
 
-    # Удаляем новость
     db.session.delete(news)
     db.session.commit()
 

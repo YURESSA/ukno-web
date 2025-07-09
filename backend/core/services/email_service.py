@@ -1,3 +1,5 @@
+import re
+
 from backend.core.config import Config
 from backend.core.services.utilits import send_email, generate_reset_token
 
@@ -109,13 +111,16 @@ def send_excursion_deletion_email(resident, excursion, csv_data):
     </html>
     """
 
+    title_slug = re.sub(r'\W+', '_', excursion.title.lower())
+    filename = f"отменённые_бронирования_{title_slug}.csv"
+
     try:
         send_email(
             subject=subject,
             recipient=recipient,
             body=body_text,
             body_html=body_html,
-            attachments=[("cancelled_reservations.csv", csv_data)]
+            attachments=[(filename, csv_data)]
         )
     except Exception as e:
         print(f"Ошибка при отправке письма об удалении экскурсии: {e}")
@@ -167,7 +172,7 @@ def send_session_deletion_email(deleter_email, excursion_name, session_id, csv_d
 
     body_html = f"""
     <html>
-        <body>
+        <body style="font-family: Arial, sans-serif; color: #333;">
             <p>Здравствуйте!</p>
             <p>Сессия экскурсии <strong>«{excursion_name}»</strong> (ID <strong>{session_id}</strong>) была <strong>удалена</strong>.</p>
             <p>Во вложении вы найдёте CSV-файл со списком всех отменённых по этой сессии бронирований.</p>
@@ -178,13 +183,16 @@ def send_session_deletion_email(deleter_email, excursion_name, session_id, csv_d
     </html>
     """
 
+    excursion_slug = re.sub(r'\W+', '_', excursion_name.lower())
+    filename = f"отменённые_бронирования_{excursion_slug}_сессия_{session_id}.csv"
+
     try:
         send_email(
             subject=subject,
             recipient=deleter_email,
             body=body_text,
             body_html=body_html,
-            attachments=[("cancelled_reservations.csv", csv_data)]
+            attachments=[(filename, csv_data)]
         )
     except Exception as e:
         print(f"Ошибка при отправке письма об удалении сессии: {e}")

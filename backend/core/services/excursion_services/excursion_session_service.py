@@ -89,7 +89,7 @@ def delete_excursion_session(excursion_id, session_id, notify_resident=True):
     active_reservations = [r for r in session.reservations if not r.is_cancelled]
     excursion_name = session.excursion.title if session.excursion else "экскурсии"
 
-    refunded = []  # список возвратов
+    refunded = []
 
     for res in active_reservations:
         if res.is_paid and res.payment and session.cost > 0 and res.payment.status == "succeeded":
@@ -104,20 +104,10 @@ def delete_excursion_session(excursion_id, session_id, notify_resident=True):
                 db.session.rollback()
                 return {"message": f"Ошибка возврата по брони {res.reservation_id}: {str(e)}"}, HTTPStatus.BAD_REQUEST
 
-        # Письмо клиенту
         send_session_cancellation_email(reservation=res, excursion_name=excursion_name, session=session)
 
     cancelled_reservations = [
-        {
-            "reservation_id": res.reservation_id,
-            "full_name": res.full_name,
-            "email": res.email,
-            "phone_number": res.phone_number,
-            "participants_count": res.participants_count,
-            "booked_at": res.booked_at.strftime("%Y-%m-%d %H:%M"),
-            "session_datetime": session.start_datetime.strftime("%d.%m.%Y %H:%M"),
-            "excursion_title": excursion_name
-        }
+        res.to_dict()
         for res in active_reservations
     ]
 
@@ -137,7 +127,6 @@ def delete_excursion_session(excursion_id, session_id, notify_resident=True):
         if notify_resident and csv_data:
             send_session_deletion_email(deleter_email, excursion_name, session_id, csv_data)
 
-            # Также вернуть CSV в ответе
             response = make_response(csv_data)
             filename = f"отмененные_бронирования_сессия_{session_id}.csv"
             encoded_filename = quote(filename)
