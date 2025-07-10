@@ -1,6 +1,7 @@
 import re
 
 from backend.core.config import Config
+from backend.core.services.calendar_utilits import create_ical_from_reservation
 from backend.core.services.utilits import send_email, generate_reset_token
 
 
@@ -22,6 +23,8 @@ def send_reservation_confirmation_email(reservation, user):
         f"Количество участников: {reservation.participants_count}\n\n"
         f"Место проведения: {excursion.place if excursion and excursion.place else 'уточняется'}\n"
         f"Контактный email: {excursion.contact_email if excursion and excursion.contact_email else 'не указан'}\n\n"
+        "Во вложении вы найдете файл с приглашением в календарь (.ics), "
+        "который можно добавить в ваш календарь.\n\n"
         "Спасибо за бронирование!"
     )
 
@@ -37,13 +40,22 @@ def send_reservation_confirmation_email(reservation, user):
           <li><strong>Место проведения:</strong> {excursion.place if excursion and excursion.place else 'уточняется'}</li>
           <li><strong>Контактный email:</strong> {excursion.contact_email if excursion and excursion.contact_email else 'не указан'}</li>
         </ul>
+        <p>Во вложении вы найдете файл с приглашением в календарь (<code>.ics</code>), который можно добавить в ваш календарь.</p>
         <p>Спасибо за бронирование!</p>
       </body>
     </html>
     """
 
+    ics_bytes = create_ical_from_reservation(reservation)
+
     try:
-        send_email(subject=subject, recipient=recipient, body=body_text, body_html=body_html)
+        send_email(
+            subject=subject,
+            recipient=recipient,
+            body=body_text,
+            body_html=body_html,
+            attachments=[("reservation.ics", ics_bytes, "text/calendar")]
+        )
     except Exception as e:
         print(f"Ошибка при отправке письма: {e}")
 
