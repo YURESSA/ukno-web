@@ -74,7 +74,11 @@ def send_email(subject, recipient, body, body_html=None, attachments=None):
 
     if attachments:
         for attachment in attachments:
-            if isinstance(attachment, tuple) and len(attachment) == 2:
+            if isinstance(attachment, tuple) and len(attachment) == 3:
+                filename, content_bytes, mimetype = attachment
+                data = BytesIO(content_bytes)
+                msg.attach(filename, mimetype, data.read())
+            elif isinstance(attachment, tuple) and len(attachment) == 2:
                 filename, content_bytes = attachment
                 data = BytesIO(content_bytes)
                 msg.attach(filename, "text/csv; charset=utf-8", data.read())

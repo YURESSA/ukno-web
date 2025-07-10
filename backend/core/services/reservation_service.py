@@ -1,5 +1,7 @@
+from datetime import timedelta
 from http import HTTPStatus
 
+from ics import Calendar, Event
 from sqlalchemy import func
 
 from backend.core import db
@@ -10,13 +12,17 @@ from backend.core.services.user_services.auth_service import get_user_by_email
 from backend.core.services.yookassa_service import create_yookassa_payment, refund_yookassa_payment
 
 
-def get_reservations_by_user_email(email: str):
+def get_reservations_by_user_email(email):
     user = get_user_by_email(email)
     if not user:
         return None, None
 
     reservations = Reservation.query.filter_by(user_id=user.user_id).all()
     return reservations, user
+
+
+def get_reservations_by_reservation_id(reservation_id):
+    return Reservation.query.filter_by(reservation_id=reservation_id).first()
 
 
 def create_reservation_with_payment(user_email, session_id, full_name, phone_number, email, participants_count):

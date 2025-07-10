@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+from urllib.parse import urlencode, quote_plus
 
 from flask import request
 from flask_jwt_extended import jwt_required
@@ -10,9 +11,10 @@ from backend.core.services.user_services.profile_service import *
 from . import user_ns
 from ..core.models.news_models import News
 from ..core.schemas.excursion_schemas import reservation_model, cancel_model
+from ..core.services.calendar_utilits import create_ical_from_reservation
 from ..core.services.email_service import send_reset_email
 from ..core.services.reservation_service import get_reservations_by_user_email, create_reservation_with_payment, \
-    cancel_user_reservation
+    cancel_user_reservation, get_reservations_by_reservation_id
 from ..core.services.utilits import verify_reset_token
 
 
@@ -213,6 +215,51 @@ class Reservations(Resource):
         )
 
         return response, status
+
+
+from flask import Response
+
+
+@user_ns.route('/reservations/<int:reservation_id>/export_ical')
+class ExportReservationICal(Resource):
+    def get(self, reservation_id):
+        reservation = get_reservations_by_reservation_id(reservation_id)
+        if not reservation:
+            return {"message": "Бронирование не найдено"}, 404
+
+        ical_bytes = create_ical_from_reservation(reservation)
+
+        return Response(
+            ical_bytes,
+            mimetype="text/calendar",
+            headers={
+                "Content-Disposition": 'attachment; filename="reservation.ics"'
+            }
+        )
+
+
+@user_ns.route('/reservations/<int:reservation_id>/google_calendar_link')
+class GoogleCalendarLink(Resource):
+    def get(self, reservation_id):
+        reservation = get_reservations_by_reservation_id(reservation_id)
+        if not reservation:
+            return {"message": "Бронирование не найдено"}, 404
+
+        title = f"Экскурсия: {reservation.session.excursion.title}"
+        start = reservation.session.start_datetime.strftime('%Y%m%dT%H%M%S')
+        end_dt = reservation.session.start_datetime + timedelta(minutes=reservation.session.excursion.duration)
+        end = end_dt.strftime('%Y%m%dT%H%M%S')
+
+        query = {
+            "action": "TEMPLATE",
+            "text": title,
+            "dates": f"{start}/{end}",
+            "details": f"Участников: {reservation.participants_count}",
+            "location": reservation.session.excursion.place,
+        }
+
+        link = f"https://calendar.google.com/calendar/render?{urlencode(query, quote_via=quote_plus)}"
+        return {"google_calendar_link": link}
 
 
 @user_ns.route('/news')
