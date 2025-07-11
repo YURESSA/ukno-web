@@ -92,11 +92,11 @@ def get_all_news():
 
 
 def get_news_by_id(news_id):
-    return News.query.get(news_id)
+    return db.session.get(News, news_id)
 
 
 def update_news(news_id, form_data, files):
-    news = News.query.get(news_id)
+    news = db.session.get(News, news_id)
     if not news:
         return None, "Новость не найдена"
 
@@ -127,7 +127,7 @@ def update_news(news_id, form_data, files):
     return news, None
 
 def delete_news(news_id):
-    news = News.query.get(news_id)
+    news = db.session.get(News, news_id)
     if not news:
         return False, "Новость не найдена"
 

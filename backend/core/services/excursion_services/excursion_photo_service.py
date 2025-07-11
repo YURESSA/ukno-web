@@ -50,7 +50,8 @@ def delete_photo_from_excursion(excursion_id, photo_id):
 
 
 def get_photos_for_excursion(excursion_id):
-    excursion = Excursion.query.get(excursion_id)
+    excursion = db.session.get(Excursion, excursion_id)
+
     if not excursion:
         return None, {"message": "Экскурсия не найдена"}, HTTPStatus.NOT_FOUND
     photos = [photo.to_dict() for photo in excursion.photos]

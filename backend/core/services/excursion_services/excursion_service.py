@@ -120,7 +120,7 @@ def create_excursion(data, email, files):
         add_tags(excursion, data.get("tags", []))
 
         db.session.commit()
-        return excursion, {"message": "Событие создано"}, None
+        return excursion, {"message": "Событие создано", "excursion_id": excursion.excursion_id}, None
 
     except ValueError as ve:
         db.session.rollback()
@@ -131,7 +131,8 @@ def create_excursion(data, email, files):
 
 
 def update_excursion(excursion_id, data):
-    excursion = Excursion.query.get(excursion_id)
+    excursion = db.session.get(Excursion, excursion_id)
+
     if not excursion:
         return None, {"message": "Экскурсия не найдена"}, HTTPStatus.NOT_FOUND
 
