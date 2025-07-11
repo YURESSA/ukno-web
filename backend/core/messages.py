@@ -11,3 +11,4 @@ class AuthMessages:
     PROTECTED_RESOURCE = "Доступ к защищенному ресурсу получен"
     ROLE_CHANGE_FORBIDDEN = "Для выбора роли, отличной от 'Пользователь', требуется авторизация администратора"
     PASSWORD_CHANGE_FORBIDDEN = "Вы можете изменить пароль только для своего аккаунта"
+    PROFILE_UPDATED = "Профиль обновлён успешно"

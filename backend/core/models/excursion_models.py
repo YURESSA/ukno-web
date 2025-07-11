@@ -151,6 +151,10 @@ class ExcursionPhoto(db.Model):
 
     excursion = db.relationship("Excursion", back_populates="photos")
 
+    __mapper_args__ = {
+        "confirm_deleted_rows": False
+    }
+
     def __str__(self):
         return f"ExcursionPhoto(id={self.photo_id}, excursion_id={self.excursion_id}, " \
                f"photo_url={self.photo_url}, order_index={self.order_index})"
@@ -181,6 +185,10 @@ class ExcursionSession(db.Model):
         lazy=True
     )
     payments = db.relationship("Payment", back_populates="session")
+
+    __mapper_args__ = {
+        "confirm_deleted_rows": False
+    }
 
     def __str__(self):
         return f"ExcursionSession(id={self.session_id}, excursion_id={self.excursion_id}, " \
