@@ -27,6 +27,14 @@ class TestAdminData:
     ROLE = "admin"
 
 
+class TestResidentData:
+    EMAIL = "resident@example.com"
+    PASSWORD = "resident123"
+    FULL_NAME = "Test Resident"
+    PHONE = "+78888888888"
+    ROLE = "resident"
+
+
 @pytest.fixture
 def app():
     app = create_app(testing=True)
@@ -42,6 +50,17 @@ def app():
             full_name=TestAdminData.FULL_NAME,
             phone=TestAdminData.PHONE,
             role_name=TestAdminData.ROLE
+        )
+        resident_user = User.query.filter_by(email=TestResidentData.EMAIL).first()
+        if resident_user:
+            db.session.delete(resident_user)
+            db.session.commit()
+        create_user(
+            email=TestResidentData.EMAIL,
+            password=TestResidentData.PASSWORD,
+            full_name=TestResidentData.FULL_NAME,
+            phone=TestResidentData.PHONE,
+            role_name=TestResidentData.ROLE
         )
     yield app
 
@@ -94,6 +113,12 @@ def access_token(app):
 def admin_access_token(app):
     with app.app_context():
         return create_access_token(identity="admin@test.com", additional_claims={"role": "admin"})
+
+
+@pytest.fixture
+def resident_access_token(app):
+    with app.app_context():
+        return create_access_token(identity=TestResidentData.EMAIL, additional_claims={"role": "resident"})
 
 
 @pytest.fixture
