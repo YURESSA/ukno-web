@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from urllib.parse import urlencode, quote_plus
 
+from flask import Response
 from flask import request
 from flask_jwt_extended import jwt_required
 from flask_restx import Resource, fields
@@ -215,9 +216,6 @@ class Reservations(Resource):
         )
 
         return response, status
-
-
-from flask import Response
 
 
 @user_ns.route('/reservations/<int:reservation_id>/export_ical')

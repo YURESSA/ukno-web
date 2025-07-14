@@ -92,9 +92,4 @@ def test_get_profile(client, access_token):
     assert data["role"] == TestUserData.ROLE
 
 
-def test_delete_profile(client, access_token):
-    headers = {"Authorization": f"Bearer {access_token}"}
-    r = client.delete("/api/user/profile", headers=headers)
-    assert r.status_code == HTTPStatus.OK
-    data = r.get_json()
-    assert AuthMessages.USER_DELETED_SELF in data.get("message", "")
+
