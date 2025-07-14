@@ -8,7 +8,7 @@ from .database import db, migrate
 from .extensions import jwt, api, mail
 
 
-def create_app():
+def create_app(testing=False):
     app = Flask(__name__, template_folder=Config.TEMPLATE_FOLDER, static_folder=Config.STATIC_FOLDER)
     app.config.from_object(Config)
     CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
@@ -20,7 +20,9 @@ def create_app():
     migrate.init_app(app, db)
 
     register_apps(app)
-
+    if testing:
+        app.config["TESTING"] = True
+        app.config["JWT_SECRET_KEY"] = "test-secret"
     return app
 
 
