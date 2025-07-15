@@ -191,7 +191,7 @@ from sqlalchemy import asc, desc
 
 
 def verify_resident_owns_excursion(resident_id, excursion_id):
-    excursion = Excursion.query.get(excursion_id)
+    excursion = db.session.get(Excursion, excursion_id)
     if not excursion:
         return None, {"message": "Экскурсия не найдена"}, HTTPStatus.NOT_FOUND
     if excursion.created_by != resident_id:
