@@ -1,4 +1,5 @@
 import io
+import json
 
 import pytest
 from flask_jwt_extended import create_access_token
@@ -35,27 +36,73 @@ class TestResidentData:
     ROLE = "resident"
 
 
+def get_excursion_payload():
+    data = {
+        "title": "Новая экскурсия",
+        "description": "Описание экскурсии",
+        "duration": 60,
+        "category": "Воркшоп",
+        "format_type": "Индивидуальная",
+        "age_category": "Для школьников (7-17 лет)",
+        "place": "Образовательный центр «Знание»",
+        "conducted_by": "Репетитор Алексей Кузнецов",
+        "is_active": True,
+        "working_hours": "Пн-Пт с 16:00 до 20:00, Сб с 10:00 до 14:00",
+        "contact_email": "math_tutor@ekbmail.ru",
+        "iframe_url": "<iframe src='https://yandex.ru/map-widget/v1/?um=constructor%3Atutoringcenter' width='600' height='450'></iframe>",
+        "telegram": "@ekb_math_tutor",
+        "vk": "https://vk.com/ekbmathtutor",
+        "distance_to_center": 1300,
+        "time_to_nearest_stop": 9,
+        "sessions": [
+            {
+                "start_datetime": "2025-07-08T17:00:00",
+                "max_participants": 1,
+                "cost": 1200
+            }
+        ],
+        "tags": ["репетиторство", "математика", "школьники", "образование", "подготовка к экзаменам"],
+        "additional_info": {
+            "max_participants": 1,
+            "materials_provided": True,
+            "location_description": "Центр расположен недалеко от станции метро «Чкаловская»."
+        }
+    }
+
+    payload = {
+        'data': json.dumps(data),
+        'photos': (io.BytesIO(b"fake image data"), "photo1.jpg"),
+    }
+
+    return payload
+
+
+def recreate_test_user(email, password, full_name, phone, role_name):
+    user = User.query.filter_by(email=email).first()
+    if user:
+        db.session.delete(user)
+        db.session.commit()
+    create_user(
+        email=email,
+        password=password,
+        full_name=full_name,
+        phone=phone,
+        role_name=role_name
+    )
+
+
 @pytest.fixture
 def app():
     app = create_app(testing=True)
     with app.app_context():
-        admin_user = User.query.filter_by(email=TestAdminData.EMAIL).first()
-        if admin_user:
-            db.session.delete(admin_user)
-            db.session.commit()
-
-        create_user(
+        recreate_test_user(
             email=TestAdminData.EMAIL,
             password=TestAdminData.PASSWORD,
             full_name=TestAdminData.FULL_NAME,
             phone=TestAdminData.PHONE,
             role_name=TestAdminData.ROLE
         )
-        resident_user = User.query.filter_by(email=TestResidentData.EMAIL).first()
-        if resident_user:
-            db.session.delete(resident_user)
-            db.session.commit()
-        create_user(
+        recreate_test_user(
             email=TestResidentData.EMAIL,
             password=TestResidentData.PASSWORD,
             full_name=TestResidentData.FULL_NAME,
@@ -70,37 +117,42 @@ def client(app):
     return app.test_client()
 
 
-import pytest
+class AuthClient:
+    def __init__(self, client, token):
+        self._client = client
+        self._token = token
+
+    def _add_auth_header(self, kwargs):
+        headers = kwargs.pop("headers", {})
+        headers["Authorization"] = f"Bearer {self._token}"
+        kwargs["headers"] = headers
+        return kwargs
+
+    def get(self, *args, **kwargs):
+        kwargs = self._add_auth_header(kwargs)
+        return self._client.get(*args, **kwargs)
+
+    def post(self, *args, **kwargs):
+        kwargs = self._add_auth_header(kwargs)
+        return self._client.post(*args, **kwargs)
+
+    def patch(self, *args, **kwargs):
+        kwargs = self._add_auth_header(kwargs)
+        return self._client.patch(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        kwargs = self._add_auth_header(kwargs)
+        return self._client.delete(*args, **kwargs)
 
 
 @pytest.fixture
 def admin_client(client, admin_access_token):
-    class AdminClient:
-        def __init__(self, client, token):
-            self._client = client
-            self._token = token
+    return AuthClient(client, admin_access_token)
 
-        def get(self, *args, **kwargs):
-            headers = kwargs.pop("headers", {})
-            headers["Authorization"] = f"Bearer {self._token}"
-            return self._client.get(*args, headers=headers, **kwargs)
 
-        def post(self, *args, **kwargs):
-            headers = kwargs.pop("headers", {})
-            headers["Authorization"] = f"Bearer {self._token}"
-            return self._client.post(*args, headers=headers, **kwargs)
-
-        def patch(self, *args, **kwargs):
-            headers = kwargs.pop("headers", {})
-            headers["Authorization"] = f"Bearer {self._token}"
-            return self._client.patch(*args, headers=headers, **kwargs)
-
-        def delete(self, *args, **kwargs):
-            headers = kwargs.pop("headers", {})
-            headers["Authorization"] = f"Bearer {self._token}"
-            return self._client.delete(*args, headers=headers, **kwargs)
-
-    return AdminClient(client, admin_access_token)
+@pytest.fixture
+def resident_client(client, resident_access_token):
+    return AuthClient(client, resident_access_token)
 
 
 @pytest.fixture
