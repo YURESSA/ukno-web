@@ -52,20 +52,21 @@ jobs:
 
       - name: Run DB migrations and tests
         run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)/backend
           cd backend
           export FLASK_APP=wsgi.py
-          
+  
           echo "Running DB migrations..."
           if [ ! -d "migrations" ]; then
             flask db init
           fi
-          
+  
           flask db migrate -m "GitHub Actions auto migration" || true
           flask db upgrade
-          cd ..
+  
           echo "Seeding reference data (optional)..."
           python -m backend.app seed_reference_data || echo "Seed step skipped"
-          
+  
           cd ..
           echo "Running tests..."
-          pytest --maxfail=1 --disable-warnings -q
+          pytest --maxfail=1 --disable-warnings -
