@@ -16,8 +16,10 @@ from backend.core.scripts.ensure_data import ensure_data_exists
 def seed_reference_data():
     ensure_data_exists(db, Role, 'roles.json', 'role_id', 'role_name')
     ensure_data_exists(db, Category, 'categories.json', 'category_id', 'category_name')
-    ensure_data_exists(db, AgeCategory, 'age_categories.json', 'age_category_id', 'age_category_name')
-    ensure_data_exists(db, FormatType, 'format_types.json', 'format_type_id', 'format_type_name')
+    ensure_data_exists(db, AgeCategory, 'age_categories.json', 'age_category_id',
+                       'age_category_name')
+    ensure_data_exists(db, FormatType, 'format_types.json', 'format_type_id',
+                       'format_type_name')
 
 
 def register_static_routes(app):
