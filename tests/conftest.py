@@ -1,5 +1,6 @@
 import io
 import json
+from datetime import datetime
 
 import pytest
 from flask_jwt_extended import create_access_token
@@ -7,7 +8,7 @@ from werkzeug.datastructures import FileStorage
 
 from backend.core import create_app, db
 from backend.core.models.auth_models import User
-from backend.core.models.excursion_models import Excursion
+from backend.core.models.excursion_models import Excursion, ExcursionSession
 from backend.core.services.excursion_services.excursion_service import create_excursion
 from backend.core.services.user_services.auth_service import create_user
 
@@ -232,3 +233,14 @@ def existing_excursion_id(app):
         if excursion_to_delete:
             db.session.delete(excursion_to_delete)
             db.session.commit()
+
+def create_excursion_session(excursion_id, start_datetime, max_participants, cost):
+    session = ExcursionSession(
+        excursion_id=excursion_id,
+        start_datetime=start_datetime,
+        max_participants=max_participants,
+        cost=cost
+    )
+    db.session.add(session)
+    db.session.commit()
+    return session

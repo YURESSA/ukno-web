@@ -1,5 +1,3 @@
-import io
-import json
 from http import HTTPStatus
 
 import pytest
@@ -43,6 +41,3 @@ class TestResidentProfile:
         }
         r = client.put("/api/resident/profile", headers=headers, json=payload)
         assert r.status_code == HTTPStatus.OK
-
-
-
