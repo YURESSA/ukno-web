@@ -1,16 +1,21 @@
 from http import HTTPStatus
+
 from tests.conftest import TestAdminData
 
+
 class TestAdminAuth:
-    def test_admin_login(self, client):
-        r = client.post('/api/admin/login', json={
-            "email": TestAdminData.EMAIL,
-            "password": TestAdminData.PASSWORD,
-        })
+    def test_login_success(self, client):
+        data = {"email": TestAdminData.EMAIL, "password": TestAdminData.PASSWORD}
+        r = client.post("/api/admin/login", json=data)
         assert r.status_code == HTTPStatus.OK
-        data = r.get_json()
-        assert "access_token" in data
-        assert data["role"] == TestAdminData.ROLE
+        resp = r.get_json()
+        assert "access_token" in resp
+        assert resp.get("role") == TestAdminData.ROLE
+
+    def test_login_failure(self, client):
+        data = {"email": "wrong@example.com", "password": "badpassword"}
+        r = client.post("/api/admin/login", json=data)
+        assert r.status_code == HTTPStatus.UNAUTHORIZED
 
 
 class TestAdminProfile:
