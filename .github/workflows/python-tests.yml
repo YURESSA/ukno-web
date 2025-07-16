@@ -63,6 +63,7 @@ jobs:
           fi
           flask db migrate -m "GitHub Actions auto migration" || true
           flask db upgrade
+          cd ..
           
           python -m app seed_reference_data || echo "Seed step skipped"
           
