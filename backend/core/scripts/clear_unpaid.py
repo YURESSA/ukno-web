@@ -8,10 +8,11 @@ from backend.core.models.excursion_models import Reservation
 def cleanup_unpaid_reservations():
     threshold = datetime.now() - timedelta(minutes=15)
     unpaid_old = Reservation.query.filter(
-        Reservation.is_paid == False,
+        ~Reservation.is_paid,
         Reservation.booked_at < threshold,
-        Reservation.is_cancelled == False
+        ~Reservation.is_cancelled
     ).all()
+
     for reservation in unpaid_old:
         db.session.delete(reservation)
     db.session.commit()

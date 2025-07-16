@@ -1,21 +1,26 @@
 from datetime import datetime, timedelta
+from http import HTTPStatus
 from urllib.parse import urlencode, quote_plus
 
 from flask import Response
 from flask import request
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_restx import Resource, fields
 
 from backend.core.schemas.auth_schemas import login_model, user_model, change_password_model, edit_profile_model
 from backend.core.services.excursion_services.excursion_service import list_excursions, get_excursion
-from backend.core.services.user_services.profile_service import *
 from . import user_ns
+from ..core import db
+from ..core.messages import AuthMessages
 from ..core.models.news_models import News
 from ..core.schemas.excursion_schemas import reservation_model, cancel_model
 from ..core.services.calendar_utilits import create_ical_from_reservation
 from ..core.services.email_service import send_reset_email
 from ..core.services.reservation_service import get_reservations_by_user_email, create_reservation_with_payment, \
     cancel_user_reservation, get_reservations_by_reservation_id
+from ..core.services.user_services.auth_service import get_user_by_email, update_profile, change_profile_password
+from ..core.services.user_services.profile_service import register_user, login_user, get_profile, \
+    get_user_info_response, delete_profile
 from ..core.services.utilits import verify_reset_token
 
 
@@ -185,7 +190,7 @@ class Reservations(Resource):
 
 
 @user_ns.route('/v2/reservations')
-class Reservations(Resource):
+class ReservationCreate(Resource):
     @jwt_required()
     @user_ns.expect(reservation_model)
     @user_ns.doc(description="Запись на сеанс экскурсии через оплату")

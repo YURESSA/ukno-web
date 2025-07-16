@@ -29,10 +29,6 @@ cancel_model = api.model('CancelReservationRequest', {
     'reservation_id': fields.Integer(required=True, description='ID бронирования')
 })
 
-from flask_restx import fields
-
-from backend.core import api
-
 excursion_model = api.model('Excursion', {
     'excursion_id': fields.Integer(readonly=True, description='ID экскурсии'),
     'title': fields.String(required=True, description='Название экскурсии'),

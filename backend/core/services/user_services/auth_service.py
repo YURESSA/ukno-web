@@ -42,7 +42,6 @@ def create_user(email, password, full_name, phone, role_name):
     return new_user
 
 
-
 def delete_user(email):
     user = get_user_by_email(email)
     if user:
@@ -50,7 +49,6 @@ def delete_user(email):
         db.session.commit()
         return True
     return False
-
 
 
 def authenticate_user(email, password, required_role=None):

@@ -143,8 +143,6 @@ class AgeCategoryResource(Resource):
         return {'message': 'Возрастная категория удалена'}, 200
 
 
-
-
 @ref_ns.route('/roles')
 class RoleList(Resource):
     @admin_required
@@ -184,8 +182,6 @@ class RoleResource(Resource):
         return {'message': 'Роль удалена'}, 200
 
 
-
-
 @ref_ns.route('/excursion-stats')
 class ExcursionStats(Resource):
     @ref_ns.doc(description="Получить статистику, роли, возрастные категории, форматы и категории экскурсий")
@@ -200,13 +196,12 @@ class ExcursionStats(Resource):
         min_center, max_center = db.session.query(
             func.min(Excursion.distance_to_center),
             func.max(Excursion.distance_to_center)
-        ).filter(Excursion.is_active == True).first()
+        ).filter(Excursion.is_active.is_(True)).first()
 
-        # Статистика по расстоянию до остановки
         min_time, max_time = db.session.query(
             func.min(Excursion.time_to_nearest_stop),
             func.max(Excursion.time_to_nearest_stop)
-        ).filter(Excursion.is_active == True).first()
+        ).filter(Excursion.is_active.is_(True)).first()
 
         # Роли
         roles = Role.query.all()

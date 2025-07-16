@@ -1,8 +1,9 @@
 import json
 from functools import wraps
+from http import HTTPStatus
 
 from flask import request, Response
-from flask_jwt_extended import jwt_required, get_jwt, verify_jwt_in_request
+from flask_jwt_extended import jwt_required, get_jwt, verify_jwt_in_request, get_jwt_identity
 from flask_restx import Resource
 
 from backend.core.services.excursion_services.excursion_photo_service import get_photos_for_excursion, \
@@ -14,7 +15,7 @@ from backend.core.services.excursion_services.excursion_service import update_ex
 from backend.core.services.excursion_services.excursion_session_service import get_sessions_for_excursion, \
     create_excursion_session, \
     update_excursion_session, delete_excursion_session
-from backend.core.services.user_services.profile_service import *
+from backend.core.services.user_services.profile_service import get_user_info_response, update_user, register_user
 from . import admin_ns
 from ..core.messages import AuthMessages
 from ..core.models.excursion_models import Reservation
@@ -24,6 +25,8 @@ from ..core.services.news_service import add_photo_to_news, get_photos_for_news,
     create_news_with_images, get_all_news, get_news_by_id, update_news, delete_news
 from ..core.services.reservation_service import delete_reservation_with_refund, get_all_reservations, \
     get_reservation_by_id
+from ..core.services.user_services.auth_service import get_user_by_email, authenticate_user, change_password, \
+    get_all_users, delete_user
 
 
 def admin_required(fn):
@@ -178,8 +181,9 @@ class NewsDetailResource(Resource):
     def put(self, news_id):
         news, error = update_news(news_id, request.form, request.files)
         if error:
-            return {
-                "message": error}, HTTPStatus.BAD_REQUEST if "JSON" in error or "обязательно" in error else HTTPStatus.NOT_FOUND
+            return ({
+                        "message": error}, HTTPStatus.BAD_REQUEST if "JSON" in error or "обязательно" in error
+                    else HTTPStatus.NOT_FOUND)
         return {"message": "Новость обновлена", "news": news.to_dict()}, HTTPStatus.OK
 
     @jwt_required()

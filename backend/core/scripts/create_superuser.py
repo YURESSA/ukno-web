@@ -2,11 +2,12 @@ import os
 import sys
 from getpass import getpass
 
+from backend.core import create_app, db
+from backend.core.models.auth_models import User, Role
+
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 sys.path.append(BASE_DIR)
 
-from backend.core import create_app, db
-from backend.core.models.auth_models import Role, User
 
 def create_superuser():
     print("=== Создание суперпользователя ===")
@@ -40,6 +41,7 @@ def create_superuser():
     db.session.add(new_user)
     db.session.commit()
     print(f"✅ Суперпользователь с email '{email}' успешно создан.")
+
 
 if __name__ == '__main__':
     app = create_app()

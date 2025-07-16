@@ -126,6 +126,7 @@ def update_news(news_id, form_data, files):
     db.session.commit()
     return news, None
 
+
 def delete_news(news_id):
     news = db.session.get(News, news_id)
     if not news:

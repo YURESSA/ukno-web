@@ -1,5 +1,12 @@
+from http import HTTPStatus
+
+from flask_jwt_extended import get_jwt_identity
+
+from backend.core import db
 from backend.core.messages import AuthMessages
-from backend.core.services.user_services.auth_service import *
+from backend.core.models.auth_models import User, Role
+from backend.core.services.user_services.auth_service import create_user, authenticate_user, change_password, \
+    delete_user
 
 
 def parse_user_data(data, default_role):

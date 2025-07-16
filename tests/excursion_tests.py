@@ -2,6 +2,8 @@ import io
 import json
 from http import HTTPStatus
 
+import pytest
+
 
 def _assert_excursions_list_response(response, expected_excursion_id=None):
     assert response.status_code == HTTPStatus.OK

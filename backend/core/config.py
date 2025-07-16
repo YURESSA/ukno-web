@@ -9,6 +9,7 @@ load_dotenv()
 class Config:
     def str_to_bool(value):
         return value.lower() in ("true", "1", "t", "yes", "y")
+
     PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
     TEMPLATE_FOLDER = os.path.join(PROJECT_ROOT, 'templates')
     STATIC_FOLDER = os.path.join(PROJECT_ROOT, 'static')
@@ -46,6 +47,5 @@ class Config:
     MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER")
     Configuration.account_id = os.environ.get("ACCOUNT_ID")
     Configuration.secret_key = os.environ.get("YOOKASSA_SECRET_KEY")
-
 
     PRODUCTION = str_to_bool(os.getenv("PRODUCTION", "False"))

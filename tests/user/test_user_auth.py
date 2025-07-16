@@ -90,6 +90,3 @@ def test_get_profile(client, access_token):
     assert data["phone"] == "1234567890"
     assert data["email"] == TestUserData.EMAIL
     assert data["role"] == TestUserData.ROLE
-
-
-

@@ -1,4 +1,3 @@
-import io
 from datetime import datetime
 from http import HTTPStatus
 
@@ -89,6 +88,7 @@ class TestExcursionSessions:
 
     def test_delete_session_resident(self, resident_client, excursion_with_one_session, excursion_id):
         _test_delete_session(resident_client, "/api/resident", excursion_id, excursion_with_one_session.session_id)
+
 
 @pytest.mark.usefixtures("resident_client")
 class TestExcursionPhotos:

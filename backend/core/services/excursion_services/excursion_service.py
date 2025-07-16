@@ -3,7 +3,7 @@ from http import HTTPStatus
 from urllib.parse import quote
 
 from flask import make_response
-from sqlalchemy import func
+from sqlalchemy import func, desc, asc
 from sqlalchemy.orm import aliased
 
 from backend.core import db
@@ -187,9 +187,6 @@ def add_tags(excursion, tag_names):
             excursion.tags.append(tag)
 
 
-from sqlalchemy import asc, desc
-
-
 def verify_resident_owns_excursion(resident_id, excursion_id):
     excursion = db.session.get(Excursion, excursion_id)
     if not excursion:
@@ -346,7 +343,7 @@ def get_resident_excursion_analytics(resident_id):
             func.coalesce(func.sum(Reservation.participants_count), 0)
         ).join(ExcursionSession).filter(
             ExcursionSession.excursion_id == excursion.excursion_id,
-            Reservation.is_cancelled == False
+            ~Reservation.is_cancelled
         ).scalar()
 
         if excursion_total_participants > max_participants:
