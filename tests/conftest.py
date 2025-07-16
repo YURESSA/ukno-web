@@ -1,6 +1,5 @@
 import io
 import json
-from datetime import datetime
 
 import pytest
 from flask_jwt_extended import create_access_token
@@ -50,7 +49,8 @@ def get_excursion_payload():
         "is_active": True,
         "working_hours": "Пн-Пт с 16:00 до 20:00, Сб с 10:00 до 14:00",
         "contact_email": "math_tutor@ekbmail.ru",
-        "iframe_url": "<iframe src='https://yandex.ru/map-widget/v1/?um=constructor%3Atutoringcenter' width='600' height='450'></iframe>",
+        "iframe_url": "<iframe src='https://yandex.ru/map-widget/v1/?um=constructor%3Atutoringcenter' "
+                      "width='600' height='450'></iframe>",
         "telegram": "@ekb_math_tutor",
         "vk": "https://vk.com/ekbmathtutor",
         "distance_to_center": 1300,
@@ -181,7 +181,8 @@ def existing_excursion_id(app):
 
         data = {
             "title": "Индивидуальные занятия по математике для школьников",
-            "description": "Помогаем школьникам Екатеринбурга улучшить знания по математике и подготовиться к экзаменам с опытным репетитором.",
+            "description": "Помогаем школьникам Екатеринбурга улучшить знания по математике и "
+                           "подготовиться к экзаменам с опытным репетитором.",
             "duration": 60,
             "category": "Воркшоп",
             "format_type": "Индивидуальная",
@@ -191,7 +192,8 @@ def existing_excursion_id(app):
             "is_active": True,
             "working_hours": "Пн-Пт с 16:00 до 20:00, Сб с 10:00 до 14:00",
             "contact_email": "math_tutor@ekbmail.ru",
-            "iframe_url": "<iframe src='https://yandex.ru/map-widget/v1/?um=constructor%3Atutoringcenter' width='600' height='450'></iframe>",
+            "iframe_url": "<iframe src='https://yandex.ru/map-widget/v1/?um=constructor%3Atutoringcenter' "
+                          "width='600' height='450'></iframe>",
             "telegram": "@ekb_math_tutor",
             "vk": "https://vk.com/ekbmathtutor",
             "distance_to_center": 1300,
@@ -233,6 +235,7 @@ def existing_excursion_id(app):
         if excursion_to_delete:
             db.session.delete(excursion_to_delete)
             db.session.commit()
+
 
 def create_excursion_session(excursion_id, start_datetime, max_participants, cost):
     session = ExcursionSession(

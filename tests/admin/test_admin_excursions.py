@@ -1,4 +1,3 @@
-import io
 from datetime import datetime
 from http import HTTPStatus
 

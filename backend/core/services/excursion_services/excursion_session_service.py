@@ -1,4 +1,5 @@
 from datetime import datetime
+from http import HTTPStatus
 from urllib.parse import quote
 
 from flask import make_response
@@ -6,8 +7,8 @@ from flask_jwt_extended import get_jwt_identity
 
 from backend.core import db
 from backend.core.models.excursion_models import ExcursionSession
-from backend.core.services.user_services.auth_service import get_user_by_email
 from backend.core.services.email_service import send_session_cancellation_email, send_session_deletion_email
+from backend.core.services.user_services.auth_service import get_user_by_email
 from backend.core.services.utilits import generate_reservations_csv
 from backend.core.services.yookassa_service import refund_yookassa_payment
 
@@ -73,9 +74,6 @@ def update_excursion_session(excursion_id, session_id, data):
     except Exception as e:
         db.session.rollback()
         return None, {"message": f"Ошибка при обновлении сессии: {str(e)}"}, HTTPStatus.INTERNAL_SERVER_ERROR
-
-
-from http import HTTPStatus
 
 
 def delete_excursion_session(excursion_id, session_id, notify_resident=True):

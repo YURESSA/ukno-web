@@ -1,5 +1,6 @@
 import json
 from http import HTTPStatus
+
 import pytest
 
 
@@ -66,4 +67,3 @@ def test_admin_delete_news_not_found(client, admin_access_token):
     assert delete_resp.status_code == HTTPStatus.NOT_FOUND
     delete_json = delete_resp.get_json()
     assert "message" in delete_json
-

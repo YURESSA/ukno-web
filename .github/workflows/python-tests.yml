@@ -49,6 +49,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
+          pip install flake8
+
+      - name: Run flake8 (PEP8 check)
+        run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)/backend
+          flake8 backend tests
 
       - name: Run DB migrations and tests
         run: |

@@ -1,20 +1,28 @@
 import json
 from functools import wraps
+from http import HTTPStatus
 
 from flask import request
-from flask_jwt_extended import get_jwt, verify_jwt_in_request
+from flask_jwt_extended import get_jwt, verify_jwt_in_request, get_jwt_identity
 from flask_restx import Resource
 
-from . import resident_ns
-from ..core.schemas.auth_schemas import *
-from ..core.schemas.excursion_schemas import *
-from backend.core.services.excursion_services.excursion_photo_service import add_photo_to_excursion, get_photos_for_excursion, \
+from backend.core.services.excursion_services.excursion_photo_service import add_photo_to_excursion, \
+    get_photos_for_excursion, \
     delete_photo_from_excursion
-from backend.core.services.excursion_services.excursion_service import create_excursion, update_excursion, get_excursions_for_resident, \
+from backend.core.services.excursion_services.excursion_service import create_excursion, update_excursion, \
+    get_excursions_for_resident, \
     get_resident_excursion_analytics, get_excursion, verify_resident_owns_excursion, delete_excursion
-from backend.core.services.excursion_services.excursion_session_service import create_excursion_session, update_excursion_session, \
+from backend.core.services.excursion_services.excursion_session_service import create_excursion_session, \
+    update_excursion_session, \
     delete_excursion_session, get_sessions_for_excursion
-from backend.core.services.user_services.profile_service import *
+from . import resident_ns
+from ..core.messages import AuthMessages
+from ..core.schemas.auth_schemas import login_model, change_password_model
+from ..core.schemas.excursion_schemas import data_param, photos_param, excursion_model, session_model, \
+    session_patch_model
+from ..core.services.user_services.auth_service import get_user_by_email, change_profile_password
+from ..core.services.user_services.profile_service import login_user, get_profile, get_user_info_response, \
+    delete_profile
 
 
 def resident_required(fn):

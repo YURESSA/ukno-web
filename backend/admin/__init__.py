@@ -1,5 +1,5 @@
 from flask_restx import Namespace
 
-admin_ns = Namespace('admin', description='Эндпоинты для администратора')
+from . import routes  # noqa: F401
 
-from . import routes
+admin_ns = Namespace('admin', description='Эндпоинты для администратора')

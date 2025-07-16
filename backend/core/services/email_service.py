@@ -28,19 +28,27 @@ def send_reservation_confirmation_email(reservation, user):
         "Спасибо за бронирование!"
     )
 
+    title = excursion.title if excursion else 'Экскурсия'
+    place = excursion.place if excursion and excursion.place else 'уточняется'
+    contact = (excursion.contact_email if excursion and excursion.contact_email
+               else 'не указан')
+
     body_html = f"""
     <html>
       <body style="font-family: Arial, sans-serif; color: #333;">
         <p>Здравствуйте, <strong>{display_name}</strong>!</p>
         <p>Вы успешно записались на экскурсию:</p>
         <ul>
-          <li><strong>Название:</strong> {excursion.title if excursion else 'Экскурсия'}</li>
+          <li><strong>Название:</strong> {title}</li>
           <li><strong>Дата и время:</strong> {session_time}</li>
           <li><strong>Количество участников:</strong> {reservation.participants_count}</li>
-          <li><strong>Место проведения:</strong> {excursion.place if excursion and excursion.place else 'уточняется'}</li>
-          <li><strong>Контактный email:</strong> {excursion.contact_email if excursion and excursion.contact_email else 'не указан'}</li>
+          <li><strong>Место проведения:</strong> {place}</li>
+          <li><strong>Контактный email:</strong> {contact}</li>
         </ul>
-        <p>Во вложении вы найдете файл с приглашением в календарь (<code>.ics</code>), который можно добавить в ваш календарь.</p>
+        <p>
+          Во вложении вы найдете файл с приглашением в календарь
+          <code>.ics</code>, который можно добавить в ваш календарь.
+        </p>
         <p>Спасибо за бронирование!</p>
       </body>
     </html>
@@ -83,12 +91,20 @@ def send_reservation_cancellation_email(user, reservation):
               "Если у вас возникли вопросы, пожалуйста, свяжитесь с нами по указанным контактам."
     )
 
+    refund_notice = (
+        '<p><strong>Средства за бронирование будут возвращены в ближайшее время.</strong></p>'
+        if reservation.payment and getattr(reservation.payment, 'status', '') == "succeeded"
+        else ''
+    )
+
     body_html = f"""
     <html>
       <body style="font-family: Arial, sans-serif; color: #333;">
         <p>Здравствуйте, <strong>{user.full_name}</strong>!</p>
-        <p>Ваше бронирование на экскурсию <strong>«{excursion_title}»</strong> (ID сессии: <strong>{session_id_str}</strong>), запланированную на <strong>{date_str}</strong>, было аннулировано администратором.</p>
-        {'<p><strong>Средства за бронирование будут возвращены в ближайшее время.</strong></p>' if reservation.payment and getattr(reservation.payment, 'status', '') == "succeeded" else ''}
+        <p>Ваше бронирование на экскурсию <strong>«{excursion_title}»</strong>
+        (ID сессии: <strong>{session_id_str}</strong>), запланированную на <strong>{date_str}</strong>,
+        было аннулировано администратором.</p>
+        {refund_notice}
         <p>Приносим извинения за возможные неудобства.</p>
         <p>Если у вас возникли вопросы, пожалуйста, свяжитесь с нами по указанным контактам.</p>
       </body>
@@ -154,14 +170,20 @@ def send_session_cancellation_email(reservation, excursion_name, session):
             + "\n\nПриносим извинения за возможные неудобства."
     )
 
+    refund_notice = (
+        '<p><strong>Средства будут возвращены в ближайшее время.</strong></p>'
+        if reservation.payment and reservation.payment.status == "succeeded"
+        else ''
+    )
+
     body_html = f"""
     <html>
       <body style="font-family: Arial, sans-serif; color: #333;">
         <p>Здравствуйте, <strong>{reservation.full_name}</strong>!</p>
-        <p>Сессия экскурсии <strong>«{excursion_name}»</strong> (ID <strong>{session.session_id}</strong>) 
-           на <strong>{session.start_datetime.strftime('%d.%m.%Y %H:%M')}</strong> отменена.</p>
+        <p>Сессия экскурсии <strong>«{excursion_name}»</strong> (ID <strong>{session.session_id}</strong>)<br>
+            на <strong>{session.start_datetime.strftime('%d.%m.%Y %H:%M')}</strong> отменена.</p>
         <p>Ваше бронирование автоматически аннулировано.</p>
-        {"<p><strong>Средства будут возвращены в ближайшее время.</strong></p>" if reservation.payment and reservation.payment.status == "succeeded" else ""}
+        {refund_notice}
         <p>Приносим извинения за возможные неудобства.</p>
       </body>
     </html>
@@ -186,7 +208,8 @@ def send_session_deletion_email(deleter_email, excursion_name, session_id, csv_d
     <html>
         <body style="font-family: Arial, sans-serif; color: #333;">
             <p>Здравствуйте!</p>
-            <p>Сессия экскурсии <strong>«{excursion_name}»</strong> (ID <strong>{session_id}</strong>) была <strong>удалена</strong>.</p>
+            <p>Сессия экскурсии <strong>«{excursion_name}»</strong> (ID <strong>{session_id}</strong>)
+            была <strong>удалена</strong>.</p>
             <p>Во вложении вы найдёте CSV-файл со списком всех отменённых по этой сессии бронирований.</p>
             <p>Если возвраты были оформлены автоматически, дополнительных действий не требуется.</p>
             <br>
@@ -232,17 +255,17 @@ def send_reservation_refund_email(reservation):
         <body style="font-family: Arial, sans-serif; font-size: 15px; color: #333;">
             <p>Здравствуйте, <strong>{reservation.full_name}</strong>!</p>
 
-            <p>Ваше бронирование на экскурсию<br>
-            <strong>«{reservation.session.excursion.title}»</strong><br>
-            на <strong>{reservation.session.start_datetime.strftime('%d.%m.%Y в %H:%M')}</strong> было успешно отменено.</p>
+            <p>Ваше бронирование на сессию экскурсии <strong>«{reservation.session.excursion.title}»</strong>
+            (на <strong>{reservation.session.start_datetime.strftime('%d.%m.%Y в %H:%M')}</strong>)
+            было успешно отменено.</p>
 
             <p>Мы оформили возврат средств на тот же способ оплаты, который использовался при покупке.</p>
 
             <p><strong>Сумма возврата:</strong><br>
-            {reservation.payment.amount if reservation.payment else 'не указана'} 
+            {reservation.payment.amount if reservation.payment else 'не указана'}
             {reservation.payment.currency if reservation.payment else 'RUB'}</p>
 
-            <p>Если у вас возникли вопросы или вы считаете, что отмена произошла по ошибке, пожалуйста, свяжитесь с нашей службой поддержки.</p>
+            <p>Если у вас возникли вопросы, свяжитесь с нашей службой поддержки.</p>
 
             <p>Спасибо, что выбираете нас!<br>
             <em>С уважением,<br>Команда поддержки</em></p>

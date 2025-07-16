@@ -1,5 +1,5 @@
 from flask_restx import Namespace
 
-webhook_ns = Namespace('webhook', description='Эндпоинты для администратора')
+from . import routes  # noqa: F401
 
-from . import routes
+webhook_ns = Namespace('webhook', description='Эндпоинты для администратора')

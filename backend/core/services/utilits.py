@@ -2,10 +2,12 @@ import os
 import re
 import threading
 import uuid
+from datetime import datetime
 from io import BytesIO
 
 from flask import current_app
 from flask_mail import Message
+from itsdangerous import URLSafeTimedSerializer
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from werkzeug.utils import secure_filename
@@ -88,9 +90,6 @@ def send_email(subject, recipient, body, body_html=None, attachments=None):
     threading.Thread(target=send_async_email, args=(current_app._get_current_object(), msg)).start()
 
 
-from itsdangerous import URLSafeTimedSerializer
-
-
 def generate_reset_token(email, expires_sec=3600):
     s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
     return s.dumps(email, salt='password-reset-salt')
@@ -109,9 +108,6 @@ def to_str(value):
     if isinstance(value, bytes):
         return value.decode('utf-8')
     return str(value)
-
-
-from datetime import datetime
 
 
 def format_datetime(value):
