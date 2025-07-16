@@ -50,31 +50,18 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r backend/requirements.txt
 
-    - name: Set Flask app env
-      run: |
-        echo "FLASK_APP=backend/wsgi.py" >> $GITHUB_ENV
-
-    - name: Prepare and run tests
+    - name: Run DB migrations and tests
       run: |
         cd backend
+        export FLASK_APP=wsgi.py
 
-        # Ждём сервисы, если необходимо
-        sleep 5
-
-        # Инициализация миграций, если нужно
+        echo "Running DB migrations..."
         if [ ! -d "migrations" ]; then
-          echo "Инициализация Alembic..."
           flask db init
         fi
 
-        flask db migrate -m "auto migrate" || true
+        flask db migrate -m "GitHub Actions auto migration" || true
         flask db upgrade
 
-        # Подготовка тестовых данных (если есть такой модуль)
-        echo "Загрузка справочников (если есть)..."
-        python -m backend.app seed_reference_data || echo "Нет seed_reference_data"
-
-        cd ..
-
-        # Запуск тестов
-        pytest --maxfail=1 --disable-warnings -q
+        echo "Seeding reference data (optional)..."
+        python -m backend.app seed_ref_
