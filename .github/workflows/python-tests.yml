@@ -2,34 +2,49 @@ name: Run Python Tests
 
 on:
   push:
-    branches:
-      - summer-practice
+    branches: [summer-practice]
   pull_request:
-    branches:
-      - summer-practice
+    branches: [summer-practice]
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        python-version: [ 3.12 ]
+    env:
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+      SQLITE_URL: ${{ secrets.SQLITE_URL }}
+      POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+      MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+      MAIL_SERVER: ${{ secrets.MAIL_SERVER }}
+      MAIL_PORT: ${{ secrets.MAIL_PORT }}
+      MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+      MAIL_DEFAULT_SENDER: ${{ secrets.MAIL_DEFAULT_SENDER }}
+      FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      POSTGRES_HOST_AUTH_METHOD: ${{ secrets.POSTGRES_HOST_AUTH_METHOD }}
+      POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+      POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+      PRODUCTION: ${{ secrets.PRODUCTION }}
+      USE_POSTGRESS: ${{ secrets.USE_POSTGRESS }}
+      ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
+      YOOKASSA_SECRET_KEY: ${{ secrets.YOOKASSA_SECRET_KEY }}
 
     steps:
-      - uses: actions/checkout@v3
+    - uses: actions/checkout@v3
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pytest
-          pip install -r backend/requirements.txt
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r backend/requirements.txt
 
-      - name: Run tests with pytest
-        run: |
-          pytest --maxfail=1 --disable-warnings -q
+    - name: Run tests with pytest
+      run: |
+        pytest --maxfail=1 --disable-warnings -q
