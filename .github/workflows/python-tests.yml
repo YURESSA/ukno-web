@@ -10,6 +10,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        python-version: [3.12]
+
     env:
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
       JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
@@ -33,7 +37,8 @@ jobs:
       YOOKASSA_SECRET_KEY: ${{ secrets.YOOKASSA_SECRET_KEY }}
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
@@ -45,6 +50,31 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r backend/requirements.txt
 
-    - name: Run tests with pytest
+    - name: Set Flask app env
       run: |
+        echo "FLASK_APP=backend/wsgi.py" >> $GITHUB_ENV
+
+    - name: Prepare and run tests
+      run: |
+        cd backend
+
+        # Ждём сервисы, если необходимо
+        sleep 5
+
+        # Инициализация миграций, если нужно
+        if [ ! -d "migrations" ]; then
+          echo "Инициализация Alembic..."
+          flask db init
+        fi
+
+        flask db migrate -m "auto migrate" || true
+        flask db upgrade
+
+        # Подготовка тестовых данных (если есть такой модуль)
+        echo "Загрузка справочников (если есть)..."
+        python -m backend.app seed_reference_data || echo "Нет seed_reference_data"
+
+        cd ..
+
+        # Запуск тестов
         pytest --maxfail=1 --disable-warnings -q
