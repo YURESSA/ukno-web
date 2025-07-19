@@ -4,10 +4,45 @@
   padding: 40px 30px;
 }
 
-.large-text {
-  font-size: 24px;
-}
-
 .larger-text {
   font-size: 36px;
+}
+
+.bold {
+  font-weight: 700;
+}
+
+.n-collapse {
+  width: max-content !important;
+  font-size: 20px !important;
+}
+
+.n-collapse-item__header-main {
+  display: flex;
+  align-items: center;
+  font-size: 20px;
+  padding: 10px 25px;
+}
+
+.n-collapse-item {
+  position: relative;
+}
+
+.n-carousel__arrow {
+  background-color: #333333 !important;
+}
+
+.n-carousel {
+  /* Стили для точек (dots) */
+  --n-dot-color: #c0c0c0; /* обычное состояние */
+  --n-dot-color-focus: #a0a0a0; /* при фокусе */
+  --n-dot-color-active: #006aff; /* активная точка */
+
+  /* Размеры точек */
+  --n-dot-size: 8px;
+  --n-dot-size-active: 10px;
+
+  /* Стили для стрелок */
+  --n-arrow-color: #3a7bd5;
+  --n-arrow-size: 24px;
 }

@@ -1,17 +1,38 @@
 <template>
   <div class="card-wrapper">
     <div class="avatar">
-      <h2>Д</h2>
+      <h2>{{ firstLetter }}</h2>
     </div>
     <div class="name">
-      <h5>Гость</h5>
-      <h3>Дмитрий Дмитрий Антонченко</h3>
+      <h5>{{ roleName }}</h5>
+      <h3>{{ full_name }}</h3>
     </div>
   </div>
 </template>
 
 
 <script setup>
+import { computed } from 'vue'
+
+const props = defineProps({
+  role: String,
+  full_name: String
+})
+
+const roleName = computed(() => {
+  switch (props.role) {
+    case 'user':
+      return 'Гость'
+    case 'admin':
+      return 'Администратор'
+    case 'resident':
+      return 'Резидент'
+    default:
+      return 'Неизвестная роль'
+  }
+})
+
+const firstLetter = computed(() => props.full_name?.[0] ?? '')
 
 </script>
 

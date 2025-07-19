@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Вход в систему</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Лаконичные переменные */
+    :root {
+        --primary: #3b82f6; /* Blue 500 */
+        --primary-hover: #2563eb; /* Blue 600 */
+        --bg-light: #f8fafc; /* Slate 50 */
+        --bg-white: #ffffff;
+        --text-dark: #1e293b; /* Slate 900 */
+        --text-muted: #64748b; /* Slate 500 */
+        --border-color: #e2e8f0; /* Slate 200 */
+        --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.05);
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --transition: all 0.2s ease-in-out;
+    }
+
+    /* Базовые стили */
+    html, body {
+        height: 100%;
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        color: var(--text-dark);
+        background-color: var(--bg-light);
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+    }
+
+    .login-container {
+        background: var(--bg-white);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-card);
+        padding: 2.5rem;
+        max-width: 420px; /* Немного шире для лучшего вида */
+        width: 100%;
+        text-align: center;
+    }
+
+    .login-container h2 {
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin-bottom: 2rem;
+        color: var(--text-dark);
+    }
+
+    /* Form Improvements */
+    .form-label {
+        font-weight: 500;
+        color: var(--text-dark);
+        margin-bottom: 0.4rem;
+        font-size: 0.875rem;
+        text-align: left; /* Выравнивание лейблов по левому краю */
+        display: block; /* Чтобы label занимал всю ширину */
+    }
+
+    .form-control {
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 0.75rem 1rem; /* Увеличенные отступы */
+        transition: var(--transition);
+        background: var(--bg-white);
+        font-size: 0.9375rem; /* Немного крупнее шрифт */
+    }
+
+    .form-control:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+        font-weight: 600;
+        border-radius: var(--radius-md);
+        transition: var(--transition);
+        border: none;
+        padding: 0.75rem 1.5rem; /* Увеличенные отступы для кнопки */
+        font-size: 1rem;
+        width: 100%; /* Кнопка на всю ширину */
+        margin-top: 1.5rem; /* Отступ сверху */
+    }
+
+    .btn-primary:hover {
+        background: var(--primary-hover);
+        color: white;
+    }
+
+    .text-danger {
+        color: #ef4444 !important; /* Red 500 */
+        font-size: 0.875rem;
+        margin-top: 1rem;
+        text-align: center;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 576px) {
+        .login-container {
+            padding: 1.5rem;
+            margin: 1rem; /* Отступы по бокам на маленьких экранах */
+        }
+        .login-container h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .form-control {
+            padding: 0.625rem 0.875rem;
+            font-size: 0.875rem;
+        }
+        .btn-primary {
+            padding: 0.625rem 1.25rem;
+            font-size: 0.9375rem;
+        }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>Вход в систему</h2>
+      <form id="loginForm">
+        <div class="mb-3">
+          <label for="email" class="form-label">Электронная почта</label>
+          <input type="email" class="form-control" id="email" required />
+        </div>
+        <div class="mb-3">
+          <label for="password" class="form-label">Пароль</label>
+          <input type="password" class="form-control" id="password" required />
+        </div>
+        <button type="submit" class="btn btn-primary">Войти</button>
+      </form>
+    <div id="errorMsg" class="text-danger mt-3"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const API_LOGIN = '/api/admin/login'; // путь к API логина
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      document.getElementById('errorMsg').textContent = '';
+
+      try {
+        const res = await fetch(API_LOGIN, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+
+        if (!res.ok) {
+          document.getElementById('errorMsg').textContent =
+            res.status === 401
+              ? 'Неверный email или пароль'
+              : 'Ошибка сервера, попробуйте позже';
+          return;
+        }
+
+        const data = await res.json();
+        localStorage.setItem('jwt_token', data.access_token);
+        window.location.href = '/admin-panel/';
+      } catch (error) {
+        document.getElementById('errorMsg').textContent = 'Ошибка сети, попробуйте позже';
+        console.error(error);
+      }
+    });
+  </script>
+</body>
+</html>

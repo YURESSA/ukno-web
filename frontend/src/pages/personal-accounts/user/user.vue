@@ -1,14 +1,19 @@
 <template>
   <Header/>
   <div class="page-wrapper">
-    <Username/>
+    <Username :full_name="profileData.full_name" :role="profileData.role"/>
     <div class="user-data-wrapper">
-      <Userdata/>
-      <NearestEvents/>
+      <Userdata
+        :email="profileData.email"
+        :phone="profileData.phone"
+        @open="openChange"
+      />
+      <NearestEvents :reservationsData="reservationsData"/>
       <DefaultButton class="profie__btn" text="История записей"/>
-      <DefaultButton class="profie__btn" text="Выйти"/>
+      <DefaultButton @click="logOut" class="profie__btn" text="Выйти"/>
     </div>
   </div>
+  <ChangePassword @close="closeChange" :role="profileData.role" v-if="openPasswordModal"/>
 </template>
 
 <script setup>
@@ -17,6 +22,39 @@ import Username from '../_shared/username.vue';
 import Userdata from '../_shared/userdata.vue';
 import NearestEvents from './components/nearestEvents.vue';
 import DefaultButton from '@/components/UI/button/DefaultButton.vue';
+import { onMounted, computed, ref } from 'vue';
+import { useDataStore } from '@/stores/counter';
+import router from '@/router';
+import ChangePassword from '../_shared/changePassword.vue';
+
+const store = useDataStore();
+const profileData = computed(() => store.profileData);
+const reservationsData = computed(() => store.reservationsData);
+const openPasswordModal = ref(false);
+
+onMounted(async () => {
+  try {
+    await store.GetProfile();
+    await store.GetUserReservations();
+  } catch (error) {
+    console.error('Ошибка при загрузке:', error);
+  }
+});
+
+async function logOut(){
+  await store.clearTokenRole();
+  router.push('/');
+}
+
+function openChange(){
+  document.body.style.overflowY = 'hidden'
+  openPasswordModal.value = true;
+}
+
+function closeChange(){
+  document.body.style.overflowY = 'auto'
+  openPasswordModal.value = false;
+}
 </script>
 
 <style scoped>

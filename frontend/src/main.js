@@ -5,7 +5,7 @@ import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
 import App from './App.vue'
-import router from './router'
+import router from './router/index.js'
 
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)

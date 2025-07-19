@@ -75,7 +75,6 @@ const store = useDataStore();
 const showErrors = ref(false);
 
 const formData = ref({
-  username: '',
   phone: '',
   email: '',
   password: '',
@@ -161,8 +160,6 @@ const handleSubmit = async () => {
   if (hasErrors) {
     return;
   }
-
-  formData.value.username = formData.value.email;
 
   try {
     await store.PostNewUser(JSON.stringify(formData.value));

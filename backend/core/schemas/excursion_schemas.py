@@ -29,10 +29,6 @@ cancel_model = api.model('CancelReservationRequest', {
     'reservation_id': fields.Integer(required=True, description='ID бронирования')
 })
 
-from flask_restx import fields
-
-from backend.core import api
-
 excursion_model = api.model('Excursion', {
     'excursion_id': fields.Integer(readonly=True, description='ID экскурсии'),
     'title': fields.String(required=True, description='Название экскурсии'),
@@ -90,4 +86,8 @@ photo_model = api.model('Photo', {
     'photo_id': fields.Integer(readonly=True, description='ID фото'),
     'filename': fields.String(description='Имя файла'),
     'photo_url': fields.String(description='URL фото'),
+})
+
+role_model = api.model('Role', {
+    'name': fields.String(required=True, description='Название роли')
 })

@@ -7,9 +7,9 @@
       </div>
       <div class="events-list">
       </div>
-      <IconButton class="button" text="узнать больше"><img src="/icon/arrow.svg" alt=""></IconButton>
-        </div>
+      <IconButton class="button" text="записаться"><img src="/icon/arrow.svg" alt=""></IconButton>
     </div>
+  </div>
 </template>
 
 <script setup>

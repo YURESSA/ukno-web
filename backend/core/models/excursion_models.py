@@ -99,6 +99,8 @@ class Excursion(db.Model):
     sessions = db.relationship("ExcursionSession", back_populates="excursion", cascade="all, delete-orphan", lazy=True)
     tags = db.relationship("Tag", secondary=excursion_tags, back_populates="excursions", lazy='subquery')
 
+    creator = db.relationship("User", backref="excursions_created", foreign_keys=[created_by])
+
     def __str__(self):
         return f"Excursion(id={self.excursion_id}, title={self.title})"
 
@@ -111,7 +113,7 @@ class Excursion(db.Model):
             'category': self.category.to_dict() if self.category else None,
             'format_type': self.format_type.to_dict() if self.format_type else None,
             'age_category': self.age_category.to_dict() if self.age_category else None,
-            'created_by': self.created_by,
+            'created_by': self.creator.email if self.creator else None,
             'is_active': self.is_active,
             'place': self.place,
             'conducted_by': self.conducted_by,
@@ -123,7 +125,10 @@ class Excursion(db.Model):
             "distance_to_center": self.distance_to_center,
             "time_to_nearest_stop": self.time_to_nearest_stop,
             'photos': [photo.to_dict() for photo in self.photos],
-            'sessions': [session.to_dict() for session in self.sessions],
+            'sessions': [
+                session.to_dict()
+                for session in sorted(self.sessions, key=lambda s: s.start_datetime)
+            ],
             'tags': [tag.to_dict() for tag in self.tags]
         }
         if include_related:
@@ -145,6 +150,10 @@ class ExcursionPhoto(db.Model):
     order_index = db.Column(db.Integer, nullable=False, default=0)
 
     excursion = db.relationship("Excursion", back_populates="photos")
+
+    __mapper_args__ = {
+        "confirm_deleted_rows": False
+    }
 
     def __str__(self):
         return f"ExcursionPhoto(id={self.photo_id}, excursion_id={self.excursion_id}, " \
@@ -175,6 +184,11 @@ class ExcursionSession(db.Model):
         cascade="all, delete-orphan",
         lazy=True
     )
+    payments = db.relationship("Payment", back_populates="session")
+
+    __mapper_args__ = {
+        "confirm_deleted_rows": False
+    }
 
     def __str__(self):
         return f"ExcursionSession(id={self.session_id}, excursion_id={self.excursion_id}, " \
@@ -215,9 +229,11 @@ class Reservation(db.Model):
     email = db.Column(db.String(255), nullable=False)
     participants_count = db.Column(db.Integer, nullable=False, default=1)
     is_cancelled = db.Column(db.Boolean, default=False)
+    is_paid = db.Column(db.Boolean, default=False)
 
     session = db.relationship("ExcursionSession", back_populates="reservations")
     user = db.relationship("User", back_populates="reservations")
+    payment = db.relationship("Payment", back_populates="reservation", uselist=False)
 
     def __str__(self):
         return (f"Reservation(id={self.reservation_id}, session_id={self.session_id}, "
@@ -226,6 +242,8 @@ class Reservation(db.Model):
                 f"booked_at={self.booked_at})")
 
     def to_dict(self):
+        cost = float(self.session.cost) if self.session and self.session.cost is not None else None
+        total = float(cost * self.participants_count) if cost is not None else None
         return {
             'reservation_id': self.reservation_id,
             'session_id': self.session_id,
@@ -235,8 +253,75 @@ class Reservation(db.Model):
             'phone_number': self.phone_number,
             'email': self.email,
             'participants_count': self.participants_count,
-            'is_cancelled': self.is_cancelled
+            'is_cancelled': self.is_cancelled,
+            'is_paid': self.is_paid,
+            'excursion_title': (
+                self.session.excursion.title
+                if self.session and self.session.excursion else None
+            ),
+            'place': (
+                self.session.excursion.place
+                if self.session and self.session.excursion else None
+            ),
+            'total_cost': total,
+            'payment_status': (
+                self.payment.status
+                if self.payment else 'unpaid'
+            )
         }
+
+    def to_dict_detailed(self):
+        cost = float(self.session.cost) if self.session and self.session.cost is not None else None
+        total = float(cost * self.participants_count) if cost is not None else None
+        return {
+            'reservation_id': self.reservation_id,
+            'session_id': self.session_id,
+            'user_id': self.user_id,
+            'booked_at': self.booked_at.isoformat(),
+            'full_name': self.full_name,
+            'phone_number': self.phone_number,
+            'email': self.email,
+            'participants_count': self.participants_count,
+            'is_cancelled': self.is_cancelled,
+            'is_paid': self.is_paid,
+            'excursion_title': (
+                self.session.excursion.title
+                if self.session and self.session.excursion else None
+            ),
+            'session_start_datetime': (
+                self.session.start_datetime.isoformat()
+                if self.session else None
+            ),
+            'place': (
+                self.session.excursion.place
+                if self.session and self.session.excursion else None
+            ),
+            'total_cost': total,
+            'payment_status': (
+                self.payment.status
+                if self.payment else 'unpaid'
+            )
+        }
+
+
+class Payment(db.Model):
+    __tablename__ = 'payments'
+
+    payment_id = db.Column(db.String(100), primary_key=True)
+    reservation_id = db.Column(db.Integer, db.ForeignKey('reservations.reservation_id'), nullable=True)
+
+    session_id = db.Column(db.Integer, db.ForeignKey('excursion_sessions.session_id'), nullable=True)
+    participants_count = db.Column(db.Integer, nullable=False)
+    email = db.Column(db.String(255), nullable=False)
+
+    amount = db.Column(db.Numeric(10, 2), nullable=False)
+    currency = db.Column(db.String(10), default='RUB')
+    status = db.Column(db.String(50), nullable=False, default='pending')
+    method = db.Column(db.String(50), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+    reservation = db.relationship("Reservation", back_populates="payment", uselist=False)
+    session = db.relationship("ExcursionSession", back_populates="payments")
 
 
 class Tag(db.Model):

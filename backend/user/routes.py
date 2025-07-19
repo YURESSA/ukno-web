@@ -1,17 +1,27 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+from http import HTTPStatus
+from urllib.parse import urlencode, quote_plus
 
+from flask import Response
 from flask import request
-from flask_jwt_extended import jwt_required
-from flask_restx import Resource
-from sqlalchemy import func
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_restx import Resource, fields
 
-from backend.core.schemas.auth_schemas import login_model, user_model, change_password_model
-from backend.core.services.profile_service import *
+from backend.core.schemas.auth_schemas import login_model, user_model, change_password_model, edit_profile_model
+from backend.core.services.excursion_services.excursion_service import list_excursions, get_excursion
 from . import user_ns
-from ..core.models.excursion_models import Reservation, ExcursionSession
+from ..core import db
+from ..core.messages import AuthMessages
 from ..core.models.news_models import News
 from ..core.schemas.excursion_schemas import reservation_model, cancel_model
-from ..core.services.excursion_service import list_excursions, get_excursion
+from ..core.services.calendar_utilits import create_ical_from_reservation
+from ..core.services.email_service import send_reset_email
+from ..core.services.reservation_service import get_reservations_by_user_email, create_reservation_with_payment, \
+    cancel_user_reservation, get_reservations_by_reservation_id
+from ..core.services.user_services.auth_service import get_user_by_email, update_profile, change_profile_password
+from ..core.services.user_services.profile_service import register_user, login_user, get_profile, \
+    get_user_info_response, delete_profile
+from ..core.services.utilits import verify_reset_token
 
 
 @user_ns.route('/register')
@@ -46,16 +56,26 @@ class UserProfile(Resource):
         return get_user_info_response(user)
 
     @jwt_required()
-    @user_ns.expect(change_password_model)
-    @user_ns.doc(description="Изменение пароля")
+    @user_ns.expect(edit_profile_model)
+    @user_ns.doc(description="Редактирование профиля пользователя")
     def put(self):
         data = request.get_json()
-        return change_profile_password(data)
+        return update_profile(data)
 
     @jwt_required()
     @user_ns.doc(description="Удаление аккаунта")
     def delete(self):
         return delete_profile()
+
+
+@user_ns.route('/profile/password')
+class ChangePassword(Resource):
+    @jwt_required()
+    @user_ns.expect(change_password_model)
+    @user_ns.doc(description="Смена пароля пользователя")
+    def put(self):
+        data = request.get_json()
+        return change_profile_password(data)
 
 
 @user_ns.route('/excursions')
@@ -110,111 +130,139 @@ class UserExcursionsList(Resource):
         }, HTTPStatus.OK
 
 
+@user_ns.route('/password-reset-request')
+class PasswordResetRequest(Resource):
+    @user_ns.expect(user_ns.model("PasswordResetRequest", {
+        "email": fields.String(required=True, description="Email")
+    }))
+    @user_ns.doc(description="Запрос на сброс пароля (отправка email)")
+    def post(self):
+        data = request.get_json()
+        email = data.get("email")
+
+        user = get_user_by_email(email)
+        if not user:
+            return {"message": "Если пользователь существует, инструкция отправлена на почту"}, HTTPStatus.OK
+
+        send_reset_email(user)
+        return {"message": "Письмо для восстановления пароля отправлено"}, HTTPStatus.OK
+
+
+@user_ns.route('/password-reset')
+class PasswordReset(Resource):
+    @user_ns.expect(user_ns.model("PasswordReset", {
+        "token": fields.String(required=True, description="Токен из email"),
+        "new_password": fields.String(required=True, description="Новый пароль")
+    }))
+    @user_ns.doc(description="Сброс пароля по токену")
+    def post(self):
+        data = request.get_json()
+        token = data.get("token")
+        new_password = data.get("new_password")
+
+        email = verify_reset_token(token)
+        if not email:
+            return {"message": "Неверный или просроченный токен"}, HTTPStatus.BAD_REQUEST
+
+        user = get_user_by_email(get_jwt_identity())
+        if not user:
+            return {"message": "Пользователь не найден"}, HTTPStatus.NOT_FOUND
+
+        user.set_password(new_password)
+        db.session.commit()
+
+        return {"message": "Пароль успешно сброшен"}, HTTPStatus.OK
+
+
 @user_ns.route('/reservations')
 class Reservations(Resource):
     @jwt_required()
     @user_ns.doc(description="Список своих бронирований")
     def get(self):
-        username = get_jwt_identity()
-        user = User.query.filter_by(username=username).first()
+        email = get_jwt_identity()
+        reservations, user = get_reservations_by_user_email(email)
 
         if not user:
             return {"message": "Пользователь не найден"}, HTTPStatus.UNAUTHORIZED
-
-        reservations = Reservation.query.filter_by(user_id=user.user_id).all()
-
         return {
-            "reservations": [
-                {
-                    "reservation_id": r.reservation_id,
-                    "excursion_id": r.session.excursion.excursion_id,
-                    "session_id": r.session_id,
-                    "excursion_title": r.session.excursion.title,
-                    "start_datetime": r.session.start_datetime.isoformat(),
-                    "cost": str(r.session.cost),
-                    "booked_at": r.booked_at.isoformat() if r.booked_at else None,
-                    "full_name": r.full_name,
-                    "phone_number": r.phone_number,
-                    "email": r.email,
-                    "participants_count": r.participants_count,
-                    "is_cancelled": r.is_cancelled
-                }
-                for r in reservations
-            ]
+            "reservations": [r.to_dict_detailed() for r in reservations]
         }, HTTPStatus.OK
 
+
+@user_ns.route('/v2/reservations')
+class ReservationCreate(Resource):
     @jwt_required()
     @user_ns.expect(reservation_model)
-    @user_ns.doc(description="Запись на сеанс экскурсии")
+    @user_ns.doc(description="Запись на сеанс экскурсии через оплату")
     def post(self):
         data = request.get_json()
-        session_id = data.get('session_id')
-        full_name = data.get('full_name')
-        phone_number = data.get('phone_number')
-        email = data.get('email')
-        participants_count = data.get('participants_count', 1)
 
-        username = get_jwt_identity()
-        user = User.query.filter_by(username=username).first()
-
-        if not user:
-            return {"message": "Пользователь не найден"}, HTTPStatus.UNAUTHORIZED
-
-        if not session_id:
-            return {"message": "session_id is required"}, HTTPStatus.BAD_REQUEST
-
-        session = ExcursionSession.query.get(session_id)
-        if not session:
-            return {"message": "Сеанс не найден"}, HTTPStatus.NOT_FOUND
-
-        existing_participants = db.session.query(
-            func.coalesce(func.sum(Reservation.participants_count), 0)
-        ).filter_by(session_id=session_id, is_cancelled=False).scalar()
-
-        if existing_participants + participants_count > session.max_participants:
-            return {"message": "Недостаточно свободных мест"}, HTTPStatus.BAD_REQUEST
-
-        r = Reservation(
-            session_id=session_id,
-            user_id=user.user_id,
-            full_name=full_name,
-            phone_number=phone_number,
-            email=email,
-            participants_count=participants_count,
-            booked_at=datetime.utcnow(),
-            is_cancelled=False
+        response, status = create_reservation_with_payment(
+            user_email=get_jwt_identity(),
+            session_id=data.get('session_id'),
+            full_name=data.get('full_name'),
+            phone_number=data.get('phone_number'),
+            email=data.get('email'),
+            participants_count=data.get('participants_count', 1)
         )
-        db.session.add(r)
-        db.session.commit()
 
-        return {
-            "message": "Бронирование успешно",
-            "reservation_id": r.reservation_id
-        }, HTTPStatus.CREATED
+        return response, status
 
     @jwt_required()
     @user_ns.expect(cancel_model)
-    @user_ns.doc(description="Отмена своего бронирования")
+    @user_ns.doc(description="Отмена своего бронирования с возвратом средств")
     def delete(self):
         data = request.get_json() or {}
         reservation_id = data.get('reservation_id')
-        username = get_jwt_identity()
-        user = User.query.filter_by(username=username).first()
 
-        if not user:
-            return {"message": "Пользователь не найден"}, HTTPStatus.UNAUTHORIZED
+        response, status = cancel_user_reservation(
+            user_email=get_jwt_identity(),
+            reservation_id=reservation_id
+        )
 
-        if not reservation_id:
-            return {"message": "reservation_id is required"}, HTTPStatus.BAD_REQUEST
+        return response, status
 
-        reservation = Reservation.query.get(reservation_id)
-        if not reservation or reservation.user_id != user.user_id:
-            return {"message": "Бронирование не найдено или не принадлежит вам"}, HTTPStatus.NOT_FOUND
 
-        reservation.is_cancelled = True
-        db.session.commit()
+@user_ns.route('/reservations/<int:reservation_id>/export_ical')
+class ExportReservationICal(Resource):
+    def get(self, reservation_id):
+        reservation = get_reservations_by_reservation_id(reservation_id)
+        if not reservation:
+            return {"message": "Бронирование не найдено"}, 404
 
-        return {"message": "Бронирование отменено"}, HTTPStatus.OK
+        ical_bytes = create_ical_from_reservation(reservation)
+
+        return Response(
+            ical_bytes,
+            mimetype="text/calendar",
+            headers={
+                "Content-Disposition": 'attachment; filename="reservation.ics"'
+            }
+        )
+
+
+@user_ns.route('/reservations/<int:reservation_id>/google_calendar_link')
+class GoogleCalendarLink(Resource):
+    def get(self, reservation_id):
+        reservation = get_reservations_by_reservation_id(reservation_id)
+        if not reservation:
+            return {"message": "Бронирование не найдено"}, 404
+
+        title = f"Экскурсия: {reservation.session.excursion.title}"
+        start = reservation.session.start_datetime.strftime('%Y%m%dT%H%M%S')
+        end_dt = reservation.session.start_datetime + timedelta(minutes=reservation.session.excursion.duration)
+        end = end_dt.strftime('%Y%m%dT%H%M%S')
+
+        query = {
+            "action": "TEMPLATE",
+            "text": title,
+            "dates": f"{start}/{end}",
+            "details": f"Участников: {reservation.participants_count}",
+            "location": reservation.session.excursion.place,
+        }
+
+        link = f"https://calendar.google.com/calendar/render?{urlencode(query, quote_via=quote_plus)}"
+        return {"google_calendar_link": link}
 
 
 @user_ns.route('/news')
