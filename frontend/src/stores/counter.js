@@ -139,7 +139,11 @@ export const useDataStore = defineStore('data', {
             'Content-Type': 'application/json',
           },
         })
-        window.location.href = response.data.payment_url;
+        if (response.data.payment_url) {
+          window.location.href = response.data.payment_url;
+        } else {
+          console.log('Бронирование прошло успешно!')
+        }
       } catch (error) {
         console.log(this.auth_key)
         console.error('Ошибка при бронировании:', error.response?.data || error.message)
@@ -195,7 +199,8 @@ export const useDataStore = defineStore('data', {
       try {
         console.log(jsonData)
         console.log(`Bearer ${this.auth_key}`)
-        const response = await axios.delete(`${baseUrl}/api/user/v2/reservations`, jsonData, {
+        const response = await axios.delete(`${baseUrl}/api/user/v2/reservations`, {
+          data: jsonData,
           headers: {
             Authorization: `Bearer ${this.auth_key}`,
             'Content-Type': 'application/json',

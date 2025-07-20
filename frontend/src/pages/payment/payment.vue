@@ -86,7 +86,7 @@
 
   onMounted(async () => {
     try {
-      await store.FetchExcursionDetail(route.params.id);
+      await store.FetchExcursionDetail(route.query.excursion_id);
       setTimeout(() => {
         load.value = true
       }, 1000)
@@ -168,7 +168,7 @@
     try {
       await store.PostReservation(JSON.stringify(formData.value));
       alert('Бронирование прошло успешно!');
-      // router.push('/');
+      router.push('/profile');
     } catch (error) {
       console.error('Ошибка бронировании', error);
     }

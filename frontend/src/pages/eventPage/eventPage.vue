@@ -117,7 +117,10 @@ onMounted(async () => {
 });
 
 const moveToBooked = () => {
-  router.push(`/payment/${excursion.value.excursion_id}`);
+  router.push({
+    path: `/payment/${excursion.value.sessions[0].session_id}`,
+    query: { excursion_id: excursion.value.excursion_id }
+  });
 };
 
 const getMainImage = computed(() => {
