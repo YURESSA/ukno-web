@@ -207,7 +207,8 @@ export const useDataStore = defineStore('data', {
           },
         })
         console.log('Данные бронирования успешно удалены:', response.data)
-        this.reservationsData = this.reservationsData.filter(
+        console.log(this.reservationsData)
+        this.reservationsData = this.reservationsData.reservations.filter(
           reservation => reservation.reservation_id !== jsonData.reservation_id
         );
       } catch (error) {
