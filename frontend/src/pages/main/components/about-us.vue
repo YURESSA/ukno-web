@@ -1,127 +1,157 @@
 <template>
-  <div class="page-wrapper" id="about">
-    <div class="container text-medium">
-      <div class="design-img">
-        <!-- <img class="absolut--img left-ear" src="/icon/main/leftEar.png" alt=""> -->
-        <!-- <img class="absolut--img bottom-ear" src="/icon/main/bottomEar.png" alt=""> -->
-      </div>
-      <div class="title">
-        <h3>Молодежное бюро 5 этаж -</h3>
-        <img class="absolut--img flower-big" src="/icon/main/flower-big.png" alt="">
-      </div>
-      <div class="about-content">
-        <div class="content-wrapper">
-          <div class="content right-border">
-            <p>Пространство для молодежи, креативных <br>
-              идей, вдохновения и развития.</p>
-          </div>
-          <div class="content">
-            <img class="absolut--img flower-small" src="/icon/main/flower-small.png" alt="">
-            <p>Мы находимся на территории бывшего <br>
-              хлебозавода №6, который работал с 1978 года. <br>
-              Сегодня мы сохраняем дух прошлого, создавая <br> новое будущее.</p>
-          </div>
+  <div class="box">
+    <div class="box-header">
+      <img src="/icon/main/subtract.svg" alt="Subtract icon" class="icon-subtract" />
+      <img src="/icon/main/bread.png" alt="Bread icon" class="icon-bread" />
+      <img src="/icon/main/fabric.svg" alt="Subtract icon" class="icon-fon" />
+      <img src="/icon/main/border.png" alt="Subtract icon" class="icon-border" />
+      <div class="main-content">
+        <h2 class="box-title">КТО МЫ ТАКИЕ?</h2>
+
+        <div class="content-block">
+          <img src="/icon/main/Rectangle.png" alt="Указатель мышки" class="inline-img left" />
+          <p>
+            Резиденты кластера «Хлебзавод №6» <br />
+            вместе с другими участниками проводим <br />
+            экскурсии и создаем пространство <br />
+            для креативных идей, вдохновения и развития
+          </p>
         </div>
-        <div class="content-wrapper">
-          <div class="content">
-            <img class="absolut--img mouse" src="/icon/main/mouse.png" alt="">
-          </div>
-          <div class="content border">
-            <img class="absolut--img ear" src="/icon/main/ear.png" alt="">
-            <p>С 2024 года мы открыли новое <br> пространство для молодежных инициатив, <br> образовательных мероприятий и <br> творческих проектов.</p>
-          </div>
-          <div class="content">
-            <img class="absolut--img bread" src="/icon/main/bread1.png" alt="">
-          </div>
+
+        <div class="content-block">
+          <p>
+            Мы находимся на территории бывшего <br />
+            хлебозавода №6, который работал с 1978 года. <br />
+            Сегодня мы сохраняем дух прошлого, <br />
+            создавая новое будущее
+          </p>
+          <img src="/icon/main/ear.png" alt="Колос" class="inline-img right" />
+        </div>
+
+        <div class="content-block center-block">
+          <img src="/icon/main/flower-small.png" alt="Маленький цветок" class="flower-small" />
+          <img src="/icon/main/flower-big.png" alt="Большой цветок" class="flower-big" />
+
+          <p>
+            С 2025 года мы открыли новое <br />
+            пространство для молодежных <br />
+            инициатив, образовательных <br />
+            мероприятий и творческих проектов
+          </p>
         </div>
       </div>
-      <UsResult></UsResult>
     </div>
   </div>
 </template>
 
-<script setup>
-import UsResult from './us-result.vue';
-</script>
+<script setup></script>
 
 <style scoped>
-.page-wrapper{
-  background-color: #FFD6BD;
-  padding-bottom: 0;
+.box {
+  position: relative;
+  overflow: visible;
 }
 
-.title{
+.box-header {
   position: relative;
 }
 
-.absolut--img{
+.icon-fon {
   position: absolute;
-}
-
-.ear{
-  bottom: -260px;
-  left: -290px;
-}
-
-.flower-big{
-  top: -130px;
-  right: 10px;
-}
-
-.flower-small{
-  bottom: 0px;
-  right: 20px;
-}
-
-.bread{
-  bottom: -250px;
-  left: -120px;
-}
-
-/* .left-ear{
-  z-index: -1;
-  left: 0px;
-}
-
-.bottom-ear{
-  z-index: -1;
-  bottom: -230px;
-} */
-
-.container{
-  margin: 0 auto;
-  max-width: 1800px;
-}
-
-.about-content{
-  margin-top: 40px;
-  margin-bottom: 120px;
-}
-
-.content-wrapper{
-  display: flex;
+  top: -18vw;
+  left: 0;
   width: 100%;
-  border-top: 1px solid white;
-  border-bottom: 1px solid white;
+  height: auto;
+  z-index: 10;
+  pointer-events: none;
 }
 
-.content-wrapper > .content{
-  display: flex;
-  align-items: center;
-  text-align: left;
+/* «Subtract» располагается поверх фона, чуть выезжает вверх */
+.icon-subtract {
+  position: absolute;
+  top: -15.9vw; /* отступом вверх выезжает из контейнера */
+  left: 7vw; /* относительный отступ слева */
+  width: 60%; /* ширина относительно wrapper-а */
+  height: auto;
+  z-index: 11;
+  pointer-events: none;
+}
+
+/* Прочие иконки остаются над ними */
+.icon-bread {
+  position: absolute;
+  z-index: 11;
+  top: -27.8vw;
+  left: 14vw;
   width: 50%;
-  height: 220px;
-  padding-left: 30px;
+}
+
+.icon-border {
+  position: absolute;
+  top: -16.1vw;
+  left: 72.7vw;
+  z-index: 11;
+  width: 25%;
+}
+
+.box-title {
+  position: absolute;
+  font-family: 'C', Helvetica, sans-serif;
+  font-size: 78px;
+  color: #ff6c36;
+  margin-top: 40px;
+  text-align: center;
+  z-index: 11;
+  top: 40px;
+  left: 30px;
+  bottom: 40px;
+}
+
+.main-content {
   position: relative;
+  gap: 40px;
 }
 
-.right-border{
+.content-block {
   display: flex;
-  border-right: 1px solid white ;
+  position: relative;
+  z-index: 11;
+  padding-bottom: 140px;
 }
 
-.border{
-  border-right: 1px solid white ;
-  border-left: 1px solid white ;
+.content-block p {
+  font-family: 'Manrope', 'Inter Semi Bold', Helvetica, sans-serif;
+  font-size: 20px;
+  line-height: 1.4;
+}
+
+.box-header > div:nth-of-type(1) {
+  padding-top: 220px;
+  padding-left: 70px;
+}
+
+.content-block p:nth-of-type(1) {
+  margin-left: 240px;
+  padding-bottom: 140px;
+}
+
+.content-block p:nth-of-type(2) {
+  margin-left: 130px;
+  padding-bottom: 140px;
+}
+
+.content-block p:nth-of-type(3) {
+  margin-left: 450px;
+}
+
+.left {
+  position: absolute;
+  top: 0;
+}
+
+.right {
+  position: absolute;
+  top: -20vw;
+  left: 45vw;
 }
 </style>
