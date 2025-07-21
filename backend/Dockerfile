@@ -12,7 +12,7 @@ COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY ../../../Downloads/ukno-web-summer-practice/ukno-web-summer-practice ./backend
+COPY .. ./backend
 
 ENV PYTHONUNBUFFERED=1
 
