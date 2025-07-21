@@ -7,6 +7,7 @@ services:
     volumes:
       - ../backend/media:/app/media
       - ../backend/static:/app/static
+      - ./sqlite:/app/instance
     ports:
       - "5000:5000"
     env_file:
