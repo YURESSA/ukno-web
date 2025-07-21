@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
 
-export const baseUrl = 'http://127.0.0.1:5000/'
+export const baseUrl = import.meta.env.VITE_FRONTEND_URL;
 
 // export const baseUrl = 'https://yuressa.uxp.ru/'
 
@@ -138,7 +138,11 @@ export const useDataStore = defineStore('data', {
             'Content-Type': 'application/json',
           },
         })
-        window.location.href = response.data.payment_url
+        if (response.data.payment_url) {
+          window.location.href = response.data.payment_url;
+        } else {
+          console.log('Бронирование прошло успешно!')
+        }
       } catch (error) {
         console.log(this.auth_key)
         console.error('Ошибка при бронировании:', error.response?.data || error.message)
@@ -194,20 +198,18 @@ export const useDataStore = defineStore('data', {
       try {
         console.log(jsonData)
         console.log(`Bearer ${this.auth_key}`)
-
         const response = await axios.delete(`${baseUrl}/api/user/v2/reservations`, {
+          data: jsonData,
           headers: {
             Authorization: `Bearer ${this.auth_key}`,
             'Content-Type': 'application/json',
           },
-          data: jsonData,
         })
-
         console.log('Данные бронирования успешно удалены:', response.data)
-
-        this.reservationsData = this.reservationsData.filter(
-          (reservation) => reservation.reservation_id !== jsonData.reservation_id,
-        )
+        console.log(this.reservationsData)
+        this.reservationsData = this.reservationsData.reservations.filter(
+          reservation => reservation.reservation_id !== jsonData.reservation_id
+        );
       } catch (error) {
         console.error(
           'Ошибка при удалении данных бронирования:',
@@ -216,7 +218,6 @@ export const useDataStore = defineStore('data', {
         throw error
       }
     },
-
     async PostNewEvent(formData) {
       try {
         const response = await axios.post(`${baseUrl}/api/resident/excursions`, formData, {
