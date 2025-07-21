@@ -7,8 +7,11 @@ services:
     volumes:
       - ../backend/media:/app/media
       - ../backend/static:/app/static
+      - ./sqlite:/app/instance
     ports:
       - "5000:5000"
+    depends_on:
+      - db
     env_file:
       - ../.env
 
@@ -19,16 +22,25 @@ services:
     container_name: nginx-proxy
     ports:
       - "80:80"
-      - "443:443"                   # добавляем HTTPS порт
     depends_on:
       - backend
     volumes:
-      - ../frontend/nginx.conf:/etc/nginx/conf.d/default.conf
-#      - ../frontend/dist:/usr/share/nginx/html
       - ../backend/media:/app/media:ro
       - ../backend/static:/app/static:ro
-      - ./certbot/conf:/etc/letsencrypt       # монтируем папку с сертификатами
-      - ./certbot/www:/var/www/certbot         # монтируем папку для challenge файлов
     restart: unless-stopped
     env_file:
       - ../.env
+
+  db:
+    image: postgres:14
+    container_name: postgres-db
+    restart: always
+    env_file:
+      - ../.env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  pgdata:
