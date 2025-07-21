@@ -1,9 +1,7 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
 
-export const baseUrl = import.meta.env.VITE_FRONTEND_URL;
-
-// export const baseUrl = 'https://yuressa.uxp.ru/'
+export const baseUrl = import.meta.env.VITE_FRONTEND_URL
 
 export const useDataStore = defineStore('data', {
   state: () => ({
@@ -139,7 +137,7 @@ export const useDataStore = defineStore('data', {
           },
         })
         if (response.data.payment_url) {
-          window.location.href = response.data.payment_url;
+          window.location.href = response.data.payment_url
         } else {
           console.log('Бронирование прошло успешно!')
         }
@@ -208,8 +206,8 @@ export const useDataStore = defineStore('data', {
         console.log('Данные бронирования успешно удалены:', response.data)
         console.log(this.reservationsData)
         this.reservationsData = this.reservationsData.reservations.filter(
-          reservation => reservation.reservation_id !== jsonData.reservation_id
-        );
+          (reservation) => reservation.reservation_id !== jsonData.reservation_id,
+        )
       } catch (error) {
         console.error(
           'Ошибка при удалении данных бронирования:',

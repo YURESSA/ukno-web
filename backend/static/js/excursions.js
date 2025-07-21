@@ -191,6 +191,7 @@ function getChangedFields() {
 
 function openSessionModalForEdit(session) {
     excursionModal.hide();
+    console.log(session);
     // Заполнение полей
     document.getElementById('editingSessionId').value = session.session_id;
     document.getElementById('sessionDatetimeModal').value = session.start_datetime.slice(0, 16);
