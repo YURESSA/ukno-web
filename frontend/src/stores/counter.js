@@ -195,10 +195,10 @@ export const useDataStore = defineStore('data', {
         throw error
       }
     },
-    async DeleteReservation(jsonData) {
+    async DeleteReservation(delet_id) {
       try {
-        console.log(jsonData)
-        console.log(`Bearer ${this.auth_key}`)
+        console.log(delet_id)
+        const jsonData = JSON.stringify(delet_id)
         const response = await axios.delete(`${baseUrl}/api/user/v2/reservations`, {
           data: jsonData,
           headers: {
@@ -207,10 +207,6 @@ export const useDataStore = defineStore('data', {
           },
         })
         console.log('Данные бронирования успешно удалены:', response.data)
-        console.log(this.reservationsData)
-        this.reservationsData = this.reservationsData.reservations.filter(
-          reservation => reservation.reservation_id !== jsonData.reservation_id
-        );
       } catch (error) {
         console.error(
           'Ошибка при удалении данных бронирования:',
