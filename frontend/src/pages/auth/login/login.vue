@@ -1,5 +1,5 @@
 <template>
-  <div class="page-wrapper">
+  <div class="page-wrapper page--margin">
     <div class="login-wrapper">
       <h3>Вход</h3>
       <form @submit.prevent="handleSubmit">

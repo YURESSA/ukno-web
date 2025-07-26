@@ -12,6 +12,7 @@ import Payment from '@/pages/payment/payment.vue'
 import UserProfile from '@/pages/personal-accounts/user/user.vue'
 import ResidentProfile from '@/pages/personal-accounts/resident/resident.vue'
 import NewEvent from '@/pages/personal-accounts/_shared/newEvent.vue'
+import News from '@/pages/news/news.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -53,8 +54,13 @@ const router = createRouter({
         },
         {
           path: '/register',
-          name: 'registerPage',
+          name: 'RegisterPage',
           component: Registration,
+        },
+        {
+          path: '/news',
+          name: 'NewsPage',
+          component: News,
         },
       ],
     },

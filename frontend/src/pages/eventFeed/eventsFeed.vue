@@ -1,5 +1,5 @@
 <template>
-  <div class="page-wrapper">
+  <div class="page-wrapper page--margin">
     <div class="feed-wrapper">
       <h3>Подбери <span class="orange">событие</span> на свой вкус</h3>
       <div class="feed-actions">
@@ -175,18 +175,6 @@ const sendSearch = async () => {
   overflow: hidden;
   background-color: rgba(128, 128, 128, 0.459);
   z-index: 99;
-}
-
-.page-wrapper::before {
-  content: '';
-  position: absolute;
-  top: -120px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url('/backgroung/eventsFeed.png') no-repeat;
-  background-size: 100% auto;
-  z-index: -1;
 }
 
 .feed-wrapper {

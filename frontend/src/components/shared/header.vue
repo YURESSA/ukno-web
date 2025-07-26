@@ -1,37 +1,34 @@
 <template>
   <div class="header-wrapper">
-    <div class="header">
-      <div class="logo">
-        <RouterLink to="/"><img src="/logo/logo.svg" alt=""></RouterLink>
-      </div>
+    <nav class="nav-wrapper">
+      <ul class="nav-list">
+        <li><RouterLink :to="{ path: '/', hash: '#news' }" replace >О НАС</RouterLink></li>
+        <li><RouterLink to="/events">СОБЫТИЯ</RouterLink></li>
+        <li>
+          <div class="logo">
+            <RouterLink to="/"><img src="/logo/logo.svg" alt=""></RouterLink>
+          </div>
+        </li>
+        <li><RouterLink to="/news">НОВОСТИ</RouterLink></li>
+        <li><RouterLink :to="{ path: '/', hash: '#contact' }" replace >КОНТАКТЫ</RouterLink></li>
+      </ul>
       <div class="profile">
         <RouterLink to="/login" v-if="hasToken">
           <button>
-            Личный кабинет
-            <img src="/icon/header/iconamoon_profile-fill.svg" alt="">
+            <img src="/icon/header/profile-fill.svg" alt="">
           </button>
         </RouterLink>
         <RouterLink to="/profile" v-else-if="!hasToken & role === 'user'">
           <button>
-            Личный кабинет
-            <img src="/icon/header/iconamoon_profile-fill.svg" alt="">
+            <img src="/icon/header/profile-fill.svg" alt="">
           </button>
         </RouterLink>
         <RouterLink to="/resident-profile" v-else-if="!hasToken & role === 'resident'">
           <button>
-            Личный кабинет
-            <img src="/icon/header/iconamoon_profile-fill.svg" alt="">
+            <img src="/icon/header/profile-fill.svg" alt="">
           </button>
         </RouterLink>
       </div>
-    </div>
-    <nav>
-      <ul class="nav-list">
-        <li><RouterLink :to="{ path: '/', hash: '#news' }" replace >О НАС</RouterLink></li>
-        <li><RouterLink to="/events">СОБЫТИЯ</RouterLink></li>
-        <li><RouterLink :to="{ path: '/', hash: '#news' }" replace >НОВОСТИ</RouterLink></li>
-        <li><RouterLink :to="{ path: '/', hash: '#contact' }" replace >КОНТАКТЫ</RouterLink></li>
-      </ul>
     </nav>
   </div>
 </template>
@@ -56,34 +53,40 @@ const role = computed(() => {
 <style scoped>
 
 .header-wrapper{
-  padding: 10px;
+  width: calc(100% - 90px);
+  position: fixed;
+  padding: 28px 45px;
+  backdrop-filter: blur(28.399999618530273px);
+  background: rgba(255, 255, 255, 0.7);
+  z-index: 99999999;
 }
 
-.header{
-  display: flex;
-  justify-content: space-between;
-  padding: 0 30px;
+.nav-wrapper{
+  position: relative;
 }
 
 .nav-list{
+  width: 80%;
+  margin: 0 auto;
   justify-content: space-around;
+  align-items: center;
+  transform: translateX(28px);
 }
 
-nav{
-  padding: 10px 30px;
-  border-top: 1px solid #333333;
-  border-bottom: 1px solid #333333;
+.profile{
+  position: absolute;
+  right: 45px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 button{
   display: flex;
   align-items: center;
   padding: 0;
-  padding-left: 30px;
   justify-content: end;
   gap: 15px;
-  background: none;
-  border: 1px solid #333333;
+  background-color: #FFD4C4;
   border-radius: 300px;
 }
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="welcom-wrapper">
+  <div class="welcom-wrapper page--margin">
     <div class="title">
       <h1>Молодежное бюро</h1>
       <h2>5 этаж</h2>

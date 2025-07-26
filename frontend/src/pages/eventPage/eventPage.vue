@@ -1,5 +1,5 @@
 <template>
-  <div class="page-wrapper" v-if="load">
+  <div class="page-wrapper page--margin" v-if="load">
     <div class="event-wrapper">
       <div class="title">
         <h2>{{ excursion.title }}</h2>
@@ -182,19 +182,9 @@ const EventFormat = computed(() => {
 }
 
 .loading{
+  min-height: 70vh;
+  margin-top: 20%;
   text-align: center;
-}
-
-.page-wrapper::before {
-  content: '';
-  position: absolute;
-  top: -120px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url('/backgroung/eventsFeed.png') no-repeat;
-  background-size: 100% auto;
-  z-index: -1;
 }
 
 .event-wrapper{
