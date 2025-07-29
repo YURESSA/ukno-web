@@ -12,6 +12,7 @@ services:
       - "5000:5000"
     env_file:
       - ../.env
+    restart: unless-stopped            # добавлен restart
 
   nginx:
     build:

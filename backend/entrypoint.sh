@@ -11,7 +11,6 @@ if [ ! -d "migrations" ]; then
   flask db migrate
 fi
 
-
 flask db upgrade
 
 cd ..
@@ -19,4 +18,4 @@ cd ..
 echo "Подготавливаю данные"
 python -m backend.app seed_reference_data
 
-exec gunicorn -w 4 -b 0.0.0.0:5000 backend.wsgi:app
+exec gunicorn -w 2 -b 0.0.0.0:5000 backend.wsgi:app
