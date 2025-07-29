@@ -28,45 +28,45 @@ Configuration.configure(
 )
 
 
-# --- Создание платежа --- #
 def create_yookassa_payment(amount, email, description, quantity=1, metadata=None, currency='RUB'):
     try:
         quantity = round(quantity, 2)
         unit_price = round(amount / quantity, 2)
-        idempotence_key = str(uuid.uuid4())
 
-        payment = Payment.create({
-            "amount": {
-                "value": f"{amount:.2f}",
-                "currency": currency
-            },
-            "confirmation": {
-                "type": "redirect",
-                "return_url": "https://yuressa.uxp.ru/profile"
-            },
-            "capture": True,
-            "description": description,
-            "receipt": {
-                "customer": {
-                    "email": email
+        payment = Payment.create(
+            {
+                "amount": {
+                    "value": f"{amount:.2f}",
+                    "currency": currency
                 },
-                "items": [
-                    {
-                        "description": description,
-                        "quantity": quantity,
-                        "amount": {
-                            "value": f"{unit_price:.2f}",
-                            "currency": currency
-                        },
-                        "vat_code": 1
-                    }
-                ]
-            },
-            "metadata": metadata or {},
-            "payment_method_data": {
-                "type": "bank_card"
+                "confirmation": {
+                    "type": "redirect",
+                    "return_url": "https://yuressa.uxp.ru/profile"
+                },
+                "capture": True,
+                "description": description,
+                "receipt": {
+                    "customer": {
+                        "email": email
+                    },
+                    "items": [
+                        {
+                            "description": description,
+                            "quantity": quantity,
+                            "amount": {
+                                "value": f"{unit_price:.2f}",
+                                "currency": currency
+                            },
+                            "vat_code": 1
+                        }
+                    ]
+                },
+                "metadata": metadata or {},
+                "payment_method_data": {
+                    "type": "bank_card"
+                }
             }
-        }, idempotence_key=idempotence_key)
+        )
 
         print(f"[OK] Создан платёж {payment.id}")
         return payment
