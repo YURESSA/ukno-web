@@ -3,7 +3,7 @@ import uuid
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from yookassa import Payment
+from yookassa import Payment, Refund
 from yookassa.client import ApiClient
 
 session = requests.Session()
