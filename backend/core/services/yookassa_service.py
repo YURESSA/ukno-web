@@ -1,23 +1,6 @@
 import uuid
 
-import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
-from yookassa import Payment, Refund
-from yookassa.client import ApiClient
-
-session = requests.Session()
-retries = Retry(
-    total=3,  # Максимум 3 попытки
-    backoff_factor=1.0,  # Задержка: 1s, 2s, 4s
-    status_forcelist=[500, 502, 503, 504],  # При каких статусах повторять
-    allowed_methods=["POST"]  # Повтор только на POST-запросах
-)
-adapter = HTTPAdapter(max_retries=retries)
-session.mount("https://", adapter)
-
-api_client = ApiClient()
-api_client.session = session
+from yookassa import Refund, Payment
 
 
 def create_yookassa_payment(amount, email, description, quantity=1, metadata=None, currency='RUB'):
