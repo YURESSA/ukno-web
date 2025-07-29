@@ -3,6 +3,8 @@ import os
 from dotenv import load_dotenv
 from yookassa import Configuration
 
+from backend.core.services.yookassa_service import api_client
+
 load_dotenv()
 
 
@@ -47,5 +49,6 @@ class Config:
     MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER")
     Configuration.account_id = os.environ.get("ACCOUNT_ID")
     Configuration.secret_key = os.environ.get("YOOKASSA_SECRET_KEY")
+    Configuration.configure(api_client)
 
     PRODUCTION = str_to_bool(os.getenv("PRODUCTION", "False"))
