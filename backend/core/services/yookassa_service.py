@@ -7,7 +7,6 @@ from urllib3.util.retry import Retry
 from yookassa import Payment, Refund, Configuration
 from yookassa.client import ApiClient
 
-# --- Настройка клиента с ретраями --- #
 session = requests.Session()
 retries = Retry(
     total=3,
