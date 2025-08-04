@@ -2,7 +2,7 @@
   <div class="header-wrapper">
     <nav class="nav-wrapper">
       <ul class="nav-list">
-        <li><RouterLink :to="{ path: '/', hash: '#news' }" replace >О НАС</RouterLink></li>
+        <li><RouterLink :to="{ path: '/ukno', hash: '#news' }" replace >О НАС</RouterLink></li>
         <li><RouterLink to="/events">СОБЫТИЯ</RouterLink></li>
         <li>
           <div class="logo">

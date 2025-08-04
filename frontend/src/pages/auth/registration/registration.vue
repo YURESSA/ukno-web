@@ -60,7 +60,7 @@
 
         <DefaultButton type="submit" class="submit--btn" text="Зарегистрироваться"/>
       </form>
-      <span>У ВАС УЖЕ ЕСТЬ АККАУНТ? <RouterLink to="login"><span class="orange">ВОЙТИ</span></RouterLink></span>
+      <span>У ВАС УЖЕ ЕСТЬ АККАУНТ? <RouterLink to="login"><span class="text-orange">ВОЙТИ</span></RouterLink></span>
     </div>
   </div>
 </template>
@@ -236,7 +236,7 @@ input:focus {
   background-color: white;
 }
 
-.orange{
+.text-orange{
   color: #F25C03;
 }
 

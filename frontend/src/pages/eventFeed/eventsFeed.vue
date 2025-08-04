@@ -1,7 +1,7 @@
 <template>
   <div class="page-wrapper page--margin">
     <div class="feed-wrapper">
-      <h3>Подбери <span class="orange">событие</span> на свой вкус</h3>
+      <h3>Подбери <span class="text-orange">событие</span> на свой вкус</h3>
       <div class="feed-actions">
         <n-input
           v-model:value="searchQuery"
@@ -97,13 +97,12 @@ onMounted(async () => {
 });
 
 function openFilter() {
-  const feedWrapper = document.querySelector('.feed-wrapper');
   document.body.style.overflow = 'hidden'
   isFilterOpen.value = true;
-  feedWrapper.scrollIntoView({
-          behavior: 'smooth',  // Плавная прокрутка
-          block: 'start'      // Выравнивание по верхнему краю
-        });
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
 }
 
 function closeFilter(){
@@ -189,7 +188,7 @@ h3{
   margin-bottom: 30px;
 }
 
-.orange{
+.text-orange{
   color: #F25C03;
 }
 

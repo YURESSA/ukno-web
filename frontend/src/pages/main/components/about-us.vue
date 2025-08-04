@@ -24,10 +24,10 @@
         </div>
         <div class="content-wrapper">
           <div class="content">
-            <img class="absolut--img mouse" src="/icon/main/mouse.png" alt="">
+            <!-- <img class="absolut--img mouse" src="/icon/main/mouse.png" alt=""> -->
+            <img class="absolut--img ear" src="/icon/main/ear.png" alt="">
           </div>
           <div class="content border">
-            <img class="absolut--img ear" src="/icon/main/ear.png" alt="">
             <p>С 2024 года мы открыли новое <br> пространство для молодежных инициатив, <br> образовательных мероприятий и <br> творческих проектов.</p>
           </div>
           <div class="content">
@@ -48,6 +48,7 @@ import UsResult from './us-result.vue';
 .page-wrapper{
   background-color: #FFD6BD;
   padding-bottom: 0;
+  height: calc(100% + 150px);
 }
 
 .title{
@@ -59,8 +60,10 @@ import UsResult from './us-result.vue';
 }
 
 .ear{
-  bottom: -260px;
-  left: -290px;
+  bottom: -200px;
+  right: 0;
+  transform: rotate(-30deg) scaleX(-1);
+
 }
 
 .flower-big{
@@ -102,7 +105,6 @@ import UsResult from './us-result.vue';
   display: flex;
   width: 100%;
   border-top: 1px solid white;
-  border-bottom: 1px solid white;
 }
 
 .content-wrapper > .content{
