@@ -1,8 +1,7 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
-import router from '@/router'
 
-export const baseUrl = 'http://127.0.0.1:5000/'
+export const baseUrl = import.meta.env.VITE_FRONTEND_URL
 
 export const useDataStore = defineStore('data', {
   state: () => ({
@@ -132,13 +131,11 @@ export const useDataStore = defineStore('data', {
     },
     async FetchExcursionDetailResident(excursion_id) {
       try {
-        const response = await axios.get(`${baseUrl}/api/resident/excursions/${excursion_id}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${this.auth_key}`
-            }
-          }
-        );
+        const response = await axios.get(`${baseUrl}/api/resident/excursions/${excursion_id}`, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+          },
+        })
         console.log('Данные успешно получены:', response.data)
         this.excursionDetail = response.data
       } catch (error) {
@@ -155,7 +152,7 @@ export const useDataStore = defineStore('data', {
           },
         })
         if (response.data.payment_url) {
-          window.location.href = response.data.payment_url;
+          window.location.href = response.data.payment_url
         } else {
           console.log('Бронирование прошло успешно!')
         }
@@ -260,14 +257,11 @@ export const useDataStore = defineStore('data', {
     },
     async DeletEvent(eventId, sessionId) {
       try {
-        const response = await axios.delete(
-          `${baseUrl}/api/resident/excursions/${eventId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${this.auth_key}`,
-            },
+        const response = await axios.delete(`${baseUrl}/api/resident/excursions/${eventId}`, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
           },
-        )
+        })
         console.log('Событие успешно удалено:', response.data)
       } catch (error) {
         console.error('Ошибка при удалении:', error.response?.data || error.message)
@@ -308,12 +302,16 @@ export const useDataStore = defineStore('data', {
     },
     async PatchSessionData(excursion_id, jsonData) {
       try {
-        const response = await axios.patch(`${baseUrl}/api/resident/excursions/${excursion_id}`, jsonData, {
-          headers: {
-            Authorization: `Bearer ${this.auth_key}`,
-            'Content-Type': 'application/json'
+        const response = await axios.patch(
+          `${baseUrl}/api/resident/excursions/${excursion_id}`,
+          jsonData,
+          {
+            headers: {
+              Authorization: `Bearer ${this.auth_key}`,
+              'Content-Type': 'application/json',
+            },
           },
-        })
+        )
         console.log('Сессия успешно обновлена:', response.data)
       } catch (error) {
         console.error('Ошибка при обновлении данных:', error.response?.data || error.message)
@@ -322,11 +320,15 @@ export const useDataStore = defineStore('data', {
     },
     async PostNewPhoto(excursion_id, formData) {
       try {
-        const response = await axios.post(`${baseUrl}/api/resident/excursions/${excursion_id}/photos`, formData, {
-          headers: {
-            Authorization: `Bearer ${this.auth_key}`,
+        const response = await axios.post(
+          `${baseUrl}/api/resident/excursions/${excursion_id}/photos`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${this.auth_key}`,
+            },
           },
-        })
+        )
         console.log('Фото успешно добавлено:', response.data)
       } catch (error) {
         console.error('Ошибка при добавлении фото:', error.response?.data || error.message)
@@ -335,12 +337,16 @@ export const useDataStore = defineStore('data', {
     },
     async PostNewSession(excursion_id, jsonData) {
       try {
-        const response = await axios.post(`${baseUrl}/api/resident/excursions/${excursion_id}/sessions`, jsonData, {
-          headers: {
-            Authorization: `Bearer ${this.auth_key}`,
-            'Content-Type': 'application/json'
+        const response = await axios.post(
+          `${baseUrl}/api/resident/excursions/${excursion_id}/sessions`,
+          jsonData,
+          {
+            headers: {
+              Authorization: `Bearer ${this.auth_key}`,
+              'Content-Type': 'application/json',
+            },
           },
-        })
+        )
         console.log('Сессия успешно добавлена:', response.data)
       } catch (error) {
         console.error('Ошибка при создании:', error.response?.data || error.message)
