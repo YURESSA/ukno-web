@@ -210,12 +210,12 @@ const sendFilter = async () => {
   border-radius: 38px;
 
   position: fixed;
-  top: 0px;
+  top: 150px;
   right: -100%;
   z-index: 100;
 
   overflow-y: scroll;
-  height: calc(100vh - 80px);
+  height: calc(100vh - 230px);
 
   scrollbar-width: none;
 

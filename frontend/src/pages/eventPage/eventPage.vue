@@ -1,5 +1,5 @@
 <template>
-  <div class="page-wrapper" v-if="load">
+  <div class="page-wrapper page--margin" v-if="load">
     <div class="event-wrapper">
       <div class="title">
         <h2>{{ excursion.title }}</h2>
@@ -12,15 +12,70 @@
           class="event-image"
         >
       </div>
-        <IconButton
-          class="event--btn"
-          text="записаться"
-          :id="excursion.id"
-          @click="moveToBooked"
-        >
-          <img src="/icon/arrow.svg" alt="">
-        </IconButton>
-      <div class="content">
+      <IconButton
+        class="event--btn"
+        text="записаться"
+        :id="excursion.id"
+        @click="moveToBooked"
+      >
+        <img src="/icon/arrow.svg" alt="">
+      </IconButton>
+
+      <div class="container">
+        <div class="events-list">
+          <div class="four-event">
+            <div class="event-type">
+              <div class="title">
+                <h3>Автор</h3>
+              </div>
+              <div class="event-content">
+                <p>Проводит {{ excursion.conducted_by }}</p>
+              </div>
+            </div>
+            <div class="event-type border-left">
+              <div class="title">
+                <h3>Место</h3>
+              </div>
+              <div class="event-content">
+                <p>{{ excursion.place }}</p>
+              </div>
+            </div>
+            <div class="event-type border-top">
+              <div class="title">
+                <h3>Стоимость</h3>
+              </div>
+              <div class="event-content">
+                <p>{{ excursion.sessions[0].cost }} ₽</p>
+              </div>
+            </div>
+            <div class="event-type orange-block">
+              <div class="title">
+                <h3>Дата и время</h3>
+              </div>
+              <div class="event-content">
+                <h2>{{ getData }}</h2>
+                <p>с {{ getTime }} до {{ totalTime }} </p>
+              </div>
+            </div>
+          </div>
+          <div class="one-event-wrapper">
+            <div class="one-event">
+              <div class="title">
+                <h3>Важно</h3>
+              </div>
+              <div class="event-content">
+                <div class="important-content">
+                  <p class="large-text">- {{ EventFormat.type }}</p>
+                  <p class="large-text">- {{ EventFormat.remained_places }}</p>
+                  <p class="large-text">- Экскурсии  {{ excursion.age_category.age_category_name }}</p>
+                  <p class="large-text">- Продолжительность - {{ excursion.duration }} минут</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- <div class="content">
         <div class="info">
           <div class="all-info">
             <div class="left-side">
@@ -52,8 +107,8 @@
             <h2>{{ getData }}</h2>
           </div>
         </div>
-      </div>
-      <div class="important">
+      </div> -->
+      <!-- <div class="important">
         <img src="/icon/event/exclamation.svg" alt="">
         <div class="important-content">
           <p class="large-text"><b>Важно:</b></p>
@@ -61,7 +116,7 @@
           <p class="large-text">- {{ EventFormat.remained_places }}</p>
           <p class="large-text">- Экскурсии  {{ excursion.age_category.age_category_name }}</p>
         </div>
-      </div>
+      </div> -->
       <div class="descript">
         <h3>Подробнее об экскурсии</h3>
         <h5>Экскурсия «{{ excursion.title }}»</h5>
@@ -182,19 +237,9 @@ const EventFormat = computed(() => {
 }
 
 .loading{
+  min-height: 70vh;
+  margin-top: 20%;
   text-align: center;
-}
-
-.page-wrapper::before {
-  content: '';
-  position: absolute;
-  top: -120px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url('/backgroung/eventsFeed.png') no-repeat;
-  background-size: 100% auto;
-  z-index: -1;
 }
 
 .event-wrapper{
@@ -220,6 +265,14 @@ const EventFormat = computed(() => {
 .event--btn{
   width: 100%;
   margin-top: 30px;
+  margin-bottom: 45px;
+  background-color: #FF6C36;
+  color: white;
+  border: none;
+}
+
+.event--btn * img{
+  filter: invert(1) brightness(1.5);
 }
 
 .content{
@@ -281,5 +334,86 @@ const EventFormat = computed(() => {
 
 :deep(.contact-container){
   box-shadow: 0px 2px 35.8px 0px #00000040;
+}
+
+
+
+.event-type * h3, .one-event * h3{
+  font-weight: 500;
+}
+
+.container{
+  max-width: 1800px;
+  border: 2px solid #F25C03;
+  border-radius: 14px;
+  margin-bottom: 30px;
+}
+
+.events-list{
+  display: flex;
+}
+
+.four-event{
+  display: flex;
+  flex-wrap: wrap;
+  width: 66%;
+}
+
+.event-type{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: calc(50% - 51px);
+  height: 310px;
+  padding: 30px 20px 30px 30px;
+}
+
+.one-event{
+  display: flex;
+  height: calc(100% - 55px);
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 30px 60px 25px 40px;
+  border-left: 2px solid #f25c03;
+  border-radius: 14px;
+  background-color: white;
+}
+
+.one-event > .title{
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.border-left{
+  border-left: 2px solid #F25C03;
+  border-radius: 14 0 0 0px;
+}
+
+.border-top{
+  border-top: 2px solid #F25C03;
+  border-radius: 14px 0 0 0;
+}
+
+.orange-block{
+  background-color: #FF6C36;
+  color: #FFFFFF!important;
+  border: 2px solid #F25C03;
+  border-right: none;
+  border-bottom: none;
+  background-image: url(/icon/event/flower.svg);
+  background-repeat: no-repeat;
+  background-position: right;
+  background-size: 90%;
+}
+
+.orange-block * h2{
+  color: #FFFFFF!important;
+}
+
+.one-event-wrapper{
+  width: 35%;
+  border-radius: 10px 10px 10px 0;
+  background-color: #FF6C36;
 }
 </style>

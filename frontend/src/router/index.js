@@ -12,6 +12,9 @@ import Payment from '@/pages/payment/payment.vue'
 import UserProfile from '@/pages/personal-accounts/user/user.vue'
 import ResidentProfile from '@/pages/personal-accounts/resident/resident.vue'
 import NewEvent from '@/pages/personal-accounts/_shared/newEvent.vue'
+import changeEvent from '@/pages/personal-accounts/_shared/changeEvent.vue'
+import News from '@/pages/news/news.vue'
+import Requesits from '@/pages/requesits/requesits.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -53,8 +56,18 @@ const router = createRouter({
         },
         {
           path: '/register',
-          name: 'registerPage',
+          name: 'RegisterPage',
           component: Registration,
+        },
+        {
+          path: '/news',
+          name: 'NewsPage',
+          component: News,
+        },
+        {
+          path: '/requesits',
+          name: 'requesits',
+          component: Requesits,
         },
       ],
     },
@@ -82,7 +95,16 @@ const router = createRouter({
       component: NewEvent,
       meta: { requiresAuth: true, requiredRole: 'resident' },
     },
+    {
+      path: '/change-event/:id',
+      name: 'changeEvent',
+      component: changeEvent,
+      meta: { requiresAuth: true, requiredRole: 'resident' },
+    },
   ],
+    scrollBehavior(to, from, savedPosition) {
+    return { top: 0 }
+  }
 })
 
 router.beforeEach((to, from, next) => {

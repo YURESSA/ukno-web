@@ -1,6 +1,6 @@
 <template>
   <Header/>
-  <div class="page-wrapper">
+  <div class="page-wrapper page--margin">
     <Username :full_name="profileData.full_name" :role="profileData.role"/>
     <div class="user-data-wrapper">
       <Userdata

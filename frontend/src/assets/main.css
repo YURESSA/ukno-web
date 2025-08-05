@@ -4,6 +4,10 @@
   padding: 40px 30px;
 }
 
+.page--margin{
+  margin-top: 120px!important;
+}
+
 .larger-text {
   font-size: 36px;
 }

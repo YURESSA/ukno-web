@@ -264,7 +264,7 @@
     border-radius: 0 12px 12px 0;
   }
 
-  .orange{
+  .text-orange{
     color: #F25C03;
   }
 

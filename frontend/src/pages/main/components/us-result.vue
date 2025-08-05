@@ -6,7 +6,7 @@
     <div class="result-list text-l">
       <ul>
         <li>
-          <div class="content solo orange">
+          <div class="content solo text-orange">
             <p>Выставки</p>
           </div>
         </li>
@@ -54,6 +54,7 @@
 </template>
 
 <script setup>
+import eventsBlock from './events-block.vue';
 
 </script>
 
@@ -62,6 +63,7 @@
   background-color: white;
   border-radius: 38px 38px 0px 0px;
   padding: 80px 50px;
+  padding-bottom: 230px;
 }
 
 h3{
@@ -95,7 +97,7 @@ li{
   width: 220px;
 }
 
-.orange{
+.text-orange{
   color: #F25C03;
   border-color: #F25C03;
 }
