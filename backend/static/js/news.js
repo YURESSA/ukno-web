@@ -176,7 +176,9 @@ async function addPhotoToNews(newsId, photoFile) {
 // Создание новости
 async function createNews(title, content, imageFiles) {
     const formData = new FormData();
-    formData.append('data', JSON.stringify({title, content}));
+    const formattedContent = content.replace(/\n/g, '<br>');
+    formData.append('data', JSON.stringify({title, content: formattedContent}));
+    console.log(formData.get)
     imageFiles.forEach(file => formData.append('image', file));
 
     const res = await fetchWithAuth(`${API_BASE}/news`, {

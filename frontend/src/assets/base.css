@@ -48,6 +48,9 @@ h1 {
 
 h2 {
   font-size: 64px;
+  font-weight: 700;
+  line-height: 110%;
+  color: #333;
 }
 
 h3 {
@@ -97,4 +100,16 @@ ul {
   gap: 15px;
   padding: 0;
   margin: 0;
+}
+
+.text-orange{
+  color: #F25C03;
+}
+
+.text-grey{
+  color: #7B7A7A;
+}
+
+.bold{
+  font-weight: 700;
 }

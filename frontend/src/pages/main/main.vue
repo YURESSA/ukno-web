@@ -1,7 +1,7 @@
 <template>
   <Welcome />
   <about-us></about-us>
-  <!-- <Events/>  компонент событий (нет финальной версии) -->
+  <Events/>
   <div class="page-wrapper dark-wrapper">
     <News/>
     <History/>
@@ -23,7 +23,7 @@ import { onMounted, watch  } from 'vue';
 import { useRoute } from 'vue-router';
 import Welcome from './components/welcome-block.vue';
 import AboutUs from './components/about-us.vue';
-// import Events from './components/events-block.vue';
+import Events from './components/events-block.vue';
 import News from './components/news-block.vue';
 import History from './components/history-block.vue';
 import Partner from './components/partner.vue';
@@ -61,6 +61,7 @@ watch(() => route.hash, scrollToHash);
   background-repeat: no-repeat;
   background-position: top -500px right;
   padding-bottom: 450px;
+  border-radius: 45px 45px 0 0;
 }
 
 .map{

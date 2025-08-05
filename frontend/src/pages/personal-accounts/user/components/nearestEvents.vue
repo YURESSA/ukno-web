@@ -71,14 +71,19 @@ const formatPrice = (price) => {
 
 
 async function deletReserv(id){
-
   const delet_id = {reservation_id: id}
-    console.log(delet_id)
   try {
-    await store.DeleteReservation(JSON.stringify(delet_id));
+    await store.DeleteReservation(delet_id);
   } catch (error) {
     console.error('Ошибка при удалении:', error);
   }
+  for (const e of filteredReservations.value) {
+      if (e.reservation_id === id) {
+          e.is_cancelled = true;
+          break;
+      }
+  }
+  console.log(filteredReservations)
 }
 </script>
 

@@ -1,82 +1,74 @@
 <template>
-  <div class="content">
-    <div class="h">Молодежное бюро</div>
-    <h1 class="intro-text">
-      Культурно-образовательный центр, где история встречает <br />
-      современность, а творчество и саморазвитие вдохновляют
-    </h1>
-  </div>
-
-  <div class="group">
-    <div class="image"></div>
+  <div class="welcom-wrapper page--margin">
+    <div class="welcom-img"></div>
+    <h1 class="text-orange">Молодежное бюро</h1>
+    <p class="text-grey">Культурно-образовательный центр, где <br>
+      история встречает современность, а творчество  <br>
+      и  саморазвитие вдохновляют</p>
+      <div class="sprout"></div>
+      <div class="ear"></div>
   </div>
 </template>
 
+<script setup>
+
+</script>
+
 <style scoped>
-.content {
+.welcom-wrapper{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 30px;
+  margin-top: 180px!important;
   position: relative;
-  height: 78px;
-  font-family: Helvetica, sans-serif;
-  overflow: visible;
-  z-index: 2;
-  padding-bottom: 10px;
-}
-
-.group {
-  position: relative;
-  width: 100%; /* вместо 100vw */
-  height: 790px;
   overflow: hidden;
-  z-index: 1;
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
 }
 
-.group .image {
+.sprout{
+  content: '';
+  width: 240px;
+  height: 360px;
+  background-image: url('/icon/main/sprout.png');
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%; /* вместо 100vw */
-  height: 790px;
-  background-image: url('/img/welcome.png');
-  background-size: cover;
+  left: -55px;
+  bottom: 40px;
+  background-position: center;
+}
+
+.ear{
+  content: '';
+  width: 270px;
+  height: 320px;
+  background-image: url('/icon/main/welcom-ear.png');
+  position: absolute;
+  right: -80px;
+  bottom: -10px;
   background-position: center;
   background-repeat: no-repeat;
-  z-index: -1;
-  border-radius: 29px;
-  box-sizing: border-box;
 }
 
-.h {
-  position: absolute;
-  top: 0;
-  left: 30px;
-  font-family: 'Carabine-Medium', Helvetica, sans-serif;
-  font-size: 77.8px;
-  font-weight: 500;
-  letter-spacing: -5.44px;
-  line-height: 77.8px;
-  color: #ff6c36;
-  white-space: nowrap;
-  user-select: none;
-  z-index: 3;
+h2{
+  text-align: center;
 }
 
-.intro-text {
-  position: absolute;
-  top: 18px;
-  right: 50px;
-  max-width: 471px;
-  font-family: 'Manrope-Medium', Helvetica, sans-serif;
-  font-size: 16px;
-  font-weight: 500;
-  letter-spacing: 0;
-  line-height: 22.4px;
-  text-align: left;
-  color: #333333;
-  margin: 0;
-  z-index: 3;
+p{
+  font-size: 24px;
+  text-align: center;
 }
+
+.welcom-img{
+  content: '';
+  width: 80%;
+  height: 475px;
+  border-radius: 48px;
+  background-image: url('/img/welcom.png');
+  background-repeat: no-repeat;
+  background-size: cover; /* Заполняет весь контейнер, сохраняя пропорции */
+  background-position: center; /* Центрирует изображение */
+  z-index: 10;
+  /* max-width: 1035px; */
+}
+
 </style>
-<script setup lang="ts"></script>

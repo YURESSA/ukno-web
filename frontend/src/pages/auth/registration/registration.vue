@@ -1,5 +1,5 @@
 <template>
-  <div class="page-wrapper">
+  <div class="page-wrapper page--margin">
     <div class="login-wrapper">
       <h3>Регистрация</h3>
       <form @submit.prevent="handleSubmit" autocomplete="off">
@@ -60,7 +60,7 @@
 
         <DefaultButton type="submit" class="submit--btn" text="Зарегистрироваться"/>
       </form>
-      <span>У ВАС УЖЕ ЕСТЬ АККАУНТ? <RouterLink to="login"><span class="orange">ВОЙТИ</span></RouterLink></span>
+      <span>У ВАС УЖЕ ЕСТЬ АККАУНТ? <RouterLink to="login"><span class="text-orange">ВОЙТИ</span></RouterLink></span>
     </div>
   </div>
 </template>
@@ -236,7 +236,7 @@ input:focus {
   background-color: white;
 }
 
-.orange{
+.text-orange{
   color: #F25C03;
 }
 

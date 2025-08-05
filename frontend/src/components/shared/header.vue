@@ -1,82 +1,96 @@
 <template>
-  <div :class="['div-wrapper', className]">
-    <nav class="nav-items">
-      <RouterLink :to="{ path: '/', hash: '#news' }" replace class="intro-text">О нас</RouterLink>
-      <RouterLink to="/events" class="intro-text">События</RouterLink>
-
-      <RouterLink to="/" class="logo">
-        <img src="/logo/logo.svg" alt="Логотип" />
-      </RouterLink>
-
-      <RouterLink :to="{ path: '/', hash: '#news' }" replace class="intro-text">Новости</RouterLink>
-      <RouterLink :to="{ path: '/', hash: '#contact' }" replace class="intro-text"
-        >Контакты
-      </RouterLink>
-
-      <RouterLink
-        :to="isAuthenticated ? (role === 'resident' ? '/resident-profile' : '/profile') : '/login'"
-        class="profile-link"
-      >
-        <img src="/icon/header/iconamoon_profile-fill.svg" alt="Профиль" class="profile-icon" />
-      </RouterLink>
+  <div class="header-wrapper">
+    <nav class="nav-wrapper">
+      <ul class="nav-list">
+        <li><RouterLink :to="{ path: '/ukno', hash: '#news' }" replace >О НАС</RouterLink></li>
+        <li><RouterLink to="/events">СОБЫТИЯ</RouterLink></li>
+        <li>
+          <div class="logo">
+            <RouterLink to="/"><img src="/logo/logo.svg" alt=""></RouterLink>
+          </div>
+        </li>
+        <li><RouterLink to="/news">НОВОСТИ</RouterLink></li>
+        <li><RouterLink :to="{ path: '/', hash: '#contact' }" replace >КОНТАКТЫ</RouterLink></li>
+      </ul>
+      <div class="profile">
+        <RouterLink to="/login" v-if="hasToken">
+          <button>
+            <img src="/icon/header/profile-fill.svg" alt="">
+          </button>
+        </RouterLink>
+        <RouterLink to="/profile" v-else-if="!hasToken & role === 'user'">
+          <button>
+            <img src="/icon/header/profile-fill.svg" alt="">
+          </button>
+        </RouterLink>
+        <RouterLink to="/resident-profile" v-else-if="!hasToken & role === 'resident'">
+          <button>
+            <img src="/icon/header/profile-fill.svg" alt="">
+          </button>
+        </RouterLink>
+      </div>
     </nav>
   </div>
 </template>
 
+
 <script setup>
-import { computed } from 'vue'
-import { useDataStore } from '@/stores/counter'
+import { computed } from 'vue';
+import { useDataStore } from '@/stores/counter';
 
-const store = useDataStore()
+const store = useDataStore();
 
-const isAuthenticated = computed(() => !!store.auth_key)
-const role = computed(() => store.role)
+const hasToken = computed(() => {
+  return !store.auth_key;
+});
+
+const role = computed(() => {
+  return store.role;
+});
+
 </script>
 
-<style>
-.div-wrapper {
-  -webkit-backdrop-filter: blur(14.2px) brightness(100%);
-  backdrop-filter: blur(14.2px) brightness(100%);
-  background-color: #ffffffb2;
-  height: 137px;
-  width: 100%;
+<style scoped>
+
+.header-wrapper{
+  width: calc(100% - 90px);
+  position: fixed;
+  padding: 28px 45px;
+  backdrop-filter: blur(28.399999618530273px);
+  background: rgba(255, 255, 255, 0.7);
+  z-index: 99999999;
+}
+
+.nav-wrapper{
+  position: relative;
+}
+
+.nav-list{
+  width: 80%;
+  margin: 0 auto;
+  justify-content: space-around;
+  align-items: center;
+  transform: translateX(28px);
+}
+
+.profile{
+  position: absolute;
+  right: 45px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+button{
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding-bottom: 40px;
+  padding: 0;
+  justify-content: end;
+  gap: 15px;
+  background-color: #FFD4C4;
+  border-radius: 300px;
 }
 
-.nav-items {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 90%;
-  max-width: 1280px;
-  gap: 30px;
-}
-
-.intro-text {
-  color: #333333;
-  font-family: 'Manrope-Medium', Helvetica, sans-serif;
-  font-size: 20px;
-  font-weight: 500;
-  line-height: 28px;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.logo img {
-  height: 81px;
-}
-
-.profile-link {
-  display: flex;
-  align-items: center;
-}
-
-.profile-icon {
-  height: 40px;
-  width: 40px;
-  cursor: pointer;
+button > img {
+  margin-right: -1px;
 }
 </style>
