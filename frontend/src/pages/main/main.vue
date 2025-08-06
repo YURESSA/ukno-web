@@ -3,7 +3,8 @@
   <about-us></about-us>
   <Events/>
   <div class="page-wrapper dark-wrapper">
-    <News/>
+    {{ news.news }}
+    <News :news="news.news"/>
     <History/>
     <Partner/>
   </div>
@@ -19,8 +20,9 @@
 </template>
 
 <script setup>
-import { onMounted, watch  } from 'vue';
+import { onMounted, watch, computed  } from 'vue';
 import { useRoute } from 'vue-router';
+import { useDataStore } from '@/stores/counter';
 import Welcome from './components/welcome-block.vue';
 import AboutUs from './components/about-us.vue';
 import Events from './components/events-block.vue';
@@ -30,11 +32,12 @@ import Partner from './components/partner.vue';
 import Contact from '../../components/shared/contact-block.vue';
 
 const route = useRoute();
+const store = useDataStore();
 
 const scrollToHash = () => {
   if (route.hash) {
     setTimeout(() => {
-      const offset = 0; //отступт от элемента
+      const offset = 100; //отступт от элемента
       const element = document.querySelector(route.hash);
       if (element) {
         window.scrollTo({
@@ -46,7 +49,16 @@ const scrollToHash = () => {
   }
 };
 
-onMounted(scrollToHash);
+const news = computed(() => store.getNews);
+
+onMounted(async () => {
+  scrollToHash
+  try {
+    await store.FetchNews();
+  } catch (error) {
+    console.error('Ошибка при загрузке новостей:', error);
+  }
+});
 
 watch(() => route.hash, scrollToHash);
 </script>

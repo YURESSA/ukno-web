@@ -1,5 +1,5 @@
 <template>
-  <div class="news-content">
+  <div class="news-content" :id="'news-' + news.news_id">
     <div class="title">
       <h2>{{ news.title }}</h2>
     </div>

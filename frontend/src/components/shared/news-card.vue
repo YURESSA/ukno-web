@@ -1,10 +1,10 @@
 <template>
   <div
   class="card"
-  :style="{ backgroundImage: `url(/img/${imageName})` }"
+  :style="{ backgroundImage: `url(${imageName})` }"
   >
     <p>{{ title }}</p>
-    <RouterLink to="">
+    <RouterLink :to="{ path: '/news', hash: `#news-${id}` }">
       узнать подробнее<img src="/icon/white-arrow.svg" alt="">
     </RouterLink>
   </div>
@@ -14,6 +14,7 @@
 defineProps({
   imageName: String,
   title: String,
+  id: String,
 })
 </script>
 
@@ -23,6 +24,7 @@ defineProps({
   display: flex;
   justify-content: space-between;
   background-size: 100%;
+  background-position: center;
   /* background-repeat: repeat; */
   /* либо contain & round */
   align-items: end;

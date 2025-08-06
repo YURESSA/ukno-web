@@ -6,9 +6,9 @@
       </div>
       <nav>
       <ul class="nav-list">
-        <li><RouterLink :to="{ path: '/', hash: '#news' }">О НАС</RouterLink></li>
+        <li><RouterLink :to="{ path: '/'}">О НАС</RouterLink></li>
         <li><RouterLink to="/events">СОБЫТИЯ</RouterLink></li>
-        <li><RouterLink :to="{ path: '/', hash: '#news' }">НОВОСТИ</RouterLink></li>
+        <li><RouterLink :to="{ path: '/news'}">НОВОСТИ</RouterLink></li>
         <li><RouterLink :to="{ path: '/', hash: '#contact' }">КОНТАКТЫ</RouterLink></li>
         <li><RouterLink :to="{ path: '/requesits'}">РЕКВЕЗИТЫ</RouterLink></li>
       </ul>

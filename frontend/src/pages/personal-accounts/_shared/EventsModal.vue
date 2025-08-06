@@ -64,7 +64,6 @@ const formattedTime = (nearestSession) =>{
 }
 
 async function deletEvent(EventId){
-  alert('dasdasda')
   try {
     await store.DeletEvent(EventId);
     alert('Событие успешно удалено')

@@ -2,7 +2,7 @@
   <div class="header-wrapper">
     <nav class="nav-wrapper">
       <ul class="nav-list">
-        <li><RouterLink :to="{ path: '/ukno', hash: '#news' }" replace >О НАС</RouterLink></li>
+        <li><RouterLink :to="{ path: '/ukno'}" replace >О НАС</RouterLink></li>
         <li><RouterLink to="/events">СОБЫТИЯ</RouterLink></li>
         <li>
           <div class="logo">
@@ -20,12 +20,12 @@
         </RouterLink>
         <RouterLink to="/profile" v-else-if="!hasToken & role === 'user'">
           <button>
-            <img src="/icon/header/profile-fill.svg" alt="">
+            <h3>{{ profileData.full_name[0] }}</h3>
           </button>
         </RouterLink>
         <RouterLink to="/resident-profile" v-else-if="!hasToken & role === 'resident'">
           <button>
-            <img src="/icon/header/profile-fill.svg" alt="">
+            <h4>{{ profileData.full_name[0] }}</h4>
           </button>
         </RouterLink>
       </div>
@@ -48,6 +48,8 @@ const role = computed(() => {
   return store.role;
 });
 
+const profileData = computed(() => store.getProfileData)
+
 </script>
 
 <style scoped>
@@ -58,7 +60,7 @@ const role = computed(() => {
   padding: 28px 45px;
   backdrop-filter: blur(28.399999618530273px);
   background: rgba(255, 255, 255, 0.7);
-  z-index: 99999999;
+  z-index: 900;
 }
 
 .nav-wrapper{
@@ -83,11 +85,12 @@ const role = computed(() => {
 button{
   display: flex;
   align-items: center;
-  padding: 0;
-  justify-content: end;
-  gap: 15px;
+  width: 48px;
+  height: 48px;
+  justify-content: center;
   background-color: #FFD4C4;
   border-radius: 300px;
+  color: #FF8C5B;
 }
 
 button > img {
