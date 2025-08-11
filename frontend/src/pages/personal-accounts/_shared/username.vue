@@ -1,7 +1,7 @@
 <template>
   <div class="card-wrapper">
     <div class="avatar">
-      <h2>{{ firstLetter }}</h2>
+      <h2>{{ firstLetter.toUpperCase() }}</h2>
     </div>
     <div class="name">
       <h5>{{ roleName }}</h5>
@@ -58,7 +58,10 @@ const firstLetter = computed(() => props.full_name?.[0] ?? '')
   min-width: 115px;
   border-radius: 100%;
   background-color: #FFD6BD;
-  color: #F25C03;
+}
+
+.avatar > h2{
+  color: #F25C03!important;
 }
 
 h3{

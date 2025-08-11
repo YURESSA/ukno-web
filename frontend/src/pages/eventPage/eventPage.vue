@@ -1,6 +1,9 @@
 <template>
   <div class="page-wrapper page--margin" v-if="load">
+    <div class="asterick"></div>
+
     <div class="event-wrapper">
+      <span><RouterLink to="/">Главная</RouterLink> / <RouterLink to="/events">События</RouterLink> / {{ excursion.title }}</span>
       <div class="title">
         <h2>{{ excursion.title }}</h2>
       </div>
@@ -72,55 +75,24 @@
                 </div>
               </div>
             </div>
+            <div class="important-icon"></div>
           </div>
         </div>
       </div>
-      <!-- <div class="content">
-        <div class="info">
-          <div class="all-info">
-            <div class="left-side">
-              <div class="info-block">
-                <img src="/icon/event/fluent_person-24-regular.svg" alt="">
-                <p>Проводит {{ excursion.conducted_by }}</p>
-              </div>
-              <div class="info-block">
-                <img src="/icon/event/placemark.svg" alt="">
-                <p>{{ getData }}, с {{ getTime }} до {{ totalTime }}</p>
-              </div>
-            </div>
-            <div class="right-side">
-              <div class="info-block">
-                <img src="/icon/event/datamark.svg" alt="">
-                <p>{{ getData }}, с {{ getTime }} до {{ totalTime }}</p>
-              </div>
-              <div class="info-block">
-                <img src="/icon/event/money.svg" alt="">
-                <p>{{ excursion.sessions[0].cost }} ₽</p>
-              </div>
-              <div class="info-block">
-                <img src="/icon/event/time.svg" alt="">
-                <p>{{ excursion.duration / 60 }} ч.</p>
-              </div>
-            </div>
-          </div>
-          <div class="date">
-            <h2>{{ getData }}</h2>
-          </div>
-        </div>
-      </div> -->
-      <!-- <div class="important">
-        <img src="/icon/event/exclamation.svg" alt="">
-        <div class="important-content">
-          <p class="large-text"><b>Важно:</b></p>
-          <p class="large-text">- {{ EventFormat.type }}</p>
-          <p class="large-text">- {{ EventFormat.remained_places }}</p>
-          <p class="large-text">- Экскурсии  {{ excursion.age_category.age_category_name }}</p>
-        </div>
-      </div> -->
       <div class="descript">
         <h3>Подробнее об экскурсии</h3>
         <h5>Экскурсия «{{ excursion.title }}»</h5>
         <p>{{ excursion.description }}</p>
+      </div>
+      <h2 v-if="excursion.photos.length > 1">Галерея ярких моментов</h2>
+      <div class="gallery">
+        <div
+          v-for="(photo, i) in excursion.photos.slice(1)"
+          :key="i"
+          :class="'gallery-img img' + i"
+          >
+            <img :src="baseUrl + photo.photo_url" :alt="'Фото ' + i">
+        </div>
       </div>
       <Contact class="map">
         <iframe
@@ -136,7 +108,8 @@
     </div>
   </div>
   <div v-else class="loading">
-    <h3>Загрузка данных...</h3>
+    <Loading/>
+     <!-- <h3>Загрузка...</h3> -->
   </div>
 </template>
 
@@ -147,6 +120,7 @@ import { useDataStore } from '@/stores/counter';
 import { baseUrl } from '@/stores/counter';
 import IconButton from '@/components/UI/button/IconButton.vue';
 import Contact from '../../components/shared/contact-block.vue';
+import Loading from '@/components/shared/loading-animation.vue';
 
 const store = useDataStore();
 const route = useRoute();
@@ -160,10 +134,12 @@ const src = computed(() => {
 const load = ref(false)
 
 onMounted(async () => {
+  document.body.style.overflow = 'hidden'
   try {
     await store.FetchExcursionDetail(route.params.id);
     setTimeout(() => {
       load.value = true
+      document.body.style.overflow = 'auto'
     }, 1000)
   } catch (error) {
     console.error('Ошибка при загрузке экскурсий:', error);
@@ -234,12 +210,27 @@ const EventFormat = computed(() => {
   align-items: center;
   position: relative;
   padding-top: 40px;
+  overflow-x: hidden;
+}
+
+span{
+  display: block;
+  text-align: left;
+  width: 100%;
+  font-size: 16px;
+  font-weight: 400;
+  color: #2d3748;
+  margin-bottom: 20px;
+}
+
+span > a{
+  font-size: 16px;
+  font-weight: 400;
+  color: #525252;
 }
 
 .loading{
-  min-height: 70vh;
-  margin-top: 20%;
-  text-align: center;
+  overflow: hidden;
 }
 
 .event-wrapper{
@@ -330,6 +321,39 @@ const EventFormat = computed(() => {
   flex-direction: column;
   gap: 30px;
   margin-top: 50px;
+  margin-bottom: 50px;
+}
+
+.gallery{
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  margin-bottom: 35px;
+}
+
+.gallery-img {
+  height: 310px;
+  overflow: hidden; /* Обрезаем всё, что выходит за границы */
+  position: relative; /* Для корректного позиционирования img */
+  border-radius: 8px; /* Опционально: скругление углов */
+}
+
+/* Размеры блоков */
+.img0, .img3 {
+  width: 38%;
+}
+
+.img1, .img2 {
+  width: 59%;
+}
+
+/* Стили для самих изображений */
+.gallery-img img {
+  width: 100%; /* Занимает всю ширину родителя */
+  height: 100%; /* Занимает всю высоту родителя */
+  object-fit: cover; /* Сохраняет пропорции, заполняя весь блок */
+  object-position: center; /* Центрирует изображение */
 }
 
 :deep(.contact-container){
@@ -377,6 +401,13 @@ const EventFormat = computed(() => {
   border-left: 2px solid #f25c03;
   border-radius: 14px;
   background-color: white;
+  position: relative;
+}
+
+.one-event > .event-content{
+  position: absolute;
+  bottom: 25px;
+  z-index: 9;
 }
 
 .one-event > .title{
@@ -412,8 +443,36 @@ const EventFormat = computed(() => {
 }
 
 .one-event-wrapper{
+  position: relative;
   width: 35%;
   border-radius: 10px 10px 10px 0;
   background-color: #FF6C36;
+  overflow: hidden;
 }
+
+.important-icon{
+  content: '';
+  position: absolute;
+  width: 156px;
+  height: 100%;
+  background-image: url('/icon/event/important.svg');
+  background-repeat: no-repeat;
+  background-size: cover;
+  top: 0px;
+  right: 0px;
+  z-index: 1;
+}
+
+.asterick{
+  display: inline;
+  position: absolute;
+  content: '';
+  width: 355px;
+  height: 343px;
+  background-image: url(/icon/news/asterisk.svg);
+  z-index: -1;
+  top: 30px;
+  right: -135px;
+}
+
 </style>

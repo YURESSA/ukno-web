@@ -2,7 +2,7 @@
   <div class="page-wrapper">
     <div class="payment-wrapper" v-if="load">
       <div class="header-wrapper">
-        <h4>Новое событие</h4>
+        <h4>Редактор события</h4>
         <IconButton @click="closePage" class="close_btn"><img src="/icon/maki_cross.svg" alt=""></IconButton>
       </div>
       <div class="person-info">
@@ -203,7 +203,6 @@
             >
               <img :src="previewImageUrl" style="width: 100%">
             </n-modal>
-            {{ excursion }}
             <BaseButton type="submit" class="sumbit--btn" text="Сохранить изменения"/>
         </form>
       </div>
@@ -419,18 +418,15 @@ async function pushSessionToApi(excursion_id){
 }
 
 const submitEvent = async () => {
-  alert('сработал')
   try {
-    // 2. Создаем FormData для файлов и JSON-данных
+    // Создаем JSON-данные
     const jsonData = JSON.stringify(formDataExcursion.value)
 
-    // 3. Добавляем файлы (если есть)
+    // Добавляем фото (если есть)
     if(fileList.value.length > 0){
       for (const file of fileList.value) {
         const formData = new FormData();
-
-        // Ключевое изменение: используем поле 'photo' вместо 'photos'
-        formData.append('photo', file.file); // <- Сервер ожидает поле 'photo'
+        formData.append('photo', file.file);
 
         try {
           await store.PostNewPhoto(excursion.value.excursion_id, formData);
@@ -635,7 +631,7 @@ span{
   width: 250px;
   height: 100%;
   background-color: rgba(226, 223, 223, 0.534);
-  /* background-image: url(/public/icon/basket.svg);
+  /* background-image: url(/icon/basket.svg);
   background-repeat: no-repeat;
   background-position: center;
   background-size: 50px; */

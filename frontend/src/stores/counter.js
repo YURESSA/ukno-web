@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import axios from 'axios'
 import router from '@/router'
 
-export const baseUrl = 'http://127.0.0.1:5000/'
+export const baseUrl = import.meta.env. VITE_FRONTEND_URL;
 
 export const useDataStore = defineStore('data', {
   state: () => ({
@@ -23,6 +23,7 @@ export const useDataStore = defineStore('data', {
     clearTokenRole() {
       this.auth_key = ''
       this.role = ''
+      this.profileData = []
     },
     deletEvent() {
       this.residentExcursions = []

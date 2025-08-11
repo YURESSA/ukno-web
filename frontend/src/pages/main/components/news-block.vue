@@ -4,18 +4,36 @@
       <h3>Новости молодежного бюро</h3>
     </div>
     <div class="news-content">
-      <NewsCard title="ПРОГРЕСС-24" imageName="news-img.png"></NewsCard>
-      <NewsCard title="ПРОГРЕСС-24" imageName="news-img4.png"></NewsCard>
-      <div class="half-width-container">
-        <NewsCard title="ПРОГРЕСС-24" imageName="news-img3.png" class="half-width"></NewsCard>
-        <NewsCard title="ПРОГРЕСС-24" imageName="news-img2.png" class="half-width"></NewsCard>
+      <template v-for="(item, index) in news.slice(0, 2)" :key="index">
+        <NewsCard
+          :title="item.title"
+          :imageName="baseUrl + item.images[0]"
+          :id = 'item.news_id'
+        ></NewsCard>
+      </template>
+
+      <div
+        class="half-width-container"
+        v-if="news.length > 2"
+      >
+        <template v-for="(item, index) in news.slice(2, 4)" :key="index + 2">
+          <NewsCard
+            :title="item.title"
+            :imageName="baseUrl + item.images[0]"
+          ></NewsCard>
+        </template>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import NewsCard from '@/components/shared/news-card.vue'
+import NewsCard from '@/components/shared/news-card.vue';
+import { baseUrl } from '@/stores/counter';
+
+const props = defineProps({
+  news: Object,
+})
 </script>
 
 <style scoped>

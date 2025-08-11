@@ -1,10 +1,11 @@
 <template>
-  <div class="page-wrapper page--margin">
+  <div class="page-wrapper">
     <div class="login-wrapper">
-      <h3>Вход для резидента</h3>
       <form @submit.prevent="handleSubmit">
+        <h3>Вход для резидента</h3>
         <input
           type="username"
+          class="text-l text-medium"
           name="username"
           placeholder="e-mail *"
           v-model="formData.email"
@@ -13,6 +14,7 @@
         >
         <input
           type="password"
+          class="text-l text-medium"
           name="password"
           placeholder="Пароль *"
           v-model="formData.password"
@@ -21,7 +23,6 @@
         >
         <DefaultButton type="submit" class="sumbit--btn" text="Войти"/>
       </form>
-      <span>У ВАС НЕТ АККАУНТА? <RouterLink to="register"><span class="text-orange">ЗАРЕГЕСТРИРОВАТЬСЯ</span></RouterLink></span>
     </div>
   </div>
 </template>
@@ -43,8 +44,9 @@ const formData = ref({
 const handleSubmit = async () => {
   try {
     await store.PostLoginResident(JSON.stringify(formData.value));
+    await store.GetResidentProfile();
     alert('Вход выполнен успешно!');
-    router.push('/');
+    router.back();
   } catch (error) {
     if (error.response?.status === 401) {
       alert('Неверные учетные данные');
@@ -60,20 +62,10 @@ const handleSubmit = async () => {
 .page-wrapper {
   display: flex;
   justify-content: center;
+  align-items: center;
   position: relative;
-  min-height: calc(100vh - 188px - 246px)
-}
-
-.page-wrapper::before {
-  content: '';
-  position: absolute;
-  top: -120px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url('/backgroung/eventsFeed.png') no-repeat;
-  background-size: 100% auto;
-  z-index: -1;
+  height: 100%;
+  padding: 0px;
 }
 
 .login-wrapper {
@@ -81,31 +73,35 @@ const handleSubmit = async () => {
   flex-direction: column;
   justify-content: center;
   max-width: 1800px;
+  max-height: max-content;
   position: relative;
-}
-
-h3{
-  margin-bottom: 40px;
+  z-index: 99;
 }
 
 form {
   display: flex;
   flex-direction: column;
-  gap: 50px;
-  max-width: 600px;
-  margin-bottom: 30px;
+  gap: 30px;
+  width: 624px;
+  border: 2px solid #f25c03;
+  border-radius: 38px;
+  padding: 40px 30px 30px 30px;
+  backdrop-filter: blur(16.5px);
+  background: rgba(255, 255, 255, 0.52);
+  transform: translateY(-50px);
 }
 
 input {
   padding: 15px 0;
   border: none;
   border-bottom: 1px solid #0000008C;
-  transition: all 0.5s ease;
+  transition: background-color 99999999s ease;
+  margin-bottom: 20px;
+  background: rgba(255, 255, 255, 0);
 }
 
 input:focus {
   outline: none;
-  background-color: #F3F3F3;
 }
 
 .sumbit--btn{
@@ -113,7 +109,8 @@ input:focus {
   padding: 20px;
   border-radius: 30px;
   border: 2px solid #333333;
-  background-color: white;
+  background-color: rgba(255, 255, 255, 0);
+  margin-top: 10px;
 }
 
 .text-orange{
@@ -126,5 +123,9 @@ input:focus {
   margin-top: -20px;
   font-weight: 700;
   display: block;
+}
+
+span{
+  text-align: center;
 }
 </style>

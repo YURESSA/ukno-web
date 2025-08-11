@@ -6,7 +6,7 @@
         <!-- <img class="absolut--img bottom-ear" src="/icon/main/bottomEar.png" alt=""> -->
       </div>
       <div class="title">
-        <h3>Молодежное бюро 5 этаж -</h3>
+        <h3>Кто мы такие?</h3>
         <img class="absolut--img flower-big" src="/icon/main/flower-big.png" alt="">
       </div>
       <div class="about-content">

@@ -51,12 +51,15 @@
         </div>
       </div>
     </div>
-    <IconButton class="button" text="записаться"><img src="/icon/arrow.svg" alt=""></IconButton>
+    <IconButton @click="router.push('/events')" class="button" text="записаться"><img src="/icon/arrow.svg" alt=""></IconButton>
   </div>
 </template>
 
 <script setup>
 import IconButton from '@/components/UI/button/IconButton.vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 </script>
 
 <style scoped>
@@ -66,7 +69,7 @@ import IconButton from '@/components/UI/button/IconButton.vue';
   margin: 0 auto;
   margin-top: -150px;
   max-width: 1800px;
-  padding: 0;
+  padding: 0px 30px;
 }
 
 span{

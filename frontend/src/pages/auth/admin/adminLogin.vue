@@ -1,5 +1,5 @@
 <template>
-  <div class="page-wrapper page--margin">
+  <div class="page-wrapper">
     <div class="login-wrapper">
       <h3>Вход для администратора</h3>
       <form @submit.prevent="handleSubmit">
@@ -26,7 +26,7 @@
         <span class="error-message" v-if="showErrors && errors.password">{{ errors.password }}</span>
         <DefaultButton type="submit" class="sumbit--btn" text="Войти"/>
       </form>
-      <span>У ВАС НЕТ АККАУНТА? <RouterLink to="register"><span class="text-orange">ЗАРЕГЕСТРИРОВАТЬСЯ</span></RouterLink></span>
+      <span>У ВАС НЕТ АККАУНТА? <RouterLink to="register"><span class="text-orange">ЗАРЕГИСТРИРОВАТЬСЯ</span></RouterLink></span>
     </div>
   </div>
 </template>
