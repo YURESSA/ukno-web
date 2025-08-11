@@ -62,6 +62,9 @@ POSTGRES_PORT=5432
 
 PRODUCTION=True
 USE_POSTGRESS=True
+
+ACCOUNT_ID= 
+YOOKASSA_SECRET_KEY=
 ```
 
 ---
@@ -107,7 +110,7 @@ docker exec -it postgres-db psql -U ukno_user -d ukno
 
 ```bash
 docker exec -it flask-backend sh
-python backend/core/scripts/create_superuser.py
+python -m backend.core.scripts.create_superuser
 ```
 
 ---
