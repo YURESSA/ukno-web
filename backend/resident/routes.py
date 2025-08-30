@@ -110,7 +110,7 @@ class ExcursionsResource(Resource):
         resident_email = get_jwt_identity()
         resident = get_user_by_email(resident_email)
         excursions = get_excursions_for_resident(resident.user_id)
-        return {"excursions": [excursion.to_dict() for excursion in excursions]}, HTTPStatus.OK
+        return {"excursions": [excursion.to_dict(include_related=True) for excursion in excursions]}, HTTPStatus.OK
 
 
 @resident_ns.route('/excursions/<int:excursion_id>')
