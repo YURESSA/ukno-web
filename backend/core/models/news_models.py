@@ -20,9 +20,11 @@ class News(db.Model):
     title = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now)
-    author_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
 
-    author = db.relationship('User', backref=db.backref('news', lazy=True))
+    # Автор новости (связь с User)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    author = db.relationship('User', foreign_keys=[author_id], backref='news')
+    photo_author = db.Column(db.String(200), nullable=True)
 
     images = db.relationship('NewsImage', back_populates='news', cascade='all, delete-orphan', lazy=True)
 
@@ -37,5 +39,6 @@ class News(db.Model):
                 "user_id": self.author.user_id,
                 "full_name": self.author.full_name,
                 "email": self.author.email
-            }
+            },
+            "photo_author": self.photo_author
         }

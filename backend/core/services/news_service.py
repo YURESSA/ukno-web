@@ -57,6 +57,7 @@ def create_news_with_images(user_email, data_str, image_files):
 
     title = data.get("title")
     content = data.get("content")
+    photo_author = data.get("photo_author")
     if not all([title, content]):
         return {"message": "Поля title и content обязательны"}, HTTPStatus.BAD_REQUEST
 
@@ -67,12 +68,14 @@ def create_news_with_images(user_email, data_str, image_files):
     news = News(
         title=title,
         content=content,
-        author_id=user.user_id
+        author_id=user.user_id,
+        photo_author=photo_author
     )
     db.session.add(news)
     db.session.flush()
 
     for image_file in image_files:
+        print(1)
         if image_file:
             image_path = save_image(image_file, "news")
             news_image = NewsImage(news_id=news.news_id, image_path=image_path)
@@ -110,11 +113,14 @@ def update_news(news_id, form_data, files):
 
     title = data.get("title")
     content = data.get("content")
+    photo_author = data.get("photo_author")
 
     if title:
         news.title = title
     if content:
         news.content = content
+    if photo_author is not None:
+        news.photo_author = photo_author
 
     images = files.getlist("image") if files else []
     for image_file in images:

@@ -80,6 +80,7 @@ async function showNewsModal(news) {
 
     document.querySelector('#newsTitle').value = news ? news.title : '';
     document.querySelector('#newsContent').value = news ? news.content : '';
+    document.querySelector('#PhotoAuthor').value = news ? news.photo_author : '';
     document.querySelector('#newsPhotoUpload').value = '';
     document.querySelector('#newsPhotoPreview').innerHTML = '';
 
@@ -177,7 +178,12 @@ async function addPhotoToNews(newsId, photoFile) {
 async function createNews(title, content, imageFiles) {
     const formData = new FormData();
     const formattedContent = content.replace(/\n/g, '<br>');
-    formData.append('data', JSON.stringify({title, content: formattedContent}));
+    const photoAuthor = document.getElementById('PhotoAuthor').value.trim();
+    formData.append('data', JSON.stringify({
+        title,
+        content: formattedContent,
+        photo_author: photoAuthor // <-- добавляем поле автора фото
+    }));
     console.log(formData.get)
     imageFiles.forEach(file => formData.append('image', file));
 

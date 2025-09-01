@@ -145,10 +145,25 @@ class AdminUserDetail(Resource):
         return get_user_info_response(updated_user), HTTPStatus.OK
 
 
+from flask_restx import reqparse
+from werkzeug.datastructures import FileStorage
+
+create_parser = reqparse.RequestParser()
+create_parser.add_argument(
+    'data', type=str, location='form', required=True,
+    help='JSON строка с полями title, content, photo_author'
+)
+create_parser.add_argument(
+    'image', type=FileStorage, location='files', action='append', required=False,
+    help='Файлы изображений для новости (можно несколько)'
+)
+
 @admin_ns.route('/news')
 class NewsResource(Resource):
     @jwt_required()
     @admin_required
+    @admin_ns.expect(create_parser)
+    @admin_ns.doc(description="Создание новости")
     def post(self):
         data_str = request.form.get("data")
         images = request.files.getlist("image")
@@ -165,6 +180,20 @@ class NewsResource(Resource):
         return {"news": news_data}, HTTPStatus.OK
 
 
+
+from flask_restx import reqparse
+from werkzeug.datastructures import FileStorage
+
+update_parser = reqparse.RequestParser()
+update_parser.add_argument(
+    'data', type=str, location='form', required=True,
+    help='JSON строка с полями title, content, photo_author'
+)
+update_parser.add_argument(
+    'image', type=FileStorage, location='files', action='append', required=False,
+    help='Файлы изображений для новости (можно несколько)'
+)
+
 @admin_ns.route('/news/<int:news_id>')
 class NewsDetailResource(Resource):
     @jwt_required()
@@ -178,8 +207,14 @@ class NewsDetailResource(Resource):
 
     @jwt_required()
     @admin_required
+    @admin_ns.expect(update_parser)
+    @admin_ns.doc(description="Обновление новости по ID")
     def put(self, news_id):
-        news, error = update_news(news_id, request.form, request.files)
+        args = update_parser.parse_args()
+        form_data = {'data': args['data']}
+        files = {'image': args.getlist('image')} if args.get('image') else None
+
+        news, error = update_news(news_id, form_data, files)
         if error:
             return ({
                         "message": error}, HTTPStatus.BAD_REQUEST if "JSON" in error or "обязательно" in error
