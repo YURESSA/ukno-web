@@ -5,6 +5,8 @@ from http import HTTPStatus
 from flask import request, Response
 from flask_jwt_extended import jwt_required, get_jwt, verify_jwt_in_request, get_jwt_identity
 from flask_restx import Resource
+from flask_restx import reqparse
+from werkzeug.datastructures import FileStorage
 
 from backend.core.services.excursion_services.excursion_photo_service import get_photos_for_excursion, \
     add_photo_to_excursion, \
@@ -145,9 +147,6 @@ class AdminUserDetail(Resource):
         return get_user_info_response(updated_user), HTTPStatus.OK
 
 
-from flask_restx import reqparse
-from werkzeug.datastructures import FileStorage
-
 create_parser = reqparse.RequestParser()
 create_parser.add_argument(
     'data', type=str, location='form', required=True,
@@ -157,6 +156,7 @@ create_parser.add_argument(
     'image', type=FileStorage, location='files', action='append', required=False,
     help='Файлы изображений для новости (можно несколько)'
 )
+
 
 @admin_ns.route('/news')
 class NewsResource(Resource):
@@ -180,10 +180,6 @@ class NewsResource(Resource):
         return {"news": news_data}, HTTPStatus.OK
 
 
-
-from flask_restx import reqparse
-from werkzeug.datastructures import FileStorage
-
 update_parser = reqparse.RequestParser()
 update_parser.add_argument(
     'data', type=str, location='form', required=True,
@@ -193,6 +189,7 @@ update_parser.add_argument(
     'image', type=FileStorage, location='files', action='append', required=False,
     help='Файлы изображений для новости (можно несколько)'
 )
+
 
 @admin_ns.route('/news/<int:news_id>')
 class NewsDetailResource(Resource):
