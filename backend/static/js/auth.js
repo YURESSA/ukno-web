@@ -4,7 +4,7 @@ const TOKEN = localStorage.getItem('jwt_token');
 
 if (!TOKEN) {
     showNotification('Не найден токен авторизации. Пожалуйста, выполните вход.');
-    window.location.href = '/login';
+    window.location.href = '/login-admin';
 }
 
 function showNotification(message, type = 'info', delay = 2500) {
@@ -31,10 +31,9 @@ function showNotification(message, type = 'info', delay = 2500) {
     area.insertAdjacentHTML('beforeend', toastHTML);
 
     const toastEl = document.getElementById(id);
-    const toast = new bootstrap.Toast(toastEl, {delay});
+    const toast = new bootstrap.Toast(toastEl, { delay });
     toast.show();
 
-    // Удалить DOM-элемент после скрытия
     toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
 }
 
@@ -45,15 +44,10 @@ async function fetchWithAuth(url, options = {}) {
 
     try {
         const res = await fetch(url, options);
-        console.log(res.status)
-        if (res.status === 401) {
+        console.log(res.status);
+        if (res.status === 401 || res.status === 403) {
             showNotification('Сессия истекла. Пожалуйста, войдите заново.');
-            window.location.href = '/login';
-            return null;
-        }
-        if (res.status === 403) {
-            showNotification('Сессия истекла. Пожалуйста, войдите заново.');
-            window.location.href = '/login';
+            window.location.href = '/login-admin';
             return null;
         }
         if (!res.ok) {

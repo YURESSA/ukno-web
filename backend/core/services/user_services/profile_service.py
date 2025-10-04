@@ -6,7 +6,7 @@ from backend.core import db
 from backend.core.messages import AuthMessages
 from backend.core.models.auth_models import User, Role
 from backend.core.services.user_services.auth_service import create_user, authenticate_user, change_password, \
-    delete_user
+    delete_user, get_user_by_email
 
 
 def parse_user_data(data, default_role):
@@ -30,19 +30,41 @@ def register_user(default_role, data, current_user_role="user"):
     return {"message": AuthMessages.USER_CREATED}, HTTPStatus.CREATED
 
 
-def login_user(role, data):
-    email = data.get("email")
-    password = data.get("password")
-    user = User.query.filter_by(email=email).first()
+def login_user(role: str, data: dict):
+    """
+    Универсальная функция авторизации пользователя по роли.
+    Возвращает (response_dict, http_status)
+    """
+    email = (data.get("email") or "").strip()
+    password = data.get("password") or ""
 
-    if not user or not user.check_password(password) or user.role.role_name.lower() != role.lower():
-        return None
-    return authenticate_user(email, password)
+    if not email or not password:
+        return {"message": "Необходимо указать и email, и пароль"}, HTTPStatus.BAD_REQUEST
+
+    user = get_user_by_email(email)
+    if not user:
+        return {"message": f"Пользователь с email {email} не найден"}, HTTPStatus.UNAUTHORIZED
+
+    if not user.check_password(password):
+        return {"message": "Неверный пароль"}, HTTPStatus.UNAUTHORIZED
+
+    if user.role.role_name.lower() != role.lower():
+        return {"message": "Доступ запрещён для этой роли"}, HTTPStatus.FORBIDDEN
+
+    token = authenticate_user(email, password)
+    if not token:
+        return {"message": "Ошибка при генерации токена"}, HTTPStatus.INTERNAL_SERVER_ERROR
+
+    return {
+        "access_token": token,
+        "role": role,
+        "message": f"Добро пожаловать, {user.full_name or 'пользователь'}!"
+    }, HTTPStatus.OK
 
 
 def get_profile():
     current_email = get_jwt_identity()
-    user = User.query.filter_by(email=current_email).first()
+    user = get_user_by_email(current_email)
     if not user:
         return None, {"message": AuthMessages.USER_NOT_FOUND}, HTTPStatus.NOT_FOUND
     return user, None, None
@@ -75,7 +97,7 @@ def get_user_info_response(user):
 
 
 def update_user(email, data):
-    user = User.query.filter_by(email=email).first()
+    user = get_user_by_email(email)
     if not user:
         return None
 

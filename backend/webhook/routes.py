@@ -12,7 +12,30 @@ from ..core.services.email_service import send_reservation_confirmation_email
 
 @webhook_ns.route('/yookassa')
 class YooKassaWebhook(Resource):
-    def post(self):
+    def post(self) -> tuple[dict, int]:
+        """
+        Обработка вебхука от YooKassa.
+
+        Ожидается JSON следующей структуры:
+        {
+            "event": "payment.succeeded" | "payment.canceled" | "refund.succeeded",
+            "object": {
+                "id": "идентификатор платежа",
+                "metadata": {
+                    "reservation_id": int
+                }
+            }
+        }
+
+        Логика:
+        - payment.succeeded: помечает бронь как оплаченной, обновляет статус платежа и отправляет email.
+        - payment.canceled: обновляет статус платежа на 'canceled'.
+        - refund.succeeded: обновляет статус платежа на 'refunded'.
+
+        Returns:
+            dict: сообщение о статусе обработки
+            int: HTTP статус код
+        """
         event_data = request.get_json()
 
         if not event_data or 'event' not in event_data:

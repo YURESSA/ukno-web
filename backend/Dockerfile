@@ -1,4 +1,5 @@
-FROM python:3.10-slim
+# Этап 1: сборка зависимостей
+FROM python:3.10-slim AS builder
 
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -9,8 +10,20 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 COPY requirements.txt .
+RUN pip install --user --no-cache-dir -r requirements.txt
 
-RUN pip install --no-cache-dir -r requirements.txt
+
+FROM python:3.10-slim
+
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY --from=builder /root/.local /root/.local
+ENV PATH=/root/.local/bin:$PATH
 
 COPY .. ./backend
 

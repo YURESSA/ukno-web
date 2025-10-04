@@ -34,7 +34,7 @@ def register_static_routes(app):
     def admin_page():
         return render_template('admin/admin_panel.html', title="Админ-панель")
 
-    @app.route('/login/', strict_slashes=False)
+    @app.route('/login-admin/', strict_slashes=False)
     def login_page():
         return render_template('login.html', title="Вход в систему")
 

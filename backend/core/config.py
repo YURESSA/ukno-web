@@ -5,11 +5,12 @@ from yookassa import Configuration
 
 load_dotenv()
 
+def str_to_bool(value):
+    if value is None:
+        return False
+    return value.lower() in ("true", "1", "t", "yes", "y")
 
 class Config:
-    def str_to_bool(value):
-        return value.lower() in ("true", "1", "t", "yes", "y")
-
     PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
     TEMPLATE_FOLDER = os.path.join(PROJECT_ROOT, 'templates')
     STATIC_FOLDER = os.path.join(PROJECT_ROOT, 'static')
@@ -20,7 +21,7 @@ class Config:
     JWT_ACCESS_TOKEN_EXPIRES = 3600 * 24 * 7 * 4
     JWT_TOKEN_LOCATION = ["headers"]
 
-    if str_to_bool(os.getenv("USE_POSTGRESS")):
+    if str_to_bool(os.getenv("USE_POSTGRES")):
         POSTGRES_USER = os.getenv("POSTGRES_USER", "ukno_user")
         POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "ukno_pass")
         POSTGRES_DB = os.getenv("POSTGRES_DB", "ukno")

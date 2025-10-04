@@ -119,7 +119,13 @@ document.getElementById('editUserForm').onsubmit = async (e) => {
     }
 
     const payload = { email, full_name, phone, role_name };
-    if (password) payload.password = password;
+    if (password) {
+        if (password.length < 6) {
+            showNotification('Пароль должен быть не менее 6 символов', 'warning');
+            return;
+        }
+        payload.password = password;
+    }
 
     const res = await fetchWithAuth(`${API_BASE}/users/detail/${email}`, {
         method: 'PUT',
