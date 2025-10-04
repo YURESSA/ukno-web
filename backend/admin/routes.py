@@ -67,10 +67,9 @@ class AdminProfile(Resource):
         """
         Получение информации о текущем администраторе.
         """
-        current_email: str = get_jwt_identity()
+        current_email = get_jwt_identity()
         user = get_user_by_email(current_email)
-        user_info: Dict[str, Any] = get_user_info_response(user)
-        return user_info, HTTPStatus.OK
+        return get_user_info_response(user)
 
     @admin_required
     @admin_ns.expect(change_password_model)

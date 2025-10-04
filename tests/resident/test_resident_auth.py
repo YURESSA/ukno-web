@@ -18,6 +18,7 @@ class TestResidentAuth:
     def test_login_failure(self, client):
         data = {"email": "nope@example.com", "password": "wrong"}
         r = client.post("/api/resident/login", json=data)
+        print(r.data)
         assert r.status_code == HTTPStatus.UNAUTHORIZED
 
 

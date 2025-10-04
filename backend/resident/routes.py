@@ -16,7 +16,6 @@ from backend.core.services.excursion_services.excursion_session_service import c
     update_excursion_session, \
     delete_excursion_session, get_sessions_for_excursion
 from . import resident_ns
-from ..core.messages import AuthMessages
 from ..core.schemas.auth_schemas import login_model, change_password_model
 from ..core.schemas.excursion_schemas import data_param, photos_param, excursion_model, session_model, \
     session_patch_model
@@ -44,11 +43,9 @@ class ResidentLogin(Resource):
     @resident_ns.expect(login_model)
     @resident_ns.doc(description="Аутентификация резидента для получения токена доступа")
     def post(self):
-        data = request.get_json()
-        token = login_user("resident", data)
-        if token:
-            return {"access_token": token, "role": "resident"}, HTTPStatus.OK
-        return {"message": AuthMessages.AUTH_INVALID_CREDENTIALS}, HTTPStatus.UNAUTHORIZED
+        data = request.get_json() or {}
+        response, status = login_user("resident", data)
+        return response, status
 
 
 @resident_ns.route('/profile')
