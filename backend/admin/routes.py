@@ -1,7 +1,7 @@
 import json
 from functools import wraps
 from http import HTTPStatus
-from typing import Tuple, Dict, Any, List
+from typing import Dict, Any, Optional, List, Tuple
 
 from flask import request, Response
 from flask_jwt_extended import get_jwt, verify_jwt_in_request, get_jwt_identity
@@ -193,9 +193,6 @@ class NewsResource(Resource):
         """
         news_data: List[Dict[str, Any]] = get_all_news()
         return {"news": news_data}, HTTPStatus.OK
-
-
-from typing import Dict, Any, Optional, List
 
 
 @admin_ns.route('/news/<int:news_id>')

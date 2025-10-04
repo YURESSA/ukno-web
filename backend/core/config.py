@@ -5,10 +5,12 @@ from yookassa import Configuration
 
 load_dotenv()
 
+
 def str_to_bool(value):
     if value is None:
         return False
     return value.lower() in ("true", "1", "t", "yes", "y")
+
 
 class Config:
     PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
