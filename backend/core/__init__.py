@@ -41,3 +41,6 @@ def register_apps(app):
 
     from backend.webhook import webhook_ns
     api.add_namespace(webhook_ns, path='/api/webhook')
+
+    from backend.login import login_ns
+    api.add_namespace(login_ns, path='/api')
