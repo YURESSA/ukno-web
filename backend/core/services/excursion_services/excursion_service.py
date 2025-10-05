@@ -368,31 +368,3 @@ def get_resident_excursion_analytics(resident_id):
         } if most_popular else None,
         "details": result
     }
-
-
-def get_detailed_excursion_with_reservations(excursion):
-    result = excursion.to_dict()
-    result['sessions'] = []
-
-    for session in excursion.sessions:
-        session_data = session.to_dict()
-        session_data['reservations'] = []
-
-        for reservation in session.reservations:
-            if reservation.is_cancelled:
-                continue
-            session_data['reservations'].append({
-                'reservation_id': reservation.reservation_id,
-                'user_id': reservation.user_id,
-                'booked_at': reservation.booked_at.isoformat(),
-                'participants_count': reservation.participants_count,
-                'user': {
-                    'user_id': reservation.user.user_id,
-                    'full_name': reservation.user.full_name,
-                    'email': reservation.user.email
-                } if reservation.user else None
-            })
-
-        result['sessions'].append(session_data)
-
-    return result
