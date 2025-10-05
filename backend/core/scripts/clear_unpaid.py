@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 
 from backend.core import db, create_app
-from backend.core.models.excursion_models import Reservation
+from backend.core.models.event_models import Reservation
 
 
 def cleanup_unpaid_reservations():

@@ -8,11 +8,11 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_restx import Resource, fields
 
 from backend.core.schemas.auth_schemas import user_model, change_password_model, edit_profile_model
-from backend.core.services.excursion_services.excursion_service import list_excursions, get_excursion
+from backend.core.services.event_services.event_service import list_events, get_event
 from . import user_ns
 from ..core import db
 from ..core.models.news_models import News
-from ..core.schemas.excursion_schemas import reservation_model, cancel_model
+from ..core.schemas.event_schemas import reservation_model, cancel_model
 from ..core.schemas.user_schemas import user_login
 from ..core.services.calendar_utilits import create_ical_from_reservation
 from ..core.services.email_service import send_reset_email
@@ -145,7 +145,7 @@ class UserExcursionsList(Resource):
         }
         sort: str | None = args.get('sort')
 
-        excursions: list = list_excursions(filters, sort)
+        excursions: list = list_events(filters, sort)
 
         return {
             "excursions": [excursion.to_dict() for excursion in excursions]
@@ -314,9 +314,9 @@ class GoogleCalendarLink(Resource):
         if not reservation:
             return {"message": "Бронирование не найдено"}, 404
 
-        title = f"Экскурсия: {reservation.session.excursion.title}"
+        title = f"Экскурсия: {reservation.session.event.title}"
         start = reservation.session.start_datetime.strftime('%Y%m%dT%H%M%S')
-        end_dt = reservation.session.start_datetime + timedelta(minutes=reservation.session.excursion.duration)
+        end_dt = reservation.session.start_datetime + timedelta(minutes=reservation.session.event.duration)
         end = end_dt.strftime('%Y%m%dT%H%M%S')
 
         query = {
@@ -324,7 +324,7 @@ class GoogleCalendarLink(Resource):
             "text": title,
             "dates": f"{start}/{end}",
             "details": f"Участников: {reservation.participants_count}",
-            "location": reservation.session.excursion.place,
+            "location": reservation.session.event.place,
         }
 
         link = f"https://calendar.google.com/calendar/render?{urlencode(query, quote_via=quote_plus)}"
@@ -360,7 +360,7 @@ class DetailExcursion(Resource):
             dict: Информация об экскурсии.
             tuple: Словарь с сообщением об ошибке и HTTP статус, если экскурсия не найдена.
         """
-        excursion = get_excursion(excursion_id)
+        excursion = get_event(excursion_id)
 
         if not excursion:
             return {"message": "Экскурсия не найдена"}, HTTPStatus.NOT_FOUND

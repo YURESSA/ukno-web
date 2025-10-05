@@ -62,7 +62,6 @@ async function loadExcursions() {
 
     renderTable('События', ['ID', 'Название', 'Описание', 'Категория', 'Формат', 'Возраст'], rows);
 
-    // Навешиваем обработчик на строки таблицы для просмотра экскурсии
     document.querySelectorAll('#excursionsTable tbody tr').forEach(row => {
         row.onclick = async (e) => {
             // Если клик был на кнопке внутри строки — игнорируем, чтобы не открывать модалку
@@ -72,7 +71,7 @@ async function loadExcursions() {
             if (!id) return;
             const res = await fetchWithAuth(`${API_BASE}/excursions/${id}`);
             if (!res) {
-                showNotification('Ошибка загрузки экскурсии', 'danger');
+                showNotification('Ошибка загрузки события', 'danger');
                 return;
             }
             const data = await res.json();
@@ -80,18 +79,17 @@ async function loadExcursions() {
         };
     });
 
-    // Обработчик удаления экскурсии
     document.querySelectorAll('.btn-delete-excursion').forEach(btn => {
         btn.onclick = async (e) => {
             e.stopPropagation();
             const id = btn.dataset.id;
-            if (!confirm(`Удалить экскурсию #${id}?`)) return;
+            if (!confirm(`Удалить событие #${id}?`)) return;
 
             showSpinner();
             try {
                 const res = await fetchWithAuth(`${API_BASE}/excursions/${id}`, {method: 'DELETE'});
                 if (res) {
-                    showNotification('Экскурсия удалена', 'success');
+                    showNotification('Событие удалено', 'success');
                     await loadExcursions();
                 }
             } catch (err) {
@@ -228,9 +226,8 @@ async function deleteSession(sessionId) {
         return;
     }
 
-    // Защита от удаления до создания экскурсии
     if (!currentExcursionId || !sessionId) {
-        showNotification('Нельзя удалить сессию до создания экскурсии', 'warning');
+        showNotification('Нельзя удалить сессию до создания события', 'warning');
         return;
     }
 
@@ -495,14 +492,11 @@ async function showSessionParticipants(excursion_id, session_id) {
 document.getElementById('modalSave').onclick = async () => {
     const isNew = !currentExcursionId;
 
-    // Собираем данные экскурсии в объект
     const excursionData = collectExcursionFormData();
 
     if (isNew) {
-        // Создаем formData для отправки multipart/form-data
         const formData = new FormData();
 
-        // Кладём данные экскурсии в поле 'data' в виде JSON-строки
         formData.append('data', JSON.stringify(excursionData));
 
         // Кладём фотографии (если есть)
@@ -520,12 +514,12 @@ document.getElementById('modalSave').onclick = async () => {
 
             if (!res.ok) {
                 const errorData = await res.json();
-                showNotification(errorData.message || 'Ошибка создания экскурсии', 'danger');
+                showNotification(errorData.message || 'Ошибка создания события', 'danger');
                 return;
             }
 
             const data = await res.json();
-            showNotification('Экскурсия успешно создана', 'success');
+            showNotification('Событие успешно создана', 'success');
 
             currentExcursionId = data.excursion_id || data.id || null;
             originalExcursionData = {...excursionData, ...data};
@@ -534,12 +528,10 @@ document.getElementById('modalSave').onclick = async () => {
             excursionModal.hide()
 
         } catch (e) {
-            showNotification('Ошибка сети при создании экскурсии', 'danger');
+            showNotification('Ошибка сети при создании события', 'danger');
         }
 
     } else {
-        // Для обновления существующей экскурсии — как в вашем текущем коде, отправляем JSON, если API это поддерживает
-        // Или сделать аналогично с FormData, если нужно тоже отправлять фото/сессии.
         const changes = getChangedFields();
         if (Object.keys(changes).length === 0) {
             showNotification('Нет изменений для сохранения', 'info');
@@ -552,11 +544,11 @@ document.getElementById('modalSave').onclick = async () => {
             });
 
             if (!res.ok) {
-                showNotification('Ошибка при обновлении экскурсии', 'danger');
+                showNotification('Ошибка при обновлении события', 'danger');
                 return;
             }
 
-            showNotification('Экскурсия обновлена', 'success');
+            showNotification('Событие обновлено', 'success');
             loadExcursions();
             excursionModal.hide()
             document.getElementById('excursionModal').style.display = 'none';
@@ -568,7 +560,7 @@ document.getElementById('modalSave').onclick = async () => {
 
 btnAddPhoto.onclick = async () => {
     if (!currentExcursionId) {
-        showNotification('Не выбрана экскурсия', 'danger');
+        showNotification('Не выбрано событие', 'danger');
         return;
     }
 
@@ -628,7 +620,6 @@ document.getElementById('saveSessionModalBtn').addEventListener('click', async (
     };
 
     if (currentExcursionId === null) {
-        // Экскурсия еще не создана, просто обновляем локальные данные сессий
         if (sessionId) {
             // редактируем существующую сессию в originalExcursionData.sessions
             const sessionIndex = originalExcursionData.sessions.findIndex(s => s.id === sessionId);
@@ -650,7 +641,6 @@ document.getElementById('saveSessionModalBtn').addEventListener('click', async (
         return;
     }
 
-    // Если экскурсия уже создана, делаем запросы к API
 
     const method = sessionId ? 'PATCH' : 'POST';
     const url = sessionId ? `/api/admin/excursions/${currentExcursionId}/sessions/${sessionId}` : `/api/admin/excursions/${currentExcursionId}/sessions`;
@@ -765,9 +755,8 @@ dropZone.addEventListener('drop', (e) => {
 });
 
 async function handleFiles(files) {
-    // Загрузим файлы сразу на сервер
     if (!currentExcursionId) {
-        showNotification('Сначала сохраните экскурсию', 'warning');
+        showNotification('Сначала сохраните событие', 'warning');
         console.log(currentExcursionId)
         return;
     }

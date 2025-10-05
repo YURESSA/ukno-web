@@ -7,7 +7,7 @@ from flask import send_from_directory, render_template
 from backend.core import create_app, db
 from backend.core.config import Config
 from backend.core.models.auth_models import Role
-from backend.core.models.excursion_models import Category, AgeCategory, FormatType
+from backend.core.models.event_models import Category, AgeCategory, FormatType
 from backend.core.scripts.clear_unpaid import cleanup_unpaid_reservations
 from backend.core.scripts.create_superuser import create_superuser
 from backend.core.scripts.ensure_data import ensure_data_exists

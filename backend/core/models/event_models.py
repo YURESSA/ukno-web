@@ -4,9 +4,9 @@ from sqlalchemy import func
 
 from backend.core import db
 
-excursion_tags = db.Table(
-    'excursion_tags',
-    db.Column('excursion_id', db.Integer, db.ForeignKey('excursions.excursion_id'), primary_key=True),
+event_tags = db.Table(
+    'event_tags',
+    db.Column('event_id', db.Integer, db.ForeignKey('events.event_id'), primary_key=True),
     db.Column('tag_id', db.Integer, db.ForeignKey('tags.tag_id'), primary_key=True)
 )
 
@@ -17,7 +17,7 @@ class Category(db.Model):
     category_id = db.Column(db.Integer, primary_key=True)
     category_name = db.Column(db.String(255), nullable=False)
 
-    excursions = db.relationship("Excursion", back_populates="category", lazy=True)
+    events = db.relationship("Event", back_populates="category", lazy=True)
 
     def __str__(self):
         return f"Category(id={self.category_id}, name={self.category_name})"
@@ -35,7 +35,7 @@ class FormatType(db.Model):
     format_type_id = db.Column(db.Integer, primary_key=True)
     format_type_name = db.Column(db.String(255), nullable=False)
 
-    excursions = db.relationship("Excursion", back_populates="format_type", lazy=True)
+    events = db.relationship("Event", back_populates="format_type", lazy=True)
 
     def __str__(self):
         return f"FormatType(id={self.format_type_id}, name={self.format_type_name})"
@@ -53,7 +53,7 @@ class AgeCategory(db.Model):
     age_category_id = db.Column(db.Integer, primary_key=True)
     age_category_name = db.Column(db.String(255), nullable=False)
 
-    excursions = db.relationship("Excursion", back_populates="age_category", lazy=True)
+    events = db.relationship("Event", back_populates="age_category", lazy=True)
 
     def __str__(self):
         return f"AgeCategory(id={self.age_category_id}, name={self.age_category_name})"
@@ -65,10 +65,10 @@ class AgeCategory(db.Model):
         }
 
 
-class Excursion(db.Model):
-    __tablename__ = 'excursions'
+class Event(db.Model):
+    __tablename__ = 'events'
 
-    excursion_id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text, nullable=False)
     duration = db.Column(db.Integer, nullable=False)
@@ -88,25 +88,25 @@ class Excursion(db.Model):
     telegram = db.Column(db.String(100), nullable=True)
     vk = db.Column(db.String(100), nullable=True)
 
-    category = db.relationship("Category", back_populates="excursions")
-    format_type = db.relationship("FormatType", back_populates="excursions")
-    age_category = db.relationship("AgeCategory", back_populates="excursions")
+    category = db.relationship("Category", back_populates="events")
+    format_type = db.relationship("FormatType", back_populates="events")
+    age_category = db.relationship("AgeCategory", back_populates="events")
 
     distance_to_center = db.Column(db.Float, nullable=True)
     time_to_nearest_stop = db.Column(db.Float, nullable=True)
 
-    photos = db.relationship("ExcursionPhoto", back_populates="excursion", cascade="all, delete-orphan", lazy=True)
-    sessions = db.relationship("ExcursionSession", back_populates="excursion", cascade="all, delete-orphan", lazy=True)
-    tags = db.relationship("Tag", secondary=excursion_tags, back_populates="excursions", lazy='subquery')
+    photos = db.relationship("EventPhoto", back_populates="event", cascade="all, delete-orphan", lazy=True)
+    sessions = db.relationship("EventSession", back_populates="event", cascade="all, delete-orphan", lazy=True)
+    tags = db.relationship("Tag", secondary='event_tags', back_populates="events", lazy='subquery')
 
-    creator = db.relationship("User", backref="excursions_created", foreign_keys=[created_by])
+    creator = db.relationship("User", backref="events_created", foreign_keys=[created_by])
 
     def __str__(self):
-        return f"Excursion(id={self.excursion_id}, title={self.title})"
+        return f"Event(id={self.event_id}, title={self.title})"
 
     def to_dict(self, include_related=False):
         data = {
-            'excursion_id': self.excursion_id,
+            'excursion_id': self.event_id,
             'title': self.title,
             'description': self.description,
             'duration': self.duration,
@@ -141,43 +141,43 @@ class Excursion(db.Model):
         return data
 
 
-class ExcursionPhoto(db.Model):
-    __tablename__ = 'excursion_photos'
+class EventPhoto(db.Model):
+    __tablename__ = 'event_photos'
 
     photo_id = db.Column(db.Integer, primary_key=True)
-    excursion_id = db.Column(db.Integer, db.ForeignKey('excursions.excursion_id'), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('events.event_id'), nullable=False)
     photo_url = db.Column(db.Text, nullable=False)
     order_index = db.Column(db.Integer, nullable=False, default=0)
 
-    excursion = db.relationship("Excursion", back_populates="photos")
+    event = db.relationship("Event", back_populates="photos")
 
     __mapper_args__ = {
         "confirm_deleted_rows": False
     }
 
     def __str__(self):
-        return f"ExcursionPhoto(id={self.photo_id}, excursion_id={self.excursion_id}, " \
+        return f"EventPhoto(id={self.photo_id}, event_id={self.event_id}, " \
                f"photo_url={self.photo_url}, order_index={self.order_index})"
 
     def to_dict(self):
         return {
             'photo_id': self.photo_id,
-            'excursion_id': self.excursion_id,
+            'excursion_id': self.event_id,
             'photo_url': self.photo_url,
             'order_index': self.order_index
         }
 
 
-class ExcursionSession(db.Model):
-    __tablename__ = 'excursion_sessions'
+class EventSession(db.Model):
+    __tablename__ = 'event_sessions'
 
     session_id = db.Column(db.Integer, primary_key=True)
-    excursion_id = db.Column(db.Integer, db.ForeignKey('excursions.excursion_id'), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('events.event_id'), nullable=False)
     start_datetime = db.Column(db.DateTime, nullable=False, default=datetime.now)
     max_participants = db.Column(db.Integer, nullable=False)
     cost = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
 
-    excursion = db.relationship("Excursion", back_populates="sessions")
+    event = db.relationship("Event", back_populates="sessions")
     reservations = db.relationship(
         "Reservation",
         back_populates="session",
@@ -191,7 +191,7 @@ class ExcursionSession(db.Model):
     }
 
     def __str__(self):
-        return f"ExcursionSession(id={self.session_id}, excursion_id={self.excursion_id}, " \
+        return f"EventSession(id={self.session_id}, event_id={self.event_id}, " \
                f"start_datetime={self.start_datetime}, max_participants={self.max_participants}, " \
                f"cost={self.cost})"
 
@@ -219,7 +219,7 @@ class Reservation(db.Model):
     __tablename__ = 'reservations'
 
     reservation_id = db.Column(db.Integer, primary_key=True)
-    session_id = db.Column(db.Integer, db.ForeignKey('excursion_sessions.session_id'), nullable=False)
+    session_id = db.Column(db.Integer, db.ForeignKey('event_sessions.session_id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
     booked_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
@@ -231,7 +231,7 @@ class Reservation(db.Model):
     is_cancelled = db.Column(db.Boolean, default=False)
     is_paid = db.Column(db.Boolean, default=False)
 
-    session = db.relationship("ExcursionSession", back_populates="reservations")
+    session = db.relationship("EventSession", back_populates="reservations")
     user = db.relationship("User", back_populates="reservations")
     payment = db.relationship("Payment", back_populates="reservation", uselist=False)
 
@@ -256,12 +256,12 @@ class Reservation(db.Model):
             'is_cancelled': self.is_cancelled,
             'is_paid': self.is_paid,
             'excursion_title': (
-                self.session.excursion.title
-                if self.session and self.session.excursion else None
+                self.session.event.title
+                if self.session and self.session.event else None
             ),
             'place': (
-                self.session.excursion.place
-                if self.session and self.session.excursion else None
+                self.session.event.place
+                if self.session and self.session.event else None
             ),
             'total_cost': total,
             'payment_status': (
@@ -285,16 +285,16 @@ class Reservation(db.Model):
             'is_cancelled': self.is_cancelled,
             'is_paid': self.is_paid,
             'excursion_title': (
-                self.session.excursion.title
-                if self.session and self.session.excursion else None
+                self.session.event.title
+                if self.session and self.session.event else None
             ),
             'session_start_datetime': (
                 self.session.start_datetime.isoformat()
                 if self.session else None
             ),
             'place': (
-                self.session.excursion.place
-                if self.session and self.session.excursion else None
+                self.session.event.place
+                if self.session and self.session.event else None
             ),
             'total_cost': total,
             'payment_status': (
@@ -310,7 +310,7 @@ class Payment(db.Model):
     payment_id = db.Column(db.String(100), primary_key=True)
     reservation_id = db.Column(db.Integer, db.ForeignKey('reservations.reservation_id'), nullable=True)
 
-    session_id = db.Column(db.Integer, db.ForeignKey('excursion_sessions.session_id'), nullable=True)
+    session_id = db.Column(db.Integer, db.ForeignKey('event_sessions.session_id'), nullable=True)
     participants_count = db.Column(db.Integer, nullable=False)
     email = db.Column(db.String(255), nullable=False)
 
@@ -321,7 +321,7 @@ class Payment(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now)
 
     reservation = db.relationship("Reservation", back_populates="payment", uselist=False)
-    session = db.relationship("ExcursionSession", back_populates="payments")
+    session = db.relationship("EventSession", back_populates="payments")
 
 
 class Tag(db.Model):
@@ -330,7 +330,7 @@ class Tag(db.Model):
     tag_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False, unique=True)
 
-    excursions = db.relationship("Excursion", secondary=excursion_tags, back_populates="tags", lazy='subquery')
+    events = db.relationship("Event", secondary=event_tags, back_populates="tags", lazy='subquery')
 
     def __str__(self):
         return f"Tag(id={self.tag_id}, name={self.name})"

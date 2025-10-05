@@ -7,8 +7,8 @@ from sqlalchemy import func
 from backend.admin.routes import admin_required
 from backend.core import db
 from backend.core.models.auth_models import Role
-from backend.core.models.excursion_models import FormatType, Category, AgeCategory, Excursion, ExcursionSession
-from backend.core.schemas.excursion_schemas import role_model
+from backend.core.models.event_models import FormatType, Category, AgeCategory, Event, EventSession
+from backend.core.schemas.event_schemas import role_model
 from backend.references import ref_ns
 
 category_model = ref_ns.model('Category', {
@@ -306,21 +306,21 @@ class ExcursionStats(Resource):
         """
         # Статистика по стоимости сессий
         min_cost, max_cost = db.session.query(
-            func.min(ExcursionSession.cost),
-            func.max(ExcursionSession.cost)
+            func.min(EventSession.cost),
+            func.max(EventSession.cost)
         ).first()
 
         # Статистика по расстоянию до центра
         min_center, max_center = db.session.query(
-            func.min(Excursion.distance_to_center),
-            func.max(Excursion.distance_to_center)
-        ).filter(Excursion.is_active.is_(True)).first()
+            func.min(Event.distance_to_center),
+            func.max(Event.distance_to_center)
+        ).filter(Event.is_active.is_(True)).first()
 
         # Статистика по времени до ближайшей остановки
         min_time, max_time = db.session.query(
-            func.min(Excursion.time_to_nearest_stop),
-            func.max(Excursion.time_to_nearest_stop)
-        ).filter(Excursion.is_active.is_(True)).first()
+            func.min(Event.time_to_nearest_stop),
+            func.max(Event.time_to_nearest_stop)
+        ).filter(Event.is_active.is_(True)).first()
 
         roles_data = [r.to_dict() for r in Role.query.all()]
 

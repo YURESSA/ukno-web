@@ -6,7 +6,7 @@ data_param = {
     'in': 'formData',
     'type': 'string',
     'required': True,
-    'description': 'JSON-строка с данными экскурсии (см. модель ExcursionData)'
+    'description': 'JSON-строка с данными экскурсии (см. модель EventData)'
 }
 
 photos_param = {
@@ -29,7 +29,7 @@ cancel_model = api.model('CancelReservationRequest', {
     'reservation_id': fields.Integer(required=True, description='ID бронирования')
 })
 
-excursion_model = api.model('Excursion', {
+event_model = api.model('Event', {
     'excursion_id': fields.Integer(readonly=True, description='ID экскурсии'),
     'title': fields.String(required=True, description='Название экскурсии'),
     'description': fields.String(description='Описание'),
@@ -46,7 +46,7 @@ excursion_model = api.model('Excursion', {
     'time_to_nearest_stop': fields.Float(description='Время до ближайшей остановки (мин)'),
 })
 
-excursion_create_model = api.model('ExcursionCreate', {
+event_create_model = api.model('EventCreate', {
     'title': fields.String(required=True, description='Название экскурсии'),
     'description': fields.String(description='Описание'),
     'duration': fields.Integer(description='Продолжительность (мин)'),
@@ -76,7 +76,7 @@ session_model = api.model('Session', {
     'cost': fields.Float(description='Стоимость'),
 })
 
-session_patch_model = api.model('ExcursionSessionPatch', {
+session_patch_model = api.model('EventSessionPatch', {
     'start_datetime': fields.String(description='Дата и время начала в формате ISO 8601',
                                     example='2025-06-10T11:00:00'),
     'max_participants': fields.Integer(description='Максимальное количество участников', example=20),

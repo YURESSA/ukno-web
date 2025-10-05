@@ -4,7 +4,7 @@ from http import HTTPStatus
 import pytest
 
 from backend.core import db
-from tests.conftest import get_excursion_payload, create_excursion_session
+from tests.conftest import get_excursion_payload, create_event_session
 from tests.excursion_tests import _assert_excursions_list_response, _assert_create_excursion_bad_json, \
     _assert_patch_update_excursion_success, _assert_patch_excursion_not_found, _assert_get_excursion_by_id_success, \
     _assert_get_not_found, _assert_delete_success, _assert_delete_not_found, _test_get_sessions_for_excursion, \
@@ -67,7 +67,7 @@ class TestExcursionSessions:
     @pytest.fixture
     def excursion_with_one_session(self, app, excursion_id):
         with app.app_context():
-            session = create_excursion_session(
+            session = create_event_session(
                 excursion_id=excursion_id,
                 start_datetime=datetime.fromisoformat("2025-07-25T12:00:00"),
                 max_participants=5,

@@ -7,8 +7,8 @@ from werkzeug.datastructures import FileStorage
 
 from backend.core import create_app, db
 from backend.core.models.auth_models import User
-from backend.core.models.excursion_models import Excursion, ExcursionSession
-from backend.core.services.excursion_services.excursion_service import create_excursion
+from backend.core.models.event_models import Event, EventSession
+from backend.core.services.event_services.event_service import create_event
 from backend.core.services.user_services.auth_service import create_user
 
 
@@ -175,7 +175,7 @@ def resident_access_token(app):
 
 
 @pytest.fixture
-def existing_excursion_id(app):
+def existing_event_id(app):
     with app.app_context():
         user_email = TestAdminData.EMAIL
 
@@ -220,26 +220,26 @@ def existing_excursion_id(app):
         )
         files = [file_storage]
 
-        excursion, response, error_status = create_excursion(data, user_email, files)
+        excursion, response, error_status = create_event(data, user_email, files)
 
         if error_status:
             raise RuntimeError(f"Ошибка при создании тестовой экскурсии: {response['message']}")
 
         db.session.commit()
 
-        excursion_id = excursion.excursion_id
+        excursion_id = excursion.event_id
         yield excursion_id
 
-        excursion_to_delete = db.session.get(Excursion, excursion_id)
+        excursion_to_delete = db.session.get(Event, excursion_id)
 
         if excursion_to_delete:
             db.session.delete(excursion_to_delete)
             db.session.commit()
 
 
-def create_excursion_session(excursion_id, start_datetime, max_participants, cost):
-    session = ExcursionSession(
-        excursion_id=excursion_id,
+def create_event_session(excursion_id, start_datetime, max_participants, cost):
+    session = EventSession(
+        event_id=excursion_id,
         start_datetime=start_datetime,
         max_participants=max_participants,
         cost=cost

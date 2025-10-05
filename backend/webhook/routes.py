@@ -6,7 +6,7 @@ from flask_restx import Resource
 from . import webhook_ns
 from ..core import db
 from ..core.models.auth_models import User
-from ..core.models.excursion_models import Reservation, Payment
+from ..core.models.event_models import Reservation, Payment
 from ..core.services.email_service import send_reservation_confirmation_email
 
 

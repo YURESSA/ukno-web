@@ -6,40 +6,40 @@ from flask import make_response
 from flask_jwt_extended import get_jwt_identity
 
 from backend.core import db
-from backend.core.models.excursion_models import ExcursionSession
+from backend.core.models.event_models import EventSession
 from backend.core.services.email_service import send_session_cancellation_email, send_session_deletion_email
 from backend.core.services.user_services.auth_service import get_user_by_email
 from backend.core.services.utilits import generate_reservations_csv
 from backend.core.services.yookassa_service import refund_yookassa_payment
 
 
-def clear_sessions_and_schedules(excursion):
-    ExcursionSession.query.filter_by(excursion_id=excursion.excursion_id).delete()
+def clear_sessions_and_schedules(event):
+    EventSession.query.filter_by(event_id=event.event_id).delete()
 
 
-def add_sessions(excursion, sessions):
+def add_sessions(event, sessions):
     for s in sessions:
         start_dt = datetime.fromisoformat(s["start_datetime"])
-        db.session.add(ExcursionSession(
-            excursion_id=excursion.excursion_id,
+        db.session.add(EventSession(
+            event_id=event.event_id,
             start_datetime=start_dt,
             max_participants=s["max_participants"],
             cost=s["cost"]
         ))
 
 
-def get_sessions_for_excursion(excursion_id):
-    return ExcursionSession.query.filter_by(excursion_id=excursion_id).all()
+def get_sessions_for_event(event_id):
+    return EventSession.query.filter_by(event_id=event_id).all()
 
 
-def create_excursion_session(excursion_id, data):
+def create_event_session(event_id, data):
     try:
         start_dt = datetime.fromisoformat(data['start_datetime'])
     except (KeyError, ValueError):
         return None, {"message": "Неверный или отсутствует start_datetime"}, HTTPStatus.BAD_REQUEST
 
-    new_session = ExcursionSession(
-        excursion_id=excursion_id,
+    new_session = EventSession(
+        event_id=event_id,
         start_datetime=start_dt,
         max_participants=data.get('max_participants'),
         cost=data.get('cost')
@@ -53,8 +53,8 @@ def create_excursion_session(excursion_id, data):
         return None, {"message": f"Ошибка при создании сессии: {str(e)}"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-def update_excursion_session(excursion_id, session_id, data):
-    session = ExcursionSession.query.filter_by(excursion_id=excursion_id, session_id=session_id).first()
+def update_event_session(event_id, session_id, data):
+    session = EventSession.query.filter_by(event_id=event_id, session_id=session_id).first()
     if not session:
         return None, {"message": "Сессия не найдена"}, HTTPStatus.NOT_FOUND
 
@@ -76,16 +76,16 @@ def update_excursion_session(excursion_id, session_id, data):
         return None, {"message": f"Ошибка при обновлении сессии: {str(e)}"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-def delete_excursion_session(excursion_id, session_id, notify_resident=True):
+def delete_event_session(event_id, session_id, notify_resident=True):
     email = get_jwt_identity()
     user = get_user_by_email(email)
     deleter_email = user.email
-    session = ExcursionSession.query.filter_by(excursion_id=excursion_id, session_id=session_id).first()
+    session = EventSession.query.filter_by(event_id=event_id, session_id=session_id).first()
     if not session:
         return {"message": "Сессия не найдена"}, HTTPStatus.NOT_FOUND
 
     active_reservations = [r for r in session.reservations if not r.is_cancelled]
-    excursion_name = session.excursion.title if session.excursion else "экскурсии"
+    event_name = session.event.title if session.event else "экскурсии"
 
     refunded = []
 
@@ -102,7 +102,7 @@ def delete_excursion_session(excursion_id, session_id, notify_resident=True):
                 db.session.rollback()
                 return {"message": f"Ошибка возврата по брони {res.reservation_id}: {str(e)}"}, HTTPStatus.BAD_REQUEST
 
-        send_session_cancellation_email(reservation=res, excursion_name=excursion_name, session=session)
+        send_session_cancellation_email(reservation=res, event_name=event_name, session=session)
 
     cancelled_reservations = [
         res.to_dict()
@@ -123,7 +123,7 @@ def delete_excursion_session(excursion_id, session_id, notify_resident=True):
         db.session.commit()
 
         if notify_resident and csv_data:
-            send_session_deletion_email(deleter_email, excursion_name, session_id, csv_data)
+            send_session_deletion_email(deleter_email, event_name, session_id, csv_data)
 
             response = make_response(csv_data)
             filename = f"отмененные_бронирования_сессия_{session_id}.csv"

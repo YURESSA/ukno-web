@@ -1,4 +1,3 @@
-import json
 from functools import wraps
 from http import HTTPStatus
 from typing import Dict, Any, Optional, List, Tuple
@@ -7,23 +6,22 @@ from flask import request, Response
 from flask_jwt_extended import get_jwt, verify_jwt_in_request, get_jwt_identity
 from flask_restx import Resource
 
-from backend.core.services.excursion_services.excursion_photo_service import get_photos_for_excursion, \
-    add_photo_to_excursion, \
-    delete_photo_from_excursion
-from backend.core.services.excursion_services.excursion_service import update_excursion, create_excursion, \
-    get_excursion, get_all_excursions, \
-    delete_excursion
-from backend.core.services.excursion_services.excursion_session_service import get_sessions_for_excursion, \
-    create_excursion_session, \
-    update_excursion_session, delete_excursion_session
+from backend.core.services.event_services.event_photo_service import get_photos_for_event, \
+    add_photo_to_event, \
+    delete_photo_from_event
+from backend.core.services.event_services.event_service import update_event, get_event, get_all_events, \
+    delete_event, handle_create_event
+from backend.core.services.event_services.event_session_service import get_sessions_for_event, \
+    create_event_session, \
+    update_event_session, delete_event_session
 from backend.core.services.user_services.profile_service import get_user_info_response, update_user, register_user, \
     login_user
 from . import admin_ns
 from ..core.messages import AuthMessages
-from ..core.models.excursion_models import Reservation
+from ..core.models.event_models import Reservation
 from ..core.schemas.admin_schemas import admin_login, create_parser, update_parser, update_user_model
 from ..core.schemas.auth_schemas import change_password_model, user_model
-from ..core.schemas.excursion_schemas import excursion_model, session_model, session_patch_model
+from ..core.schemas.event_schemas import event_model, session_model, session_patch_model
 from ..core.services.news_service import add_photo_to_news, get_photos_for_news, delete_photo_from_news, \
     create_news_with_images, get_all_news, get_news_by_id, update_news, delete_news
 from ..core.services.reservation_service import delete_reservation_with_refund, get_all_reservations, \
@@ -316,7 +314,7 @@ class AdminExcursionsResource(Resource):
 
         :return: JSON с массивом экскурсий и HTTP-статус 200
         """
-        excursions = get_all_excursions()
+        excursions = get_all_events()
         return {"excursions": [e.to_dict() for e in excursions]}, HTTPStatus.OK
 
     @admin_required
@@ -336,26 +334,13 @@ class AdminExcursionsResource(Resource):
 
         :return: JSON с сообщением об успешном создании и ID экскурсии или ошибкой, HTTP-статус
         """
-        if 'data' not in request.form:
-            return {"message": "Поле 'data' обязательно"}, HTTPStatus.BAD_REQUEST
-        try:
-            data = json.loads(request.form['data'])
-        except json.JSONDecodeError as e:
-            return {"message": f"Неверный JSON: {str(e)}"}, HTTPStatus.BAD_REQUEST
-
-        files = request.files.getlist("photos")
-        created_by = get_jwt_identity()
-
-        excursion, error, status = create_excursion(data, created_by, files)
-        if error:
-            return error, status
-        return {"message": "Экскурсия создана", "excursion_id": excursion.excursion_id}, HTTPStatus.CREATED
+        return handle_create_event()
 
 
 @admin_ns.route('/excursions/<int:excursion_id>')
 class AdminExcursionResource(Resource):
     @admin_required
-    @admin_ns.expect(excursion_model, validate=True)
+    @admin_ns.expect(event_model, validate=True)
     def patch(self, excursion_id: int) -> tuple[dict, int]:
         """
         Обновление данных конкретной экскурсии (только для администратора).
@@ -364,7 +349,7 @@ class AdminExcursionResource(Resource):
         :return: JSON с сообщением и обновлёнными данными экскурсии, или ошибка, HTTP-статус
         """
         data = request.get_json()
-        excursion, error, status = update_excursion(excursion_id, data)
+        excursion, error, status = update_event(excursion_id, data)
         if error:
             return error, status
         return {"message": "Экскурсия обновлена", "excursion": excursion.to_dict()}, status
@@ -377,7 +362,7 @@ class AdminExcursionResource(Resource):
         :param excursion_id: ID экскурсии
         :return: JSON с данными экскурсии и HTTP-статус 200 или ошибка 404
         """
-        excursion = get_excursion(excursion_id)
+        excursion = get_event(excursion_id)
         if not excursion:
             return {"message": "Экскурсия не найдена"}, HTTPStatus.NOT_FOUND
         return {"excursion": excursion.to_dict(include_related=True)}, HTTPStatus.OK
@@ -391,7 +376,7 @@ class AdminExcursionResource(Resource):
         :return: JSON
         """
         admin = get_user_by_email(get_jwt_identity())
-        response = delete_excursion(excursion_id, admin, return_csv=True)
+        response = delete_event(excursion_id, admin, return_csv=True)
 
         if isinstance(response, Response):
             return response
@@ -410,7 +395,7 @@ class AdminExcursionSessionsResource(Resource):
         :param excursion_id: ID экскурсии
         :return: Список сессий в виде словарей и HTTP-статус 200
         """
-        sessions = get_sessions_for_excursion(excursion_id)
+        sessions = get_sessions_for_event(excursion_id)
         return [s.to_dict() for s in sessions], HTTPStatus.OK
 
     @admin_required
@@ -424,7 +409,7 @@ class AdminExcursionSessionsResource(Resource):
                  В случае ошибки возвращается словарь с сообщением и статус ошибки.
         """
         data = request.get_json()
-        session, error, status = create_excursion_session(excursion_id, data)
+        session, error, status = create_event_session(excursion_id, data)
         if error:
             return error, status
         return session.to_dict(), status
@@ -444,7 +429,7 @@ class AdminExcursionSessionResource(Resource):
                  В случае ошибки возвращается словарь с сообщением и статус ошибки.
         """
         data = request.get_json()
-        session, error, status = update_excursion_session(excursion_id, session_id, data)
+        session, error, status = update_event_session(excursion_id, session_id, data)
         if error:
             return error, status
         return session.to_dict(), status
@@ -458,7 +443,7 @@ class AdminExcursionSessionResource(Resource):
         :param session_id: ID сессии
         :return: Сообщение об успешном удалении и HTTP-статус или Response (например, CSV).
         """
-        response = delete_excursion_session(excursion_id, session_id, notify_resident=True)
+        response = delete_event_session(excursion_id, session_id, notify_resident=True)
         if isinstance(response, Response):
             return response
 
@@ -490,7 +475,7 @@ class AdminExcursionPhotosResource(Resource):
         :return: Словарь с ключом 'photos', содержащий список фото, и HTTP-статус.
                  В случае ошибки возвращается словарь с сообщением и статус ошибки.
         """
-        photos, error, status = get_photos_for_excursion(excursion_id)
+        photos, error, status = get_photos_for_event(excursion_id)
         if error:
             return error, status
         return {"photos": photos}, status
@@ -519,11 +504,11 @@ class AdminExcursionPhotosResource(Resource):
             return {"message": "Фото не загружено"}, HTTPStatus.BAD_REQUEST
 
         photo_file = request.files['photo']
-        photos, error, status = add_photo_to_excursion(excursion_id, photo_file)
+        photos, error, status = add_photo_to_event(excursion_id, photo_file)
         if error:
             return error, status
 
-        photos, _, status = get_photos_for_excursion(excursion_id)
+        photos, _, status = get_photos_for_event(excursion_id)
         return {"message": "Фото добавлено", "photos": photos}, status
 
 
@@ -538,7 +523,7 @@ class AdminExcursionPhotoResource(Resource):
         :param photo_id: ID фото
         :return: Словарь с сообщением и HTTP-статус.
         """
-        result, status = delete_photo_from_excursion(excursion_id, photo_id)
+        result, status = delete_photo_from_event(excursion_id, photo_id)
         return result, status
 
 

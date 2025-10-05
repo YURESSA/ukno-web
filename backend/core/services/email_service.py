@@ -7,37 +7,37 @@ from backend.core.services.utilits import send_email, generate_reset_token
 
 def send_reservation_confirmation_email(reservation, user):
     session = reservation.session
-    excursion = session.excursion if session else None
+    event = session.event if session else None
     session_time = session.start_datetime.strftime(
         '%d.%m.%Y %H:%M') if session and session.start_datetime else 'неизвестно'
 
-    subject = "Подтверждение бронирования экскурсии"
+    subject = "Подтверждение бронирования события"
     recipient = reservation.email or user.email
     display_name = reservation.full_name or recipient
 
     body_text = (
         f"Здравствуйте, {display_name}!\n\n"
-        f"Вы успешно записались на экскурсию:\n"
-        f"Название: {excursion.title if excursion else 'Экскурсия'}\n"
+        f"Вы успешно записались на событие:\n"
+        f"Название: {event.title if event else 'Событие'}\n"
         f"Дата и время: {session_time}\n"
         f"Количество участников: {reservation.participants_count}\n\n"
-        f"Место проведения: {excursion.place if excursion and excursion.place else 'уточняется'}\n"
-        f"Контактный email: {excursion.contact_email if excursion and excursion.contact_email else 'не указан'}\n\n"
+        f"Место проведения: {event.place if event and event.place else 'уточняется'}\n"
+        f"Контактный email: {event.contact_email if event and event.contact_email else 'не указан'}\n\n"
         "Во вложении вы найдете файл с приглашением в календарь (.ics), "
         "который можно добавить в ваш календарь.\n\n"
         "Спасибо за бронирование!"
     )
 
-    title = excursion.title if excursion else 'Экскурсия'
-    place = excursion.place if excursion and excursion.place else 'уточняется'
-    contact = (excursion.contact_email if excursion and excursion.contact_email
+    title = event.title if event else 'Событие'
+    place = event.place if event and event.place else 'уточняется'
+    contact = (event.contact_email if event and event.contact_email
                else 'не указан')
 
     body_html = f"""
     <html>
       <body style="font-family: Arial, sans-serif; color: #333;">
         <p>Здравствуйте, <strong>{display_name}</strong>!</p>
-        <p>Вы успешно записались на экскурсию:</p>
+        <p>Вы успешно записались на событие:</p>
         <ul>
           <li><strong>Название:</strong> {title}</li>
           <li><strong>Дата и время:</strong> {session_time}</li>
@@ -69,18 +69,18 @@ def send_reservation_confirmation_email(reservation, user):
 
 
 def send_reservation_cancellation_email(user, reservation):
-    excursion = reservation.session.excursion if reservation.session else None
+    event = reservation.session.event if reservation.session else None
     session = reservation.session
 
     subject = "Бронирование аннулировано"
 
     date_str = session.start_datetime.strftime('%d.%m.%Y %H:%M') if session and session.start_datetime else 'неизвестно'
     session_id_str = session.session_id if session else 'неизвестен'
-    excursion_title = excursion.title if excursion else 'Экскурсия'
+    event_title = event.title if event else 'Событие'
 
     body_text = (
             f"Здравствуйте, {user.full_name}!\n\n"
-            f"Ваше бронирование на экскурсию «{excursion_title}» "
+            f"Ваше бронирование на событие «{event_title}» "
             f"(ID сессии: {session_id_str}), запланированную на {date_str}, было аннулировано администратором."
             + (
                 "\nСредства за бронирование будут возвращены в ближайшее время."
@@ -101,7 +101,7 @@ def send_reservation_cancellation_email(user, reservation):
     <html>
       <body style="font-family: Arial, sans-serif; color: #333;">
         <p>Здравствуйте, <strong>{user.full_name}</strong>!</p>
-        <p>Ваше бронирование на экскурсию <strong>«{excursion_title}»</strong>
+        <p>Ваше бронирование на событие <strong>«{event_title}»</strong>
         (ID сессии: <strong>{session_id_str}</strong>), запланированную на <strong>{date_str}</strong>,
         было аннулировано администратором.</p>
         {refund_notice}
@@ -117,13 +117,13 @@ def send_reservation_cancellation_email(user, reservation):
         print(f"Ошибка при отправке письма: {e}")
 
 
-def send_excursion_deletion_email(resident, excursion, csv_data):
-    subject = "Удалена экскурсия и отменены сессии"
+def send_event_deletion_email(resident, event, csv_data):
+    subject = "Удалено событие и отменены сессии"
     recipient = resident.email
 
     body_text = (
         "Здравствуйте!\n\n"
-        f"Экскурсия «{excursion.title}» и все её сессии были удалены.\n"
+        f"Событие «{event.title}» и все его сессии были удалены.\n"
         "В приложении — список всех отменённых бронирований.\n"
         "Спасибо за использование платформы!"
     )
@@ -132,14 +132,14 @@ def send_excursion_deletion_email(resident, excursion, csv_data):
     <html>
       <body style="font-family: Arial, sans-serif; color: #333;">
         <p>Здравствуйте!</p>
-        <p>Экскурсия <strong>«{excursion.title}»</strong> и все её сессии были удалены.</p>
+        <p>Событие <strong>«{event.title}»</strong> и все его сессии были удалены.</p>
         <p>В приложении — список всех отменённых бронирований.</p>
         <p>Спасибо за использование платформы!</p>
       </body>
     </html>
     """
 
-    title_slug = re.sub(r'\W+', '_', excursion.title.lower())
+    title_slug = re.sub(r'\W+', '_', event.title.lower())
     filename = f"отменённые_бронирования_{title_slug}.csv"
 
     try:
@@ -151,16 +151,16 @@ def send_excursion_deletion_email(resident, excursion, csv_data):
             attachments=[(filename, csv_data)]
         )
     except Exception as e:
-        print(f"Ошибка при отправке письма об удалении экскурсии: {e}")
+        print(f"Ошибка при отправке письма об удалении события: {e}")
 
 
-def send_session_cancellation_email(reservation, excursion_name, session):
-    subject = "Отмена экскурсионной сессии"
+def send_session_cancellation_email(reservation, event_name, session):
+    subject = "Отмена сессии события"
     recipient = reservation.email or (reservation.user.email if hasattr(reservation, 'user') else None)
 
     body_text = (
             f"Здравствуйте, {reservation.full_name}!\n\n"
-            f"Сессия экскурсии «{excursion_name}» (ID {session.session_id}) на "
+            f"Сессия события «{event_name}» (ID {session.session_id}) на "
             f"{session.start_datetime.strftime('%d.%m.%Y %H:%M')} отменена.\n"
             "Ваше бронирование автоматически аннулировано."
             + (
@@ -180,7 +180,7 @@ def send_session_cancellation_email(reservation, excursion_name, session):
     <html>
       <body style="font-family: Arial, sans-serif; color: #333;">
         <p>Здравствуйте, <strong>{reservation.full_name}</strong>!</p>
-        <p>Сессия экскурсии <strong>«{excursion_name}»</strong> (ID <strong>{session.session_id}</strong>)<br>
+        <p>Сессия события <strong>«{event_name}»</strong> (ID <strong>{session.session_id}</strong>)<br>
             на <strong>{session.start_datetime.strftime('%d.%m.%Y %H:%M')}</strong> отменена.</p>
         <p>Ваше бронирование автоматически аннулировано.</p>
         {refund_notice}
@@ -195,11 +195,11 @@ def send_session_cancellation_email(reservation, excursion_name, session):
         print(f"Ошибка при отправке письма об отмене сессии: {e}")
 
 
-def send_session_deletion_email(deleter_email, excursion_name, session_id, csv_data):
+def send_session_deletion_email(deleter_email, event_name, session_id, csv_data):
     subject = "Список отменённых бронирований по удалённой сессии"
 
     body_text = (
-        f"Сессия экскурсии «{excursion_name}» (ID {session_id}) была удалена.\n\n"
+        f"Сессия события «{event_name}» (ID {session_id}) была удалена.\n\n"
         f"Во вложении — список всех отменённых по этой сессии бронирований.\n"
         f"Если возвраты были оформлены автоматически — дополнительных действий не требуется."
     )
@@ -208,18 +208,18 @@ def send_session_deletion_email(deleter_email, excursion_name, session_id, csv_d
     <html>
         <body style="font-family: Arial, sans-serif; color: #333;">
             <p>Здравствуйте!</p>
-            <p>Сессия экскурсии <strong>«{excursion_name}»</strong> (ID <strong>{session_id}</strong>)
+            <p>Сессия события <strong>«{event_name}»</strong> (ID <strong>{session_id}</strong>)
             была <strong>удалена</strong>.</p>
             <p>Во вложении вы найдёте CSV-файл со списком всех отменённых по этой сессии бронирований.</p>
             <p>Если возвраты были оформлены автоматически, дополнительных действий не требуется.</p>
             <br>
-            <p>С уважением,<br>Система управления экскурсиями</p>
+            <p>С уважением,<br>Система управления событиями</p>
         </body>
     </html>
     """
 
-    excursion_slug = re.sub(r'\W+', '_', excursion_name.lower())
-    filename = f"отменённые_бронирования_{excursion_slug}_сессия_{session_id}.csv"
+    event_slug = re.sub(r'\W+', '_', event_name.lower())
+    filename = f"отменённые_бронирования_{event_slug}_сессия_{session_id}.csv"
 
     try:
         send_email(
@@ -240,8 +240,8 @@ def send_reservation_refund_email(reservation):
 
     body_text = (
         f"Здравствуйте, {reservation.full_name}!\n\n"
-        f"Ваше бронирование на экскурсию "
-        f"«{reservation.session.excursion.title}» "
+        f"Ваше бронирование на событие "
+        f"«{reservation.session.event.title}» "
         f"на {reservation.session.start_datetime.strftime('%d.%m.%Y в %H:%M')} было успешно отменено.\n\n"
         f"Мы оформили возврат средств на тот же способ оплаты, который использовался при покупке.\n"
         f"Сумма возврата: {reservation.payment.amount if reservation.payment else 'не указана'} "
@@ -255,7 +255,7 @@ def send_reservation_refund_email(reservation):
         <body style="font-family: Arial, sans-serif; font-size: 15px; color: #333;">
             <p>Здравствуйте, <strong>{reservation.full_name}</strong>!</p>
 
-            <p>Ваше бронирование на сессию экскурсии <strong>«{reservation.session.excursion.title}»</strong>
+            <p>Ваше бронирование на сессию события <strong>«{reservation.session.event.title}»</strong>
             (на <strong>{reservation.session.start_datetime.strftime('%d.%m.%Y в %H:%M')}</strong>)
             было успешно отменено.</p>
 

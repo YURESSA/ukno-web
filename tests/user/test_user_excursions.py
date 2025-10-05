@@ -3,7 +3,7 @@ from http import HTTPStatus
 import pytest
 
 from backend.core.messages import AuthMessages
-from backend.core.models.excursion_models import ExcursionSession
+from backend.core.models.event_models import EventSession
 from tests.conftest import TestUserData
 
 
@@ -47,9 +47,9 @@ class TestUserReservations:
     def headers(self, access_token):
         return {"Authorization": f"Bearer {access_token}"}
 
-    def test_create_reservation(self, client, app, headers, existing_excursion_id):
+    def test_create_reservation(self, client, app, headers, existing_event_id):
         with app.app_context():
-            session_obj = ExcursionSession.query.filter_by(excursion_id=existing_excursion_id).first()
+            session_obj = EventSession.query.filter_by(event_id=existing_event_id).first()
             assert session_obj is not None, "Сеанс экскурсии не найден"
 
             payload = {

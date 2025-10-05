@@ -3,7 +3,7 @@ from http import HTTPStatus
 from sqlalchemy import func
 
 from backend.core import db
-from backend.core.models.excursion_models import Reservation, ExcursionSession, Payment
+from backend.core.models.event_models import Reservation, EventSession, Payment
 from backend.core.services.email_service import send_reservation_confirmation_email, send_reservation_refund_email, \
     send_reservation_cancellation_email
 from backend.core.services.user_services.auth_service import get_user_by_email
@@ -31,7 +31,7 @@ def create_reservation_with_payment(user_email, session_id, full_name, phone_num
     if not session_id:
         return {"message": "session_id is required"}, HTTPStatus.BAD_REQUEST
 
-    session = db.session.get(ExcursionSession, session_id)
+    session = db.session.get(EventSession, session_id)
     if not session:
         return {"message": "Сеанс не найден"}, HTTPStatus.NOT_FOUND
 
@@ -84,7 +84,7 @@ def create_reservation_with_payment(user_email, session_id, full_name, phone_num
     payment_response = create_yookassa_payment(
         amount=amount,
         email=user_email,
-        description=f"Оплата экскурсии «{session.excursion.title}» на {session.start_datetime}",
+        description=f"Оплата экскурсии «{session.event.title}» на {session.start_datetime}",
         quantity=participants_count,
         metadata={
             "reservation_id": reservation.reservation_id,

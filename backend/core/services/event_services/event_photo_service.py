@@ -4,7 +4,7 @@ from http import HTTPStatus
 from sqlalchemy import func
 
 from backend.core import db
-from backend.core.models.excursion_models import ExcursionPhoto, Excursion
+from backend.core.models.event_models import EventPhoto, Event
 from backend.core.services.utilits import save_image, remove_file_if_exists
 
 
@@ -25,17 +25,17 @@ def process_photos(files):
     return photos
 
 
-def add_photos(excursion, photos):
+def add_photos(event, photos):
     for p in photos:
-        db.session.add(ExcursionPhoto(
-            excursion_id=excursion.excursion_id,
+        db.session.add(EventPhoto(
+            event_id=event.event_id,
             photo_url=p["photo_url"],
             order_index=p.get("order_index", 0)
         ))
 
 
-def delete_photo_from_excursion(excursion_id, photo_id):
-    photo = ExcursionPhoto.query.filter_by(excursion_id=excursion_id, photo_id=photo_id).first()
+def delete_photo_from_event(event_id, photo_id):
+    photo = EventPhoto.query.filter_by(event_id=event_id, photo_id=photo_id).first()
     if not photo:
         return {"message": "Фото не найдено"}, HTTPStatus.NOT_FOUND
 
@@ -49,16 +49,16 @@ def delete_photo_from_excursion(excursion_id, photo_id):
         return {"message": f"Ошибка при удалении фото: {str(e)}"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-def get_photos_for_excursion(excursion_id):
-    excursion = db.session.get(Excursion, excursion_id)
+def get_photos_for_event(event_id):
+    event = db.session.get(Event, event_id)
 
-    if not excursion:
+    if not event:
         return None, {"message": "Экскурсия не найдена"}, HTTPStatus.NOT_FOUND
-    photos = [photo.to_dict() for photo in excursion.photos]
+    photos = [photo.to_dict() for photo in event.photos]
     return photos, None, HTTPStatus.OK
 
 
-def add_photo_to_excursion(excursion_id, photo_file):
+def add_photo_to_event(event_id, photo_file):
     if not photo_file:
         return None, {"message": "Фото не загружено"}, HTTPStatus.BAD_REQUEST
 
@@ -71,12 +71,12 @@ def add_photo_to_excursion(excursion_id, photo_file):
         return None, {"message": "Недопустимый файл"}, HTTPStatus.BAD_REQUEST
 
     max_index = db.session.query(
-        func.max(ExcursionPhoto.order_index)
-    ).filter_by(excursion_id=excursion_id).scalar()
+        func.max(EventPhoto.order_index)
+    ).filter_by(event_id=event_id).scalar()
     next_index = (max_index or 0) + 1
 
-    new_photo = ExcursionPhoto(
-        excursion_id=excursion_id,
+    new_photo = EventPhoto(
+        event_id=event_id,
         photo_url=photos[0]["photo_url"],
         order_index=next_index
     )
@@ -90,8 +90,8 @@ def add_photo_to_excursion(excursion_id, photo_file):
     return new_photo, None, HTTPStatus.CREATED
 
 
-def clear_photos(excursion):
-    photos = excursion.photos[:]
+def clear_photos(event):
+    photos = event.photos[:]
     for photo in photos:
         try:
             remove_file_if_exists(photo.photo_url)
