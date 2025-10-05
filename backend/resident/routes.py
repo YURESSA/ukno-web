@@ -1,4 +1,3 @@
-import json
 from functools import wraps
 from http import HTTPStatus
 
@@ -9,7 +8,7 @@ from flask_restx import Resource
 from backend.core.services.event_services.event_photo_service import add_photo_to_event, \
     get_photos_for_event, \
     delete_photo_from_event
-from backend.core.services.event_services.event_service import create_event, update_event, \
+from backend.core.services.event_services.event_service import update_event, \
     get_events_for_resident, \
     get_resident_event_analytics, get_event, verify_resident_owns_event, delete_event, handle_create_event
 from backend.core.services.event_services.event_session_service import create_event_session, \
