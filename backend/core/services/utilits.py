@@ -32,9 +32,7 @@ def save_image(file, subfolder=""):
     filepath = os.path.join(folder_path, filename)
     file.save(filepath)
 
-    # Отдаем путь для URL
     return os.path.join('media/uploads', subfolder, filename).replace("\\", "/")
-
 
 
 def get_model_by_name(model, field_name, value, error_message):

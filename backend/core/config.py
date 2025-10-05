@@ -13,15 +13,13 @@ def str_to_bool(value):
 
 
 class Config:
-    # Определяем корень проекта в зависимости от директории запуска
-    print(os.path.basename(os.getcwd()))
     if os.path.basename(os.getcwd()) == "backend":
-        PROJECT_ROOT = os.path.abspath(os.getcwd())
+        PROJECT_ROOT = os.path.abspath(os.path.join(os.getcwd(), ".."))
     else:
-        PROJECT_ROOT = os.path.abspath(os.path.join(os.getcwd(), "backend"))
+        PROJECT_ROOT = os.path.abspath(os.getcwd())
 
-    TEMPLATE_FOLDER = os.path.join(PROJECT_ROOT, 'templates')
-    STATIC_FOLDER = os.path.join(PROJECT_ROOT, 'static')
+    TEMPLATE_FOLDER = os.path.join(PROJECT_ROOT, 'backend', 'templates')
+    STATIC_FOLDER = os.path.join(PROJECT_ROOT, 'backend', 'static')
     DEBUG = True
     SECRET_KEY = os.getenv('SECRET_KEY')
 
