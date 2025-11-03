@@ -270,7 +270,6 @@ class Reservations(Resource):
         }, HTTPStatus.OK
 
 
-
 @user_ns.route('/v2/reservations')
 class ReservationCreate(Resource):
     @jwt_required()

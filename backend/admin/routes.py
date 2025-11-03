@@ -7,7 +7,6 @@ from flask_jwt_extended import get_jwt, verify_jwt_in_request, get_jwt_identity
 from flask_restx import Resource
 
 from backend.core.services.event_services.event_photo_service import get_photos_for_event, \
-    add_photo_to_event, \
     delete_photo_from_event, handle_add_photo
 from backend.core.services.event_services.event_service import update_event, get_event, get_all_events, \
     delete_event, handle_create_event
