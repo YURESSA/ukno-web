@@ -65,7 +65,7 @@ class ResidentProfile(Resource):
         user, error, status = get_profile()
         if error:
             return error, status
-        return get_user_info_response(user), status
+        return get_user_info_response(user)
 
     @resident_required
     @resident_ns.expect(change_password_model, validate=True)
