@@ -69,7 +69,7 @@ class UserProfile(Resource):
         user, error, status = get_profile()
         if error:
             return error, status
-        return get_user_info_response(user), status
+        return get_user_info_response(user)
 
     @jwt_required()
     @user_ns.expect(edit_profile_model)
