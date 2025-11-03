@@ -13,7 +13,6 @@ category_model = ref_ns.model('Category', {
 })
 
 
-
 @ref_ns.route('/categories')
 class CategoryList(Resource):
     @ref_ns.doc(description="Список всех категорий экскурсий")
