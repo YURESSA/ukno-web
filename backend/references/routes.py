@@ -4,7 +4,7 @@ from flask import request
 from flask_restx import Resource, fields
 from sqlalchemy import func
 
-from backend.admin.routes import admin_required
+from backend.admin.decorators import admin_required
 from backend.core import db
 from backend.core.models.auth_models import Role
 from backend.core.models.event_models import FormatType, Category, AgeCategory, Event, EventSession
