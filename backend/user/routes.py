@@ -36,10 +36,7 @@ class UserRegister(Resource):
                  В случае ошибки — словарь с сообщением об ошибке и соответствующий статус.
         """
         data = request.get_json()
-        result, error, status = register_user("user", data)
-        if error:
-            return error, status
-        return result, status
+        return register_user("user", data)
 
 
 @user_ns.route('/login')
