@@ -25,6 +25,23 @@ def process_photos(files):
     return photos
 
 
+def handle_add_photo(excursion_id: int, photo_file) -> tuple[dict, int]:
+    """
+    Добавляет фото к экскурсии и возвращает актуальный список фото.
+
+    :param excursion_id: ID экскурсии
+    :param photo_file: объект загруженного файла (werkzeug.FileStorage)
+    :return: Словарь с сообщением и списком фото, HTTP-статус.
+             В случае ошибки возвращается словарь с сообщением и статус ошибки.
+    """
+    photos, error, status = add_photo_to_event(excursion_id, photo_file)
+    if error:
+        return error, status
+
+    photos, _, status = get_photos_for_event(excursion_id)
+    return {"message": "Фото добавлено", "photos": photos}, status
+
+
 def add_photos(event, photos):
     for p in photos:
         db.session.add(EventPhoto(

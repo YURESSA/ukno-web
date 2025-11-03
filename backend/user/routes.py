@@ -28,21 +28,30 @@ from ..core.services.utilits import verify_reset_token
 class UserRegister(Resource):
     @user_ns.expect(user_model)
     @user_ns.doc(description="Регистрация обычного пользователя (роль автоматически 'user')")
-    def post(self):
+    def post(self) -> tuple[dict, int]:
         """
-        Регистрация нового пользователя
+        Регистрация нового пользователя.
+
+        :return: Возвращает словарь с данными зарегистрированного пользователя и статус HTTP.
+                 В случае ошибки — словарь с сообщением об ошибке и соответствующий статус.
         """
         data = request.get_json()
-        return register_user("user", data)
+        result, error, status = register_user("user", data)
+        if error:
+            return error, status
+        return result, status
 
 
 @user_ns.route('/login')
 class UserLogin(Resource):
     @user_ns.expect(user_login)
     @user_ns.doc(description="Аутентификация обычного пользователя для получения токена доступа")
-    def post(self):
+    def post(self) -> tuple[dict, int]:
         """
-        Вход пользователя и получение JWT токена
+        Вход пользователя и получение JWT-токена.
+
+        :return: Возвращает словарь с JWT-токеном и статус HTTP.
+                 В случае ошибки — словарь с сообщением об ошибке и соответствующий статус.
         """
         data = request.get_json() or {}
         response, status = login_user("user", data)
@@ -52,46 +61,61 @@ class UserLogin(Resource):
 @user_ns.route('/profile')
 class UserProfile(Resource):
     @jwt_required()
-    @user_ns.doc(description="Получение информации о пользователе")
-    def get(self):
+    @user_ns.doc(description="Получение информации о текущем пользователе")
+    def get(self) -> tuple[dict, int]:
         """
-        Получение профиля текущего пользователя
+        Получение профиля текущего пользователя.
+
+        :return: Возвращает словарь с данными пользователя и HTTP-статус.
+                 В случае ошибки — словарь с сообщением об ошибке и соответствующий статус.
         """
         user, error, status = get_profile()
         if error:
             return error, status
-        return get_user_info_response(user)
+        return get_user_info_response(user), status
 
     @jwt_required()
     @user_ns.expect(edit_profile_model)
-    @user_ns.doc(description="Редактирование профиля пользователя")
-    def put(self):
+    @user_ns.doc(description="Редактирование профиля текущего пользователя")
+    def put(self) -> tuple[dict, int]:
         """
-        Редактирование профиля текущего пользователя
+        Редактирование профиля текущего пользователя.
+
+        :return: Возвращает обновлённые данные пользователя и HTTP-статус.
+                 В случае ошибки — словарь с сообщением об ошибке и соответствующий статус.
         """
         data = request.get_json()
-        return update_profile(data)
+        response, status = update_profile(data)
+        return response, status
 
     @jwt_required()
-    @user_ns.doc(description="Удаление аккаунта")
-    def delete(self):
+    @user_ns.doc(description="Удаление аккаунта текущего пользователя")
+    def delete(self) -> tuple[dict, int]:
         """
-        Удаление аккаунта текущего пользователя
+        Удаление аккаунта текущего пользователя.
+
+        :return: Возвращает сообщение об успешном удалении и HTTP-статус.
+                 В случае ошибки — словарь с сообщением об ошибке и соответствующий статус.
         """
-        return delete_profile()
+        response, status = delete_profile()
+        return response, status
 
 
 @user_ns.route('/profile/password')
 class ChangePassword(Resource):
     @jwt_required()
     @user_ns.expect(change_password_model)
-    @user_ns.doc(description="Смена пароля пользователя")
-    def put(self):
+    @user_ns.doc(description="Смена пароля текущего пользователя")
+    def put(self) -> tuple[dict, int]:
         """
-        Смена пароля текущего пользователя
+        Смена пароля текущего пользователя.
+
+        :return: Возвращает сообщение об успешной смене пароля и HTTP-статус.
+                 В случае ошибки — словарь с сообщением об ошибке и соответствующий статус.
         """
         data = request.get_json()
-        return change_profile_password(data)
+        response, status = change_profile_password(data)
+        return response, status
 
 
 @user_ns.route('/excursions')
@@ -120,10 +144,13 @@ class UserExcursionsList(Resource):
             )
         }
     )
-    def get(self):
+    def get(self) -> tuple[dict, int]:
         """
-        Получение списка экскурсий с возможностью фильтрации и сортировки.
-        Все параметры опциональны. Если не указаны фильтры — возвращаются все активные экскурсии.
+        Получение списка активных экскурсий с возможностью фильтрации и сортировки.
+
+        Все параметры опциональны. Если фильтры не указаны, возвращаются все активные экскурсии.
+
+        :return: Словарь с ключом "excursions", содержащим список экскурсий, и HTTP-статус.
         """
         args: dict = request.args
         filters: dict = {
@@ -154,14 +181,22 @@ class UserExcursionsList(Resource):
 
 @user_ns.route('/password-reset-request')
 class PasswordResetRequest(Resource):
-    @user_ns.expect(user_ns.model("PasswordResetRequest", {
-        "email": fields.String(required=True, description="Email пользователя")
-    }))
+    password_reset_request_model = user_ns.model(
+        "PasswordResetRequest",
+        {
+            "email": fields.String(required=True, description="Email пользователя")
+        }
+    )
+
+    @user_ns.expect(password_reset_request_model, validate=True)
     @user_ns.doc(description="Запрос на сброс пароля: отправка инструкции на email")
-    def post(self):
+    def post(self) -> tuple[dict, int]:
         """
         Обрабатывает запрос на сброс пароля.
+
         Всегда возвращает успешный ответ, чтобы не раскрывать существование пользователя.
+
+        :return: Словарь с сообщением об отправке инструкции и HTTP-статус.
         """
         data: dict = request.get_json() or {}
         email: str | None = data.get("email")
@@ -177,15 +212,23 @@ class PasswordResetRequest(Resource):
 
 @user_ns.route('/password-reset')
 class PasswordReset(Resource):
-    @user_ns.expect(user_ns.model("PasswordReset", {
-        "token": fields.String(required=True, description="Токен из email"),
-        "new_password": fields.String(required=True, description="Новый пароль")
-    }))
+    password_reset_model = user_ns.model(
+        "PasswordReset",
+        {
+            "token": fields.String(required=True, description="Токен из email"),
+            "new_password": fields.String(required=True, description="Новый пароль")
+        }
+    )
+
+    @user_ns.expect(password_reset_model, validate=True)
     @user_ns.doc(description="Сброс пароля по токену, без авторизации JWT")
-    def post(self):
+    def post(self) -> tuple[dict, int]:
         """
         Сбрасывает пароль пользователя по токену.
-        Токен проверяется, если недействителен — возвращается ошибка.
+
+        :return: В случае успешного сброса — сообщение об успешной операции и HTTPStatus.OK.
+                 Если токен недействителен — сообщение об ошибке и HTTPStatus.BAD_REQUEST.
+                 Если пользователь не найден — сообщение об ошибке и HTTPStatus.NOT_FOUND.
         """
         data: dict = request.get_json() or {}
         token: str | None = data.get("token")
@@ -209,8 +252,14 @@ class PasswordReset(Resource):
 class Reservations(Resource):
     @jwt_required()
     @user_ns.doc(description="Получение списка своих бронирований пользователя")
-    def get(self):
-        email = get_jwt_identity()
+    def get(self) -> tuple[dict, int]:
+        """
+        Получение списка всех бронирований текущего пользователя.
+
+        :return: Словарь с ключом "reservations", содержащим список бронирований,
+                 и HTTP-статус. Если пользователь не найден — сообщение об ошибке и HTTPStatus.UNAUTHORIZED.
+        """
+        email: str = get_jwt_identity()
         reservations, user = get_reservations_by_user_email(email)
 
         if not user:
@@ -221,21 +270,22 @@ class Reservations(Resource):
         }, HTTPStatus.OK
 
 
+
 @user_ns.route('/v2/reservations')
 class ReservationCreate(Resource):
     @jwt_required()
-    @user_ns.expect(reservation_model)
+    @user_ns.expect(reservation_model, validate=True)
     @user_ns.doc(description="Запись на сеанс экскурсии через оплату")
-    def post(self):
+    def post(self) -> tuple[dict, int]:
         """
         Создает бронь на сеанс экскурсии с оплатой.
 
         Использует данные пользователя из JWT (email) и информацию о бронировании из тела запроса.
+
+        :return: Словарь с результатом операции и HTTP-статус.
         """
         data: dict = request.get_json() or {}
 
-        response: dict
-        status: int
         response, status = create_reservation_with_payment(
             user_email=get_jwt_identity(),
             session_id=data.get('session_id'),
@@ -248,19 +298,19 @@ class ReservationCreate(Resource):
         return response, status
 
     @jwt_required()
-    @user_ns.expect(cancel_model)
+    @user_ns.expect(cancel_model, validate=True)
     @user_ns.doc(description="Отмена своего бронирования с возвратом средств")
-    def delete(self):
+    def delete(self) -> tuple[dict, int]:
         """
         Отменяет бронь пользователя и инициирует возврат средств.
 
         Использует email пользователя из JWT и ID бронирования из тела запроса.
+
+        :return: Словарь с результатом отмены и HTTP-статус.
         """
         data: dict = request.get_json() or {}
         reservation_id: int | None = data.get('reservation_id')
 
-        response: dict
-        status: int
         response, status = cancel_user_reservation(
             user_email=get_jwt_identity(),
             reservation_id=reservation_id

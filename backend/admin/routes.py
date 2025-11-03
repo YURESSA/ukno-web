@@ -8,7 +8,7 @@ from flask_restx import Resource
 
 from backend.core.services.event_services.event_photo_service import get_photos_for_event, \
     add_photo_to_event, \
-    delete_photo_from_event
+    delete_photo_from_event, handle_add_photo
 from backend.core.services.event_services.event_service import update_event, get_event, get_all_events, \
     delete_event, handle_create_event
 from backend.core.services.event_services.event_session_service import get_sessions_for_event, \
@@ -468,13 +468,6 @@ class AdminExcursionSessionResource(Resource):
 class AdminExcursionPhotosResource(Resource):
     @admin_required
     def get(self, excursion_id: int) -> tuple[dict, int]:
-        """
-        Получение списка всех фото для конкретной экскурсии.
-
-        :param excursion_id: ID экскурсии
-        :return: Словарь с ключом 'photos', содержащий список фото, и HTTP-статус.
-                 В случае ошибки возвращается словарь с сообщением и статус ошибки.
-        """
         photos, error, status = get_photos_for_event(excursion_id)
         if error:
             return error, status
@@ -494,22 +487,16 @@ class AdminExcursionPhotosResource(Resource):
     )
     def post(self, excursion_id: int) -> tuple[dict, int]:
         """
-        Добавление нового фото к экскурсии.
+            Загрузка нового фото для конкретной экскурсии.
 
-        :param excursion_id: ID экскурсии
-        :return: Словарь с сообщением и обновленным списком фото, и HTTP-статус.
-                 В случае ошибки возвращается словарь с сообщением и статус ошибки.
-        """
+            :param excursion_id: ID экскурсии, к которой добавляется фото
+            :return: Словарь с сообщением и обновлённым списком фото, и HTTP-статус.
+                     В случае ошибки возвращается словарь с сообщением и статус ошибки.
+            """
         if 'photo' not in request.files:
             return {"message": "Фото не загружено"}, HTTPStatus.BAD_REQUEST
-
         photo_file = request.files['photo']
-        photos, error, status = add_photo_to_event(excursion_id, photo_file)
-        if error:
-            return error, status
-
-        photos, _, status = get_photos_for_event(excursion_id)
-        return {"message": "Фото добавлено", "photos": photos}, status
+        return handle_add_photo(excursion_id, photo_file)
 
 
 @admin_ns.route('/excursions/<int:excursion_id>/photos/<int:photo_id>')

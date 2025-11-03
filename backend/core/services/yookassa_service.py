@@ -56,7 +56,9 @@ def create_yookassa_payment(amount, email, description, quantity=1, metadata=Non
                                 "value": f"{unit_price:.2f}",
                                 "currency": currency
                             },
-                            "vat_code": 1
+                            "vat_code": 1,
+                            "payment_subject": "service",
+                            "payment_mode": "full_payment"
                         }
                     ]
                 },

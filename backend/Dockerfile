@@ -1,4 +1,3 @@
-# Этап 1: сборка зависимостей
 FROM python:3.10-slim AS builder
 
 RUN apt-get update && apt-get install -y \
