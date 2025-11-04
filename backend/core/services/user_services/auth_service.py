@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from typing import Optional, List, Tuple, Dict
 
 from flask_jwt_extended import create_access_token, get_jwt_identity
 
@@ -6,15 +7,33 @@ from backend.core import db
 from backend.core.models.auth_models import User, Role
 
 
-def get_user_by_email(email):
+def get_user_by_email(email: str) -> Optional[User]:
+    """
+    Получение пользователя по email.
+
+    :param email: Email пользователя
+    :return: Объект User или None, если пользователь не найден
+    """
     return User.query.filter_by(email=email).first()
 
 
-def get_role_by_name(role_name):
+def get_role_by_name(role_name: str) -> Optional[Role]:
+    """
+    Получение роли по имени.
+
+    :param role_name: Название роли
+    :return: Объект Role или None, если роль не найдена
+    """
     return Role.query.filter_by(role_name=role_name).first()
 
 
-def get_all_users(role=None):
+def get_all_users(role: Optional[str] = None) -> List[User]:
+    """
+    Получение списка всех пользователей, с возможной фильтрацией по роли.
+
+    :param role: Название роли для фильтрации (необязательно)
+    :return: Список объектов User
+    """
     query = User.query
 
     if role:
@@ -24,7 +43,17 @@ def get_all_users(role=None):
     return users
 
 
-def create_user(email, password, full_name, phone, role_name):
+def create_user(email: str, password: str, full_name: str, phone: str, role_name: str) -> Optional[User]:
+    """
+    Создание нового пользователя.
+
+    :param email: Email пользователя
+    :param password: Пароль пользователя
+    :param full_name: Полное имя пользователя
+    :param phone: Телефон пользователя
+    :param role_name: Название роли пользователя
+    :return: Объект User или None, если роль не найдена или пользователь с таким email уже существует
+    """
     role = get_role_by_name(role_name)
     if not role or User.query.filter_by(email=email).first():
         return None
@@ -42,7 +71,13 @@ def create_user(email, password, full_name, phone, role_name):
     return new_user
 
 
-def delete_user(email):
+def delete_user(email: str) -> bool:
+    """
+    Удаление пользователя по email.
+
+    :param email: Email пользователя
+    :return: True, если пользователь удалён, False если пользователь не найден
+    """
     user = get_user_by_email(email)
     if user:
         db.session.delete(user)
@@ -51,7 +86,15 @@ def delete_user(email):
     return False
 
 
-def authenticate_user(email, password, required_role=None):
+def authenticate_user(email: str, password: str, required_role: Optional[str] = None) -> Optional[str]:
+    """
+    Аутентификация пользователя и генерация JWT токена.
+
+    :param email: Email пользователя
+    :param password: Пароль пользователя
+    :param required_role: Если указано, проверяется роль пользователя
+    :return: JWT токен при успешной аутентификации, иначе None
+    """
     user = get_user_by_email(email)
     if not user or not user.check_password(password):
         return None
@@ -62,7 +105,15 @@ def authenticate_user(email, password, required_role=None):
     return create_access_token(identity=user.email, additional_claims={"role": user.role.role_name})
 
 
-def change_password(email, old_password, new_password):
+def change_password(email: str, old_password: str, new_password: str) -> bool:
+    """
+    Изменение пароля пользователя.
+
+    :param email: Email пользователя
+    :param old_password: Текущий пароль
+    :param new_password: Новый пароль
+    :return: True, если пароль успешно изменён, иначе False
+    """
     user = get_user_by_email(email)
     if user and user.check_password(old_password):
         user.set_password(new_password)
@@ -71,7 +122,13 @@ def change_password(email, old_password, new_password):
     return False
 
 
-def update_profile(data):
+def update_profile(data: dict) -> Tuple[Dict, int]:
+    """
+    Обновление профиля текущего пользователя.
+
+    :param data: Словарь с новыми данными пользователя: 'email', 'phone', 'full_name'
+    :return: Словарь с сообщением и HTTP-статус
+    """
     email = get_jwt_identity()
     user = User.query.filter_by(email=email).first()
 
@@ -97,7 +154,13 @@ def update_profile(data):
     return {"message": "Профиль обновлён успешно"}, HTTPStatus.OK
 
 
-def change_profile_password(data):
+def change_profile_password(data: dict) -> Tuple[Dict, int]:
+    """
+    Изменение пароля текущего пользователя.
+
+    :param data: Словарь с полями 'old_password' и 'new_password'
+    :return: Словарь с сообщением и HTTP-статус
+    """
     email = get_jwt_identity()
     user = User.query.filter_by(email=email).first()
 
