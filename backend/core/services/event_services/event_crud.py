@@ -246,8 +246,10 @@ def add_tags(event: Event, tag_names: Iterable[str]) -> None:
             event.tags.append(tag)
 
 
-def verify_resident_owns_event(resident_id: int, event_id: int) -> Tuple[
-    Optional[Event], Optional[dict], Optional[int]]:
+def verify_resident_owns_event(
+        resident_id: int,
+        event_id: int
+) -> Tuple[Optional[Event], Optional[dict], Optional[int]]:
     """
     Проверяет, принадлежит ли экскурсия конкретному резиденту.
 

@@ -105,7 +105,10 @@ def get_photos_for_event(event_id: int) -> Tuple[Optional[List[Dict[str, Any]]],
     return photos, None, HTTPStatus.OK
 
 
-def add_photo_to_event(event_id: int, photo_file: FileStorage) -> Tuple[Optional[EventPhoto], Optional[Dict[str, str]], int]:
+def add_photo_to_event(
+        event_id: int,
+        photo_file: FileStorage
+) -> Tuple[Optional[EventPhoto], Optional[Dict[str, str]], int]:
     """
     Добавляет одно фото к экскурсии.
 

@@ -84,8 +84,11 @@ def create_event_session(event_id: int, data: dict) -> Tuple[Optional[EventSessi
         return None, {"message": f"Ошибка при создании сессии: {str(e)}"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-def update_event_session(event_id: int, session_id: int, data: dict) -> Tuple[
-    Optional[EventSession], Optional[dict], int]:
+def update_event_session(
+        event_id: int,
+        session_id: int,
+        data: dict
+) -> Tuple[Optional[EventSession], Optional[dict], int]:
     """
     Обновляет данные конкретной сессии экскурсии.
 
@@ -117,8 +120,11 @@ def update_event_session(event_id: int, session_id: int, data: dict) -> Tuple[
         return None, {"message": f"Ошибка при обновлении сессии: {str(e)}"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-def delete_event_session(event_id: int, session_id: int, notify_resident: bool = True) -> Union[
-    Tuple[dict, int], 'Response']:
+def delete_event_session(
+        event_id: int,
+        session_id: int,
+        notify_resident: bool = True
+) -> Union[Tuple[dict, int], 'Response']:
     """
     Удаляет конкретную сессию экскурсии, отменяет активные бронирования и при необходимости отправляет уведомления.
 
