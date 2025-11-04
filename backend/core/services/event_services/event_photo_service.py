@@ -1,15 +1,24 @@
 import os
 from http import HTTPStatus
+from typing import List, Dict, Tuple, Optional, Any, NoReturn
 
 from sqlalchemy import func
+from werkzeug.datastructures import FileStorage
 
 from backend.core import db
 from backend.core.models.event_models import EventPhoto, Event
 from backend.core.services.utilits import save_image, remove_file_if_exists
 
 
-def process_photos(files):
-    photos = []
+def process_photos(files: list[FileStorage]) -> list[dict[str, str | int]]:
+    """
+    Обрабатывает загруженные фото: проверяет тип, размер и сохраняет их.
+
+    :param files: Список файлов (объекты FileStorage)
+    :return: Список словарей с относительным путём к файлу и порядковым индексом.
+    :raises ValueError: Если файл не является изображением или превышает 5 MB.
+    """
+    photos: list[dict[str, str | int]] = []
     for idx, file in enumerate(files):
         if not file or not file.filename or not file.content_type:
             continue
@@ -42,7 +51,15 @@ def handle_add_photo(excursion_id: int, photo_file) -> tuple[dict, int]:
     return {"message": "Фото добавлено", "photos": photos}, status
 
 
-def add_photos(event, photos):
+def add_photos(event, photos: List[Dict[str, str | int]]) -> None:
+    """
+    Добавляет фотографии к указанному событию (экскурсии).
+
+    :param event: Объект события (экскурсии), к которому добавляются фото.
+    :param photos: Список словарей с ключами:
+                   - "photo_url": относительный путь к изображению
+                   - "order_index": порядок отображения (опционально)
+    """
     for p in photos:
         db.session.add(EventPhoto(
             event_id=event.event_id,
@@ -51,7 +68,14 @@ def add_photos(event, photos):
         ))
 
 
-def delete_photo_from_event(event_id, photo_id):
+def delete_photo_from_event(event_id: int, photo_id: int) -> Tuple[Dict[str, str], int]:
+    """
+    Удаляет фото, связанное с указанной экскурсией (событием).
+
+    :param event_id: ID экскурсии (события)
+    :param photo_id: ID фотографии
+    :return: Кортеж (словарь с сообщением, HTTP-статус)
+    """
     photo = EventPhoto.query.filter_by(event_id=event_id, photo_id=photo_id).first()
     if not photo:
         return {"message": "Фото не найдено"}, HTTPStatus.NOT_FOUND
@@ -66,7 +90,13 @@ def delete_photo_from_event(event_id, photo_id):
         return {"message": f"Ошибка при удалении фото: {str(e)}"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-def get_photos_for_event(event_id):
+def get_photos_for_event(event_id: int) -> Tuple[Optional[List[Dict[str, Any]]], Optional[Dict[str, str]], int]:
+    """
+    Получает список фотографий, привязанных к указанной экскурсии.
+
+    :param event_id: ID экскурсии (события)
+    :return: Кортеж (список фото или None, словарь ошибки или None, HTTP-статус)
+    """
     event = db.session.get(Event, event_id)
 
     if not event:
@@ -75,7 +105,14 @@ def get_photos_for_event(event_id):
     return photos, None, HTTPStatus.OK
 
 
-def add_photo_to_event(event_id, photo_file):
+def add_photo_to_event(event_id: int, photo_file: FileStorage) -> Tuple[Optional[EventPhoto], Optional[Dict[str, str]], int]:
+    """
+    Добавляет одно фото к экскурсии.
+
+    :param event_id: ID экскурсии
+    :param photo_file: объект загруженного файла (werkzeug.FileStorage)
+    :return: Кортеж (объект фото или None, словарь ошибки или None, HTTP-статус)
+    """
     if not photo_file:
         return None, {"message": "Фото не загружено"}, HTTPStatus.BAD_REQUEST
 
@@ -107,7 +144,13 @@ def add_photo_to_event(event_id, photo_file):
     return new_photo, None, HTTPStatus.CREATED
 
 
-def clear_photos(event):
+def clear_photos(event: Event) -> NoReturn:
+    """
+    Удаляет все фотографии, связанные с экскурсионным событием,
+    как из базы данных, так и с файловой системы.
+
+    :param event: Объект экскурсии (Event), для которой нужно очистить фото.
+    """
     photos = event.photos[:]
     for photo in photos:
         try:
