@@ -27,20 +27,20 @@ def create_app(testing=False):
 
 
 def register_apps(app):
-    from backend.user import user_ns
+    from backend.api.user import user_ns
     api.add_namespace(user_ns, path='/api/user')
 
-    from backend.admin import admin_ns
+    from backend.api.admin import admin_ns
     api.add_namespace(admin_ns, path='/api/admin')
 
-    from backend.resident import resident_ns
+    from backend.api.resident import resident_ns
     api.add_namespace(resident_ns, path='/api/resident')
 
-    from backend.references import ref_ns
+    from backend.api.references import ref_ns
     api.add_namespace(ref_ns, path='/api/references')
 
-    from backend.webhook import webhook_ns
+    from backend.api.webhook import webhook_ns
     api.add_namespace(webhook_ns, path='/api/webhook')
 
-    from backend.login import login_ns
+    from backend.api.login import login_ns
     api.add_namespace(login_ns, path='/api')

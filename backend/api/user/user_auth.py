@@ -3,8 +3,8 @@ from flask_restx import Resource
 
 from backend.core.schemas.auth_schemas import user_model
 from . import user_ns
-from ..core.schemas.user_schemas import user_login
-from ..core.services.user_services.profile_service import register_user, login_user
+from backend.core.schemas.user_schemas import user_login
+from backend.core.services.user_services.profile_service import register_user, login_user
 
 
 @user_ns.route('/register')

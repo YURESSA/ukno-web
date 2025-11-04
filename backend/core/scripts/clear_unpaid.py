@@ -1,4 +1,3 @@
-# backend/cleanup_reservations.py
 from datetime import datetime, timedelta
 
 from backend.core import db, create_app

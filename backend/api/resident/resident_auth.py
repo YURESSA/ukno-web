@@ -3,9 +3,9 @@ from flask_restx import Resource
 
 from . import resident_ns
 from .decorators import resident_required
-from ..core.schemas.auth_schemas import login_model, change_password_model
-from ..core.services.user_services.auth_service import change_profile_password
-from ..core.services.user_services.profile_service import login_user, get_profile, get_user_info_response, \
+from backend.core.schemas.auth_schemas import login_model, change_password_model
+from backend.core.services.user_services.auth_service import change_profile_password
+from backend.core.services.user_services.profile_service import login_user, get_profile, get_user_info_response, \
     delete_profile
 
 

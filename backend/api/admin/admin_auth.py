@@ -8,10 +8,10 @@ from flask_restx import Resource
 from backend.core.services.user_services.profile_service import get_user_info_response, login_user
 from . import admin_ns
 from .decorators import admin_required
-from ..core.messages import AuthMessages
-from ..core.schemas.admin_schemas import admin_login
-from ..core.schemas.auth_schemas import change_password_model
-from ..core.services.user_services.auth_service import get_user_by_email, change_password
+from backend.core.messages import AuthMessages
+from backend.core.schemas.admin_schemas import admin_login
+from backend.core.schemas.auth_schemas import change_password_model
+from backend.core.services.user_services.auth_service import get_user_by_email, change_password
 
 
 @admin_ns.route('/login')

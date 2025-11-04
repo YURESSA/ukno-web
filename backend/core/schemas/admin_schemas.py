@@ -1,7 +1,7 @@
 from flask_restx import fields, reqparse
 from werkzeug.datastructures import FileStorage
 
-from backend.admin import admin_ns
+from backend.api.admin import admin_ns
 
 admin_login = admin_ns.model('AdminLogin', {
     'email': fields.String(required=True, description='Электронная почта администратора', example='admin@example.com'),

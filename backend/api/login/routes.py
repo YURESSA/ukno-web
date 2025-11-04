@@ -5,7 +5,7 @@ from flask_restx import Resource
 
 from backend.core.schemas.auth_schemas import login_model
 from backend.core.services.user_services.auth_service import get_user_by_email, authenticate_user
-from backend.login import login_ns
+from backend.api.login import login_ns
 
 
 @login_ns.route('/login')

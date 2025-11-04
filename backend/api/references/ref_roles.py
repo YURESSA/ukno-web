@@ -3,11 +3,11 @@ from typing import Any
 from flask import request
 from flask_restx import Resource
 
-from backend.admin.decorators import admin_required
+from backend.api.admin.decorators import admin_required
 from backend.core import db
 from backend.core.models.auth_models import Role
 from backend.core.schemas.event_schemas import role_model
-from backend.references import ref_ns
+from backend.api.references import ref_ns
 
 
 @ref_ns.route('/roles')

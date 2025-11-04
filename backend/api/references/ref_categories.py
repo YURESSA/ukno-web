@@ -3,10 +3,10 @@ from typing import Any
 from flask import request
 from flask_restx import Resource, fields
 
-from backend.admin.decorators import admin_required
+from backend.api.admin.decorators import admin_required
 from backend.core import db
 from backend.core.models.event_models import Category
-from backend.references import ref_ns
+from backend.api.references import ref_ns
 
 category_model = ref_ns.model('Category', {
     'name': fields.String(required=True, description='Название категории'),

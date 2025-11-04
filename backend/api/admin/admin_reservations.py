@@ -4,8 +4,8 @@ from flask_restx import Resource
 
 from . import admin_ns
 from .decorators import admin_required
-from ..core.services.reservation_service.reservation_queries import get_all_reservations, get_reservation_by_id
-from ..core.services.reservation_service.reservation_crud import delete_reservation_with_refund
+from backend.core.services.reservation_service.reservation_queries import get_all_reservations, get_reservation_by_id
+from backend.core.services.reservation_service.reservation_crud import delete_reservation_with_refund
 
 
 @admin_ns.route('/reservations')

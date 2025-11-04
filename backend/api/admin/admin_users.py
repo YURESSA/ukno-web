@@ -8,10 +8,10 @@ from flask_restx import Resource
 from backend.core.services.user_services.profile_service import get_user_info_response, update_user, register_user
 from . import admin_ns
 from .decorators import admin_required
-from ..core.messages import AuthMessages
-from ..core.schemas.admin_schemas import update_user_model
-from ..core.schemas.auth_schemas import user_model
-from ..core.services.user_services.auth_service import get_user_by_email, get_all_users, delete_user
+from backend.core.messages import AuthMessages
+from backend.core.schemas.admin_schemas import update_user_model
+from backend.core.schemas.auth_schemas import user_model
+from backend.core.services.user_services.auth_service import get_user_by_email, get_all_users, delete_user
 
 
 @admin_ns.route('/users')

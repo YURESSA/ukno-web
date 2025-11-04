@@ -1,6 +1,6 @@
 from flask_restx import fields
 
-from backend.resident import resident_ns
+from backend.api.resident import resident_ns
 
 resident_login = resident_ns.model('ResidentLogin', {
     'email': fields.String(required=True, description='Электронная почта резидента', example='resident@example.com'),

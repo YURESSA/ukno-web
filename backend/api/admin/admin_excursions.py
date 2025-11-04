@@ -7,15 +7,15 @@ from flask_restx import Resource
 from backend.core.services.event_services.event_photo_service import get_photos_for_event, \
     delete_photo_from_event, handle_add_photo
 from backend.core.services.event_services.event_api import handle_create_event
-from ..core.services.event_services.event_crud import get_event, get_all_events, delete_event, update_event
+from backend.core.services.event_services.event_crud import get_event, get_all_events, delete_event, update_event
 from backend.core.services.event_services.event_session_service import get_sessions_for_event, \
     create_event_session, \
     update_event_session, delete_event_session
 from . import admin_ns
 from .decorators import admin_required
-from ..core.models.event_models import Reservation
-from ..core.schemas.event_schemas import event_model, session_model, session_patch_model
-from ..core.services.user_services.auth_service import get_user_by_email
+from backend.core.models.event_models import Reservation
+from backend.core.schemas.event_schemas import event_model, session_model, session_patch_model
+from backend.core.services.user_services.auth_service import get_user_by_email
 
 
 @admin_ns.route('/excursions')

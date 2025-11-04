@@ -6,10 +6,10 @@ from flask_restx import Resource
 
 from backend.core.services.event_services.event_photo_service import get_photos_for_event, \
     delete_photo_from_event, handle_add_photo
-from ..core.services.event_services.event_crud import verify_resident_owns_event
+from backend.core.services.event_services.event_crud import verify_resident_owns_event
 from . import resident_ns
 from .decorators import resident_required
-from ..core.services.user_services.auth_service import get_user_by_email
+from backend.core.services.user_services.auth_service import get_user_by_email
 
 
 @resident_ns.route('/excursions/<int:excursion_id>/photos')

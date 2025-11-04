@@ -1,6 +1,6 @@
 from flask_restx import fields
 
-from backend.user import user_ns
+from backend.api.user import user_ns
 
 user_login = user_ns.model('UserLogin', {
     'email': fields.String(required=True, description='Электронная почта пользователя', example='user@example.com'),

@@ -3,7 +3,7 @@ from http import HTTPStatus
 from flask_restx import Resource
 
 from . import user_ns
-from ..core.models.news_models import News
+from backend.core.models.news_models import News
 
 
 @user_ns.route('/news')

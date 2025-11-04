@@ -4,15 +4,15 @@ from flask import request
 from flask_jwt_extended import get_jwt_identity
 from flask_restx import Resource
 
-from ..core.services.event_services.event_crud import verify_resident_owns_event
+from backend.core.services.event_services.event_crud import verify_resident_owns_event
 from backend.core.services.event_services.event_session_service import create_event_session, \
     update_event_session, \
     delete_event_session, get_sessions_for_event
 from . import resident_ns
 from .decorators import resident_required
-from ..core.schemas.event_schemas import session_model, \
+from backend.core.schemas.event_schemas import session_model, \
     session_patch_model
-from ..core.services.user_services.auth_service import get_user_by_email
+from backend.core.services.user_services.auth_service import get_user_by_email
 
 
 @resident_ns.route('/excursions/<int:excursion_id>/sessions')

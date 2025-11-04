@@ -4,7 +4,7 @@ from sqlalchemy import func
 from backend.core import db
 from backend.core.models.auth_models import Role
 from backend.core.models.event_models import FormatType, Category, AgeCategory, Event, EventSession
-from backend.references import ref_ns
+from backend.api.references import ref_ns
 
 
 @ref_ns.route('/excursion-stats')
