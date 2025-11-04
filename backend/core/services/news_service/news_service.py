@@ -1,6 +1,9 @@
 import json
 import os
 from http import HTTPStatus
+from typing import Tuple, Optional, List, Dict
+
+from werkzeug.datastructures import FileStorage
 
 from backend.core import db
 from backend.core.models.news_models import NewsImage, News
@@ -8,7 +11,13 @@ from backend.core.services.user_services.auth_service import get_user_by_email
 from backend.core.services.utilits import save_image, remove_file_if_exists
 
 
-def get_photos_for_news(news_id):
+def get_photos_for_news(news_id: int) -> Tuple[Optional[List[Dict]], Optional[Dict], HTTPStatus]:
+    """
+    Получает список фото для новости.
+
+    :param news_id: ID новости
+    :return: Кортеж (список фото, ошибка или None, HTTP-статус)
+    """
     news = News.query.get(news_id)
     if not news:
         return None, {"message": "Новость не найдена"}, HTTPStatus.NOT_FOUND
@@ -16,7 +25,14 @@ def get_photos_for_news(news_id):
     return photos, None, HTTPStatus.OK
 
 
-def add_photo_to_news(news_id, photo_file):
+def add_photo_to_news(news_id: int, photo_file: FileStorage) -> Tuple[Optional[List[Dict]], Optional[Dict], HTTPStatus]:
+    """
+    Добавляет фото к новости.
+
+    :param news_id: ID новости
+    :param photo_file: Загруженный файл (werkzeug.FileStorage)
+    :return: Кортеж (обновленный список фото, ошибка или None, HTTP-статус)
+    """
     news = News.query.get(news_id)
     if not news:
         return None, {"message": "Новость не найдена"}, HTTPStatus.NOT_FOUND
@@ -31,7 +47,14 @@ def add_photo_to_news(news_id, photo_file):
         return None, {"message": f"Ошибка при добавлении фото: {str(e)}"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-def delete_photo_from_news(news_id, photo_id):
+def delete_photo_from_news(news_id: int, photo_id: int) -> Tuple[Dict, HTTPStatus]:
+    """
+    Удаляет фото новости по ID.
+
+    :param news_id: ID новости
+    :param photo_id: ID фото
+    :return: Словарь с сообщением и HTTP-статус
+    """
     photo = NewsImage.query.filter_by(news_id=news_id, id=photo_id).first()
     if not photo:
         return {"message": "Фото не найдено"}, HTTPStatus.NOT_FOUND
@@ -46,7 +69,15 @@ def delete_photo_from_news(news_id, photo_id):
         return {"message": f"Ошибка при удалении фото: {str(e)}"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-def create_news_with_images(user_email, data_str, image_files):
+def create_news_with_images(user_email: str, data_str: str, image_files: List[FileStorage]) -> Tuple[Dict, HTTPStatus]:
+    """
+    Создает новость с прикрепленными фото.
+
+    :param user_email: Email автора новости
+    :param data_str: JSON-строка с данными новости (title, content, photo_author)
+    :param image_files: Список файлов изображений
+    :return: Словарь с сообщением, ID новости и HTTP-статус
+    """
     if not data_str:
         return {"message": "Поле 'data' обязательно"}, HTTPStatus.BAD_REQUEST
 
@@ -89,16 +120,30 @@ def create_news_with_images(user_email, data_str, image_files):
     }, HTTPStatus.CREATED
 
 
-def get_all_news():
+def get_all_news() -> List[Dict]:
+    """
+    Получает все новости в порядке убывания даты создания.
+
+    :return: Список словарей с новостями
+    """
     news_list = News.query.order_by(News.created_at.desc()).all()
     return [n.to_dict() for n in news_list]
 
 
-def get_news_by_id(news_id):
+def get_news_by_id(news_id: int) -> Optional[News]:
+    """Получает новость по ID."""
     return db.session.get(News, news_id)
 
 
-def update_news(news_id, form_data, files):
+def update_news(news_id: int, form_data: dict, files: Optional[dict] = None) -> Tuple[Optional[News], Optional[str]]:
+    """
+    Обновляет новость и добавляет новые изображения.
+
+    :param news_id: ID новости
+    :param form_data: словарь с полем 'data', содержащим JSON с title, content, photo_author
+    :param files: словарь с ключом 'image', содержащий список файлов
+    :return: кортеж (объект новости или None, сообщение об ошибке или None)
+    """
     news = db.session.get(News, news_id)
     if not news:
         return None, "Новость не найдена"
@@ -133,7 +178,13 @@ def update_news(news_id, form_data, files):
     return news, None
 
 
-def delete_news(news_id):
+def delete_news(news_id: int) -> Tuple[bool, Optional[str]]:
+    """
+    Удаляет новость и связанные с ней изображения.
+
+    :param news_id: ID новости
+    :return: кортеж (успех: bool, сообщение об ошибке или None)
+    """
     news = db.session.get(News, news_id)
     if not news:
         return False, "Новость не найдена"

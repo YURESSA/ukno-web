@@ -9,7 +9,7 @@ from flask_restx import Resource
 
 from . import user_ns
 from ..core.schemas.event_schemas import reservation_model, cancel_model
-from ..core.services.calendar_utilits import create_ical_from_reservation
+from ..core.services.utilits import create_ical_from_reservation
 from ..core.services.event_services.event_crud import get_event
 from ..core.services.reservation_service.reservation_queries import get_reservations_by_user_email, \
     get_reservations_by_reservation_id

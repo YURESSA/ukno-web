@@ -1,8 +1,7 @@
 import re
 
 from backend.core.config import Config
-from backend.core.services.calendar_utilits import create_ical_from_reservation
-from backend.core.services.utilits import send_email, generate_reset_token
+from backend.core.services.utilits import send_email, generate_reset_token, create_ical_from_reservation
 
 
 def send_reservation_confirmation_email(reservation, user):
