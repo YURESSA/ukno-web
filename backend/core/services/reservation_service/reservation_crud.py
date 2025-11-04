@@ -1,29 +1,37 @@
 from http import HTTPStatus
+from typing import Tuple, Dict, Any
 
 from sqlalchemy import func
 
 from backend.core import db
-from backend.core.models.event_models import Reservation, EventSession, Payment
-from backend.core.services.email_service import send_reservation_confirmation_email, send_reservation_refund_email, \
+from backend.core.models.event_models import EventSession, Reservation, Payment
+from backend.core.services.email_service.email_service import send_reservation_confirmation_email, \
     send_reservation_cancellation_email
+from backend.core.services.reservation_service.yookassa_service import create_yookassa_payment, refund_yookassa_payment
 from backend.core.services.user_services.auth_service import get_user_by_email
-from backend.core.services.yookassa_service import create_yookassa_payment, refund_yookassa_payment
 
 
-def get_reservations_by_user_email(email):
-    user = get_user_by_email(email)
-    if not user:
-        return None, None
+def create_reservation_with_payment(
+        user_email: str,
+        session_id: int,
+        full_name: str,
+        phone_number: str,
+        email: str,
+        participants_count: int
+) -> Tuple[Dict[str, Any], HTTPStatus]:
+    """
+    Создает бронирование для указанного сеанса с обработкой оплаты через YooKassa.
 
-    reservations = Reservation.query.filter_by(user_id=user.user_id).all()
-    return reservations, user
+    Если стоимость сеанса равна 0, бронирование считается оплаченным автоматически.
 
-
-def get_reservations_by_reservation_id(reservation_id):
-    return Reservation.query.filter_by(reservation_id=reservation_id).first()
-
-
-def create_reservation_with_payment(user_email, session_id, full_name, phone_number, email, participants_count):
+    :param user_email: email пользователя, создающего бронь
+    :param session_id: ID сеанса экскурсии
+    :param full_name: имя участника
+    :param phone_number: телефон участника
+    :param email: email участника
+    :param participants_count: количество участников
+    :return: кортеж (ответ в виде словаря, HTTP статус)
+    """
     user = get_user_by_email(user_email)
     if not user:
         return {"message": "Пользователь не найден"}, HTTPStatus.UNAUTHORIZED
@@ -114,48 +122,13 @@ def create_reservation_with_payment(user_email, session_id, full_name, phone_num
     }, HTTPStatus.CREATED
 
 
-def cancel_user_reservation(user_email, reservation_id):
-    user = get_user_by_email(user_email)
-    if not user:
-        return {"message": "Пользователь не найден"}, HTTPStatus.UNAUTHORIZED
+def delete_reservation_with_refund(reservation_id: int) -> Tuple[bool, str, int]:
+    """
+    Удаляет бронирование и при необходимости выполняет возврат средств через YooKassa.
 
-    if not reservation_id:
-        return {"message": "reservation_id is required"}, HTTPStatus.BAD_REQUEST
-
-    reservation = db.session.get(Reservation, reservation_id)
-    if not reservation or reservation.user_id != user.user_id:
-        return {"message": "Бронирование не найдено или не принадлежит вам"}, HTTPStatus.NOT_FOUND
-
-    if reservation.is_cancelled:
-        return {"message": "Бронирование уже отменено"}, HTTPStatus.BAD_REQUEST
-
-    refund_done = False
-    if reservation.is_paid:
-        if reservation.payment:
-            try:
-                refund_yookassa_payment(reservation.payment.payment_id, float(reservation.payment.amount))
-                refund_done = True
-            except Exception as e:
-                print(f"Ошибка возврата средств YooKassa: {e}")
-                return {"message": "Не удалось сделать возврат средств"}, HTTPStatus.INTERNAL_SERVER_ERROR
-        else:
-            refund_done = False
-
-    reservation.is_cancelled = True
-    db.session.commit()
-
-    try:
-        send_reservation_refund_email(reservation)
-    except Exception as e:
-        print(f"Ошибка отправки email: {e}")
-
-    if refund_done:
-        return {"message": "Бронирование отменено, средства возвращены"}, HTTPStatus.OK
-    else:
-        return {"message": "Бронирование отменено"}, HTTPStatus.OK
-
-
-def delete_reservation_with_refund(reservation_id):
+    :param reservation_id: ID бронирования для удаления
+    :return: Кортеж (успех: bool, сообщение: str, HTTP-статус: int)
+    """
     reservation = Reservation.query.get(reservation_id)
     if not reservation:
         return False, 'Бронь не найдена', 404
@@ -188,15 +161,3 @@ def delete_reservation_with_refund(reservation_id):
         return False, f"Ошибка при удалении брони: {str(e)}", 500
 
     return True, "Бронирование успешно удалено", 200
-
-
-def get_all_reservations():
-    reservations = Reservation.query.all()
-    return [r.to_dict() for r in reservations]
-
-
-def get_reservation_by_id(reservation_id):
-    reservation = Reservation.query.get(reservation_id)
-    if not reservation:
-        return None
-    return reservation.to_dict_detailed()

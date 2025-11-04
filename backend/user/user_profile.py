@@ -7,7 +7,8 @@ from flask_restx import Resource, fields
 from backend.core.schemas.auth_schemas import change_password_model, edit_profile_model
 from . import user_ns
 from ..core import db
-from ..core.services.email_service import send_reset_email
+from ..core.services.email_service.email_service import send_reset_email
+
 from ..core.services.user_services.auth_service import get_user_by_email, update_profile, change_profile_password
 from ..core.services.user_services.profile_service import get_profile, \
     get_user_info_response, delete_profile

@@ -8,10 +8,12 @@ from flask_jwt_extended import get_jwt_identity
 
 from backend.core import db
 from backend.core.models.event_models import EventSession, Event
-from backend.core.services.email_service import send_session_cancellation_email, send_session_deletion_email
+from backend.core.services.email_service.email_service import send_session_deletion_email, \
+    send_session_cancellation_email
+
 from backend.core.services.user_services.auth_service import get_user_by_email
 from backend.core.services.utilits import generate_reservations_csv
-from backend.core.services.yookassa_service import refund_yookassa_payment
+from backend.core.services.reservation_service.yookassa_service import refund_yookassa_payment
 
 
 def clear_sessions_and_schedules(event: Event) -> None:

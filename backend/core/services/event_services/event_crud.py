@@ -7,7 +7,8 @@ from werkzeug.datastructures import FileStorage
 
 from backend.core import db
 from backend.core.models.event_models import Event, Category, FormatType, AgeCategory, Tag
-from backend.core.services.email_service import send_event_deletion_email
+from backend.core.services.email_service.email_service import send_event_deletion_email
+
 from backend.core.services.event_services.event_photo_service import process_photos, add_photos
 from backend.core.services.event_services.event_session_service import delete_event_session, \
     clear_sessions_and_schedules, add_sessions

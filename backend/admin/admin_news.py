@@ -8,8 +8,8 @@ from flask_restx import Resource
 from . import admin_ns
 from .decorators import admin_required
 from ..core.schemas.admin_schemas import create_parser, update_parser
-from ..core.services.news_service import add_photo_to_news, get_photos_for_news, delete_photo_from_news, \
-    create_news_with_images, get_all_news, get_news_by_id, update_news, delete_news
+from ..core.services.news_service.news_service import get_all_news, create_news_with_images, get_news_by_id, \
+    update_news, delete_news, get_photos_for_news, add_photo_to_news, delete_photo_from_news
 
 
 @admin_ns.route('/news')
