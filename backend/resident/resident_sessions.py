@@ -4,7 +4,7 @@ from flask import request
 from flask_jwt_extended import get_jwt_identity
 from flask_restx import Resource
 
-from backend.core.services.event_services.event_service import verify_resident_owns_event
+from ..core.services.event_services.event_crud import verify_resident_owns_event
 from backend.core.services.event_services.event_session_service import create_event_session, \
     update_event_session, \
     delete_event_session, get_sessions_for_event

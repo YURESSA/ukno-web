@@ -4,9 +4,9 @@ from flask import request
 from flask_jwt_extended import get_jwt_identity
 from flask_restx import Resource
 
-from backend.core.services.event_services.event_service import update_event, \
-    get_events_for_resident, \
-    get_event, verify_resident_owns_event, delete_event, handle_create_event
+from backend.core.services.event_services.event_api import handle_create_event
+from ..core.services.event_services.event_crud import get_event, get_events_for_resident, delete_event, update_event, \
+    verify_resident_owns_event
 from . import resident_ns
 from .decorators import resident_required
 from ..core.schemas.event_schemas import data_param, photos_param, event_model

@@ -1,23 +1,40 @@
 from datetime import datetime
 from http import HTTPStatus
+from typing import List, Dict, Tuple, Optional, Union
 from urllib.parse import quote
 
-from flask import make_response
+from flask import make_response, Response
 from flask_jwt_extended import get_jwt_identity
 
 from backend.core import db
-from backend.core.models.event_models import EventSession
+from backend.core.models.event_models import EventSession, Event
 from backend.core.services.email_service import send_session_cancellation_email, send_session_deletion_email
 from backend.core.services.user_services.auth_service import get_user_by_email
 from backend.core.services.utilits import generate_reservations_csv
 from backend.core.services.yookassa_service import refund_yookassa_payment
 
 
-def clear_sessions_and_schedules(event):
+def clear_sessions_and_schedules(event: Event) -> None:
+    """
+    Удаляет все сессии и связанные расписания для заданной экскурсии.
+
+    :param event: объект Event, для которого очищаются сессии
+    :return: None
+    """
     EventSession.query.filter_by(event_id=event.event_id).delete()
 
 
-def add_sessions(event, sessions):
+def add_sessions(event: Event, sessions: List[Dict]) -> None:
+    """
+    Добавляет новые сессии к экскурсии.
+
+    :param event: объект Event, к которому добавляются сессии
+    :param sessions: список словарей с данными сессий, каждый словарь должен содержать:
+                     - start_datetime (str, ISO-формат)
+                     - max_participants (int)
+                     - cost (float)
+    :return: None
+    """
     for s in sessions:
         start_dt = datetime.fromisoformat(s["start_datetime"])
         db.session.add(EventSession(
@@ -28,11 +45,25 @@ def add_sessions(event, sessions):
         ))
 
 
-def get_sessions_for_event(event_id):
+def get_sessions_for_event(event_id: int) -> List[EventSession]:
+    """
+    Получает все сессии для конкретной экскурсии.
+
+    :param event_id: ID экскурсии
+    :return: Список объектов EventSession
+    """
     return EventSession.query.filter_by(event_id=event_id).all()
 
 
-def create_event_session(event_id, data):
+def create_event_session(event_id: int, data: dict) -> Tuple[Optional[EventSession], Optional[dict], int]:
+    """
+    Создает новую сессию для экскурсии.
+
+    :param event_id: ID экскурсии
+    :param data: Словарь с данными сессии, ожидается ключ 'start_datetime' в ISO формате,
+                 а также необязательные 'max_participants' и 'cost'.
+    :return: Кортеж (созданный объект EventSession | None, словарь с сообщением об ошибке | None, HTTPStatus)
+    """
     try:
         start_dt = datetime.fromisoformat(data['start_datetime'])
     except (KeyError, ValueError):
@@ -53,7 +84,17 @@ def create_event_session(event_id, data):
         return None, {"message": f"Ошибка при создании сессии: {str(e)}"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-def update_event_session(event_id, session_id, data):
+def update_event_session(event_id: int, session_id: int, data: dict) -> Tuple[
+    Optional[EventSession], Optional[dict], int]:
+    """
+    Обновляет данные конкретной сессии экскурсии.
+
+    :param event_id: ID экскурсии
+    :param session_id: ID сессии
+    :param data: Словарь с обновляемыми данными. Возможные ключи:
+                 'start_datetime' (ISO формат), 'max_participants', 'cost'.
+    :return: Кортеж (обновленный объект EventSession | None, словарь с ошибкой | None, HTTPStatus)
+    """
     session = EventSession.query.filter_by(event_id=event_id, session_id=session_id).first()
     if not session:
         return None, {"message": "Сессия не найдена"}, HTTPStatus.NOT_FOUND
@@ -76,7 +117,16 @@ def update_event_session(event_id, session_id, data):
         return None, {"message": f"Ошибка при обновлении сессии: {str(e)}"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-def delete_event_session(event_id, session_id, notify_resident=True):
+def delete_event_session(event_id: int, session_id: int, notify_resident: bool = True) -> Union[
+    Tuple[dict, int], 'Response']:
+    """
+    Удаляет конкретную сессию экскурсии, отменяет активные бронирования и при необходимости отправляет уведомления.
+
+    :param event_id: ID экскурсии
+    :param session_id: ID сессии
+    :param notify_resident: Отправлять ли CSV уведомление о отмене бронирований резиденту
+    :return: Либо словарь с результатом и HTTPStatus, либо Flask Response с CSV.
+    """
     email = get_jwt_identity()
     user = get_user_by_email(email)
     deleter_email = user.email

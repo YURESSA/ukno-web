@@ -3,7 +3,7 @@ from http import HTTPStatus
 from flask import request
 from flask_restx import Resource
 
-from backend.core.services.event_services.event_service import list_events
+from backend.core.services.event_services.event_api import list_events
 from . import user_ns
 
 

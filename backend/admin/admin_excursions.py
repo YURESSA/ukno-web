@@ -6,8 +6,8 @@ from flask_restx import Resource
 
 from backend.core.services.event_services.event_photo_service import get_photos_for_event, \
     delete_photo_from_event, handle_add_photo
-from backend.core.services.event_services.event_service import update_event, get_event, get_all_events, \
-    delete_event, handle_create_event
+from backend.core.services.event_services.event_api import handle_create_event
+from ..core.services.event_services.event_crud import get_event, get_all_events, delete_event, update_event
 from backend.core.services.event_services.event_session_service import get_sessions_for_event, \
     create_event_session, \
     update_event_session, delete_event_session

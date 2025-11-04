@@ -8,7 +8,7 @@ from werkzeug.datastructures import FileStorage
 from backend.core import create_app, db
 from backend.core.models.auth_models import User
 from backend.core.models.event_models import Event, EventSession
-from backend.core.services.event_services.event_service import create_event
+from backend.core.services.event_services.event_crud import create_event
 from backend.core.services.user_services.auth_service import create_user
 
 
