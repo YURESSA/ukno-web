@@ -9,10 +9,11 @@ from . import user_ns
 from backend.core import db
 from backend.core.services.email_service.email_service import send_reset_email
 
-from backend.core.services.user_services.auth_service import get_user_by_email, update_profile, change_profile_password
+from backend.core.services.user_services.auth_service import change_profile_password
+from ...core.services.user_services.user_service import get_user_by_email, update_profile
 from backend.core.services.user_services.profile_service import get_profile, \
     get_user_info_response, delete_profile
-from backend.core.services.utilits import verify_reset_token
+from ...core.utilits.token_utils import verify_reset_token
 
 
 @user_ns.route('/profile')

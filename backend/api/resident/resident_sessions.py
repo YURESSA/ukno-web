@@ -12,7 +12,7 @@ from . import resident_ns
 from .decorators import resident_required
 from backend.core.schemas.event_schemas import session_model, \
     session_patch_model
-from backend.core.services.user_services.auth_service import get_user_by_email
+from ...core.services.user_services.user_service import get_user_by_email
 
 
 @resident_ns.route('/excursions/<int:excursion_id>/sessions')

@@ -7,7 +7,7 @@ from werkzeug.datastructures import FileStorage
 
 from backend.core import db
 from backend.core.models.event_models import EventPhoto, Event
-from backend.core.services.utilits import save_image, remove_file_if_exists
+from backend.core.utilits.file_utils import save_image, remove_file_if_exists
 
 
 def process_photos(files: list[FileStorage]) -> list[dict[str, str | int]]:

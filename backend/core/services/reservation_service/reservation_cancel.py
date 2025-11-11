@@ -5,7 +5,7 @@ from backend.core import db
 from backend.core.models.event_models import Reservation
 from backend.core.services.email_service.email_service import send_reservation_refund_email
 from backend.core.services.reservation_service.yookassa_service import refund_yookassa_payment
-from backend.core.services.user_services.auth_service import get_user_by_email
+from backend.core.services.user_services.user_service import get_user_by_email
 
 
 def cancel_user_reservation(user_email: str, reservation_id: int) -> Tuple[Dict[str, Any], HTTPStatus]:

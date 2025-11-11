@@ -12,8 +12,9 @@ from backend.core.services.email_service.email_service import send_event_deletio
 from backend.core.services.event_services.event_photo_service import process_photos, add_photos
 from backend.core.services.event_services.event_session_service import delete_event_session, \
     clear_sessions_and_schedules, add_sessions
-from backend.core.services.user_services.auth_service import get_user_by_email
-from backend.core.services.utilits import remove_file_if_exists, generate_reservations_csv, get_model_by_name
+from backend.core.services.user_services.user_service import get_user_by_email
+from backend.core.utilits.model_utils import get_model_by_name
+from backend.core.utilits.file_utils import remove_file_if_exists, generate_reservations_csv
 
 
 def get_event(event_id: int, resident_id: Optional[int] = None) -> Optional[Event]:

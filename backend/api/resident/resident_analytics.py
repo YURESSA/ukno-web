@@ -6,7 +6,7 @@ from flask_restx import Resource
 from backend.core.services.event_services.event_analytics import get_resident_event_analytics
 from . import resident_ns
 from .decorators import resident_required
-from backend.core.services.user_services.auth_service import get_user_by_email
+from ...core.services.user_services.user_service import get_user_by_email
 
 
 @resident_ns.route('/analytics')

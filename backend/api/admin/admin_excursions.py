@@ -15,7 +15,7 @@ from . import admin_ns
 from .decorators import admin_required
 from backend.core.models.event_models import Reservation
 from backend.core.schemas.event_schemas import event_model, session_model, session_patch_model
-from backend.core.services.user_services.auth_service import get_user_by_email
+from ...core.services.user_services.user_service import get_user_by_email
 
 
 @admin_ns.route('/excursions')

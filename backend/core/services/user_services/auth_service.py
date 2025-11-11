@@ -1,157 +1,13 @@
 from http import HTTPStatus
-from typing import Optional, List, Tuple, Dict
+from typing import Tuple, Dict
 
-from flask_jwt_extended import create_access_token, get_jwt_identity
+from flask_jwt_extended import get_jwt_identity
 
 from backend.core import db
-from backend.core.models.auth_models import User, Role
-
-
-def get_user_by_email(email: str) -> Optional[User]:
-    """
-    Получение пользователя по email.
-
-    :param email: Email пользователя
-    :return: Объект User или None, если пользователь не найден
-    """
-    return User.query.filter_by(email=email).first()
-
-
-def get_role_by_name(role_name: str) -> Optional[Role]:
-    """
-    Получение роли по имени.
-
-    :param role_name: Название роли
-    :return: Объект Role или None, если роль не найдена
-    """
-    return Role.query.filter_by(role_name=role_name).first()
-
-
-def get_all_users(role: Optional[str] = None) -> List[User]:
-    """
-    Получение списка всех пользователей, с возможной фильтрацией по роли.
-
-    :param role: Название роли для фильтрации (необязательно)
-    :return: Список объектов User
-    """
-    query = User.query
-
-    if role:
-        query = query.filter(User.role.has(role_name=role))
-
-    users = query.all()
-    return users
-
-
-def create_user(email: str, password: str, full_name: str, phone: str, role_name: str) -> Optional[User]:
-    """
-    Создание нового пользователя.
-
-    :param email: Email пользователя
-    :param password: Пароль пользователя
-    :param full_name: Полное имя пользователя
-    :param phone: Телефон пользователя
-    :param role_name: Название роли пользователя
-    :return: Объект User или None, если роль не найдена или пользователь с таким email уже существует
-    """
-    role = get_role_by_name(role_name)
-    if not role or User.query.filter_by(email=email).first():
-        return None
-
-    new_user = User(
-        email=email,
-        full_name=full_name,
-        phone=phone,
-        role_id=role.role_id
-    )
-    new_user.set_password(password)
-
-    db.session.add(new_user)
-    db.session.commit()
-    return new_user
-
-
-def delete_user(email: str) -> bool:
-    """
-    Удаление пользователя по email.
-
-    :param email: Email пользователя
-    :return: True, если пользователь удалён, False если пользователь не найден
-    """
-    user = get_user_by_email(email)
-    if user:
-        db.session.delete(user)
-        db.session.commit()
-        return True
-    return False
-
-
-def authenticate_user(email: str, password: str, required_role: Optional[str] = None) -> Optional[str]:
-    """
-    Аутентификация пользователя и генерация JWT токена.
-
-    :param email: Email пользователя
-    :param password: Пароль пользователя
-    :param required_role: Если указано, проверяется роль пользователя
-    :return: JWT токен при успешной аутентификации, иначе None
-    """
-    user = get_user_by_email(email)
-    if not user or not user.check_password(password):
-        return None
-
-    if required_role and user.role.role_name != required_role:
-        return None
-
-    return create_access_token(identity=user.email, additional_claims={"role": user.role.role_name})
-
-
-def change_password(email: str, old_password: str, new_password: str) -> bool:
-    """
-    Изменение пароля пользователя.
-
-    :param email: Email пользователя
-    :param old_password: Текущий пароль
-    :param new_password: Новый пароль
-    :return: True, если пароль успешно изменён, иначе False
-    """
-    user = get_user_by_email(email)
-    if user and user.check_password(old_password):
-        user.set_password(new_password)
-        db.session.commit()
-        return True
-    return False
-
-
-def update_profile(data: dict) -> Tuple[Dict, int]:
-    """
-    Обновление профиля текущего пользователя.
-
-    :param data: Словарь с новыми данными пользователя: 'email', 'phone', 'full_name'
-    :return: Словарь с сообщением и HTTP-статус
-    """
-    email = get_jwt_identity()
-    user = User.query.filter_by(email=email).first()
-
-    if not user:
-        return {"message": "Пользователь не найден"}, HTTPStatus.NOT_FOUND
-
-    new_email = data.get("email")
-    new_phone = data.get("phone")
-    new_full_name = data.get("full_name")
-
-    if new_email and new_email != user.email:
-        if User.query.filter_by(email=new_email).first():
-            return {"message": "Этот email уже используется"}, HTTPStatus.BAD_REQUEST
-        user.email = new_email
-
-    if new_phone:
-        user.phone = new_phone
-
-    if new_full_name:
-        user.full_name = new_full_name
-
-    db.session.commit()
-    return {"message": "Профиль обновлён успешно"}, HTTPStatus.OK
+from backend.core.messages import AuthMessages
+from backend.core.models.auth_models import User
+from backend.core.services.user_services.user_service import create_user, get_user_by_email, authenticate_user
+from backend.core.utilits.user_utils import parse_user_data
 
 
 def change_profile_password(data: dict) -> Tuple[Dict, int]:
@@ -180,3 +36,60 @@ def change_profile_password(data: dict) -> Tuple[Dict, int]:
     db.session.commit()
 
     return {"message": "Пароль успешно изменён"}, HTTPStatus.OK
+
+
+def register_user(default_role: str, data: Dict, current_user_role: str = "user") -> Tuple[Dict, int]:
+    """
+    Регистрирует нового пользователя с указанной ролью.
+    Если текущий пользователь не админ, роль игнорируется и используется default_role.
+
+    :param default_role: Роль по умолчанию для нового пользователя
+    :param data: Словарь с данными пользователя (email, password, full_name, phone, role_name)
+    :param current_user_role: Роль текущего пользователя, совершающего регистрацию
+    :return: Кортеж из словаря с сообщением и HTTP-статуса
+    """
+    email, password, full_name, phone, role_name = parse_user_data(data, default_role)
+
+    if current_user_role != "admin":
+        role_name = default_role
+
+    new_user = create_user(email, password, full_name, phone, role_name)
+    if not new_user:
+        return {"message": AuthMessages.USER_ALREADY_EXISTS}, HTTPStatus.CONFLICT
+    return {"message": AuthMessages.USER_CREATED}, HTTPStatus.CREATED
+
+
+def login_user(role: str, data: dict) -> Tuple[Dict, int]:
+    """
+    Универсальная функция авторизации пользователя по роли.
+
+    :param role: Роль, под которую выполняется вход (например, 'resident' или 'admin')
+    :param data: Словарь с полями 'email' и 'password'
+    :return: Кортеж (response_dict, http_status)
+             response_dict содержит сообщение, токен и роль при успешном входе
+    """
+    email = (data.get("email") or "").strip()
+    password = data.get("password") or ""
+
+    if not email or not password:
+        return {"message": "Необходимо указать и email, и пароль"}, HTTPStatus.BAD_REQUEST
+
+    user = get_user_by_email(email)
+    if not user:
+        return {"message": f"Пользователь с email {email} не найден"}, HTTPStatus.UNAUTHORIZED
+
+    if not user.check_password(password):
+        return {"message": "Неверный пароль"}, HTTPStatus.UNAUTHORIZED
+
+    if user.role.role_name.lower() != role.lower():
+        return {"message": "Доступ запрещён для этой роли"}, HTTPStatus.FORBIDDEN
+
+    token = authenticate_user(email, password)
+    if not token:
+        return {"message": "Ошибка при генерации токена"}, HTTPStatus.INTERNAL_SERVER_ERROR
+
+    return {
+        "access_token": token,
+        "role": role,
+        "message": f"Добро пожаловать, {user.full_name or 'пользователь'}!"
+    }, HTTPStatus.OK

@@ -11,8 +11,8 @@ from backend.core.models.event_models import EventSession, Event
 from backend.core.services.email_service.email_service import send_session_deletion_email, \
     send_session_cancellation_email
 
-from backend.core.services.user_services.auth_service import get_user_by_email
-from backend.core.services.utilits import generate_reservations_csv
+from backend.core.services.user_services.user_service import get_user_by_email
+from backend.core.utilits.file_utils import generate_reservations_csv
 from backend.core.services.reservation_service.yookassa_service import refund_yookassa_payment
 
 

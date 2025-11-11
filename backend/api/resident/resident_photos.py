@@ -9,7 +9,7 @@ from backend.core.services.event_services.event_photo_service import get_photos_
 from backend.core.services.event_services.event_crud import verify_resident_owns_event
 from . import resident_ns
 from .decorators import resident_required
-from backend.core.services.user_services.auth_service import get_user_by_email
+from ...core.services.user_services.user_service import get_user_by_email
 
 
 @resident_ns.route('/excursions/<int:excursion_id>/photos')

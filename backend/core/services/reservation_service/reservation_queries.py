@@ -2,7 +2,7 @@ from typing import Tuple, Optional, List, Dict
 
 from backend.core.models.auth_models import User
 from backend.core.models.event_models import Reservation
-from backend.core.services.user_services.auth_service import get_user_by_email
+from backend.core.services.user_services.user_service import get_user_by_email
 
 
 def get_reservations_by_user_email(email: str) -> Tuple[Optional[List['Reservation']], Optional['User']]:

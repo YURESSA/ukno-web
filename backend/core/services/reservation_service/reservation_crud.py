@@ -8,7 +8,7 @@ from backend.core.models.event_models import EventSession, Reservation, Payment
 from backend.core.services.email_service.email_service import send_reservation_confirmation_email, \
     send_reservation_cancellation_email
 from backend.core.services.reservation_service.yookassa_service import create_yookassa_payment, refund_yookassa_payment
-from backend.core.services.user_services.auth_service import get_user_by_email
+from backend.core.services.user_services.user_service import get_user_by_email
 
 
 def create_reservation_with_payment(
