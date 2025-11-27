@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>{{ title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet"/>
+    <link href="https://unpkg.com/tabulator-tables@5.6.1/dist/css/tabulator.min.css" rel="stylesheet">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet"/>
+    <style>
+          .spinner-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.4); /* затемнение */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+          }
+        /* ===== Переменные цветов/теней/радиуса ===== */
+        :root {
+            --primary: #3b82f6; /* Blue 500 */
+            --primary-hover: #2563eb; /* Blue 600 */
+            --success: #10b981; /* Green 500 */
+            --danger: #ef4444; /* Red 500 */
+            --warning: #f59e0b; /* Amber 500 */
+            --info: #0ea5e9; /* Sky 500 */
+            --bg-light: #f8fafc; /* Slate 50 */
+            --bg-white: #ffffff;
+            --text-dark: #1e293b; /* Slate 900 */
+            --text-muted: #64748b; /* Slate 500 */
+            --border-color: #e2e8f0; /* Slate 200 */
+            --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.03),
+            0 1px 2px rgba(0, 0, 0, 0.02);
+            --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.05);
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --transition: all 0.2s ease-in-out;
+        }
+
+        /* ===== Базовые стили ===== */
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-dark);
+            background-color: var(--bg-light);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: none;
+        }
+
+        .wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ===== Sidebar ===== */
+        #sidebar {
+            width: 240px;
+            background: var(--bg-white);
+            border-right: 1px solid var(--border-color);
+            padding: 1.5rem 0;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-subtle);
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 0 1.5rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1rem;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar-brand-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--primary);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .sidebar-brand-text h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .sidebar-brand-text p {
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        .nav-section {
+            padding: 0 1rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: var(--text-muted);
+            border-radius: var(--radius-md);
+            margin-bottom: 0.25rem;
+            transition: var(--transition);
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            background: var(--bg-light);
+            color: var(--text-dark);
+        }
+
+        .nav-link.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .nav-link i {
+            width: 1.125rem;
+            text-align: center;
+            font-size: 0.9375rem;
+        }
+
+        /* ===== Основной контент ===== */
+        #mainContent {
+            flex: 1;
+            margin-left: 240px; /* отступ под фиксированный sidebar */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* ===== Заголовок страницы ===== */
+        .main-header {
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.05rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap; /* для адаптивности кнопок */
+            gap: 1rem;
+        }
+
+        .header-title h1 {
+            font-size: 1.625rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .header-title p {
+            color: var(--text-muted);
+            margin: 0.25rem 0 0;
+            font-size: 0.8125rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            flex-wrap: wrap; /* кнопки переносятся при сужении */
+        }
+
+        /* ===== Область контента ===== */
+        .content-area {
+            flex: 1;
+            padding: 1.5rem 2rem;
+            background: var(--bg-light);
+        }
+
+        .content-card {
+            background: var(--bg-white);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            box-shadow: var(--shadow-card);
+        }
+
+        /* ===== Стили для таблиц ===== */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .table {
+            margin: 0;
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+        }
+
+        .table th {
+            background: var(--bg-light);
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.8125rem;
+            padding: 0.875rem 1.5rem;
+            border: none;
+            text-align: left;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .table td {
+            padding: 0.875rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+            vertical-align: middle;
+            color: var(--text-dark);
+            font-size: 0.875rem;
+        }
+
+        .table tbody tr:hover {
+            background: var(--bg-light);
+        }
+
+        /* ===== Кнопки ===== */
+        .btn {
+            font-weight: 500;
+            border-radius: var(--radius-md);
+            transition: var(--transition);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669; /* Darker green */
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626; /* Darker red */
+            color: white;
+        }
+
+        .btn-outline-secondary {
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            background: transparent;
+        }
+
+        .btn-outline-secondary:hover {
+            background: var(--bg-light);
+            color: var(--text-dark);
+            border-color: var(--border-color);
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.6rem;
+            font-size: 0.75rem;
+            border-radius: var(--radius-sm);
+        }
+
+        /* ===== Модальные окна ===== */
+        .modal-content {
+            border: none;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-card);
+        }
+
+        .modal-header {
+            background: var(--bg-light);
+            border-bottom: 1px solid var(--border-color);
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            padding: 1.25rem 1.5rem;
+        }
+
+        .modal-title {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.125rem;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            background: var(--bg-light);
+            border-top: 1px solid var(--border-color);
+            border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+            padding: 1.25rem 1.5rem;
+        }
+
+        /* ===== Поля формы ===== */
+        .form-label {
+            font-weight: 500;
+            color: var(--text-dark);
+            margin-bottom: 0.4rem;
+            font-size: 0.875rem;
+        }
+
+        .form-control, .form-select {
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 0.625rem 0.875rem;
+            transition: var(--transition);
+            background: var(--bg-white);
+            font-size: 0.875rem;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+
+        /* ===== Пустое состояние ===== */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-muted);
+            font-size: 0.9375rem;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 0.75rem;
+            opacity: 0.3;
+            color: var(--border-color);
+        }
+
+        .empty-state h3 {
+            font-size: 1.375rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+
+        /* ===== Состояние загрузки ===== */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem;
+            color: var(--text-muted);
+            font-size: 0.9375rem;
+        }
+
+        .spinner {
+            width: 2rem;
+            height: 2rem;
+            border: 2px solid var(--border-color);
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 0.75rem;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ===== Бейджи для ролей ===== */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25em 0.5em;
+            font-size: 0.75em;
+            font-weight: 600;
+            line-height: 1;
+            color: #fff;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: var(--radius-sm);
+            text-transform: capitalize;
+        }
+
+        .badge.bg-danger {
+            background-color: var(--danger) !important;
+        }
+
+        .badge.bg-primary {
+            background-color: var(--primary) !important;
+        }
+
+        .badge.bg-success {
+            background-color: var(--success) !important;
+        }
+
+        .badge.bg-secondary {
+            background-color: var(--text-muted) !important;
+        }
+
+        /* ===== Специальные стили для Excursion Modal ===== */
+        .modal-xl {
+            --bs-modal-width: 900px; /* ширина extra large модалки */
+        }
+
+        .form-group-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .photo-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .photo-preview {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-preview .remove-photo {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(239, 68, 68, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .photo-preview .remove-photo:hover {
+            background: var(--danger);
+        }
+
+        .session-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .session-item .session-info {
+            flex-grow: 1;
+            color: var(--text-dark);
+        }
+
+        .session-item .session-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .session-item .session-actions .btn-sm {
+            padding: 0.3rem 0.5rem;
+        }
+
+        .tag-item {
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-md);
+            font-size: 0.8125rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tag-item .remove-tag {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 0.75rem;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s ease;
+        }
+
+        .tag-item .remove-tag:hover {
+            opacity: 1;
+        }
+
+        /* ===== Стили для input[type="file"] ===== */
+        input[type="file"] {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 0;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        input[type="file"]::-webkit-file-upload-button {
+            background: var(--primary);
+            color: white;
+            border: 0;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+            font-size: 0.875rem;
+            margin-right: 1rem;
+        }
+
+        input[type="file"]::-webkit-file-upload-button:hover {
+            background: var(--primary-hover);
+        }
+
+        /* ===== Адаптив ===== */
+        @media (max-width: 992px) {
+            #sidebar {
+                width: 200px;
+            }
+
+            #mainContent {
+                margin-left: 200px;
+            }
+
+            .main-header, .content-area {
+                padding: 1rem 1.25rem;
+            }
+
+            .header-title h1 {
+                font-size: 1.375rem;
+            }
+
+            .btn {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.8125rem;
+            }
+
+            .modal-xl {
+                --bs-modal-width: 95%; /* подгонка под небольшой экран */
+            }
+        }
+
+        @media (max-width: 768px) {
+            #sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                box-shadow: none;
+            }
+
+            #sidebar.show {
+                transform: translateX(0);
+                box-shadow: var(--shadow-card);
+            }
+
+            #mainContent {
+                margin-left: 0;
+            }
+
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            .modal-dialog {
+                margin: 0.5rem;
+            }
+
+            .modal-body {
+                padding: 1.25rem;
+            }
+
+            .modal-footer {
+                padding: 1rem 1.25rem;
+            }
+
+            .table th, .table td {
+                padding: 0.75rem 1rem;
+            }
+
+            .form-group-grid {
+                grid-template-columns: 1fr; /* все поля одна колонка */
+            }
+
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <!-- ===== Sidebar ===== -->
+    <nav id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-brand">
+                <div class="sidebar-brand-icon">
+                    <i class="fas fa-cogs"></i>
+                </div>
+                <div class="sidebar-brand-text">
+                    <h2>Админ панель</h2>
+                    <p>Управление системой</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-section">
+            <a href="#" id="btnUsers" class="nav-link active">
+                <i class="fas fa-users"></i>
+                <span>Пользователи</span>
+            </a>
+            <a href="#" id="btnRoles" class="nav-link">
+                <i class="fas fa-shield-alt"></i>
+                <span>Роли</span>
+            </a>
+            <a href="#" id="btnCategories" class="nav-link">
+                <i class="fas fa-folder"></i>
+                <span>Категории</span>
+            </a>
+            <a href="#" id="btnFormatTypes" class="nav-link">
+                <i class="fas fa-file-alt"></i>
+                <span>Типы форматов</span>
+            </a>
+            <a href="#" id="btnAgeCategories" class="nav-link">
+                <i class="fas fa-calendar"></i>
+                <span>Возрастные категории</span>
+            </a>
+            <a href="#" id="btnExcursions" class="nav-link">
+                <i class="fas fa-map-marked-alt"></i>
+                <span>События</span>
+            </a>
+            <a href="#" id="btnNews" class="nav-link">
+                <i class="fas fa-newspaper"></i>
+                <span>Новости</span>
+            </a>
+            <a href="#" id="btnReservations" class="nav-link">
+                <i class="fas fa-calendar-check"></i>
+                <span>Брони</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- ===== Main Content ===== -->
+    <div id="mainContent">
+        <!-- ===== Header ===== -->
+        <header class="main-header">
+            <div class="header-content">
+                <div class="header-title">
+                    <h1 id="pageTitle">Пользователи</h1>
+                    <p id="pageDescription">Управление конфигурацией системы</p>
+                </div>
+                <div class="header-actions">
+                    <button id="btnCreateUser" class="btn btn-success" data-bs-toggle="modal"
+                            data-bs-target="#createUserModal">
+                        <i class="fas fa-plus"></i> Создать пользователя
+                    </button>
+                    <button id="btnCreateRef" class="btn btn-success" style="display: none;"
+                            data-bs-toggle="modal" data-bs-target="#createRefModal">
+                        <i class="fas fa-plus"></i> Создать запись
+                    </button>
+                    <button id="btnCreateExcurs" class="btn btn-success" style="display: none;"
+                            data-bs-toggle="modal" data-bs-target="#excursionModal">
+                        <i class="fas fa-plus"></i> Создать событие
+                    </button>
+                    <button id="btnCreateNews" class="btn btn-success" style="display: none;"
+                            data-bs-toggle="modal" data-bs-target="#newsModal">
+                        <i class="fas fa-plus"></i> Создать новость
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- ===== Content Area ===== -->
+        <main class="content-area">
+            <div class="content-card">
+                <div id="contentArea">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Загрузка данных...
+                    </div>
+                    <!-- Здесь JS подставит реальные таблицы/контент -->
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- ===== Модальное окно: Создать пользователя ===== -->
+<div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow-sm border-0 rounded-4">
+            <div class="modal-header bg-success bg-opacity-10 rounded-top">
+                <h5 class="modal-title fw-bold mb-0 d-flex align-items-center gap-2" id="createUserModalLabel">
+                    <i class="fas fa-user-plus text-success fs-4"></i>
+                    Создать нового пользователя
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <form id="createUserForm" novalidate>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="email" class="form-label fw-semibold">
+                                Email <span class="text-danger">*</span>
+                            </label>
+                            <input type="email" id="email" class="form-control" placeholder="user@example.com"
+                                   required/>
+                            <div class="invalid-feedback">Пожалуйста, введите корректный Email.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="role_name" class="form-label fw-semibold">
+                                Роль <span class="text-danger">*</span>
+                            </label>
+                            <select id="role_name" class="form-select" required>
+                                <option value="" selected disabled>Выберите роль</option>
+                                <option value="user">Пользователь</option>
+                                <option value="resident">Резидент</option>
+                                <option value="admin">Администратор</option>
+                            </select>
+                            <div class="invalid-feedback">Пожалуйста, выберите роль.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="password" class="form-label fw-semibold">
+                                Пароль <span class="text-danger">*</span>
+                            </label>
+                            <input type="password" id="password" class="form-control" placeholder="Введите пароль"
+                                   required/>
+                            <div class="invalid-feedback">Пароль обязателен.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="full_name" class="form-label fw-semibold">ФИО</label>
+                            <input type="text" id="full_name" class="form-control" placeholder="Полное имя"/>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label fw-semibold">Телефон</label>
+                            <input type="tel" id="phone" class="form-control" placeholder="+7 (999) 123-45-67"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Отмена
+                    </button>
+                    <button type="submit" class="btn btn-success d-flex align-items-center gap-2">
+                        <i class="fas fa-save"></i> Создать пользователя
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Модальное окно: Редактировать пользователя ===== -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow-sm border-0 rounded-4">
+            <div class="modal-header bg-primary bg-opacity-10 rounded-top">
+                <h5 class="modal-title fw-bold mb-0 d-flex align-items-center gap-2" id="editUserModalLabel">
+                    <i class="fas fa-user-edit text-primary fs-4"></i>
+                    Редактировать пользователя
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <form id="editUserForm" novalidate>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="edit_email" class="form-label fw-semibold">
+                                Email
+                            </label>
+                            <input type="email" id="edit_email" class="form-control" disabled/>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_role_name" class="form-label fw-semibold">
+                                Роль <span class="text-danger">*</span>
+                            </label>
+                            <select id="edit_role_name" class="form-select" required>
+                                <option value="" selected disabled>Выберите роль</option>
+                                <option value="user">Пользователь</option>
+                                <option value="resident">Резидент</option>
+                                <option value="admin">Администратор</option>
+                            </select>
+                            <div class="invalid-feedback">Пожалуйста, выберите роль.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_password" class="form-label fw-semibold">
+                                Пароль (оставьте пустым, если не меняете)
+                            </label>
+                            <input type="password" id="edit_password" class="form-control"
+                                   placeholder="Введите новый пароль"/>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_full_name" class="form-label fw-semibold">ФИО</label>
+                            <input type="text" id="edit_full_name" class="form-control"/>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_phone" class="form-label fw-semibold">Телефон</label>
+                            <input type="tel" id="edit_phone" class="form-control"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Отмена
+                    </button>
+                    <button type="submit" class="btn btn-primary d-flex align-items-center gap-2">
+                        <i class="fas fa-save"></i> Сохранить изменения
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- ===== Модалка: Создать запись (References) ===== -->
+<div class="modal fade" id="createRefModal" tabindex="-1"
+     aria-labelledby="createRefModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered"> <!-- Центрирование модалки -->
+        <form id="createRefForm" class="modal-content shadow-sm border-0 rounded-4">
+            <div class="modal-header bg-success bg-opacity-10 rounded-top d-flex align-items-center gap-2">
+                <i class="fas fa-plus-circle text-success fs-4"></i>
+                <h5 class="modal-title fw-bold mb-0" id="createRefModalLabel">Создать новую запись</h5>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="refNameInput" class="form-label fw-semibold">Название</label>
+                    <input type="text" class="form-control" id="refNameInput" required placeholder="Введите название">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary"
+                        data-bs-dismiss="modal">
+                    Отмена
+                </button>
+                <button type="submit" class="btn btn-success">
+                    Создать
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- ===== Модалка: Создать/Редактировать Событие (Excursion) ===== -->
+<div class="modal fade" id="excursionModal" tabindex="-1" role="dialog" aria-labelledby="excursionModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
+        <div class="modal-content shadow-sm border-0 rounded-4">
+            <div class="modal-header bg-primary bg-opacity-10 rounded-top d-flex align-items-center gap-2">
+                <i class="fas fa-route text-primary fs-4"></i>
+                <h5 class="modal-title fw-bold mb-0">Событие</h5>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Название -->
+                <div class="mb-4">
+                    <label for="modalTitle" class="form-label fw-semibold">Название события</label>
+                    <input type="text" id="modalTitle" class="form-control form-control-lg"
+                           placeholder="Название события"/>
+                </div>
+
+                <!-- Описание -->
+                <div class="mb-4">
+                    <label for="modalDescription" class="form-label fw-semibold">Описание</label>
+                    <textarea id="modalDescription" class="form-control" rows="3" placeholder="Описание"></textarea>
+                </div>
+
+                <!-- Основная информация -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label for="modalCategory" class="form-label fw-semibold">Категория</label>
+                        <select id="modalCategory" class="form-select">
+                            <option value="" disabled selected>Выберите категорию</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="modalFormat" class="form-label fw-semibold">Формат</label>
+                        <select id="modalFormat" class="form-select">
+                            <option value="" disabled selected>Выберите формат</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="modalAgeCategory" class="form-label fw-semibold">Возраст</label>
+                        <select id="modalAgeCategory" class="form-select">
+                            <option value="" disabled selected>Выберите возраст</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="modalIsActive" class="form-label fw-semibold">Активна</label>
+                        <select id="modalIsActive" class="form-select">
+                            <option value="true">Да</option>
+                            <option value="false">Нет</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="modalDuration" class="form-label fw-semibold">Продолжительность (мин)</label>
+                        <input type="number" id="modalDuration" class="form-control" placeholder="Продолжительность"
+                               min="0"/>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="modalPlace" class="form-label fw-semibold">Место</label>
+                        <input type="text" id="modalPlace" class="form-control" placeholder="Место проведения"/>
+                    </div>
+                </div>
+
+                <!-- Контакты и логистика -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label for="modalConductedBy" class="form-label fw-semibold">Проводит</label>
+                        <input type="text" id="modalConductedBy" class="form-control" placeholder="ФИО организатора"/>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="modalWorkingHours" class="form-label fw-semibold">Часы работы</label>
+                        <input type="text" id="modalWorkingHours" class="form-control" placeholder="Напр. 10:00-18:00"/>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="modalContactEmail" class="form-label fw-semibold">Email</label>
+                        <input type="email" id="modalContactEmail" class="form-control" placeholder="Контактный email"/>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="modalTelegram" class="form-label fw-semibold">Telegram</label>
+                        <input type="text" id="modalTelegram" class="form-control" placeholder="@example"/>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="modalVk" class="form-label fw-semibold">VK</label>
+                        <input type="text" id="modalVk" class="form-control" placeholder="Ссылка на VK"/>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="modalDistance" class="form-label fw-semibold">До центра (км)</label>
+                        <input type="number" id="modalDistance" class="form-control" step="0.1" placeholder="0.0"
+                               min="0"/>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="modalTimeToStop" class="form-label fw-semibold">До остановки (мин)</label>
+                        <input type="number" id="modalTimeToStop" class="form-control" step="1" placeholder="0"
+                               min="0"/>
+                    </div>
+                </div>
+
+                <!-- Iframe -->
+                <div class="mb-4">
+                    <label for="modalIframe" class="form-label fw-semibold">Ссылка на iframe</label>
+                    <input type="text" id="modalIframe" class="form-control"
+                           placeholder="Ссылка на карту/видео и т.д."/>
+                </div>
+
+                <!-- Фотографии -->
+                <h6 class="fw-bold mb-2">Фотографии</h6>
+                <div id="modalPhotos"
+                     class="photo-preview-container mb-3 rounded border border-secondary border-opacity-25 p-2">
+                    <!-- JS сюда добавит .photo-preview -->
+                </div>
+                <div id="photoDropZone" class="d-flex align-items-center gap-3 border rounded p-3 mb-2"
+                     style="border-style: dashed;">
+                    <input type="file" id="modalPhotoUpload" multiple accept="image/*"
+                           class="form-control-file flex-grow-1"/>
+                    <button type="button" id="btnAddPhoto" class="btn btn-primary">
+                        <i class="fas fa-camera"></i> Добавить фото
+                    </button>
+                </div>
+                <div id="dropMessage" class="text-muted small mb-4">Или перетащите фотографии сюда</div>
+
+                <!-- Сессии -->
+                <h6 class="fw-bold mb-2">Сессии</h6>
+                <div id="modalSessions" class="mb-3">
+                    <!-- JS добавит .session-item -->
+                </div>
+                <button type="button" id="btnAddSession" class="btn btn-outline-primary mb-4" data-bs-toggle="modal"
+                        data-bs-target="#sessionModal">
+                    <i class="fas fa-plus"></i> Добавить сессию
+                </button>
+
+                <!-- Теги -->
+                <h6 class="fw-bold mb-2">Теги</h6>
+                <div id="modalTags" class="d-flex flex-wrap gap-2 mb-4">
+                    <!-- JS добавит .tag-item -->
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Отмена
+                </button>
+                <button type="button" id="modalSave" class="btn btn-success">
+                    <i class="fas fa-save"></i> Сохранить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ===== Модалка: Сессия ===== -->
+<div class="modal fade" id="sessionModal" tabindex="-1" role="dialog"
+     aria-labelledby="sessionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+        <div class="modal-content shadow-sm border-0 rounded-4">
+            <div class="modal-header bg-success bg-opacity-10 rounded-top d-flex align-items-center gap-2">
+                <i class="fas fa-calendar-plus text-success fs-4"></i>
+                <h5 class="modal-title fw-bold mb-0" id="sessionModalLabel">
+                    Добавить сессию
+                </h5>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+
+            <div class="modal-body">
+                <form id="sessionForm">
+                    <input type="hidden" id="editingSessionId"/>
+
+                    <div class="mb-3">
+                        <label for="sessionDatetimeModal" class="form-label fw-semibold">
+                            Дата и время
+                        </label>
+                        <input type="datetime-local" class="form-control" id="sessionDatetimeModal" required/>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="sessionCostModal" class="form-label fw-semibold">
+                            Стоимость (₽)
+                        </label>
+                        <input type="number" step="100" min="0" class="form-control" id="sessionCostModal"
+                               placeholder="Введите стоимость" required/>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="sessionMaxParticipantsModal" class="form-label fw-semibold">
+                            Максимум участников
+                        </label>
+                        <input type="number" min="1" class="form-control" id="sessionMaxParticipantsModal"
+                               placeholder="Например, 15" required/>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Отмена
+                </button>
+                <button type="button" class="btn btn-success" id="saveSessionModalBtn">
+                    <i class="fas fa-save"></i> Сохранить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="newsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header rounded-top" id="newsModalHeader">
+                <h5 class="modal-title fw-bold mb-0 d-flex align-items-center gap-2" id="newsModalTitle">
+                    <i id="newsModalIcon" class="fas fa-newspaper fs-4"></i>
+                    <span id="newsModalText">Создать новость</span>
+                </h5>
+
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <input type="text" id="newsTitle" class="form-control mb-2" placeholder="Заголовок">
+                <textarea id="newsContent" class="form-control mb-2" placeholder="Содержимое"></textarea>
+
+                <input type="file" id="newsImages" class="form-control mb-2" multiple style="display:none;">
+                <!-- можно скрыть, если не нужен -->
+                <div id="newsPhotoPreview" class="d-flex flex-wrap gap-2"></div>
+
+                <!-- Новый блок для загрузки фото -->
+                <div id="photoDropZoneNews" class="d-flex align-items-center gap-3 border rounded p-3 mb-2"
+                     style="border-style: dashed;">
+                    <input type="file" id="newsPhotoUpload" multiple accept="image/*"
+                           class="form-control-file flex-grow-1"/>
+                    <button type="button" id="btnUploadPhotoNews" class="btn btn-primary">
+                        <i class="fas fa-camera"></i> Добавить фото
+                    </button>
+                </div>
+                <div id="dropMessage" class="text-muted small mb-4">Или перетащите фотографии сюда</div>
+                <input type="text" id="PhotoAuthor" class="form-control mb-2" placeholder="Автор фото">
+            </div>
+
+            <div class="modal-footer">
+                <button id="saveNewsBtn" class="btn btn-success">Сохранить</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="reservationModal" tabindex="-1"
+     aria-labelledby="reservationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow rounded-4">
+            <div class="modal-header bg-primary bg-opacity-10 rounded-top-4 d-flex align-items-center">
+                <i class="fas fa-ticket-alt text-primary fs-4 me-2"></i>
+                <h5 class="modal-title fw-bold mb-0" id="reservationModalLabel">
+                    Детали бронирования
+                </h5>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"
+                        aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body bg-light bg-opacity-25 px-4 py-3">
+                <!-- Контент для деталей брони будет сюда динамически вставляться -->
+                <div id="reservationDetails" class="small">
+                    <p>Загрузка данных...</p>
+                </div>
+            </div>
+            <div class="modal-footer bg-white rounded-bottom-4">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> Закрыть
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="participantsModal" tabindex="-1" aria-labelledby="participantsModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary bg-opacity-10 rounded-top d-flex align-items-center gap-2">
+                <i class="fas fa-user-circle text-primary fs-4"></i>
+                <h5 class="modal-title fw-bold mb-0">Участник сессии</h5>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+
+            <div class="modal-body">
+                <ul id="participantsList" class="list-group">
+                    <!-- Сюда динамически вставляем участников -->
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="loading-spinner" style="display: none;">
+  <div class="spinner-overlay">
+    <div class="spinner-border text-light" role="status">
+      <span class="visually-hidden">Загрузка...</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .spinner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+</style>
+
+
+
+
+
+<div id="notificationArea" class="position-fixed top-0 end-0 p-3" style="z-index: 1100;"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+<script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+<script src="{{ url_for('static', filename='js/users.js') }}"></script>
+<script src="{{ url_for('static', filename='js/references.js') }}"></script>
+<script src="{{ url_for('static', filename='js/excursions.js') }}"></script>
+<script src="{{ url_for('static', filename='js/news.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/reservations.js') }}"></script>
+
+<script src="https://unpkg.com/tabulator-tables@5.6.1/dist/js/tabulator.min.js"></script>
+</body>
+</html>
+

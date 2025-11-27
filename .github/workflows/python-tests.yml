@@ -2,9 +2,9 @@ name: Run Python Tests
 
 on:
   push:
-    branches: [ summer-practice ]
+    branches: [ main-backend ]
   pull_request:
-    branches: [ summer-practice ]
+    branches: [ main-backend ]
 
 jobs:
   test:

@@ -1,0 +1,44 @@
+# Виртуальное окружение
+.venv/
+venv/
+env/
+
+# Конфигурационные файлы IDE
+.idea/
+.vscode/
+
+# Кеши Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Логи и временные файлы
+*.log
+*.sqlite3
+instance/
+.env
+.env.local
+.env.*.bkp
+
+# Миграции Alembic
+migrations/versions/
+
+# Базы данных
+*.db
+*.sqlite
+
+# Docker
+docker-compose.override.yml
+
+# Node.js (если есть фронтенд)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Разное
+.DS_Store
+Thumbs.db
+/backend/migrations/
+/backend/media/
+/media/

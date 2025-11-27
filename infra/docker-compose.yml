@@ -1,0 +1,52 @@
+services:
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: flask-backend
+    volumes:
+      - ../media:/app/media
+      - ../backend/static:/app/static
+      - ./sqlite:/app/instance
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - ../.env
+
+  nginx:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    volumes:
+      - ../media:/app/media:ro
+      - ../backend/static:/app/static:ro
+    restart: unless-stopped
+    env_file:
+      -
+      - ../.env
+
+  db:
+    image: postgres:14
+    container_name: postgres-db
+    restart: always
+    env_file:
+      - ../.env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+
+volumes:
+  pgdata:
