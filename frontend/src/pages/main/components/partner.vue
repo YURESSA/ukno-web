@@ -30,9 +30,12 @@
 .partners-block{
   display: flex;
   justify-content: space-around;
-  border: 1px solid white;
   border-radius: 36px;
   padding: 45px 0;
+}
+
+.partners-block > img{
+  width: 82px;
 }
 
 .container{

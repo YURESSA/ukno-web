@@ -6,9 +6,12 @@ import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
 import App from './App.vue'
 import router from './router/index.js'
+<<<<<<< HEAD
 
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
+=======
+>>>>>>> main-frontend
 
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)

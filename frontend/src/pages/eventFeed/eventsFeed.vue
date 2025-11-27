@@ -1,7 +1,7 @@
 <template>
-  <div class="page-wrapper">
+  <div class="page-wrapper page--margin">
     <div class="feed-wrapper">
-      <h3>Подбери <span class="orange">событие</span> на свой вкус</h3>
+      <h3>Подбери <span class="text-orange">событие</span> на свой вкус</h3>
       <div class="feed-actions">
         <n-input
           v-model:value="searchQuery"
@@ -38,7 +38,7 @@
             />
           </div>
           <div class="filter">
-            <IconButton class="sort--btn" text="Фильрты" @click="openFilter"><img src="/icon/filter/filter.svg" alt=""></IconButton>
+            <IconButton class="sort--btn" text="Фильтры" @click="openFilter"><img src="/icon/filter/filter.svg" alt=""></IconButton>
           </div>
         </div>
       </div>
@@ -97,13 +97,12 @@ onMounted(async () => {
 });
 
 function openFilter() {
-  const feedWrapper = document.querySelector('.feed-wrapper');
   document.body.style.overflow = 'hidden'
   isFilterOpen.value = true;
-  feedWrapper.scrollIntoView({
-          behavior: 'smooth',  // Плавная прокрутка
-          block: 'start'      // Выравнивание по верхнему краю
-        });
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
 }
 
 function closeFilter(){
@@ -177,18 +176,6 @@ const sendSearch = async () => {
   z-index: 99;
 }
 
-.page-wrapper::before {
-  content: '';
-  position: absolute;
-  top: -120px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url('/backgroung/eventsFeed.png') no-repeat;
-  background-size: 100% auto;
-  z-index: -1;
-}
-
 .feed-wrapper {
   display: flex;
   flex-direction: column;
@@ -201,7 +188,7 @@ h3{
   margin-bottom: 30px;
 }
 
-.orange{
+.text-orange{
   color: #F25C03;
 }
 

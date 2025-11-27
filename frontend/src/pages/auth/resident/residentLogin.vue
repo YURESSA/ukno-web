@@ -1,10 +1,18 @@
 <template>
   <div class="page-wrapper">
     <div class="login-wrapper">
+<<<<<<< HEAD
       <h3>Вход для резидента</h3>
       <form @submit.prevent="handleSubmit">
         <input
           type="username"
+=======
+      <form @submit.prevent="handleSubmit">
+        <h3>Вход для резидента</h3>
+        <input
+          type="username"
+          class="text-l text-medium"
+>>>>>>> main-frontend
           name="username"
           placeholder="e-mail *"
           v-model="formData.email"
@@ -13,6 +21,10 @@
         >
         <input
           type="password"
+<<<<<<< HEAD
+=======
+          class="text-l text-medium"
+>>>>>>> main-frontend
           name="password"
           placeholder="Пароль *"
           v-model="formData.password"
@@ -21,7 +33,10 @@
         >
         <DefaultButton type="submit" class="sumbit--btn" text="Войти"/>
       </form>
+<<<<<<< HEAD
       <span>У ВАС НЕТ АККАУНТА? <RouterLink to="register"><span class="orange">ЗАРЕГЕСТРИРОВАТЬСЯ</span></RouterLink></span>
+=======
+>>>>>>> main-frontend
     </div>
   </div>
 </template>
@@ -43,8 +58,14 @@ const formData = ref({
 const handleSubmit = async () => {
   try {
     await store.PostLoginResident(JSON.stringify(formData.value));
+<<<<<<< HEAD
     alert('Вход выполнен успешно!');
     router.push('/');
+=======
+    await store.GetResidentProfile();
+    alert('Вход выполнен успешно!');
+    router.back();
+>>>>>>> main-frontend
   } catch (error) {
     if (error.response?.status === 401) {
       alert('Неверные учетные данные');
@@ -60,6 +81,7 @@ const handleSubmit = async () => {
 .page-wrapper {
   display: flex;
   justify-content: center;
+<<<<<<< HEAD
   position: relative;
   min-height: calc(100vh - 188px - 246px)
 }
@@ -74,6 +96,12 @@ const handleSubmit = async () => {
   background: url('/backgroung/eventsFeed.png') no-repeat;
   background-size: 100% auto;
   z-index: -1;
+=======
+  align-items: center;
+  position: relative;
+  height: 100%;
+  padding: 0px;
+>>>>>>> main-frontend
 }
 
 .login-wrapper {
@@ -81,31 +109,57 @@ const handleSubmit = async () => {
   flex-direction: column;
   justify-content: center;
   max-width: 1800px;
+<<<<<<< HEAD
   position: relative;
 }
 
 h3{
   margin-bottom: 40px;
+=======
+  max-height: max-content;
+  position: relative;
+  z-index: 99;
+>>>>>>> main-frontend
 }
 
 form {
   display: flex;
   flex-direction: column;
+<<<<<<< HEAD
   gap: 50px;
   max-width: 600px;
   margin-bottom: 30px;
+=======
+  gap: 30px;
+  width: 624px;
+  border: 2px solid #f25c03;
+  border-radius: 38px;
+  padding: 40px 30px 30px 30px;
+  backdrop-filter: blur(16.5px);
+  background: rgba(255, 255, 255, 0.52);
+  transform: translateY(-50px);
+>>>>>>> main-frontend
 }
 
 input {
   padding: 15px 0;
   border: none;
   border-bottom: 1px solid #0000008C;
+<<<<<<< HEAD
   transition: all 0.5s ease;
+=======
+  transition: background-color 99999999s ease;
+  margin-bottom: 20px;
+  background: rgba(255, 255, 255, 0);
+>>>>>>> main-frontend
 }
 
 input:focus {
   outline: none;
+<<<<<<< HEAD
   background-color: #F3F3F3;
+=======
+>>>>>>> main-frontend
 }
 
 .sumbit--btn{
@@ -113,10 +167,18 @@ input:focus {
   padding: 20px;
   border-radius: 30px;
   border: 2px solid #333333;
+<<<<<<< HEAD
   background-color: white;
 }
 
 .orange{
+=======
+  background-color: rgba(255, 255, 255, 0);
+  margin-top: 10px;
+}
+
+.text-orange{
+>>>>>>> main-frontend
   color: #F25C03;
 }
 
@@ -127,4 +189,11 @@ input:focus {
   font-weight: 700;
   display: block;
 }
+<<<<<<< HEAD
+=======
+
+span{
+  text-align: center;
+}
+>>>>>>> main-frontend
 </style>

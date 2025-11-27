@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
+import router from '@/router'
 
-export const baseUrl = 'http://127.0.0.1:5000/'
+export const baseUrl = import.meta.env.VITE_FRONTEND_URL;
 
 // export const baseUrl = 'https://yuressa.uxp.ru/'
 
@@ -14,6 +15,11 @@ export const useDataStore = defineStore('data', {
     excursionDetail: [],
     profileData: [],
     reservationsData: [],
+<<<<<<< HEAD
+=======
+    newsData: [],
+    excursionsStats: [],
+>>>>>>> main-frontend
   }),
   actions: {
     setTokenRole(auth_key, role) {
@@ -23,6 +29,10 @@ export const useDataStore = defineStore('data', {
     clearTokenRole() {
       this.auth_key = ''
       this.role = ''
+<<<<<<< HEAD
+=======
+      this.profileData = []
+>>>>>>> main-frontend
     },
     deletEvent() {
       this.residentExcursions = []
@@ -42,7 +52,7 @@ export const useDataStore = defineStore('data', {
     },
     async PostLoginUser(jsonData) {
       try {
-        const response = await axios.post(`${baseUrl}/api/user/login`, jsonData, {
+        const response = await axios.post(`${baseUrl}/api/login`, jsonData, {
           headers: {
             'Content-Type': 'application/json',
           },
@@ -130,6 +140,22 @@ export const useDataStore = defineStore('data', {
         throw error
       }
     },
+    async FetchExcursionDetailResident(excursion_id) {
+      try {
+        const response = await axios.get(`${baseUrl}/api/resident/excursions/${excursion_id}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${this.auth_key}`
+            }
+          }
+        );
+        console.log('Данные успешно получены:', response.data)
+        this.excursionDetail = response.data
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
     async PostReservation(jsonData) {
       try {
         const response = await axios.post(`${baseUrl}/api/user/v2/reservations`, jsonData, {
@@ -138,7 +164,15 @@ export const useDataStore = defineStore('data', {
             'Content-Type': 'application/json',
           },
         })
+<<<<<<< HEAD
         window.location.href = response.data.payment_url
+=======
+        if (response.data.payment_url) {
+          window.location.href = response.data.payment_url;
+        } else {
+          console.log('Бронирование прошло успешно!')
+        }
+>>>>>>> main-frontend
       } catch (error) {
         console.log(this.auth_key)
         console.error('Ошибка при бронировании:', error.response?.data || error.message)
@@ -190,16 +224,25 @@ export const useDataStore = defineStore('data', {
         throw error
       }
     },
+<<<<<<< HEAD
     async DeleteReservation(jsonData) {
       try {
         console.log(jsonData)
         console.log(`Bearer ${this.auth_key}`)
 
         const response = await axios.delete(`${baseUrl}/api/user/v2/reservations`, {
+=======
+    async DeleteReservation(delet_id) {
+      try {
+        const jsonData = JSON.stringify(delet_id)
+        const response = await axios.delete(`${baseUrl}/api/user/v2/reservations`, {
+          data: jsonData,
+>>>>>>> main-frontend
           headers: {
             Authorization: `Bearer ${this.auth_key}`,
             'Content-Type': 'application/json',
           },
+<<<<<<< HEAD
           data: jsonData,
         })
 
@@ -208,6 +251,10 @@ export const useDataStore = defineStore('data', {
         this.reservationsData = this.reservationsData.filter(
           (reservation) => reservation.reservation_id !== jsonData.reservation_id,
         )
+=======
+        })
+        console.log('Данные бронирования успешно удалены:', response.data)
+>>>>>>> main-frontend
       } catch (error) {
         console.error(
           'Ошибка при удалении данных бронирования:',
@@ -216,13 +263,20 @@ export const useDataStore = defineStore('data', {
         throw error
       }
     },
+<<<<<<< HEAD
 
+=======
+>>>>>>> main-frontend
     async PostNewEvent(formData) {
       try {
         const response = await axios.post(`${baseUrl}/api/resident/excursions`, formData, {
           headers: {
             Authorization: `Bearer ${this.auth_key}`,
+<<<<<<< HEAD
             'Content-Type': 'multipart/form-data', // Важно для FormData!
+=======
+            'Content-Type': 'multipart/form-data',
+>>>>>>> main-frontend
           },
         })
         console.log('Upload success:', response.data)
@@ -246,7 +300,27 @@ export const useDataStore = defineStore('data', {
         throw error
       }
     },
+<<<<<<< HEAD
     async DeletSession(eventId, sessionId) {
+=======
+    async DeletEvent(eventId, sessionId) {
+      try {
+        const response = await axios.delete(
+          `${baseUrl}/api/resident/excursions/${eventId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${this.auth_key}`,
+            },
+          },
+        )
+        console.log('Событие успешно удалено:', response.data)
+      } catch (error) {
+        console.error('Ошибка при удалении:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async DeleteSession(eventId, sessionId) {
+>>>>>>> main-frontend
       try {
         const response = await axios.delete(
           `${baseUrl}/api/resident/excursions/${eventId}/sessions/${sessionId}`,
@@ -262,16 +336,101 @@ export const useDataStore = defineStore('data', {
         throw error
       }
     },
+<<<<<<< HEAD
+=======
+    async DeletePhoto(eventId, photoId) {
+      try {
+        const response = await axios.delete(
+          `${baseUrl}/api/resident/excursions/${eventId}/photos/${photoId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${this.auth_key}`,
+            },
+          },
+        )
+        console.log('Фото успешно удалено:', response.data)
+      } catch (error) {
+        console.error('Ошибка при удалении фото:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async PatchSessionData(excursion_id, jsonData) {
+      try {
+        const response = await axios.patch(`${baseUrl}/api/resident/excursions/${excursion_id}`, jsonData, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+            'Content-Type': 'application/json'
+          },
+        })
+        console.log('Сессия успешно обновлена:', response.data)
+      } catch (error) {
+        console.error('Ошибка при обновлении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async PostNewPhoto(excursion_id, formData) {
+      try {
+        const response = await axios.post(`${baseUrl}/api/resident/excursions/${excursion_id}/photos`, formData, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+          },
+        })
+        console.log('Фото успешно добавлено:', response.data)
+      } catch (error) {
+        console.error('Ошибка при добавлении фото:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async PostNewSession(excursion_id, jsonData) {
+      try {
+        const response = await axios.post(`${baseUrl}/api/resident/excursions/${excursion_id}/sessions`, jsonData, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+            'Content-Type': 'application/json'
+          },
+        })
+        console.log('Сессия успешно добавлена:', response.data)
+      } catch (error) {
+        console.error('Ошибка при создании:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async FetchNews() {
+      try {
+        const response = await axios.get(`${baseUrl}/api/user/news`)
+        console.log('Новости успешно получены:', response.data)
+        this.newsData = response.data
+      } catch (error) {
+        console.error('Ошибка при получении новостей:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async FetchExcursionsStats(){
+      try {
+        const response = await axios.get(`${baseUrl}/api/references/excursion-stats`)
+        console.log('Данные успешно получены:', response.data)
+        this.excursionsStats = response.data
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    }
+>>>>>>> main-frontend
   },
   getters: {
     getProfileData: (state) => state.profileData,
     getExcursions: (state) => state.excursions,
     getExcursionDetail: (state) => state.excursionDetail,
     getResidentEvents: (state) => state.residentExcursions,
+<<<<<<< HEAD
+=======
+    getNews: (state) => state.newsData,
+    getExcursionsStats: (state) => state.excursionsStats
+>>>>>>> main-frontend
   },
   persist: {
     key: 'data-store',
     storage: window.localStorage,
-    paths: ['auth_key', 'excursions'],
+    paths: ['auth_key', 'excursions', 'excursionsStats'],
   },
 })

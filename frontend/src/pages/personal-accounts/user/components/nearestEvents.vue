@@ -20,7 +20,11 @@
           <div class="card-wrapper">
             <h5>{{ reservation.excursion_title }}</h5>
             <!-- <p>{{ getExcursionDescription(reservation.excursion_id) }}</p> -->
+<<<<<<< HEAD
             <p>{{ formatDateTime(reservation.session_start_datetime) }} | Старт у фонтана</p>
+=======
+            <p>{{ formatDateTime(reservation.session_start_datetime) }} | {{ reservation.place }}</p>
+>>>>>>> main-frontend
             <p>Участников: {{ reservation.participants_count }}</p>
             <div class="price">
               <span>{{ formatPrice(reservation.total_cost) }} ₽</span>
@@ -71,6 +75,7 @@ const formatPrice = (price) => {
 
 
 async function deletReserv(id){
+<<<<<<< HEAD
 
   const delet_id = {reservation_id: id}
     console.log(delet_id)
@@ -79,6 +84,21 @@ async function deletReserv(id){
   } catch (error) {
     console.error('Ошибка при удалении:', error);
   }
+=======
+  const delet_id = {reservation_id: id}
+  try {
+    await store.DeleteReservation(delet_id);
+  } catch (error) {
+    console.error('Ошибка при удалении:', error);
+  }
+  for (const e of filteredReservations.value) {
+      if (e.reservation_id === id) {
+          e.is_cancelled = true;
+          break;
+      }
+  }
+  console.log(filteredReservations)
+>>>>>>> main-frontend
 }
 </script>
 
@@ -104,6 +124,10 @@ async function deletReserv(id){
 :deep(.n-carousel__arrow-group) {
   bottom: 50%!important;
   transform: translateY(50%);
+<<<<<<< HEAD
+=======
+  right: -80px!important;
+>>>>>>> main-frontend
 }
 
 :deep(.n-carousel__dots ) {
@@ -138,7 +162,7 @@ async function deletReserv(id){
   gap: 20px;
   padding: 40px;
 
-  width: 300px;
+  width: 400px;
   border-radius: 14px;
   border: 1px solid #DEDEDE;
   margin-bottom: 10px;

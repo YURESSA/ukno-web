@@ -26,7 +26,11 @@
         <span class="error-message" v-if="showErrors && errors.password">{{ errors.password }}</span>
         <DefaultButton type="submit" class="sumbit--btn" text="Войти"/>
       </form>
+<<<<<<< HEAD
       <span>У ВАС НЕТ АККАУНТА? <RouterLink to="register"><span class="orange">ЗАРЕГЕСТРИРОВАТЬСЯ</span></RouterLink></span>
+=======
+      <span>У ВАС НЕТ АККАУНТА? <RouterLink to="register"><span class="text-orange">ЗАРЕГИСТРИРОВАТЬСЯ</span></RouterLink></span>
+>>>>>>> main-frontend
     </div>
   </div>
 </template>
@@ -36,6 +40,10 @@ import { ref } from 'vue';
 import DefaultButton from '@/components/UI/button/DefaultButton.vue';
 import { useDataStore } from '@/stores/counter';
 import router from '@/router';
+<<<<<<< HEAD
+=======
+import { notification } from '@/utils/notification'
+>>>>>>> main-frontend
 
 const store = useDataStore();
 const showErrors = ref(false);
@@ -83,6 +91,7 @@ const handleSubmit = async () => {
   }
   try {
     await store.PostLoginAdmin(JSON.stringify(formData.value));
+<<<<<<< HEAD
     alert('Вход выполнен успешно!');
     router.push('/');
   } catch (error) {
@@ -90,6 +99,15 @@ const handleSubmit = async () => {
       alert('Неверные учетные данные');
     } else {
       alert('Произошла ошибка при входе');
+=======
+    notification('Вход выполнен успешно!', 'positive')
+    router.push('/');
+  } catch (error) {
+    if (error.response?.status === 401) {
+      notification('Неверные учетные данные', 'negative')
+    } else {
+      notification('Произошла ошибка при входе', 'negative')
+>>>>>>> main-frontend
     }
     console.error('Ошибка входа', error);
   }
@@ -156,7 +174,11 @@ input:focus {
   background-color: white;
 }
 
+<<<<<<< HEAD
 .orange{
+=======
+.text-orange{
+>>>>>>> main-frontend
   color: #F25C03;
 }
 

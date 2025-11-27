@@ -41,7 +41,6 @@
 
 <style scoped>
 .contact-wrapper{
-  padding: 40px 30px;
   max-width: 1800px;
   margin: 0 auto;
 }

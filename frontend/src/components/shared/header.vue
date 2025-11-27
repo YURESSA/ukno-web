@@ -1,37 +1,50 @@
 <template>
   <div class="header-wrapper">
-    <div class="header">
-      <div class="logo">
-        <RouterLink to="/"><img src="/logo/logo.svg" alt=""></RouterLink>
-      </div>
+    <nav class="nav-wrapper">
+      <ul class="nav-list">
+        <li class="project">
+          Проекты
+          <ul class="project-list">
+            <li>Психологический клуб</li>
+            <li>Репетиторский клуб</li>
+            <li>Музейное пространство</li>
+          </ul>
+        </li>
+        <li><RouterLink to="/events">События</RouterLink></li>
+        <li>
+          <div class="logo">
+            <RouterLink to="/"><img src="/logo/logo.svg" alt=""></RouterLink>
+          </div>
+        </li>
+        <li><RouterLink to="/news">Новости</RouterLink></li>
+        <li><RouterLink :to="{ path: '/ukno'}" replace >О нас</RouterLink></li>
+      </ul>
       <div class="profile">
         <RouterLink to="/login" v-if="hasToken">
           <button>
-            Личный кабинет
-            <img src="/icon/header/iconamoon_profile-fill.svg" alt="">
+            <img src="/icon/header/profile-fill.svg" alt="">
           </button>
         </RouterLink>
         <RouterLink to="/profile" v-else-if="!hasToken & role === 'user'">
+<<<<<<< HEAD
           <button>
             Личный кабинет
             <img src="/icon/header/iconamoon_profile-fill.svg" alt="">
           </button>
         </RouterLink>
         <RouterLink to="/resident-profile" v-else-if="!hasToken & role === 'resident'">
+=======
+>>>>>>> main-frontend
           <button>
-            Личный кабинет
-            <img src="/icon/header/iconamoon_profile-fill.svg" alt="">
+            <h4>{{ profileData.full_name[0].toUpperCase() }}</h4>
+          </button>
+        </RouterLink>
+        <RouterLink to="/resident-profile" v-else-if="!hasToken & role === 'resident'">
+          <button>
+            <h4>{{ profileData.full_name[0].toUpperCase() }}</h4>
           </button>
         </RouterLink>
       </div>
-    </div>
-    <nav>
-      <ul class="nav-list">
-        <li><RouterLink :to="{ path: '/', hash: '#news' }" replace >О НАС</RouterLink></li>
-        <li><RouterLink to="/events">СОБЫТИЯ</RouterLink></li>
-        <li><RouterLink :to="{ path: '/', hash: '#news' }" replace >НОВОСТИ</RouterLink></li>
-        <li><RouterLink :to="{ path: '/', hash: '#contact' }" replace >КОНТАКТЫ</RouterLink></li>
-      </ul>
     </nav>
   </div>
 </template>
@@ -50,44 +63,99 @@ const hasToken = computed(() => {
 const role = computed(() => {
   return store.role;
 });
+<<<<<<< HEAD
+=======
+
+const profileData = computed(() => store.getProfileData)
+>>>>>>> main-frontend
 
 </script>
 
 <style scoped>
 
 .header-wrapper{
-  padding: 10px;
+  width: calc(100% - 90px);
+  position: fixed;
+  padding: 28px 45px;
+  backdrop-filter: blur(28.399999618530273px);
+  background: rgba(255, 255, 255, 0.7);
+  z-index: 900;
 }
 
-.header{
-  display: flex;
-  justify-content: space-between;
-  padding: 0 30px;
+.nav-wrapper{
+  position: relative;
 }
 
 .nav-list{
+  width: 80%;
+  margin: 0 auto;
   justify-content: space-around;
+  align-items: center;
+  transform: translateX(28px);
 }
 
-nav{
-  padding: 10px 30px;
-  border-top: 1px solid #333333;
-  border-bottom: 1px solid #333333;
+.profile{
+  position: absolute;
+  right: 45px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 button{
   display: flex;
   align-items: center;
-  padding: 0;
-  padding-left: 30px;
-  justify-content: end;
-  gap: 15px;
-  background: none;
-  border: 1px solid #333333;
+  width: 48px;
+  height: 48px;
+  justify-content: center;
+  background-color: #FFD4C4;
   border-radius: 300px;
+  color: #FF8C5B;
 }
 
 button > img {
   margin-right: -1px;
+}
+
+.project{
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.project-list{
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0px;
+  left: -50%;
+  transform: translateX(-20%);
+  top: 70px;
+  background-color: white;
+  box-shadow: 0 4px 10px 0 rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.5s ease;
+}
+
+.project:hover > .project-list{
+  visibility: visible;
+  opacity: 1;
+}
+
+.project:hover{
+  height: 70px;
+}
+
+.project-list > li{
+  padding: 24px 12px;
+  width: 260px;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.project-list > li:hover{
+  background-color: #EBEBEB;
 }
 </style>

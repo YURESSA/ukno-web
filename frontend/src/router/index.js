@@ -1,7 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useDataStore } from '@/stores/counter'
 import Main from '@/pages/main/main.vue'
+<<<<<<< HEAD
+=======
+
+>>>>>>> main-frontend
 import MainLayout from '@/layouts/MainLayout.vue'
+import LoginLayout from '@/layouts/LoginLayout.vue'
+
 import EventsFeed from '@/pages/eventFeed/eventsFeed.vue'
 import EventPage from '@/pages/eventPage/eventPage.vue'
 import Login from '@/pages/auth/login/login.vue'
@@ -12,6 +18,13 @@ import Payment from '@/pages/payment/payment.vue'
 import UserProfile from '@/pages/personal-accounts/user/user.vue'
 import ResidentProfile from '@/pages/personal-accounts/resident/resident.vue'
 import NewEvent from '@/pages/personal-accounts/_shared/newEvent.vue'
+<<<<<<< HEAD
+=======
+import changeEvent from '@/pages/personal-accounts/_shared/changeEvent.vue'
+import News from '@/pages/news/news.vue'
+import Requesits from '@/pages/requesits/requesits.vue'
+import Ukno from '@/pages/ukno/ukno.vue'
+>>>>>>> main-frontend
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -37,6 +50,28 @@ const router = createRouter({
           component: EventPage,
         },
         {
+          path: '/news',
+          name: 'NewsPage',
+          component: News,
+        },
+        {
+          path: '/requesits',
+          name: 'requesits',
+          component: Requesits,
+        },
+        {
+          path: '/ukno',
+          name: 'ukno',
+          component: Ukno,
+        },
+      ],
+    },
+    {
+      path: '/',
+      name: 'LoginLayout',
+      component: LoginLayout,
+      children: [
+        {
           path: '/login',
           name: 'LoginPage',
           component: Login,
@@ -53,7 +88,7 @@ const router = createRouter({
         },
         {
           path: '/register',
-          name: 'registerPage',
+          name: 'RegisterPage',
           component: Registration,
         },
       ],
@@ -81,8 +116,36 @@ const router = createRouter({
       name: 'NewEvent',
       component: NewEvent,
       meta: { requiresAuth: true, requiredRole: 'resident' },
+<<<<<<< HEAD
+=======
+    },
+    {
+      path: '/change-event/:id',
+      name: 'changeEvent',
+      component: changeEvent,
+      meta: { requiresAuth: true, requiredRole: 'resident' },
+>>>>>>> main-frontend
     },
   ],
+    scrollBehavior(to, from, savedPosition) {
+    return { top: 0 }
+  }
+})
+
+router.beforeEach((to, from, next) => {
+  const store = useDataStore()
+
+  if (to.meta.requiresAuth) {
+    if (!store.auth_key) {
+      return next('/login')
+    }
+
+    if (to.meta.requiredRole && store.role !== to.meta.requiredRole) {
+      return next('/')
+    }
+  }
+
+  next()
 })
 
 router.beforeEach((to, from, next) => {

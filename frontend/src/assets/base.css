@@ -32,6 +32,7 @@ h5 {
   font-family: 'Roboto Flex', Arial, Helvetica, sans-serif;
 }
 
+<<<<<<< HEAD
 .text-medium {
   font-weight: 500;
   line-height: 140%;
@@ -41,6 +42,8 @@ h5 {
   font-size: 24px;
 }
 
+=======
+>>>>>>> main-frontend
 h1 {
   font-size: 94px;
   font-weight: 700;
@@ -48,11 +51,15 @@ h1 {
 
 h2 {
   font-size: 64px;
+  font-weight: 700;
+  line-height: 110%;
+  color: #333;
 }
 
 h3 {
   font-size: 44px;
   font-weight: 700;
+  line-height: 110%;
 }
 
 h4 {
@@ -97,4 +104,16 @@ ul {
   gap: 15px;
   padding: 0;
   margin: 0;
+}
+
+.text-orange{
+  color: #F25C03;
+}
+
+.text-grey{
+  color: #7B7A7A;
+}
+
+.bold{
+  font-weight: 700;
 }

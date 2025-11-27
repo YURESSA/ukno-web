@@ -1,12 +1,13 @@
 <template>
   <div class="page-wrapper">
     <div class="login-wrapper">
-      <h3>Регистрация</h3>
       <form @submit.prevent="handleSubmit" autocomplete="off">
+        <h3>Регистрация</h3>
         <input
           type="text"
           name="full_name"
           placeholder="Фамилия Имя *"
+          class="text-l text-medium"
           v-model="formData.full_name"
           required
           autocomplete="off"
@@ -17,6 +18,7 @@
           type="tel"
           name="phone"
           placeholder="Номер телефона *"
+          class="text-l text-medium"
           v-model="formData.phone"
           required
           autocomplete="off"
@@ -28,6 +30,7 @@
           type="email"
           name="email"
           placeholder="e-mail *"
+          class="text-l text-medium"
           v-model="formData.email"
           required
           autocomplete="off"
@@ -39,6 +42,7 @@
           type="password"
           name="password"
           placeholder="Пароль *"
+          class="text-l text-medium"
           v-model="formData.password"
           required
           autocomplete="new-password"
@@ -51,6 +55,7 @@
           type="password"
           name="passwordConfirmation"
           placeholder="Повторите пароль *"
+          class="text-l text-medium"
           v-model="formData.passwordConfirmation"
           required
           autocomplete="new-password"
@@ -58,9 +63,9 @@
         >
         <span class="error-message" v-if="showErrors && errors.passwordConfirmation">{{ errors.passwordConfirmation }}</span>
 
-        <DefaultButton type="submit" class="submit--btn" text="Зарегистрироваться"/>
+        <DefaultButton type="submit" class="sumbit--btn" text="Зарегистрироваться"/>
+        <span class="bold">У ВАС УЖЕ ЕСТЬ АККАУНТ? <RouterLink to="login"><span class="text-orange">ВОЙТИ</span></RouterLink></span>
       </form>
-      <span>У ВАС УЖЕ ЕСТЬ АККАУНТ? <RouterLink to="login"><span class="orange">ВОЙТИ</span></RouterLink></span>
     </div>
   </div>
 </template>
@@ -70,6 +75,7 @@ import { ref } from 'vue';
 import DefaultButton from '@/components/UI/button/DefaultButton.vue';
 import { useDataStore } from '@/stores/counter';
 import router from '@/router';
+import { notification } from '@/utils/notification'
 
 const store = useDataStore();
 const showErrors = ref(false);
@@ -163,13 +169,13 @@ const handleSubmit = async () => {
 
   try {
     await store.PostNewUser(JSON.stringify(formData.value));
-    alert('Регистрация прошла успешно!');
+    await notification('Регистрация прошла успешно!', 'positive');
     router.push('/login');
   } catch (error) {
     if (error.response?.status === 409) {
-      alert('Пользователь с таким email уже существует');
+      await notification('Пользователь с таким email уже существует', 'negative');
     } else {
-      alert('Произошла ошибка при регистрации');
+      await notification('Произошла ошибка при регистрации', 'negative');
     }
     console.error('Ошибка регистрации', error);
   }
@@ -180,20 +186,10 @@ const handleSubmit = async () => {
 .page-wrapper {
   display: flex;
   justify-content: center;
+  align-items: center;
   position: relative;
-  min-height: calc(100vh - 188px - 246px)
-}
-
-.page-wrapper::before {
-  content: '';
-  position: absolute;
-  top: -120px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url('/backgroung/eventsFeed.png') no-repeat;
-  background-size: 100% auto;
-  z-index: -1;
+  height: 100%;
+  padding: 0px;
 }
 
 .login-wrapper {
@@ -201,19 +197,21 @@ const handleSubmit = async () => {
   flex-direction: column;
   justify-content: center;
   max-width: 1800px;
+  max-height: max-content;
   position: relative;
-}
-
-h3{
-  margin-bottom: 40px;
+  z-index: 99;
 }
 
 form {
   display: flex;
   flex-direction: column;
-  gap: 40px;
-  width: 600px;
-  margin-bottom: 30px;
+  gap: 30px;
+  width: 624px;
+  border: 2px solid #f25c03;
+  border-radius: 38px;
+  padding: 40px 30px 30px 30px;
+  backdrop-filter: blur(16.5px);
+  background: rgba(255, 255, 255, 0.52);
 }
 
 input {
@@ -221,22 +219,24 @@ input {
   border: none;
   border-bottom: 1px solid #0000008C;
   transition: all 0.5s ease;
+  margin-bottom: 20px;
+  background: rgba(255, 255, 255, 0);
 }
 
 input:focus {
   outline: none;
-  background-color: #F3F3F3;
 }
 
-.submit--btn{
+.sumbit--btn{
   width: 100%;
   padding: 20px;
   border-radius: 30px;
   border: 2px solid #333333;
-  background-color: white;
+  background-color: rgba(255, 255, 255, 0);
+  margin-top: 10px;
 }
 
-.orange{
+.text-orange{
   color: #F25C03;
 }
 

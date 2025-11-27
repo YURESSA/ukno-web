@@ -1,6 +1,9 @@
 <template>
-  <div class="page-wrapper" v-if="load">
+  <div class="page-wrapper page--margin" v-if="load">
+    <div class="asterick"></div>
+
     <div class="event-wrapper">
+      <span><RouterLink to="/">Главная</RouterLink> / <RouterLink to="/events">События</RouterLink> / {{ excursion.title }}</span>
       <div class="title">
         <h2>{{ excursion.title }}</h2>
       </div>
@@ -12,60 +15,84 @@
           class="event-image"
         >
       </div>
-        <IconButton
-          class="event--btn"
-          text="записаться"
-          :id="excursion.id"
-          @click="moveToBooked"
-        >
-          <img src="/icon/arrow.svg" alt="">
-        </IconButton>
-      <div class="content">
-        <div class="info">
-          <div class="all-info">
-            <div class="left-side">
-              <div class="info-block">
-                <img src="/icon/event/fluent_person-24-regular.svg" alt="">
+      <IconButton
+        class="event--btn"
+        text="записаться"
+        :id="excursion.id"
+        @click="moveToBooked"
+      >
+        <img src="/icon/arrow.svg" alt="">
+      </IconButton>
+
+      <div class="container">
+        <div class="events-list">
+          <div class="four-event">
+            <div class="event-type">
+              <div class="title">
+                <h3>Автор</h3>
+              </div>
+              <div class="event-content">
                 <p>Проводит {{ excursion.conducted_by }}</p>
               </div>
-              <div class="info-block">
-                <img src="/icon/event/placemark.svg" alt="">
-                <p>{{ getData }}, с {{ getTime }} до {{ totalTime }}</p>
+            </div>
+            <div class="event-type border-left">
+              <div class="title">
+                <h3>Место</h3>
+              </div>
+              <div class="event-content">
+                <p>{{ excursion.place }}</p>
               </div>
             </div>
-            <div class="right-side">
-              <div class="info-block">
-                <img src="/icon/event/datamark.svg" alt="">
-                <p>{{ getData }}, с {{ getTime }} до {{ totalTime }}</p>
+            <div class="event-type border-top">
+              <div class="title">
+                <h3>Стоимость</h3>
               </div>
-              <div class="info-block">
-                <img src="/icon/event/money.svg" alt="">
+              <div class="event-content">
                 <p>{{ excursion.sessions[0].cost }} ₽</p>
               </div>
-              <div class="info-block">
-                <img src="/icon/event/time.svg" alt="">
-                <p>{{ excursion.duration / 60 }} ч.</p>
+            </div>
+            <div class="event-type orange-block">
+              <div class="title">
+                <h3>Дата и время</h3>
+              </div>
+              <div class="event-content">
+                <h2>{{ getData }}</h2>
+                <p>с {{ getTime }} до {{ totalTime }} </p>
               </div>
             </div>
           </div>
-          <div class="date">
-            <h2>{{ getData }}</h2>
+          <div class="one-event-wrapper">
+            <div class="one-event">
+              <div class="title">
+                <h3>Важно</h3>
+              </div>
+              <div class="event-content">
+                <div class="important-content">
+                  <p class="large-text">- {{ EventFormat.type }}</p>
+                  <p class="large-text">- {{ EventFormat.remained_places }}</p>
+                  <p class="large-text">- Экскурсии  {{ excursion.age_category.age_category_name }}</p>
+                  <p class="large-text">- Продолжительность - {{ excursion.duration }} минут</p>
+                </div>
+              </div>
+            </div>
+            <div class="important-icon"></div>
           </div>
-        </div>
-      </div>
-      <div class="important">
-        <img src="/icon/event/exclamation.svg" alt="">
-        <div class="important-content">
-          <p class="large-text"><b>Важно:</b></p>
-          <p class="large-text">- {{ EventFormat.type }}</p>
-          <p class="large-text">- {{ EventFormat.remained_places }}</p>
-          <p class="large-text">- Экскурсии  {{ excursion.age_category.age_category_name }}</p>
         </div>
       </div>
       <div class="descript">
         <h3>Подробнее об экскурсии</h3>
         <h5>Экскурсия «{{ excursion.title }}»</h5>
         <p>{{ excursion.description }}</p>
+      </div>
+      <h2 v-if="excursion.photos.length > 1">Галерея ярких моментов</h2>
+      <div class="gallery">
+        <div
+          v-for="(photo, i) in excursion.photos.slice(1)"
+          :key="i"
+          :class="'gallery-img img' + i"
+          >
+            <img :src="baseUrl + photo.photo_url" :alt="'Фото ' + i">
+        </div>
       </div>
       <Contact class="map">
         <iframe
@@ -81,7 +108,8 @@
     </div>
   </div>
   <div v-else class="loading">
-    <h3>Загрузка данных...</h3>
+    <Loading/>
+     <!-- <h3>Загрузка...</h3> -->
   </div>
 </template>
 
@@ -92,6 +120,8 @@ import { useDataStore } from '@/stores/counter';
 import { baseUrl } from '@/stores/counter';
 import IconButton from '@/components/UI/button/IconButton.vue';
 import Contact from '../../components/shared/contact-block.vue';
+import Loading from '@/components/shared/loading-animation.vue';
+import { notification } from '@/utils/notification'
 
 const store = useDataStore();
 const route = useRoute();
@@ -105,19 +135,24 @@ const src = computed(() => {
 const load = ref(false)
 
 onMounted(async () => {
+  document.body.style.overflow = 'hidden'
   try {
     await store.FetchExcursionDetail(route.params.id);
     setTimeout(() => {
       load.value = true
+      document.body.style.overflow = 'auto'
     }, 1000)
   } catch (error) {
     console.error('Ошибка при загрузке экскурсий:', error);
-    alert('Произошла ошибка, попробуйте ещё раз')
+    await notification('Произошла ошибка, попробуйте ещё раз', 'negative');
   }
 });
 
 const moveToBooked = () => {
-  router.push(`/payment/${excursion.value.excursion_id}`);
+  router.push({
+    path: `/payment/${excursion.value.sessions[0].session_id}`,
+    query: { excursion_id: excursion.value.excursion_id }
+  });
 };
 
 const getMainImage = computed(() => {
@@ -176,22 +211,27 @@ const EventFormat = computed(() => {
   align-items: center;
   position: relative;
   padding-top: 40px;
+  overflow-x: hidden;
+}
+
+span{
+  display: block;
+  text-align: left;
+  width: 100%;
+  font-size: 16px;
+  font-weight: 400;
+  color: #2d3748;
+  margin-bottom: 20px;
+}
+
+span > a{
+  font-size: 16px;
+  font-weight: 400;
+  color: #525252;
 }
 
 .loading{
-  text-align: center;
-}
-
-.page-wrapper::before {
-  content: '';
-  position: absolute;
-  top: -120px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url('/backgroung/eventsFeed.png') no-repeat;
-  background-size: 100% auto;
-  z-index: -1;
+  overflow: hidden;
 }
 
 .event-wrapper{
@@ -217,6 +257,14 @@ const EventFormat = computed(() => {
 .event--btn{
   width: 100%;
   margin-top: 30px;
+  margin-bottom: 45px;
+  background-color: #FF6C36;
+  color: white;
+  border: none;
+}
+
+.event--btn * img{
+  filter: invert(1) brightness(1.5);
 }
 
 .content{
@@ -274,9 +322,158 @@ const EventFormat = computed(() => {
   flex-direction: column;
   gap: 30px;
   margin-top: 50px;
+  margin-bottom: 50px;
+}
+
+.gallery{
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  margin-bottom: 35px;
+}
+
+.gallery-img {
+  height: 310px;
+  overflow: hidden; /* Обрезаем всё, что выходит за границы */
+  position: relative; /* Для корректного позиционирования img */
+  border-radius: 8px; /* Опционально: скругление углов */
+}
+
+/* Размеры блоков */
+.img0, .img3 {
+  width: 38%;
+}
+
+.img1, .img2 {
+  width: 59%;
+}
+
+/* Стили для самих изображений */
+.gallery-img img {
+  width: 100%; /* Занимает всю ширину родителя */
+  height: 100%; /* Занимает всю высоту родителя */
+  object-fit: cover; /* Сохраняет пропорции, заполняя весь блок */
+  object-position: center; /* Центрирует изображение */
 }
 
 :deep(.contact-container){
   box-shadow: 0px 2px 35.8px 0px #00000040;
 }
+
+
+
+.event-type * h3, .one-event * h3{
+  font-weight: 500;
+}
+
+.container{
+  max-width: 1800px;
+  border: 2px solid #F25C03;
+  border-radius: 14px;
+  margin-bottom: 30px;
+}
+
+.events-list{
+  display: flex;
+}
+
+.four-event{
+  display: flex;
+  flex-wrap: wrap;
+  width: 66%;
+}
+
+.event-type{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: calc(50% - 51px);
+  height: 310px;
+  padding: 30px 20px 30px 30px;
+}
+
+.one-event{
+  display: flex;
+  height: calc(100% - 55px);
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 30px 60px 25px 40px;
+  border-left: 2px solid #f25c03;
+  border-radius: 14px;
+  background-color: white;
+  position: relative;
+}
+
+.one-event > .event-content{
+  position: absolute;
+  bottom: 25px;
+  z-index: 9;
+}
+
+.one-event > .title{
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.border-left{
+  border-left: 2px solid #F25C03;
+  border-radius: 14 0 0 0px;
+}
+
+.border-top{
+  border-top: 2px solid #F25C03;
+  border-radius: 14px 0 0 0;
+}
+
+.orange-block{
+  background-color: #FF6C36;
+  color: #FFFFFF!important;
+  border: 2px solid #F25C03;
+  border-right: none;
+  border-bottom: none;
+  background-image: url(/icon/event/flower.svg);
+  background-repeat: no-repeat;
+  background-position: right;
+  background-size: 90%;
+}
+
+.orange-block * h2{
+  color: #FFFFFF!important;
+}
+
+.one-event-wrapper{
+  position: relative;
+  width: 35%;
+  border-radius: 10px 10px 10px 0;
+  background-color: #FF6C36;
+  overflow: hidden;
+}
+
+.important-icon{
+  content: '';
+  position: absolute;
+  width: 156px;
+  height: 100%;
+  background-image: url('/icon/event/important.svg');
+  background-repeat: no-repeat;
+  background-size: cover;
+  top: 0px;
+  right: 0px;
+  z-index: 1;
+}
+
+.asterick{
+  display: inline;
+  position: absolute;
+  content: '';
+  width: 355px;
+  height: 343px;
+  background-image: url(/icon/news/asterisk.svg);
+  z-index: -1;
+  top: 30px;
+  right: -135px;
+}
+
 </style>

@@ -1,9 +1,10 @@
 <template>
   <Welcome />
+  <Alert/>
   <about-us></about-us>
-  <!-- <Events/>  компонент событий (нет финальной версии) -->
+  <Events/>
   <div class="page-wrapper dark-wrapper">
-    <News/>
+    <News :news="news.news"/>
     <History/>
     <Partner/>
   </div>
@@ -19,22 +20,25 @@
 </template>
 
 <script setup>
-import { onMounted, watch  } from 'vue';
+import { onMounted, watch, computed  } from 'vue';
 import { useRoute } from 'vue-router';
+import { useDataStore } from '@/stores/counter';
 import Welcome from './components/welcome-block.vue';
 import AboutUs from './components/about-us.vue';
-// import Events from './components/events-block.vue';
+import Events from './components/events-block.vue';
 import News from './components/news-block.vue';
 import History from './components/history-block.vue';
 import Partner from './components/partner.vue';
 import Contact from '../../components/shared/contact-block.vue';
+import Alert from '@/components/UI/alert.vue';
 
 const route = useRoute();
+const store = useDataStore();
 
 const scrollToHash = () => {
   if (route.hash) {
     setTimeout(() => {
-      const offset = 0; //отступт от элемента
+      const offset = 100; //отступт от элемента
       const element = document.querySelector(route.hash);
       if (element) {
         window.scrollTo({
@@ -46,7 +50,16 @@ const scrollToHash = () => {
   }
 };
 
-onMounted(scrollToHash);
+const news = computed(() => store.getNews);
+
+onMounted(async () => {
+  scrollToHash
+  try {
+    await store.FetchNews();
+  } catch (error) {
+    console.error('Ошибка при загрузке новостей:', error);
+  }
+});
 
 watch(() => route.hash, scrollToHash);
 </script>
@@ -56,11 +69,12 @@ watch(() => route.hash, scrollToHash);
 .dark-wrapper{
   color: white;
   background-color: #333333;
-  background-image: url('/backgroung/news-block.png');
+  /* background-image: url('/backgroung/news-block.png'); */
   background-size: cover;
   background-repeat: no-repeat;
   background-position: top -500px right;
   padding-bottom: 450px;
+  border-radius: 45px 45px 0 0;
 }
 
 .map{
