@@ -6,11 +6,7 @@
         <!-- <img class="absolut--img bottom-ear" src="/icon/main/bottomEar.png" alt=""> -->
       </div>
       <div class="title">
-<<<<<<< HEAD
-        <h3>Молодежное бюро 5 этаж -</h3>
-=======
         <h3>Кто мы такие?</h3>
->>>>>>> main-frontend
         <img class="absolut--img flower-big" src="/icon/main/flower-big.png" alt="">
       </div>
       <div class="about-content">
@@ -27,19 +23,11 @@
         </div>
         <div class="content-wrapper">
           <div class="content">
-<<<<<<< HEAD
-            <img class="absolut--img mouse" src="/icon/main/mouse.png" alt="">
-          </div>
-          <div class="content border">
-            <img class="absolut--img ear" src="/icon/main/ear.png" alt="">
-            <p>С 2024 года мы открыли новое <br> пространство для молодежных инициатив, <br> образовательных мероприятий и <br> творческих проектов.</p>
-=======
             <!-- <img class="absolut--img mouse" src="/icon/main/mouse.png" alt=""> -->
             <img class="absolut--img ear" src="/icon/main/ear.png" alt="">
           </div>
           <div class="content border">
             <p>С 2025 года мы открыли новое <br> пространство для молодежных инициатив, <br> образовательных мероприятий и <br> творческих проектов.</p>
->>>>>>> main-frontend
           </div>
           <div class="content">
             <img class="absolut--img bread" src="/icon/main/bread1.png" alt="">
@@ -64,21 +52,11 @@ import UsResult from './us-result.vue';
 
 .title{
   position: relative;
-<<<<<<< HEAD
-=======
   text-align: center;
->>>>>>> main-frontend
 }
 
 .absolut--img{
   position: absolute;
-<<<<<<< HEAD
-}
-
-.ear{
-  bottom: -260px;
-  left: -290px;
-=======
   pointer-events: none;
 }
 
@@ -87,7 +65,6 @@ import UsResult from './us-result.vue';
   right: 0;
   transform: rotate(-30deg) scaleX(-1);
 
->>>>>>> main-frontend
 }
 
 .flower-big{
@@ -139,13 +116,10 @@ import UsResult from './us-result.vue';
   height: 220px;
   padding-left: 30px;
   position: relative;
-<<<<<<< HEAD
-=======
 }
 
 .content > p{
   max-width: 485px;
->>>>>>> main-frontend
 }
 
 .right-border{

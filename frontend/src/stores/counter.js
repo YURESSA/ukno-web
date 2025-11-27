@@ -4,8 +4,6 @@ import router from '@/router'
 
 export const baseUrl = import.meta.env.VITE_FRONTEND_URL;
 
-// export const baseUrl = 'https://yuressa.uxp.ru/'
-
 export const useDataStore = defineStore('data', {
   state: () => ({
     auth_key: '',
@@ -15,11 +13,8 @@ export const useDataStore = defineStore('data', {
     excursionDetail: [],
     profileData: [],
     reservationsData: [],
-<<<<<<< HEAD
-=======
     newsData: [],
     excursionsStats: [],
->>>>>>> main-frontend
   }),
   actions: {
     setTokenRole(auth_key, role) {
@@ -29,10 +24,7 @@ export const useDataStore = defineStore('data', {
     clearTokenRole() {
       this.auth_key = ''
       this.role = ''
-<<<<<<< HEAD
-=======
       this.profileData = []
->>>>>>> main-frontend
     },
     deletEvent() {
       this.residentExcursions = []
@@ -164,15 +156,11 @@ export const useDataStore = defineStore('data', {
             'Content-Type': 'application/json',
           },
         })
-<<<<<<< HEAD
-        window.location.href = response.data.payment_url
-=======
         if (response.data.payment_url) {
           window.location.href = response.data.payment_url;
         } else {
           console.log('Бронирование прошло успешно!')
         }
->>>>>>> main-frontend
       } catch (error) {
         console.log(this.auth_key)
         console.error('Ошибка при бронировании:', error.response?.data || error.message)
@@ -224,37 +212,17 @@ export const useDataStore = defineStore('data', {
         throw error
       }
     },
-<<<<<<< HEAD
-    async DeleteReservation(jsonData) {
-      try {
-        console.log(jsonData)
-        console.log(`Bearer ${this.auth_key}`)
-
-        const response = await axios.delete(`${baseUrl}/api/user/v2/reservations`, {
-=======
     async DeleteReservation(delet_id) {
       try {
         const jsonData = JSON.stringify(delet_id)
         const response = await axios.delete(`${baseUrl}/api/user/v2/reservations`, {
           data: jsonData,
->>>>>>> main-frontend
           headers: {
             Authorization: `Bearer ${this.auth_key}`,
             'Content-Type': 'application/json',
           },
-<<<<<<< HEAD
-          data: jsonData,
-        })
-
-        console.log('Данные бронирования успешно удалены:', response.data)
-
-        this.reservationsData = this.reservationsData.filter(
-          (reservation) => reservation.reservation_id !== jsonData.reservation_id,
-        )
-=======
         })
         console.log('Данные бронирования успешно удалены:', response.data)
->>>>>>> main-frontend
       } catch (error) {
         console.error(
           'Ошибка при удалении данных бронирования:',
@@ -263,20 +231,12 @@ export const useDataStore = defineStore('data', {
         throw error
       }
     },
-<<<<<<< HEAD
-
-=======
->>>>>>> main-frontend
     async PostNewEvent(formData) {
       try {
         const response = await axios.post(`${baseUrl}/api/resident/excursions`, formData, {
           headers: {
             Authorization: `Bearer ${this.auth_key}`,
-<<<<<<< HEAD
-            'Content-Type': 'multipart/form-data', // Важно для FormData!
-=======
             'Content-Type': 'multipart/form-data',
->>>>>>> main-frontend
           },
         })
         console.log('Upload success:', response.data)
@@ -300,9 +260,6 @@ export const useDataStore = defineStore('data', {
         throw error
       }
     },
-<<<<<<< HEAD
-    async DeletSession(eventId, sessionId) {
-=======
     async DeletEvent(eventId, sessionId) {
       try {
         const response = await axios.delete(
@@ -320,7 +277,6 @@ export const useDataStore = defineStore('data', {
       }
     },
     async DeleteSession(eventId, sessionId) {
->>>>>>> main-frontend
       try {
         const response = await axios.delete(
           `${baseUrl}/api/resident/excursions/${eventId}/sessions/${sessionId}`,
@@ -336,8 +292,6 @@ export const useDataStore = defineStore('data', {
         throw error
       }
     },
-<<<<<<< HEAD
-=======
     async DeletePhoto(eventId, photoId) {
       try {
         const response = await axios.delete(
@@ -415,18 +369,14 @@ export const useDataStore = defineStore('data', {
         throw error
       }
     }
->>>>>>> main-frontend
   },
   getters: {
     getProfileData: (state) => state.profileData,
     getExcursions: (state) => state.excursions,
     getExcursionDetail: (state) => state.excursionDetail,
     getResidentEvents: (state) => state.residentExcursions,
-<<<<<<< HEAD
-=======
     getNews: (state) => state.newsData,
     getExcursionsStats: (state) => state.excursionsStats
->>>>>>> main-frontend
   },
   persist: {
     key: 'data-store',

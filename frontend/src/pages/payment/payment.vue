@@ -58,10 +58,7 @@
   import { useDataStore } from '@/stores/counter';
   import { onMounted, computed, ref } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
-<<<<<<< HEAD
-=======
   import { notification } from '@/utils/notification'
->>>>>>> main-frontend
 
   const store = useDataStore();
   const route = useRoute();
@@ -73,7 +70,7 @@
   const showErrors = ref(false);
 
   const formData = ref({
-    session_id: route.params.id,
+    session_id: parseInt(route.params.id),
     full_name: userData.value.full_name,
     phone_number: userData.value.phone,
     email: userData.value.email,
@@ -90,22 +87,14 @@
 
   onMounted(async () => {
     try {
-<<<<<<< HEAD
-      await store.FetchExcursionDetail(route.params.id);
-=======
       await store.FetchExcursionDetail(route.query.excursion_id);
->>>>>>> main-frontend
       setTimeout(() => {
         load.value = true
       }, 1000)
       console.log(excursion.value)
     } catch (error) {
       console.error('Ошибка при загрузке экскурсий:', error);
-<<<<<<< HEAD
-      alert('Произошла ошибка, попробуйте ещё раз')
-=======
       await notification('Произошла ошибка, попробуйте ещё раз', 'negative');
->>>>>>> main-frontend
     }
   });
 
@@ -179,13 +168,8 @@
     console.log(JSON.stringify(formData.value))
     try {
       await store.PostReservation(JSON.stringify(formData.value));
-<<<<<<< HEAD
-      alert('Бронирование прошло успешно!');
-      // router.push('/');
-=======
       await notification('Бронирование прошло успешно!', 'positive');
       router.push('/profile');
->>>>>>> main-frontend
     } catch (error) {
       console.error('Ошибка бронировании', error);
     }
@@ -281,11 +265,7 @@
     border-radius: 0 12px 12px 0;
   }
 
-<<<<<<< HEAD
-  .orange{
-=======
   .text-orange{
->>>>>>> main-frontend
     color: #F25C03;
   }
 

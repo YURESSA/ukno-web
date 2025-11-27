@@ -14,36 +14,11 @@
               placeholder="Название события*"
               v-model="formData.title"
             >
-<<<<<<< HEAD
-            <input
-=======
             <textarea
->>>>>>> main-frontend
               type="EventName"
               name="EventName"
               placeholder="Описание события*"
               v-model="formData.description"
-<<<<<<< HEAD
-            >
-            <input
-              type="EventName"
-              name="EventName"
-              placeholder="Формат события*"
-              v-model="formData.format_type"
-            >
-            <input
-              type="EventName"
-              name="EventName"
-              placeholder="Тип события*"
-              v-model="formData.category"
-            >
-            <input
-              type="EventName"
-              name="EventName"
-              placeholder="Возрастная категория*"
-              v-model="formData.age_category"
-            >
-=======
             ></textarea>
 
             <select v-model="formData.format_type" class="custom-select" required>
@@ -81,7 +56,6 @@
                 {{ age_category.age_category_name }}
               </option>
             </select>
->>>>>>> main-frontend
 
             <h5>Условие проведения</h5>
             <span>Дата и время события</span>
@@ -180,16 +154,6 @@
               placeholder="Время от ближайшей остановки (в минутах)"
               v-model="formData.time_to_nearest_stop"
             >
-<<<<<<< HEAD
-            <span>Хэштеги</span>
-            <input
-              type="EventName"
-              name="EventName"
-              placeholder="архитектура, конструктивизм, история"
-              v-model="formData.tags"
-            >
-=======
->>>>>>> main-frontend
 
             <h5>Изображения</h5>
             <n-upload
@@ -208,10 +172,7 @@
             </n-modal>
             <BaseButton type="submit" class="sumbit--btn" text="Создать событие"/>
         </form>
-<<<<<<< HEAD
-=======
         {{ formData }}
->>>>>>> main-frontend
       </div>
     </div>
   </div>
@@ -219,27 +180,18 @@
 
 <script setup>
 import { useRouter } from 'vue-router';
-<<<<<<< HEAD
-import { ref } from 'vue';
-=======
 import { ref, onMounted, computed } from 'vue';
->>>>>>> main-frontend
 import IconButton from '@/components/UI/button/IconButton.vue';
 import BaseButton from '@/components/UI/button/BaseButton.vue';
 import { useDataStore } from '@/stores/counter';
 import { NDatePicker, NConfigProvider, NModal, NUpload } from 'naive-ui';
 import { ruRU, dateRuRU } from 'naive-ui';
-<<<<<<< HEAD
-=======
 import { notification } from '@/utils/notification'
->>>>>>> main-frontend
 
 const store = useDataStore();
 const router = useRouter();
 const formattedValue = ref(null);
 
-<<<<<<< HEAD
-=======
 onMounted(async () => {
   await store.FetchExcursionsStats();
 });
@@ -247,7 +199,6 @@ onMounted(async () => {
 const excursionsStats = computed(() => store.getExcursionsStats);
 
 
->>>>>>> main-frontend
 const formData = ref({
   title: '',
   description: '',
@@ -354,11 +305,7 @@ const submitEvent = async () => {
     console.log(formDataToSend)
 
     await store.PostNewEvent(formDataToSend);
-<<<<<<< HEAD
-    alert('Событие успешно создано')
-=======
     await notification('Произошла ошибка, попробуйте ещё раз', 'positive');
->>>>>>> main-frontend
     router.back();
   } catch (error) {
     console.error('Upload failed:', error);
@@ -423,21 +370,12 @@ form {
   margin-top: 30px;
 }
 
-<<<<<<< HEAD
-input {
-=======
 input, textarea, select {
->>>>>>> main-frontend
   padding: 15px 0;
   border: 2px solid #2C2C2C24;
   border-radius: 8px;
   padding-left: 20px;
   transition: all 0.5s ease;
-<<<<<<< HEAD
-}
-
-input:focus {
-=======
   font-size: 20px;
   font-weight: 400 !important;
   font-family: 'Manrope' !important;
@@ -460,13 +398,10 @@ input:focus {
 }
 
 input:focus, textarea:focus {
->>>>>>> main-frontend
   outline: none;
   background-color: #F3F3F3;
 }
 
-<<<<<<< HEAD
-=======
 input::placeholder,
 textarea::placeholder {
   font-weight: 400 !important;
@@ -481,7 +416,6 @@ input::-moz-placeholder,
 textarea::-moz-placeholder {
   font-weight: 400 !important;
 }
->>>>>>> main-frontend
 .participants-input{
   display: flex;
   flex-direction: column;

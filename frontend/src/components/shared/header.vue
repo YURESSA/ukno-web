@@ -26,15 +26,6 @@
           </button>
         </RouterLink>
         <RouterLink to="/profile" v-else-if="!hasToken & role === 'user'">
-<<<<<<< HEAD
-          <button>
-            Личный кабинет
-            <img src="/icon/header/iconamoon_profile-fill.svg" alt="">
-          </button>
-        </RouterLink>
-        <RouterLink to="/resident-profile" v-else-if="!hasToken & role === 'resident'">
-=======
->>>>>>> main-frontend
           <button>
             <h4>{{ profileData.full_name[0].toUpperCase() }}</h4>
           </button>
@@ -63,11 +54,8 @@ const hasToken = computed(() => {
 const role = computed(() => {
   return store.role;
 });
-<<<<<<< HEAD
-=======
 
 const profileData = computed(() => store.getProfileData)
->>>>>>> main-frontend
 
 </script>
 

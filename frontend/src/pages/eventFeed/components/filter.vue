@@ -11,19 +11,6 @@
     <div class="filter-main">
       <div class="filter-component">
         <h5>Формат</h5>
-<<<<<<< HEAD
-        <n-checkbox-group v-model:value="formData.category">
-          <n-space class="checkbox-group" item-style="display: flex;">
-            <n-checkbox
-              v-for="option in allFormatOptions"
-              :key="option"
-              size="large"
-              :value="option"
-              :label="option"
-            />
-          </n-space>
-        </n-checkbox-group>
-=======
         <div class="checkbox-wrapper">
           <n-checkbox
             size="large"
@@ -43,7 +30,6 @@
             </n-space>
           </n-checkbox-group>
         </div>
->>>>>>> main-frontend
       </div>
       <div class="filter-component">
         <h5>Даты</h5>
@@ -122,18 +108,6 @@ import BaseButton from '@UI/button/BaseButton.vue'
 import DefaultButton from '@UI/button/DefaultButton.vue'
 import IconButton from '@/components/UI/button/IconButton.vue'
 import { useDataStore } from '@/stores/counter';
-<<<<<<< HEAD
-
-const allFormatOptions = [
-  "Все варианты",
-  "Экскурсия",
-  "Мастер Класс",
-  "Воркшоп",
-  "Выставка",
-  "Концерт"
-];
-
-=======
 
 onMounted(async () => {
   await store.FetchExcursionsStats();
@@ -148,7 +122,6 @@ const allFormatOptions = computed(() => {
   return [...excursionsStats.value.categories.map(item => item.category_name)];
 });
 
->>>>>>> main-frontend
 const priceRange = ref([0, 2000])
 const range = ref([Date.now(), Date.now() + 7 * 24 * 60 * 60 * 1000]);
 
@@ -165,18 +138,6 @@ const formData = ref({
   age_category: '',
 });
 
-<<<<<<< HEAD
-watch(() => formData.value.category, (newVal) => {
-  // Если выбран "Все варианты"
-  if (newVal.includes("Все варианты")) {
-    formData.value.category = allFormatOptions;
-  }
-  // Если сняли "Все варианты" при полном выборе
-  else if (newVal.length === allFormatOptions.length - 1 && !newVal.includes("Все варианты")) {
-    formData.value.category = [];
-  }
-}, { deep: true });
-=======
 
 function handleCheckboxChange(ch){
   if(ch){
@@ -185,7 +146,6 @@ function handleCheckboxChange(ch){
     formData.value.category = [];
   }
 }
->>>>>>> main-frontend
 
 function validateParticipants(){
   if(formData.value.participants_count < 1){
@@ -220,10 +180,6 @@ function buildQueryString(formData) {
 
   const params = new URLSearchParams();
 
-<<<<<<< HEAD
-  // Используем formData.value, а не formData!
-=======
->>>>>>> main-frontend
   for (const [key, value] of Object.entries(formData.value)) {
     if (value === null || value === undefined || value === '') continue;
 
@@ -247,8 +203,6 @@ const sendFilter = async () => {
   } catch (error) {
     console.error('Ошибка при загрузке экскурсий:', error);
   }
-<<<<<<< HEAD
-=======
 }
 
 const resetFilter = async () => {
@@ -267,7 +221,6 @@ const resetFilter = async () => {
   } catch (error) {
     console.error('Ошибка при загрузке экскурсий:', error);
   }
->>>>>>> main-frontend
 }
 </script>
 

@@ -1,10 +1,6 @@
 <template>
   <Header/>
-<<<<<<< HEAD
-  <div class="page-wrapper">
-=======
   <div class="page-wrapper page--margin">
->>>>>>> main-frontend
     <Username :full_name="profileData.full_name" :role="profileData.role"/>
     <div class="user-data-wrapper">
       <Userdata

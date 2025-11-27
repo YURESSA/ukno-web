@@ -1,11 +1,7 @@
 <template>
   <div class="card-wrapper">
     <div class="avatar">
-<<<<<<< HEAD
-      <h2>{{ firstLetter }}</h2>
-=======
       <h2>{{ firstLetter.toUpperCase() }}</h2>
->>>>>>> main-frontend
     </div>
     <div class="name">
       <h5>{{ roleName }}</h5>

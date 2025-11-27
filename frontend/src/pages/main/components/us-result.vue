@@ -1,14 +1,5 @@
 <template>
   <div class="result-wrapper">
-<<<<<<< HEAD
-    <div class="title">
-      <h3>Ваше культурное пространство — это</h3>
-    </div>
-    <div class="result-list text-l">
-      <ul>
-        <li>
-          <div class="content solo orange">
-=======
     <div class="title text-orange">
       <h3>Наше культурное пространство — это</h3>
     </div>
@@ -16,7 +7,6 @@
       <ul>
         <li>
           <div class="content solo text-orange">
->>>>>>> main-frontend
             <p>Выставки</p>
           </div>
         </li>

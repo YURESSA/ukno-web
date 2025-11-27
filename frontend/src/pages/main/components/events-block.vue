@@ -2,11 +2,6 @@
   <div class="page-wrapper" id="events">
     <div class="container">
       <div class="events-list">
-<<<<<<< HEAD
-      </div>
-      <IconButton class="button" text="записаться"><img src="/icon/arrow.svg" alt=""></IconButton>
-    </div>
-=======
         <div class="events">
           <div class="event-type event-type--first">
             <div class="title">
@@ -73,7 +68,6 @@
       </div>
     </div>
     <IconButton @click="router.push('/events')" class="button" text="записаться"><img src="/icon/arrow.svg" alt=""></IconButton>
->>>>>>> main-frontend
   </div>
 </template>
 

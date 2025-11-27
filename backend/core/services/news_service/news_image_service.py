@@ -6,7 +6,7 @@ from werkzeug.datastructures import FileStorage
 
 from backend.core import db
 from backend.core.models.news_models import NewsImage, News
-from backend.core.utilits.file_utils import save_image
+from backend.core.utilits.file_utils import save_image, remove_file_if_exists
 
 
 def get_photos_for_news(news_id: int) -> Tuple[Optional[List[Dict]], Optional[Dict], HTTPStatus]:
@@ -57,9 +57,7 @@ def delete_photo_from_news(news_id: int, photo_id: int) -> Tuple[Dict, HTTPStatu
     if not photo:
         return {"message": "Фото не найдено"}, HTTPStatus.NOT_FOUND
     try:
-        full_path = os.path.join(os.getcwd(), photo.image_path)
-        if os.path.exists(full_path):
-            os.remove(full_path)
+        remove_file_if_exists(photo.image_path)
         db.session.delete(photo)
         db.session.commit()
         return {"message": "Фото удалено"}, HTTPStatus.OK

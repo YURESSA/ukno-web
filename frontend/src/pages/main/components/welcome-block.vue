@@ -1,12 +1,8 @@
 <template>
   <div class="welcom-wrapper page--margin">
     <div class="welcom-img"></div>
-<<<<<<< HEAD
-    <p>Культурно-образовательный центр, где <br>
-=======
     <h1 class="text-orange">Молодежное бюро</h1>
     <p class="text-grey">Культурно-образовательный центр, где <br>
->>>>>>> main-frontend
       история встречает современность, а творчество  <br>
       и  саморазвитие вдохновляют</p>
       <div class="sprout"></div>
@@ -25,8 +21,6 @@
   align-items: center;
   gap: 20px;
   margin-bottom: 30px;
-<<<<<<< HEAD
-=======
   margin-top: 180px!important;
   position: relative;
   overflow: hidden;
@@ -53,7 +47,6 @@
   bottom: -10px;
   background-position: center;
   background-repeat: no-repeat;
->>>>>>> main-frontend
 }
 
 h2{
