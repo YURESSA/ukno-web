@@ -9,6 +9,7 @@ const {
   notificationType,
   closeNotification
 } = useNotification()
+// test
 </script>
 
 <template>
