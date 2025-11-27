@@ -70,7 +70,7 @@
   const showErrors = ref(false);
 
   const formData = ref({
-    session_id: route.params.id,
+    session_id: parseInt(route.params.id),
     full_name: userData.value.full_name,
     phone_number: userData.value.phone,
     email: userData.value.email,
