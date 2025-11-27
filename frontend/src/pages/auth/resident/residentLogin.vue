@@ -44,8 +44,9 @@ const formData = ref({
 const handleSubmit = async () => {
   try {
     await store.PostLoginResident(JSON.stringify(formData.value));
+    await store.GetResidentProfile();
     alert('Вход выполнен успешно!');
-    router.push('/');
+    router.back();
   } catch (error) {
     if (error.response?.status === 401) {
       alert('Неверные учетные данные');

@@ -5,20 +5,22 @@
         <h4>Все ваши события</h4>
         <IconButton @click="$emit('close')" class="action--btn"><img src="/icon/maki_cross.svg" alt=""></IconButton>
       </div>
-      <div class="card-wrapper" v-if="events != ''">
-        <div class="card" v-for="(excursions, i) in events.excursions" :key="i">
-          <div class="card-header">
-            <div class="left">
-              <p class="text-l bold">{{ excursions.title }}</p>
+      <div class="cards">
+        <div class="card-wrapper" v-if="events != ''">
+          <div class="card" v-for="(excursions, i) in events.excursions" :key="i">
+            <div class="card-header">
+              <div class="left">
+                <p class="text-l bold">{{ excursions.title }}</p>
+              </div>
+              <div class="card-btn">
+                <IconButton class="action--btn"><img src="/icon/pencil.svg" alt="" @click="router.push(`/change-event/${excursions.excursion_id}`)"></IconButton>
+                <IconButton @click="deletEvent(excursions.excursion_id)" class="action--btn"><img src="/icon/basket.svg" alt=""></IconButton>
+              </div>
             </div>
-            <div class="card-btn">
-              <IconButton class="action--btn"><img src="/icon/pencil.svg" alt="" @click="router.push(`/change-event/${excursions.excursion_id}`)"></IconButton>
-              <IconButton @click="deletEvent(excursions.excursion_id)" class="action--btn"><img src="/icon/basket.svg" alt=""></IconButton>
+            <div class="content">
+              <p>{{ excursions.description }}</p>
+              <p v-if="excursions.sessions.length != 0 ">{{ formattedDate(excursions.sessions[0]) }} | {{ formattedTime(excursions.sessions[0]) }} | {{ excursions.category.category_name }}</p>
             </div>
-          </div>
-          <div class="content">
-            <p>{{ excursions.description }}</p>
-            <p v-if="excursions.sessions.length != 0 ">{{ formattedDate(excursions.sessions[0]) }} | {{ formattedTime(excursions.sessions[0]) }} | {{ excursions.category.category_name }}</p>
           </div>
         </div>
       </div>
@@ -31,6 +33,7 @@ import IconButton from '@/components/UI/button/IconButton.vue';
 import router from '@/router';
 import { useDataStore } from '@/stores/counter';
 import { computed, onMounted, ref } from 'vue';
+import { notification } from '@/utils/notification'
 
 const store = useDataStore();
 const events = computed(() => store.getResidentEvents);
@@ -66,7 +69,7 @@ const formattedTime = (nearestSession) =>{
 async function deletEvent(EventId){
   try {
     await store.DeletEvent(EventId);
-    alert('Событие успешно удалено')
+    await notification('Событие успешно удалено', 'positive');
     store.deletEvent();
     emit('close')
   } catch (error) {
@@ -104,10 +107,15 @@ async function deletEvent(EventId){
 }
 
 .card{
-  min-width: 100%;
+  width: calc(100% - 80px);
   padding: 40px 30px;
   border-radius: 14px;
   border: 1px solid #DEDEDE
+}
+
+.cards{
+  overflow-y: auto;
+  max-height: 600px;
 }
 
 .content{
@@ -139,7 +147,7 @@ async function deletEvent(EventId){
   position: absolute;
   width: 660px;
   max-height: 600px;
-  overflow-y: scroll;
+  /* overflow-y: hidden; */
   background-color: #FFFFFF;
   box-shadow: 0px 0px 12.7px 0px #0000002E;
   border-radius: 26px;

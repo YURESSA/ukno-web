@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import axios from 'axios'
 import router from '@/router'
 
-export const baseUrl = 'http://127.0.0.1:5000/'
+export const baseUrl = import.meta.env.VITE_FRONTEND_URL;
 
 export const useDataStore = defineStore('data', {
   state: () => ({
@@ -14,6 +14,7 @@ export const useDataStore = defineStore('data', {
     profileData: [],
     reservationsData: [],
     newsData: [],
+    excursionsStats: [],
   }),
   actions: {
     setTokenRole(auth_key, role) {
@@ -23,6 +24,7 @@ export const useDataStore = defineStore('data', {
     clearTokenRole() {
       this.auth_key = ''
       this.role = ''
+      this.profileData = []
     },
     deletEvent() {
       this.residentExcursions = []
@@ -42,7 +44,7 @@ export const useDataStore = defineStore('data', {
     },
     async PostLoginUser(jsonData) {
       try {
-        const response = await axios.post(`${baseUrl}/api/user/login`, jsonData, {
+        const response = await axios.post(`${baseUrl}/api/login`, jsonData, {
           headers: {
             'Content-Type': 'application/json',
           },
@@ -357,6 +359,16 @@ export const useDataStore = defineStore('data', {
         throw error
       }
     },
+    async FetchExcursionsStats(){
+      try {
+        const response = await axios.get(`${baseUrl}/api/references/excursion-stats`)
+        console.log('Данные успешно получены:', response.data)
+        this.excursionsStats = response.data
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    }
   },
   getters: {
     getProfileData: (state) => state.profileData,
@@ -364,10 +376,11 @@ export const useDataStore = defineStore('data', {
     getExcursionDetail: (state) => state.excursionDetail,
     getResidentEvents: (state) => state.residentExcursions,
     getNews: (state) => state.newsData,
+    getExcursionsStats: (state) => state.excursionsStats
   },
   persist: {
     key: 'data-store',
     storage: window.localStorage,
-    paths: ['auth_key', 'excursions'],
+    paths: ['auth_key', 'excursions', 'excursionsStats'],
   },
 })

@@ -1,15 +1,27 @@
 @import url('./base.css');
 
 .page-wrapper {
-  padding: 40px 30px;
+  padding: 50px 70px;
 }
 
 .page--margin{
   margin-top: 120px!important;
 }
 
+.text-standart{
+  font-size: 20px;
+}
+
+.text-l {
+  font-size: 24px;
+}
+
 .larger-text {
   font-size: 36px;
+}
+
+.medium {
+  font-weight: 500;
 }
 
 .bold {

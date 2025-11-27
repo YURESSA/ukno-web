@@ -20,7 +20,7 @@
           <div class="card-wrapper">
             <h5>{{ reservation.excursion_title }}</h5>
             <!-- <p>{{ getExcursionDescription(reservation.excursion_id) }}</p> -->
-            <p>{{ formatDateTime(reservation.session_start_datetime) }} | Старт у фонтана</p>
+            <p>{{ formatDateTime(reservation.session_start_datetime) }} | {{ reservation.place }}</p>
             <p>Участников: {{ reservation.participants_count }}</p>
             <div class="price">
               <span>{{ formatPrice(reservation.total_cost) }} ₽</span>
@@ -109,6 +109,7 @@ async function deletReserv(id){
 :deep(.n-carousel__arrow-group) {
   bottom: 50%!important;
   transform: translateY(50%);
+  right: -80px!important;
 }
 
 :deep(.n-carousel__dots ) {
@@ -143,7 +144,7 @@ async function deletReserv(id){
   gap: 20px;
   padding: 40px;
 
-  width: 300px;
+  width: 400px;
   border-radius: 14px;
   border: 1px solid #DEDEDE;
   margin-bottom: 10px;

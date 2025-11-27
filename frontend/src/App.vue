@@ -1,9 +1,24 @@
 <script setup>
 import { RouterView } from 'vue-router'
+import { useNotification } from '@/composables/useNotification'
+import Alert from '@/components/UI/alert.vue'
+
+const {
+  showNotification,
+  notificationMessage,
+  notificationType,
+  closeNotification
+} = useNotification()
 </script>
 
 <template>
   <router-view />
+  <alert
+    :show="showNotification"
+    :message="notificationMessage"
+    :type="notificationType"
+    @close="closeNotification"
+  />
 </template>
 
 <style scoped>

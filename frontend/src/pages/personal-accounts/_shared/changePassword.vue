@@ -53,6 +53,7 @@ import { useDataStore } from '@/stores/counter';
 import IconButton from '@/components/UI/button/IconButton.vue';
 import BaseButton from '@/components/UI/button/BaseButton.vue';
 import DefaultButton from '@/components/UI/button/DefaultButton.vue';
+import { notification } from '@/utils/notification'
 
 const store = useDataStore();
 const passwordConfirmation = ref('');
@@ -131,13 +132,13 @@ const handleSubmit = async () => {
 
   try {
     await store.PutPassword(JSON.stringify(formData.value), url);
-    alert('Пароль успешно изменён!');
+    await notification('Пароль успешно изменён!', 'positive');
     emit('close')
   } catch (error) {
     if (error.response?.status === 400) {
-      alert('Неверный старый пароль');
+      await notification('Неверный старый пароль', 'negative');
     } else {
-      alert('Произошла ошибка при смене пароля');
+      await notification('Произошла ошибка при смене пароля', 'negative');
     }
     console.error('Ошибка при смене пароля', error);
   }

@@ -6,14 +6,13 @@
         <!-- <img class="absolut--img bottom-ear" src="/icon/main/bottomEar.png" alt=""> -->
       </div>
       <div class="title">
-        <h3>Молодежное бюро 5 этаж -</h3>
+        <h3>Кто мы такие?</h3>
         <img class="absolut--img flower-big" src="/icon/main/flower-big.png" alt="">
       </div>
       <div class="about-content">
         <div class="content-wrapper">
           <div class="content right-border">
-            <p>Пространство для молодежи, креативных <br>
-              идей, вдохновения и развития.</p>
+            <p> Резиденты кластера «Хлебзавод №6» вместе с другими участниками проводим экскурсии и создаем  пространство для  креативных идей, вдохновения и развития</p>
           </div>
           <div class="content">
             <img class="absolut--img flower-small" src="/icon/main/flower-small.png" alt="">
@@ -28,7 +27,7 @@
             <img class="absolut--img ear" src="/icon/main/ear.png" alt="">
           </div>
           <div class="content border">
-            <p>С 2024 года мы открыли новое <br> пространство для молодежных инициатив, <br> образовательных мероприятий и <br> творческих проектов.</p>
+            <p>С 2025 года мы открыли новое <br> пространство для молодежных инициатив, <br> образовательных мероприятий и <br> творческих проектов.</p>
           </div>
           <div class="content">
             <img class="absolut--img bread" src="/icon/main/bread1.png" alt="">
@@ -53,10 +52,12 @@ import UsResult from './us-result.vue';
 
 .title{
   position: relative;
+  text-align: center;
 }
 
 .absolut--img{
   position: absolute;
+  pointer-events: none;
 }
 
 .ear{
@@ -117,8 +118,13 @@ import UsResult from './us-result.vue';
   position: relative;
 }
 
+.content > p{
+  max-width: 485px;
+}
+
 .right-border{
   display: flex;
+  justify-content: flex-end;
   border-right: 1px solid white ;
 }
 

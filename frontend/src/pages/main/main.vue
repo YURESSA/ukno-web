@@ -1,9 +1,9 @@
 <template>
   <Welcome />
+  <Alert/>
   <about-us></about-us>
   <Events/>
   <div class="page-wrapper dark-wrapper">
-    {{ news.news }}
     <News :news="news.news"/>
     <History/>
     <Partner/>
@@ -30,6 +30,7 @@ import News from './components/news-block.vue';
 import History from './components/history-block.vue';
 import Partner from './components/partner.vue';
 import Contact from '../../components/shared/contact-block.vue';
+import Alert from '@/components/UI/alert.vue';
 
 const route = useRoute();
 const store = useDataStore();
@@ -68,7 +69,7 @@ watch(() => route.hash, scrollToHash);
 .dark-wrapper{
   color: white;
   background-color: #333333;
-  background-image: url('/backgroung/news-block.png');
+  /* background-image: url('/backgroung/news-block.png'); */
   background-size: cover;
   background-repeat: no-repeat;
   background-position: top -500px right;

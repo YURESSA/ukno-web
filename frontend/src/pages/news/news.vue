@@ -88,7 +88,7 @@ watch(() => route.hash, () => {
   padding-top: 40px;
   min-height: 100vh;
   position: relative;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 .img-wrapper{
@@ -128,7 +128,6 @@ span{
   font-weight: 400;
   font-size: 16px;
   line-height: 150%;
-  text-align: center;
   color: #525252;
 }
 

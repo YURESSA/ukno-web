@@ -38,7 +38,7 @@
             />
           </div>
           <div class="filter">
-            <IconButton class="sort--btn" text="Фильрты" @click="openFilter"><img src="/icon/filter/filter.svg" alt=""></IconButton>
+            <IconButton class="sort--btn" text="Фильтры" @click="openFilter"><img src="/icon/filter/filter.svg" alt=""></IconButton>
           </div>
         </div>
       </div>

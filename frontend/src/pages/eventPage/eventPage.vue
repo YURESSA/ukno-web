@@ -62,7 +62,6 @@
             </div>
           </div>
           <div class="one-event-wrapper">
-            <div class="important-icon"></div>
             <div class="one-event">
               <div class="title">
                 <h3>Важно</h3>
@@ -76,6 +75,7 @@
                 </div>
               </div>
             </div>
+            <div class="important-icon"></div>
           </div>
         </div>
       </div>
@@ -121,6 +121,7 @@ import { baseUrl } from '@/stores/counter';
 import IconButton from '@/components/UI/button/IconButton.vue';
 import Contact from '../../components/shared/contact-block.vue';
 import Loading from '@/components/shared/loading-animation.vue';
+import { notification } from '@/utils/notification'
 
 const store = useDataStore();
 const route = useRoute();
@@ -143,7 +144,7 @@ onMounted(async () => {
     }, 1000)
   } catch (error) {
     console.error('Ошибка при загрузке экскурсий:', error);
-    alert('Произошла ошибка, попробуйте ещё раз')
+    await notification('Произошла ошибка, попробуйте ещё раз', 'negative');
   }
 });
 
@@ -329,6 +330,7 @@ span > a{
   gap: 30px;
   flex-wrap: wrap;
   margin-top: 20px;
+  margin-bottom: 35px;
 }
 
 .gallery-img {
@@ -400,6 +402,13 @@ span > a{
   border-left: 2px solid #f25c03;
   border-radius: 14px;
   background-color: white;
+  position: relative;
+}
+
+.one-event > .event-content{
+  position: absolute;
+  bottom: 25px;
+  z-index: 9;
 }
 
 .one-event > .title{
@@ -450,7 +459,9 @@ span > a{
   background-image: url('/icon/event/important.svg');
   background-repeat: no-repeat;
   background-size: cover;
+  top: 0px;
   right: 0px;
+  z-index: 1;
 }
 
 .asterick{
@@ -464,4 +475,5 @@ span > a{
   top: 30px;
   right: -135px;
 }
+
 </style>

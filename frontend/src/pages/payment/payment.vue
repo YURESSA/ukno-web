@@ -58,6 +58,7 @@
   import { useDataStore } from '@/stores/counter';
   import { onMounted, computed, ref } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
+  import { notification } from '@/utils/notification'
 
   const store = useDataStore();
   const route = useRoute();
@@ -93,7 +94,7 @@
       console.log(excursion.value)
     } catch (error) {
       console.error('Ошибка при загрузке экскурсий:', error);
-      alert('Произошла ошибка, попробуйте ещё раз')
+      await notification('Произошла ошибка, попробуйте ещё раз', 'negative');
     }
   });
 
@@ -167,7 +168,7 @@
     console.log(JSON.stringify(formData.value))
     try {
       await store.PostReservation(JSON.stringify(formData.value));
-      alert('Бронирование прошло успешно!');
+      await notification('Бронирование прошло успешно!', 'positive');
       router.push('/profile');
     } catch (error) {
       console.error('Ошибка бронировании', error);

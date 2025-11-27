@@ -2,15 +2,22 @@
   <div class="header-wrapper">
     <nav class="nav-wrapper">
       <ul class="nav-list">
-        <li><RouterLink :to="{ path: '/ukno'}" replace >О НАС</RouterLink></li>
-        <li><RouterLink to="/events">СОБЫТИЯ</RouterLink></li>
+        <li class="project">
+          Проекты
+          <ul class="project-list">
+            <li>Психологический клуб</li>
+            <li>Репетиторский клуб</li>
+            <li>Музейное пространство</li>
+          </ul>
+        </li>
+        <li><RouterLink to="/events">События</RouterLink></li>
         <li>
           <div class="logo">
             <RouterLink to="/"><img src="/logo/logo.svg" alt=""></RouterLink>
           </div>
         </li>
-        <li><RouterLink to="/news">НОВОСТИ</RouterLink></li>
-        <li><RouterLink :to="{ path: '/', hash: '#contact' }" replace >КОНТАКТЫ</RouterLink></li>
+        <li><RouterLink to="/news">Новости</RouterLink></li>
+        <li><RouterLink :to="{ path: '/ukno'}" replace >О нас</RouterLink></li>
       </ul>
       <div class="profile">
         <RouterLink to="/login" v-if="hasToken">
@@ -20,12 +27,12 @@
         </RouterLink>
         <RouterLink to="/profile" v-else-if="!hasToken & role === 'user'">
           <button>
-            <h3>{{ profileData.full_name[0] }}</h3>
+            <h4>{{ profileData.full_name[0].toUpperCase() }}</h4>
           </button>
         </RouterLink>
         <RouterLink to="/resident-profile" v-else-if="!hasToken & role === 'resident'">
           <button>
-            <h4>{{ profileData.full_name[0] }}</h4>
+            <h4>{{ profileData.full_name[0].toUpperCase() }}</h4>
           </button>
         </RouterLink>
       </div>
@@ -95,5 +102,48 @@ button{
 
 button > img {
   margin-right: -1px;
+}
+
+.project{
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.project-list{
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0px;
+  left: -50%;
+  transform: translateX(-20%);
+  top: 70px;
+  background-color: white;
+  box-shadow: 0 4px 10px 0 rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.5s ease;
+}
+
+.project:hover > .project-list{
+  visibility: visible;
+  opacity: 1;
+}
+
+.project:hover{
+  height: 70px;
+}
+
+.project-list > li{
+  padding: 24px 12px;
+  width: 260px;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.project-list > li:hover{
+  background-color: #EBEBEB;
 }
 </style>

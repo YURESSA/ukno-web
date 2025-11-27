@@ -20,24 +20,40 @@
               placeholder="Описание события*"
               v-model="formDataExcursion.description"
             ></textarea>
-            <input
-              type="EventName"
-              name="EventName"
-              placeholder="Формат события*"
-              v-model="formDataExcursion.format_type"
-            >
-            <input
-              type="EventName"
-              name="EventName"
-              placeholder="Тип события*"
-              v-model="formDataExcursion.category"
-            >
-            <input
-              type="EventName"
-              name="EventName"
-              placeholder="Возрастная категория*"
-              v-model="formDataExcursion.age_category"
-            >
+            <select v-model="formDataExcursion.format_type" class="custom-select" required>
+              <option class="placeholder" value="" disabled>Формат события*</option>
+              <option
+              class="option"
+              :value="format.format_type_name"
+              v-for="format in excursionsStats.format_types"
+              :key="format.format_type_id"
+              >
+                {{ format.format_type_name }}
+              </option>
+            </select>
+            <select v-model="formDataExcursion.category" class="custom-select" required>
+              <option class="placeholder" value="" disabled>Тип события*</option>
+              <option
+              class="option"
+              :value="category.category_name"
+              v-for="category in excursionsStats.categories"
+              :key="category.category_id"
+              >
+                {{ category.category_name }}
+              </option>
+            </select>
+
+            <select v-model="formDataExcursion.age_category" class="custom-select" required>
+              <option class="placeholder" value="" disabled>Возрастная категория**</option>
+              <option
+              class="option"
+              :value="age_category.age_category_name"
+              v-for="age_category in excursionsStats.age_categories"
+              :key="age_category.age_category_id"
+              >
+                {{ age_category.age_category_name }}
+              </option>
+            </select>
 
             <h5>Условие проведения</h5>
             <input
@@ -220,12 +236,14 @@ import BaseButton from '@/components/UI/button/BaseButton.vue';
 import { NDatePicker, NConfigProvider, NModal, NUpload } from 'naive-ui';
 import { ruRU, dateRuRU } from 'naive-ui';
 import { baseUrl } from '@/stores/counter';
+import { notification } from '@/utils/notification'
 
 const store = useDataStore();
 const route = useRoute();
 const load = ref(false)
 
 const excursion = computed(() => store.getExcursionDetail.excursion);
+const excursionsStats = computed(() => store.getExcursionsStats);
 
 const formDataExcursion = ref(null);
 const formDataSessions = ref(null);
@@ -237,6 +255,7 @@ onMounted(async () => {
     setTimeout(() => {
       load.value = true
     }, 1000)
+    await store.FetchExcursionsStats();
     console.log('Загрузил')
     formDataExcursion.value = {
       title: excursion.value.title,
@@ -266,7 +285,7 @@ onMounted(async () => {
     }
   } catch (error) {
     console.error('Ошибка при загрузке экскурсий:', error);
-    alert('Произошла ошибка, попробуйте ещё раз')
+    await notification('Произошла ошибка, попробуйте ещё раз', 'negative');
   }
 });
 
@@ -381,7 +400,7 @@ async function deletePhoto(excursion_id, photo_id){
     excursion.value.photos = excursion.value.photos.filter(photo => photo.photo_id !== photo_id)
   } catch(error) {
     console.error('Ошибка при удалении фото:', error);
-    alert('Не удалось удалить фото');
+    await notification('Не удалось удалить фото', 'negative');
   }
 }
 
@@ -399,7 +418,7 @@ async function deleteSession(excursion_id, session_id) {
     }
   } catch (error) {
     console.error('Ошибка при удалении сессии:', error);
-    alert('Не удалось удалить сессию');
+    await notification('Не удалось удалить сессию', 'negative');
   }
 }
 
@@ -408,12 +427,12 @@ async function pushSessionToApi(excursion_id){
   const jsonData = JSON.stringify(newSession.value)
   try {
     await store.PostNewSession(excursion_id, jsonData);
-    alert('Сессия добавлена');
+    await notification('Сессия добавлена', 'positive');
     newSession.value = ''
     addInProcess.value = false
   } catch (error) {
     console.error('Ошибка при добавлении сессии:', error);
-    alert('Не удалось удалить сессию');
+    await notification('Не удалось удалить сессию', 'negative');
   }
 }
 
@@ -438,7 +457,7 @@ const submitEvent = async () => {
     }
 
     await store.PatchSessionData(excursion.value.excursion_id, jsonData);
-    alert('Событие успешно обновленно')
+    await notification('Событие успешно обновленно', 'positive');
     router.back();
   } catch (error) {
     console.error('Upload failed:', error);
@@ -684,4 +703,60 @@ span{
   width: 30px;
   height: 30px;
 }
+
+input, textarea, select {
+  padding: 15px 0;
+  border: 2px solid #2C2C2C24;
+  border-radius: 8px;
+  padding-left: 20px;
+  transition: all 0.5s ease;
+  font-size: 20px;
+  font-weight: 400 !important;
+  font-family: 'Manrope' !important;
+}
+
+.custom-select option.placeholder {
+  color: #999;
+}
+
+.custom-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23777'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 20px center;
+  background-size: 16px;
+  padding-right: 45px; /* 20px отступ + 16px стрелка + немного запаса */
+  width: 100%;
+}
+
+.option{
+  color: #333;
+}
+
+.custom-select:valid {
+  color: #333; /* Цвет когда выбран нормальный вариант */
+}
+
+input:focus, textarea:focus {
+  outline: none;
+  background-color: #F3F3F3;
+}
+
+input::placeholder,
+textarea::placeholder {
+  font-weight: 400 !important;
+}
+
+input::-webkit-input-placeholder,
+textarea::-webkit-input-placeholder {
+  font-weight: 400 !important;
+}
+
+input::-moz-placeholder,
+textarea::-moz-placeholder {
+  font-weight: 400 !important;
+}
+
 </style>

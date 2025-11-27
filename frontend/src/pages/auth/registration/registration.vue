@@ -75,6 +75,7 @@ import { ref } from 'vue';
 import DefaultButton from '@/components/UI/button/DefaultButton.vue';
 import { useDataStore } from '@/stores/counter';
 import router from '@/router';
+import { notification } from '@/utils/notification'
 
 const store = useDataStore();
 const showErrors = ref(false);
@@ -168,13 +169,13 @@ const handleSubmit = async () => {
 
   try {
     await store.PostNewUser(JSON.stringify(formData.value));
-    alert('Регистрация прошла успешно!');
+    await notification('Регистрация прошла успешно!', 'positive');
     router.push('/login');
   } catch (error) {
     if (error.response?.status === 409) {
-      alert('Пользователь с таким email уже существует');
+      await notification('Пользователь с таким email уже существует', 'negative');
     } else {
-      alert('Произошла ошибка при регистрации');
+      await notification('Произошла ошибка при регистрации', 'negative');
     }
     console.error('Ошибка регистрации', error);
   }

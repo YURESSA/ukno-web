@@ -2,7 +2,7 @@
   <div class="filter-wrapper">
     <div class="filter-header">
       <div class="title">
-        <h4>Формат</h4>
+        <h4>Фильтры</h4>
       </div>
       <div>
         <button class="close__button"><img src="/icon/filter/close.svg" alt="Закрыть" @click="closeFilter"></button>
@@ -11,17 +11,25 @@
     <div class="filter-main">
       <div class="filter-component">
         <h5>Формат</h5>
-        <n-checkbox-group v-model:value="formData.category">
-          <n-space class="checkbox-group" item-style="display: flex;">
-            <n-checkbox
-              v-for="option in allFormatOptions"
-              :key="option"
-              size="large"
-              :value="option"
-              :label="option"
-            />
-          </n-space>
-        </n-checkbox-group>
+        <div class="checkbox-wrapper">
+          <n-checkbox
+            size="large"
+            value="Все варинаты"
+            label="Все варинаты"
+            @update:checked="(checked) => handleCheckboxChange(checked)"
+          />
+          <n-checkbox-group v-model:value="formData.category">
+            <n-space class="checkbox-group" item-style="display: flex;">
+              <n-checkbox
+                v-for="option in allFormatOptions"
+                :key="option"
+                size="large"
+                :value="option"
+                :label="option"
+              />
+            </n-space>
+          </n-checkbox-group>
+        </div>
       </div>
       <div class="filter-component">
         <h5>Даты</h5>
@@ -63,7 +71,7 @@
             <n-input-number v-model:value="priceRange[0]" :step="100" placeholder="Сумма от" size="small" :show-button="false" />
             <n-input-number class="right-input" v-model:value="priceRange[1]" :step="100" placeholder="Сумма до" size="small" :show-button="false" />
           </n-space>
-          <n-slider v-model:value="priceRange" range :step="100" :min="0" :max="2000" />
+          <n-slider v-model:value="priceRange" range :step="100" :min="excursionsStats.cost.min" :max="excursionsStats.cost.max" />
         </n-space>
       </div>
       <div class="filter-component">
@@ -88,27 +96,31 @@
     </div>
     <div class="interact-button">
       <BaseButton type="button" text="Показать" @click="sendFilter"/>
-      <DefaultButton class="reset-button" text="Сбросить" icon="" />
+      <DefaultButton class="reset-button" @click="resetFilter" text="Сбросить" icon="" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, defineEmits, watch } from 'vue'
+import { ref, defineEmits, watch, onMounted, computed } from 'vue'
 import { NCheckbox, NCheckboxGroup, NSpace, NInputNumber, NSlider, NDatePicker } from 'naive-ui'
 import BaseButton from '@UI/button/BaseButton.vue'
 import DefaultButton from '@UI/button/DefaultButton.vue'
 import IconButton from '@/components/UI/button/IconButton.vue'
 import { useDataStore } from '@/stores/counter';
 
-const allFormatOptions = [
-  "Все варианты",
-  "Экскурсия",
-  "Мастер Класс",
-  "Воркшоп",
-  "Выставка",
-  "Концерт"
-];
+onMounted(async () => {
+  await store.FetchExcursionsStats();
+});
+
+const excursionsStats = computed(() => store.getExcursionsStats);
+
+const allFormatOptions = computed(() => {
+  if (!excursionsStats.value || !excursionsStats.value.categories) {
+    return ['Загрузка...'];
+  }
+  return [...excursionsStats.value.categories.map(item => item.category_name)];
+});
 
 const priceRange = ref([0, 2000])
 const range = ref([Date.now(), Date.now() + 7 * 24 * 60 * 60 * 1000]);
@@ -126,16 +138,14 @@ const formData = ref({
   age_category: '',
 });
 
-watch(() => formData.value.category, (newVal) => {
-  // Если выбран "Все варианты"
-  if (newVal.includes("Все варианты")) {
-    formData.value.category = allFormatOptions;
-  }
-  // Если сняли "Все варианты" при полном выборе
-  else if (newVal.length === allFormatOptions.length - 1 && !newVal.includes("Все варианты")) {
+
+function handleCheckboxChange(ch){
+  if(ch){
+    formData.value.category = allFormatOptions.value;
+  } else {
     formData.value.category = [];
   }
-}, { deep: true });
+}
 
 function validateParticipants(){
   if(formData.value.participants_count < 1){
@@ -170,7 +180,6 @@ function buildQueryString(formData) {
 
   const params = new URLSearchParams();
 
-  // Используем formData.value, а не formData!
   for (const [key, value] of Object.entries(formData.value)) {
     if (value === null || value === undefined || value === '') continue;
 
@@ -191,6 +200,24 @@ const sendFilter = async () => {
   const queryString = buildQueryString(formData);
   try {
     await store.GetFilterExcursions(queryString);
+  } catch (error) {
+    console.error('Ошибка при загрузке экскурсий:', error);
+  }
+}
+
+const resetFilter = async () => {
+  try {
+    await store.FetchExcursions();
+    formData.value = {
+      category: [],
+      start_date: '',
+      end_date: '',
+      participants_count: 1,
+      format_type: '',
+      min_price: '',
+      max_price: '',
+      age_category: '',
+    }
   } catch (error) {
     console.error('Ошибка при загрузке экскурсий:', error);
   }
@@ -288,9 +315,13 @@ const sendFilter = async () => {
   background-color: #e7e4e4b7;
 }
 
-.checkbox-group{
+.checkbox-group {
   flex-direction: column!important;
   gap: 10px!important;
+}
+
+.checkbox-wrapper > .n-checkbox{
+  margin-bottom: 10px;
 }
 
 .participants-input{
