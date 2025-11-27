@@ -30,6 +30,7 @@ services:
       - ../backend/static:/app/static:ro
     restart: unless-stopped
     env_file:
+      -
       - ../.env
 
   db:
