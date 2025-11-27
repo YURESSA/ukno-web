@@ -1,3 +1,7 @@
+# Конфигурационные файлы IDE
+.idea/
+.vscode/
+
 # Виртуальное окружение
 .venv/
 venv/
@@ -8,7 +12,7 @@ env/
 .vscode/
 
 # Кеши Python
-__pycache__/
+pycache/
 *.pyc
 *.pyo
 *.pyd
@@ -41,4 +45,8 @@ yarn-error.log
 Thumbs.db
 /backend/migrations/
 /backend/media/
+<<<<<<< HEAD
 /media/
+=======
+/media/
+>>>>>>> main-frontend
