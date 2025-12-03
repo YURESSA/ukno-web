@@ -10,7 +10,7 @@ from backend.core.models.ref_models import CompanyProject
 
 project_model = ref_ns.model('CompanyProject', {
     'title': fields.String(required=True, description='Название проекта'),
-    'description': fields.String(required=False, description='Описание проекта'),
+    'link': fields.String(required=True, description='Ссылка на проект'),
 })
 
 
@@ -36,19 +36,23 @@ class ProjectList(Resource):
         Создание нового проекта компании.
 
         JSON body:
-            title (str): Название проекта (обязательно).
-            description (str): Описание проекта.
-
+            title (str): Название проекта (обязательно)
+            link (str): Ссылка на проект (обязательно)
         """
         data = request.json or {}
 
         title = data.get('title')
+        link = data.get('link')
+
         if not title:
             return {'message': 'Поле title обязательно'}, 400
 
+        if not link:
+            return {'message': 'Поле link обязательно'}, 400
+
         project = CompanyProject(
             title=title,
-            description=data.get('description')
+            link=link
         )
 
         db.session.add(project)
