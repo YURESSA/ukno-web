@@ -1,5 +1,6 @@
 import logging
 import os
+from time import time
 
 import flask
 from flask import Flask
@@ -33,7 +34,7 @@ def create_app(testing=False):
 
         file_handler = logging.FileHandler(log_file)
         file_handler.setLevel(logging.INFO)
-        formatter = logging.Formatter('[%(asctime)s] [%(levelname)s] %(name)s - %(message)s')
+        formatter = logging.Formatter('[%(asctime)s] [%(levelname)s] %(message)s')
         file_handler.setFormatter(formatter)
 
         if not any(isinstance(h, logging.FileHandler) for h in app.logger.handlers):
@@ -42,13 +43,18 @@ def create_app(testing=False):
         app.logger.info("Приложение Flask создано и расширения инициализированы")
 
     @app.before_request
-    def log_request_info():
-        app.logger.info(f"Request: {flask.request.method} {flask.request.path}")
+    def start_timer():
+        flask.g.start_time = time()
 
-    @app.errorhandler(Exception)
-    def handle_exception(e):
-        app.logger.exception("Произошла ошибка: %s", e)
-        return {"message": "Internal Server Error"}, 500
+    @app.after_request
+    def log_request_info(response):
+        duration = round((time() - flask.g.start_time) * 1000, 2)  # мс
+        app.logger.info(
+            f"{flask.request.remote_addr} {flask.request.method} {flask.request.path} "
+            f"{response.status_code} {duration}ms "
+            f"UA:{flask.request.headers.get('User-Agent')}"
+        )
+        return response
 
     return app
 

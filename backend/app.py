@@ -41,7 +41,11 @@ def register_static_routes(app):
 
 def run_cleanup(app):
     with app.app_context():
-        cleanup_unpaid_reservations()
+        try:
+            count = cleanup_unpaid_reservations()
+            app.logger.info(f"Очистка неоплаченных броней выполнена, удалено {count}")
+        except Exception as e:
+            app.logger.exception("Ошибка при очистке броней: %s", e)
 
 
 def main():
