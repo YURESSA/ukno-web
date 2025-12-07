@@ -1,5 +1,7 @@
+import logging
 import os
 
+import flask
 from flask import Flask
 from flask_cors import CORS
 
@@ -23,6 +25,31 @@ def create_app(testing=False):
     if testing:
         app.config["TESTING"] = True
         app.config["JWT_SECRET_KEY"] = "test-secret"
+
+    app.logger.setLevel(logging.INFO)
+    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+        log_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs', 'app.log')
+        os.makedirs(os.path.dirname(log_file), exist_ok=True)
+
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setLevel(logging.INFO)
+        formatter = logging.Formatter('[%(asctime)s] [%(levelname)s] %(name)s - %(message)s')
+        file_handler.setFormatter(formatter)
+
+        if not any(isinstance(h, logging.FileHandler) for h in app.logger.handlers):
+            app.logger.addHandler(file_handler)
+
+        app.logger.info("Приложение Flask создано и расширения инициализированы")
+
+    @app.before_request
+    def log_request_info():
+        app.logger.info(f"Request: {flask.request.method} {flask.request.path}")
+
+    @app.errorhandler(Exception)
+    def handle_exception(e):
+        app.logger.exception("Произошла ошибка: %s", e)
+        return {"message": "Internal Server Error"}, 500
+
     return app
 
 
