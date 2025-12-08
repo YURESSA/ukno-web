@@ -48,13 +48,27 @@ def create_app(testing=False):
 
     @app.after_request
     def log_request_info(response):
-        duration = round((time() - flask.g.start_time) * 1000, 2)  # мс
-        app.logger.info(
-            f"{flask.request.remote_addr} {flask.request.method} {flask.request.path} "
-            f"{response.status_code} {duration}ms "
-            f"UA:{flask.request.headers.get('User-Agent')}"
-        )
+        duration = round((time() - flask.g.start_time) * 1000, 2)
+
+        if response.status_code >= 400:
+            app.logger.error(
+                f"{flask.request.remote_addr} {flask.request.method} {flask.request.path} "
+                f"{response.status_code} {duration}ms "
+                f"UA:{flask.request.headers.get('User-Agent')}"
+            )
+
         return response
+
+    @app.errorhandler(Exception)
+    def handle_exception(e):
+        duration = round((time() - flask.g.start_time) * 1000, 2)
+
+        app.logger.exception(
+            f"UNHANDLED ERROR: {flask.request.remote_addr} {flask.request.method} {flask.request.path} "
+            f"{duration}ms UA:{flask.request.headers.get('User-Agent')}"
+        )
+
+        return {"message": "Internal server error"}, 500
 
     return app
 
