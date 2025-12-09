@@ -96,7 +96,7 @@ const formattedTime = computed(() => {
 
 const getMainImage = computed(() => {
   console.log( baseUrl + props.excursion.photos[0].photo_url)
-  return baseUrl + props.excursion.photos[0].photo_url;
+  return baseUrl + '/' + props.excursion.photos[0].photo_url;
 });
 
 const handleImageError = (e) => {

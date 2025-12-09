@@ -79,7 +79,7 @@ const profileData = computed(() => store.getProfileData)
   margin: 0 auto;
   justify-content: space-around;
   align-items: center;
-  transform: translateX(28px);
+  /* transform: translateX(28px); */
 }
 
 .profile{
@@ -116,8 +116,8 @@ button > img {
   flex-direction: column;
   align-items: center;
   gap: 0px;
-  left: -50%;
-  transform: translateX(-20%);
+  left: 0;
+  transform: translateX(-25%);
   top: 70px;
   background-color: white;
   box-shadow: 0 4px 10px 0 rgba(0, 0, 0, 0.04);
@@ -137,10 +137,12 @@ button > img {
 }
 
 .project-list > li{
-  padding: 24px 12px;
+  padding: 6px 12px;
   width: 260px;
   transition: all 0.3s ease;
   border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
 }
 
 .project-list > li:hover{

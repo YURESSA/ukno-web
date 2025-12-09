@@ -7,7 +7,7 @@
           type="email"
           class="text-l text-medium"
           name="email"
-          placeholder="e-mail *"
+          placeholder="E-mail *"
           v-model="formData.email"
           required
           autocomplete="off"
@@ -89,7 +89,13 @@ const handleSubmit = async () => {
     await store.GetProfile();
 
     await notification('Вход выполнен успешно!', 'positive');
-    router.back();
+    const previousRoute = router.options.history.state.back;
+
+    if (previousRoute === '/register') {
+      router.push('/');
+    } else {
+      router.back();
+    }
 
   } catch (error) {
     if (error.response?.status === 401) {

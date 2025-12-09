@@ -381,6 +381,6 @@ export const useDataStore = defineStore('data', {
   persist: {
     key: 'data-store',
     storage: window.localStorage,
-    paths: ['auth_key', 'excursions', 'excursionsStats'],
+    paths: ['auth_key', 'excursionsStats'],
   },
 })

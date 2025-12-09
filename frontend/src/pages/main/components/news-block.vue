@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div class="container" v-if="news">
     <div class="title" id="news">
       <h3>Новости молодежного бюро</h3>
     </div>

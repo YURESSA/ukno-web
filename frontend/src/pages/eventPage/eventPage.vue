@@ -48,7 +48,8 @@
                 <h3>Стоимость</h3>
               </div>
               <div class="event-content">
-                <p>{{ excursion.sessions[0].cost }} ₽</p>
+                <p v-if="parseInt(excursion.sessions[0].cost) > 0">{{ parseInt(excursion.sessions[0].cost) }} ₽</p>
+                <p v-if="parseInt(excursion.sessions[0].cost) == 0"> Бесплатно! </p>
               </div>
             </div>
             <div class="event-type orange-block">
@@ -157,7 +158,7 @@ const moveToBooked = () => {
 
 const getMainImage = computed(() => {
   console.log( baseUrl + excursion.value.photos[0].photo_url)
-  return baseUrl + excursion.value.photos[0].photo_url;
+  return baseUrl + '/' + excursion.value.photos[0].photo_url;
 });
 
 

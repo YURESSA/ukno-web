@@ -109,6 +109,8 @@ import DefaultButton from '@UI/button/DefaultButton.vue'
 import IconButton from '@/components/UI/button/IconButton.vue'
 import { useDataStore } from '@/stores/counter';
 
+const store = useDataStore();
+
 onMounted(async () => {
   await store.FetchExcursionsStats();
 });
@@ -122,10 +124,8 @@ const allFormatOptions = computed(() => {
   return [...excursionsStats.value.categories.map(item => item.category_name)];
 });
 
-const priceRange = ref([0, 2000])
+const priceRange = ref([excursionsStats.value.cost.min, excursionsStats.value.cost.max])
 const range = ref([Date.now(), Date.now() + 7 * 24 * 60 * 60 * 1000]);
-
-const store = useDataStore();
 
 const formData = ref({
   category: [],

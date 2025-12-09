@@ -29,7 +29,7 @@
         <input
           type="email"
           name="email"
-          placeholder="e-mail *"
+          placeholder="E-mail *"
           class="text-l text-medium"
           v-model="formData.email"
           required
@@ -190,6 +190,7 @@ const handleSubmit = async () => {
   position: relative;
   height: 100%;
   padding: 0px;
+  margin-top: 20px;
 }
 
 .login-wrapper {

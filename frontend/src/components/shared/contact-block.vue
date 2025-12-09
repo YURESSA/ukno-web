@@ -4,7 +4,7 @@
         <h3>Контакты</h3>
         <p>Улица 8 Марта, 203, Екатеринбург, Свердловская область, 620085</p>
         <p>Режим работы: ежедневно с 10:00 до 21:00</p>
-        <p>E-mail: mb@mail.ru</p>
+        <p>E-mail: bureau@ukno.ru</p>
         <p><a href="tel:+79905679522"></a>+7(990)567-95-22</p>
         <ul>
             <li><a href="tel:+79905679522"><img src="/icon/header/phone.svg" alt=""></a></li>
@@ -18,15 +18,15 @@
             <div class="info-block">
               <img src="/icon/footer/city.svg" alt="">
               <div class="text">
-                <h3 class="green">6 км</h3>
-                <p>от центра города</p>
+                <h3 class="green">15 минут</h3>
+                <p>от метро Ботаническая</p>
               </div>
             </div>
             <div class="info-block">
               <img src="/icon/footer/bus.svg" alt="">
               <div class="text">
-                <h3 class="violet">7 мин</h3>
-                <p>от  ближайшей остановки</p>
+                <h3 class="violet">3 минуты</h3>
+                <p>от ближайшей остановки  </p>
               </div>
             </div>
           </div>
