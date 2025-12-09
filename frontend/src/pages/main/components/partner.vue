@@ -3,21 +3,21 @@
     <h3>Партнёры</h3>
     <div class="partners-block">
       <img src="/logo/ukno.svg" alt="">
-      <img src="/logo/icons8-монзо-250 1.svg" alt="">
-      <img src="/logo/icons8-swiftui 1.svg" alt="">
-      <img src="/logo/icons8-ember 1.svg" alt="">
+      <img src="/logo/ПФКИ_Лого.svg" alt="">
+      <img src="/logo/Хлебозавод_логотип.svg" alt="">
+      <img src="/logo/Фудфейс_логотип.svg" alt="">
     </div>
     <div class="partners-block">
-      <img src="/logo/s.svg" alt="">
-      <img src="/logo/m.svg" alt="">
-      <img src="/logo/animal-crossing.svg" alt="">
-      <img src="/logo/v.svg" alt="">
+      <img src="/logo/5.svg" alt="">
+      <img src="/logo/6.svg" alt="">
+      <img src="/logo/7.svg" alt="">
+      <img src="/logo/8.svg" alt="">
     </div>
     <div class="partners-block">
-      <img src="/logo/image.svg" alt="">
-      <img src="/logo/icons8-монзо-250 1.svg" alt="">
-      <img src="/logo/icons8-swiftui 1.svg" alt="">
-      <img src="/logo/icons8-ember 1.svg" alt="">
+      <img src="/logo/12.svg" alt="">
+      <img src="/logo/10.svg" alt="">
+      <img src="/logo/12.svg" alt="">
+      <img src="/logo/12.svg" alt="">
     </div>
   </div>
 </template>
@@ -35,7 +35,8 @@
 }
 
 .partners-block > img{
-  width: 82px;
+  width: 241px;
+  height: 88px;
 }
 
 .container{

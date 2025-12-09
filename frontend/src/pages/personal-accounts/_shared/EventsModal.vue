@@ -6,7 +6,7 @@
         <IconButton @click="$emit('close')" class="action--btn"><img src="/icon/maki_cross.svg" alt=""></IconButton>
       </div>
       <div class="cards">
-        <div class="card-wrapper" v-if="events != ''">
+        <div class="card-wrapper" v-if="events.excursions.length > 0">
           <div class="card" v-for="(excursions, i) in events.excursions" :key="i">
             <div class="card-header">
               <div class="left">
@@ -23,6 +23,7 @@
             </div>
           </div>
         </div>
+        <h4 v-else>У вас нет событий!</h4>
       </div>
     </div>
   </div>
@@ -89,6 +90,11 @@ async function deletEvent(EventId){
   overflow: hidden;
   background-color: rgba(128, 128, 128, 0.459);
   z-index: 99;
+}
+
+h4 {
+  text-align: center;
+  margin-top: 20px;
 }
 
 .header-modal{

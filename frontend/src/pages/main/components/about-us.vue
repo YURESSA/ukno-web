@@ -125,11 +125,21 @@ import UsResult from './us-result.vue';
 .right-border{
   display: flex;
   justify-content: flex-end;
-  border-right: 1px solid white ;
+  border-right: 1px solid white;
+}
+
+.right-border > p{
+  text-align: right;
+  margin-right: 45px;
 }
 
 .border{
-  border-right: 1px solid white ;
-  border-left: 1px solid white ;
+  justify-content: center;
+  border-right: 1px solid white;
+  border-left: 1px solid white;
+}
+
+.border > p {
+  text-align: center;
 }
 </style>
