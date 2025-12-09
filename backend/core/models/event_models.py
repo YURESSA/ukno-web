@@ -71,6 +71,7 @@ class Event(db.Model):
     event_id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text, nullable=False)
+    short_description = db.Column(db.String(512), nullable=True)
     duration = db.Column(db.Integer, nullable=False)
 
     category_id = db.Column(db.Integer, db.ForeignKey('categories.category_id'), nullable=False)
@@ -108,6 +109,7 @@ class Event(db.Model):
         data = {
             'excursion_id': self.event_id,
             'title': self.title,
+            'short_description': self.short_description,
             'description': self.description,
             'duration': self.duration,
             'category': self.category.to_dict() if self.category else None,
