@@ -54,16 +54,16 @@ class ExcursionStats(Resource):
 
         return {
             "cost": {
-                "min": float(min_cost) if min_cost is not None else None,
-                "max": float(max_cost) if max_cost is not None else None
+                "min": float(min_cost) if min_cost is not None else 0,
+                "max": float(max_cost) if max_cost is not None else 0
             },
             "distance_to_center": {
-                "min": round(min_center, 2) if min_center is not None else None,
-                "max": round(max_center, 2) if max_center is not None else None
+                "min": round(min_center, 2) if min_center is not None else 0,
+                "max": round(max_center, 2) if max_center is not None else 0
             },
             "time_to_stop": {
-                "min": round(min_time, 2) if min_time is not None else None,
-                "max": round(max_time, 2) if max_time is not None else None
+                "min": round(min_time, 2) if min_time is not None else 0,
+                "max": round(max_time, 2) if max_time is not None else 0
             },
             "roles": roles_data,
             "age_categories": age_categories_data,
