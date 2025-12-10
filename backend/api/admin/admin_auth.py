@@ -6,6 +6,7 @@ from flask_jwt_extended import get_jwt_identity
 from flask_restx import Resource
 
 from backend.core.services.user_services.profile_service import get_user_info_response
+from ...core.models.auth_models import RoleEnum
 from ...core.services.user_services.auth_service import login_user
 from . import admin_ns
 from .decorators import admin_required
@@ -24,7 +25,7 @@ class AdminLogin(Resource):
         Авторизация администратора для получения JWT токена.
         """
         data: Dict[str, Any] = request.get_json() or {}
-        response, status = login_user("admin", data)
+        response, status = login_user(RoleEnum.ADMIN, data)
         return response, status
 
 

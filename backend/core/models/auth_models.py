@@ -1,39 +1,47 @@
+import enum
+
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from backend.core import db
 
 
-class Role(db.Model):
-    __tablename__ = 'roles'
-    role_id = db.Column(db.Integer, primary_key=True)
-    role_name = db.Column(db.String(50), nullable=False, unique=True)
-
-    users = db.relationship('User', backref='role', lazy=True)
-
-    def __repr__(self):
-        return f"<Role {self.role_name}>"
+class RoleEnum(enum.Enum):
+    ADMIN = "admin"
+    RESIDENT = "resident"
+    USER = "user"
 
     def to_dict(self):
+        """
+        Возвращает словарь с id и названием роли.
+        role_id — порядковый номер Enum (начиная с 1)
+        """
+        role_id = list(RoleEnum).index(self) + 1
         return {
-            'role_id': self.role_id,
-            'role_name': self.role_name
+            "role_id": role_id,
+            "role_name": self.value
         }
 
 
 class User(db.Model):
     __tablename__ = 'users'
+
     user_id = db.Column(db.Integer, primary_key=True)
     full_name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     phone = db.Column(db.String(15), nullable=True)
     password_hash = db.Column(db.String(256), nullable=False)
-    role_id = db.Column(db.Integer, db.ForeignKey('roles.role_id'), nullable=False)
+
+    role = db.Column(
+        db.Enum(RoleEnum, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        default=RoleEnum.USER
+    )
 
     reservations = db.relationship(
-            "Reservation",
-            back_populates="user",
-            cascade="all, delete-orphan",
-            lazy=True
+        "Reservation",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy=True
     )
 
     def __repr__(self):

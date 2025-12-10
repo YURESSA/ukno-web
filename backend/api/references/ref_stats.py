@@ -1,10 +1,10 @@
 from flask_restx import Resource
 from sqlalchemy import func
 
-from backend.core import db
-from backend.core.models.auth_models import Role
-from backend.core.models.event_models import FormatType, Category, AgeCategory, Event, EventSession
 from backend.api.references import ref_ns
+from backend.core import db
+from backend.core.models.auth_models import RoleEnum
+from backend.core.models.event_models import FormatType, Category, AgeCategory, Event, EventSession
 
 
 @ref_ns.route('/excursion-stats')
@@ -44,7 +44,7 @@ class ExcursionStats(Resource):
             func.max(Event.time_to_nearest_stop)
         ).filter(Event.is_active.is_(True)).first()
 
-        roles_data = [r.to_dict() for r in Role.query.all()]
+        roles_data = [role.to_dict() for role in RoleEnum]
 
         age_categories_data = [a.to_dict() for a in AgeCategory.query.all()]
 

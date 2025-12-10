@@ -88,7 +88,7 @@ def recreate_test_user(email, password, full_name, phone, role_name):
         password=password,
         full_name=full_name,
         phone=phone,
-        role_name=role_name
+        role=role_name
     )
 
 

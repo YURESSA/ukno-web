@@ -5,13 +5,14 @@ from flask import request
 from flask_jwt_extended import get_jwt
 from flask_restx import Resource
 
-from backend.core.services.user_services.profile_service import get_user_info_response
-from ...core.services.user_services.auth_service import register_user
-from . import admin_ns
-from .decorators import admin_required
 from backend.core.messages import AuthMessages
 from backend.core.schemas.admin_schemas import update_user_model
 from backend.core.schemas.auth_schemas import user_model
+from backend.core.services.user_services.profile_service import get_user_info_response
+from . import admin_ns
+from .decorators import admin_required
+from ...core.models.auth_models import RoleEnum
+from ...core.services.user_services.auth_service import register_user
 from ...core.services.user_services.user_service import get_user_by_email, get_all_users, delete_user, update_user
 
 
@@ -34,9 +35,15 @@ class AdminUserList(Resource):
         """
         Создание нового пользователя (или резидента) от лица администратора
         """
-        current_role: str = get_jwt().get('role', '')
+        current_role_str: str = get_jwt().get('role', 'user')
+        try:
+            current_role = RoleEnum(current_role_str)
+        except ValueError:
+            current_role = RoleEnum.USER
         data: Dict[str, Any] = request.get_json() or {}
-        response, status = register_user("user", data, current_role)
+
+        response, status = register_user(RoleEnum.USER, data, current_role)
+
         return response, status
 
 
@@ -57,11 +64,16 @@ class AdminUserDetail(Resource):
     @admin_ns.doc(description="Удаление пользователя по email (только для администратора)")
     def delete(self, email: str) -> Tuple[dict, int]:
         """
-        Удаление пользователя по email
+        Удаление пользователя по email с проверкой на созданные экскурсии и активные бронирования
         """
-        if delete_user(email):
+        success, message = delete_user(email)
+
+        if success:
             return {"message": AuthMessages.USER_DELETED}, HTTPStatus.OK
-        return {"message": AuthMessages.USER_NOT_FOUND}, HTTPStatus.NOT_FOUND
+        else:
+            if message == "Пользователь не найден":
+                return {"message": AuthMessages.USER_NOT_FOUND}, HTTPStatus.NOT_FOUND
+            return {"message": message}, HTTPStatus.BAD_REQUEST
 
     @admin_required
     @admin_ns.doc(description="Редактирование пользователя по email (только для администратора)")

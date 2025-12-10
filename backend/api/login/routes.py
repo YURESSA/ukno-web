@@ -30,7 +30,7 @@ class UniversalLogin(Resource):
         if not user.check_password(password):
             return {"message": "Неверный пароль"}, HTTPStatus.UNAUTHORIZED
 
-        role = user.role.role_name.lower()
+        role = user.role.value
 
         token = authenticate_user(email, password)
         if not token:
