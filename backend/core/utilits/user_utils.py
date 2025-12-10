@@ -3,8 +3,16 @@ from typing import Optional, Tuple, Dict
 from backend.core.models.auth_models import RoleEnum
 
 
-def parse_user_data(data: Dict, default_role: RoleEnum) -> Tuple[
-    Optional[str], Optional[str], Optional[str], Optional[str], RoleEnum]:
+def parse_user_data(
+        data: Dict,
+        default_role: RoleEnum
+) -> Tuple[
+    Optional[str],
+    Optional[str],
+    Optional[str],
+    Optional[str],
+    RoleEnum
+]:
     """
     Извлекает данные пользователя из словаря и подставляет роль по умолчанию, если не указана.
 
