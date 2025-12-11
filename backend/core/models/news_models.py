@@ -48,4 +48,3 @@ class News(db.Model):
             },
             "photo_author": self.photo_author
         }
-
