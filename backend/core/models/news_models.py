@@ -18,20 +18,26 @@ class News(db.Model):
 
     news_id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
+    short_description = db.Column(db.String(300), nullable=True)
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now)
 
-    # Автор новости (связь с User)
     author_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
     author = db.relationship('User', foreign_keys=[author_id], backref='news')
     photo_author = db.Column(db.String(200), nullable=True)
 
-    images = db.relationship('NewsImage', back_populates='news', cascade='all, delete-orphan', lazy=True)
+    images = db.relationship(
+        'NewsImage',
+        back_populates='news',
+        cascade='all, delete-orphan',
+        lazy=True
+    )
 
     def to_dict(self):
         return {
             "news_id": self.news_id,
             "title": self.title,
+            "short_description": self.short_description,
             "content": self.content,
             "created_at": self.created_at.isoformat(),
             "images": [image.image_path for image in self.images],
@@ -42,3 +48,4 @@ class News(db.Model):
             },
             "photo_author": self.photo_author
         }
+
