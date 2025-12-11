@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
   <div class="container" v-if="news">
     <div class="title" id="news">
       <h3>Новости молодежного бюро</h3>
@@ -25,9 +25,83 @@
       </div>
     </div>
   </div>
+</template> -->
+
+<template>
+  {{ news[0] }}
+  <div class="history-wrapper" id="history">
+    <div class="container">
+      <div class="img-block">
+        <img :src="imageUrl" alt="">
+      </div>
+      <div class="content-block">
+        <h3>{{ news[0].title }}</h3>
+        <div class="content">
+          <p>{{ news[0].content }}</p>
+        </div>
+        <RouterLink to=""><IconButton class="link-button" text="команды"><img src="/icon/white-arrow.svg" alt=""></IconButton></RouterLink>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
+import IconButton from '@/components/UI/button/IconButton.vue';
+import NewsCard from '@/components/shared/news-card.vue';
+import { baseUrl } from '@/stores/counter';
+import { computed } from 'vue';
+
+const props = defineProps({
+  news: Object,
+})
+
+const imageUrl = computed(() => baseUrl + props.news[0].images[0])
+</script>
+
+<style scoped>
+.history-wrapper{
+  margin-top: 50px;
+  margin-bottom: 120px;
+}
+
+.container{
+  display: flex;
+  gap: 70px;
+  margin: 0 auto;
+  max-width: 1800px;
+}
+
+.img-block > img {
+  width: 310px;
+  height: 430px;
+  object-fit: cover;
+  object-position: center;
+}
+
+.content-block{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.content{
+  margin-top: 40px;
+  margin-bottom: 60px;
+}
+
+.link-button{
+  border-color: white;
+  width: 100%;
+  color: white;
+}
+
+.content > p{
+  margin-top: 20px;
+}
+</style>
+
+<!-- <script setup>
 import NewsCard from '@/components/shared/news-card.vue';
 import { baseUrl } from '@/stores/counter';
 
@@ -58,4 +132,4 @@ const props = defineProps({
 .half-width {
   flex: 1;
 }
-</style>
+</style> -->

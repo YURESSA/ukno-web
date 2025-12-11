@@ -46,3 +46,4 @@ Thumbs.db
 /backend/migrations/
 /backend/media/
 /media/
+frontend/.env

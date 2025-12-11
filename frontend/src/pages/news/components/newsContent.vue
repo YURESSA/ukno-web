@@ -12,7 +12,7 @@
         :alt="news.title"
         class="event-image"
       >
-      <span>Фото: Сергей Иванов</span>
+      <span>{{ news.photo_author }}</span>
     </div>
     <div class="news-text" v-html="news.content">
 
