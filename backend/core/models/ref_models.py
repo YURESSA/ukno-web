@@ -36,14 +36,14 @@ class CompanyHistory(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     link = db.Column(db.String(500), nullable=False)
-    date = db.Column(db.String(50), nullable=False)  # можно заменить на Date
+    date = db.Column(db.Date, nullable=False)
     description = db.Column(db.Text, nullable=False)
 
     def to_dict(self):
         return {
             'id': self.id,
             'link': self.link,
-            'date': self.date,
+            'date': self.date.isoformat(),
             'description': self.description
         }
 

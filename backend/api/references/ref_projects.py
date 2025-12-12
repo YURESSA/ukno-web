@@ -64,6 +64,36 @@ class ProjectList(Resource):
 @ref_ns.route('/projects/<int:id>')
 class ProjectResource(Resource):
 
+    @ref_ns.doc(description="Получение проекта компании по ID")
+    def get(self, id: int) -> tuple[dict, int]:
+        project = CompanyProject.query.get(id)
+        if not project:
+            return {'message': 'Проект не найден'}, 404
+        return project.to_dict(), 200
+
+    @admin_required
+    @ref_ns.expect(project_model)
+    @ref_ns.doc(description="Обновление проекта компании по ID")
+    def put(self, id: int) -> tuple[dict, int]:
+        project = CompanyProject.query.get(id)
+        if not project:
+            return {'message': 'Проект не найден'}, 404
+
+        data = request.json or {}
+        title = data.get('title')
+        link = data.get('link')
+
+        if not title:
+            return {'message': 'Поле title обязательно'}, 400
+        if not link:
+            return {'message': 'Поле link обязательно'}, 400
+
+        project.title = title
+        project.link = link
+
+        db.session.commit()
+        return project.to_dict(), 200
+
     @admin_required
     @ref_ns.doc(description="Удаление проекта компании по ID")
     def delete(self, id: int) -> tuple[dict, int]:
