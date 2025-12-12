@@ -1,5 +1,5 @@
+from datetime import datetime
 from typing import Any
-from datetime import datetime, date
 
 from flask import request
 from flask_restx import Resource, fields
