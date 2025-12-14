@@ -178,4 +178,77 @@ input:focus {
 span{
   text-align: center;
 }
+
+/* Мобильные стили */
+@media (max-width: 768px) {
+  .page-wrapper {
+    padding: 20px 16px;
+    align-items: flex-start;
+    min-height: 100vh;
+  }
+
+  .login-wrapper {
+    width: 100%;
+    max-width: 100%;
+    margin-top: 40px;
+  }
+
+  form {
+    width: 100%;
+    max-width: 100%;
+    padding: 30px 20px;
+    border-radius: 24px;
+    gap: 20px;
+    transform: translateY(0);
+    border-width: 1.5px;
+  }
+
+  input {
+    padding: 14px 0;
+    margin-bottom: 16px;
+    font-size: 16px;
+  }
+
+  .sumbit--btn {
+    padding: 18px;
+    font-size: 16px;
+    margin-top: 20px;
+  }
+
+  .error-message {
+    font-size: 16px;
+    margin-top: -10px;
+  }
+}
+
+/* Для маленьких экранов */
+@media (max-width: 480px) {
+  form {
+    padding: 25px 16px;
+    border-radius: 20px;
+    gap: 16px;
+  }
+
+  input {
+    padding: 12px 0;
+    margin-bottom: 12px;
+  }
+
+  .sumbit--btn {
+    padding: 16px;
+  }
+
+  .error-message {
+    font-size: 14px;
+  }
+}
+
+/* Для планшетов */
+@media (min-width: 769px) and (max-width: 1024px) {
+  form {
+    width: 80%;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+}
 </style>
