@@ -4,6 +4,7 @@
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>{{ title }}</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
           rel="stylesheet"/>
     <link href="https://unpkg.com/tabulator-tables@5.6.1/dist/css/tabulator.min.css" rel="stylesheet">
@@ -12,7 +13,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"/>
     <style>
-          .spinner-overlay {
+        .spinner-overlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -23,7 +24,8 @@
             align-items: center;
             justify-content: center;
             z-index: 9999;
-          }
+        }
+
         /* ===== Переменные цветов/теней/радиуса ===== */
         :root {
             --primary: #3b82f6; /* Blue 500 */
@@ -713,6 +715,22 @@
                 <i class="fas fa-calendar-check"></i>
                 <span>Брони</span>
             </a>
+            <a href="#" id="btnTeam" class="nav-link">
+                <i class="fas fa-users-cog"></i>
+                <span>Команда</span>
+            </a>
+            <a href="#" id="btnHome" class="nav-link">
+                <i class="fas fa-home"></i>
+                <span>Главная</span>
+            </a>
+            <a href="#" id="btnProjects" class="nav-link">
+                <i class="fas fa-project-diagram"></i>
+                <span>Проекты</span>
+            </a>
+            <a href="#" id="btnHistory" class="nav-link">
+                <i class="fas fa-history"></i>
+                <span>История</span>
+            </a>
         </div>
     </nav>
 
@@ -741,6 +759,22 @@
                     <button id="btnCreateNews" class="btn btn-success" style="display: none;"
                             data-bs-toggle="modal" data-bs-target="#newsModal">
                         <i class="fas fa-plus"></i> Создать новость
+                    </button>
+                    <button id="btnCreateTeam" class="btn btn-success" style="display: none;"
+                            data-bs-toggle="modal" data-bs-target="#teamModal">
+                        <i class="fas fa-plus"></i> Добавить участника команды
+                    </button>
+                    <button id="btnCreateCulturalSpace" class="btn btn-success" style="display: none;"
+                            data-bs-toggle="modal" data-bs-target="#culturalSpaceModal">
+                        <i class="fas fa-plus"></i> Добавить элемент культурного пространства
+                    </button>
+                    <button id="btnCreateProject" class="btn btn-success" style="display: none;"
+                            data-bs-toggle="modal" data-bs-target="#projectModal">
+                        <i class="fas fa-plus"></i> Добавить проект
+                    </button>
+                    <button id="btnCreateHistory" class="btn btn-success" style="display: none;" data-bs-toggle="modal"
+                            data-bs-target="#historyModal">
+                        <i class="fas fa-plus"></i> Добавить событие
                     </button>
                 </div>
             </div>
@@ -936,6 +970,12 @@
                     <label for="modalTitle" class="form-label fw-semibold">Название события</label>
                     <input type="text" id="modalTitle" class="form-control form-control-lg"
                            placeholder="Название события"/>
+                </div>
+
+                <div class="mb-4">
+                    <label for="modalShortDescription" class="form-label fw-semibold">Краткое описание</label>
+                    <textarea id="modalShortDescription" class="form-control" rows="2"
+                              placeholder="Краткое описание для События"></textarea>
                 </div>
 
                 <!-- Описание -->
@@ -1138,6 +1178,12 @@
 
             <div class="modal-body">
                 <input type="text" id="newsTitle" class="form-control mb-2" placeholder="Заголовок">
+
+                <!-- Краткое описание (short_description) -->
+                <textarea id="newsShortDescription" class="form-control mb-2" rows="2"
+                          placeholder="Краткое описание"></textarea>
+
+                <!-- Полное содержимое -->
                 <textarea id="newsContent" class="form-control mb-2" placeholder="Содержимое"></textarea>
 
                 <input type="file" id="newsImages" class="form-control mb-2" multiple style="display:none;">
@@ -1164,6 +1210,7 @@
         </div>
     </div>
 </div>
+
 
 <div class="modal fade" id="reservationModal" tabindex="-1"
      aria-labelledby="reservationModalLabel" aria-hidden="true">
@@ -1215,30 +1262,162 @@
 </div>
 
 <div id="loading-spinner" style="display: none;">
-  <div class="spinner-overlay">
-    <div class="spinner-border text-light" role="status">
-      <span class="visually-hidden">Загрузка...</span>
+    <div class="spinner-overlay">
+        <div class="spinner-border text-light" role="status">
+            <span class="visually-hidden">Загрузка...</span>
+        </div>
     </div>
-  </div>
 </div>
 
+<!-- Модалка для сотрудника -->
+<div class="modal fade" id="teamModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content rounded-4 shadow-sm border-0">
+            <div class="modal-header bg-primary bg-opacity-10 rounded-top d-flex align-items-center gap-2">
+                <i id="teamModalIcon" class="fas fa-user-tie fs-4 text-primary"></i>
+                <h5 id="teamModalHeader" class="fw-bold mb-0">Сотрудник</h5>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">ФИО</label>
+                    <input type="text" id="teamFullName" class="form-control" placeholder="ФИО сотрудника">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Описание</label>
+                    <textarea id="teamDescription" class="form-control" rows="3"
+                              placeholder="Описание сотрудника"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Фото</label>
+                    <div id="teamPhotoDropZone" class="d-flex align-items-center gap-3 border rounded p-3 mb-2"
+                         style="border-style: dashed;">
+                        <input type="file" id="teamPhotoUpload" accept="image/*" class="form-control-file flex-grow-1"/>
+                        <button type="button" id="btnUploadTeamPhoto" class="btn btn-primary">
+                            <i class="fas fa-camera"></i> Добавить фото
+                        </button>
+                    </div>
+                </div>
+                <div id="teamPhotoPreview" class="mb-3 d-flex flex-wrap gap-2"></div>
+
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i> Отмена</button>
+                <button id="teamSaveBtn" class="btn btn-success"><i class="fas fa-save"></i> Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модалка для элемента культурного пространства -->
+<div class="modal fade" id="culturalSpaceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content rounded-4 shadow-sm border-0">
+            <div class="modal-header bg-primary bg-opacity-10 rounded-top d-flex align-items-center gap-2">
+                <i id="culturalSpaceModalIcon" class="fas fa-landmark fs-4 text-primary"></i>
+                <h5 id="culturalSpaceModalHeader" class="fw-bold mb-0">Элемент культурного пространства</h5>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Текст</label>
+                    <textarea id="culturalSpaceText" class="form-control" rows="3"
+                              placeholder="Введите текст элемента"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Фото</label>
+                    <div id="culturalSpacePhotoDropZone" class="d-flex align-items-center gap-3 border rounded p-3 mb-2"
+                         style="border-style: dashed;">
+                        <input type="file" id="culturalSpacePhotoUpload" accept="image/*"
+                               class="form-control-file flex-grow-1"/>
+                        <button type="button" id="btnUploadCulturalSpacePhoto" class="btn btn-primary">
+                            <i class="fas fa-camera"></i> Добавить фото
+                        </button>
+                    </div>
+                </div>
+                <div id="culturalSpacePhotoPreview" class="mb-3 d-flex flex-wrap gap-2"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i> Отмена</button>
+                <button id="culturalSpaceSaveBtn" class="btn btn-success"><i class="fas fa-save"></i> Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="projectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content rounded-4 shadow-sm border-0">
+            <div class="modal-header bg-primary bg-opacity-10 rounded-top d-flex align-items-center gap-2">
+                <i class="fas fa-project-diagram fs-4 text-primary"></i>
+                <h5 id="projectModalHeader" class="fw-bold mb-0">Проект компании</h5>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Название</label>
+                    <input type="text" id="projectTitle" class="form-control" placeholder="Название проекта">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Ссылка</label>
+                    <input type="text" id="projectLink" class="form-control" placeholder="Ссылка на проект">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i> Отмена</button>
+                <button id="projectSaveBtn" class="btn btn-success"><i class="fas fa-save"></i> Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модалка для событий истории компании -->
+<div class="modal fade" id="historyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content rounded-4 shadow-sm border-0">
+            <div class="modal-header bg-primary bg-opacity-10 rounded-top d-flex align-items-center gap-2">
+                <i class="fas fa-history fs-4 text-primary"></i>
+                <h5 id="historyModalHeader" class="fw-bold mb-0">Событие истории компании</h5>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="historyDate" class="form-label fw-semibold">Дата</label>
+                    <input type="date" id="historyDate" class="form-control"/>
+                </div>
+                <div class="mb-3">
+                    <label for="historyLink" class="form-label fw-semibold">Ссылка</label>
+                    <input type="text" id="historyLink" class="form-control" placeholder="Введите ссылку"/>
+                </div>
+                <div class="mb-3">
+                    <label for="historyDescription" class="form-label fw-semibold">Описание</label>
+                    <textarea id="historyDescription" class="form-control" rows="3"
+                              placeholder="Введите описание"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i> Отмена</button>
+                <button id="historySaveBtn" class="btn btn-success"><i class="fas fa-save"></i> Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <style>
-  .spinner-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-  }
+    .spinner-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
 </style>
-
-
-
 
 
 <div id="notificationArea" class="position-fixed top-0 end-0 p-3" style="z-index: 1100;"></div>
@@ -1252,6 +1431,10 @@
 <script src="{{ url_for('static', filename='js/news.js') }}"></script>
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 <script src="{{ url_for('static', filename='js/reservations.js') }}"></script>
+<script src="{{ url_for('static', filename='js/team.js') }}"></script>
+<script src="{{ url_for('static', filename='js/cultural_space.js') }}"></script>
+<script src="{{ url_for('static', filename='js/projects.js') }}"></script>
+<script src="{{ url_for('static', filename='js/history.js') }}"></script>
 
 <script src="https://unpkg.com/tabulator-tables@5.6.1/dist/js/tabulator.min.js"></script>
 </body>
