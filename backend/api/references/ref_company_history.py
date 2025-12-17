@@ -10,6 +10,7 @@ from backend.core import db
 from backend.core.models.ref_models import CompanyHistory
 
 history_model = ref_ns.model('CompanyHistory', {
+    'title': fields.String(required=True, description='Название события'),
     'link': fields.String(required=True, description='Ссылка на событие'),
     'date': fields.String(required=True, description='Дата события (YYYY-MM-DD)', example='2025-12-11'),
     'description': fields.String(required=True, description='Описание события'),
@@ -23,6 +24,18 @@ class CompanyHistoryList(Resource):
     def get(self) -> tuple[list[Any], int]:
         """
         Получение всех записей таймлайна.
+
+        **Ответ:**
+            200 OK: Список объектов CompanyHistory
+            [
+                {
+                    "id": 1,
+                    "link": "https://example.com/event1",
+                    "date": "2025-12-11",
+                    "description": "Описание события 1"
+                },
+                ...
+            ]
         """
         items = CompanyHistory.query.all()
         return [i.to_dict() for i in items], 200
@@ -36,15 +49,22 @@ class CompanyHistoryList(Resource):
 
         JSON body:
             link (str): Ссылка (обязательно)
-            date (str): Дата (обязательно)
+            date (str): Дата (обязательно, формат YYYY-MM-DD)
             description (str): Описание (обязательно)
+
+        **Ответы:**
+            201 Created: Возвращает созданное событие
+            400 Bad Request: Ошибка валидации полей
         """
         data = request.json or {}
-
+        print(data)
+        title = data.get('title')
         link = data.get('link')
         date_str = data.get('date')
         description = data.get('description')
 
+        if not title:
+            return {'message': 'Поле title обязательно'}, 400
         if not link:
             return {'message': 'Поле link обязательно'}, 400
         if not date_str:
@@ -58,6 +78,7 @@ class CompanyHistoryList(Resource):
             return {'message': 'Неверный формат даты. Используйте YYYY-MM-DD'}, 400
 
         item = CompanyHistory(
+            title=title,
             link=link,
             date=event_date,
             description=description
@@ -74,6 +95,16 @@ class CompanyHistoryResource(Resource):
 
     @ref_ns.doc(description="Получение события по ID")
     def get(self, id: int) -> tuple[dict, int]:
+        """
+        Получение события по его ID.
+
+        Параметры:
+            id (int): ID события
+
+        **Ответы:**
+            200 OK: Возвращает объект события
+            404 Not Found: Если событие с указанным ID не найдено
+        """
         item = CompanyHistory.query.get(id)
         if not item:
             return {'message': 'Событие не найдено'}, 404
@@ -83,17 +114,33 @@ class CompanyHistoryResource(Resource):
     @ref_ns.expect(history_model)
     @ref_ns.doc(description="Обновление события по ID")
     def put(self, id: int) -> tuple[dict, int]:
+        """
+        Обновление события по его ID.
+
+        Параметры:
+            id (int): ID события
+
+        JSON body:
+            link (str): Ссылка (обязательно)
+            date (str): Дата (обязательно, формат YYYY-MM-DD)
+            description (str): Описание (обязательно)
+
+        **Ответы:**
+            200 OK: Возвращает обновлённое событие
+            400 Bad Request: Ошибка валидации полей
+            404 Not Found: Если событие с указанным ID не найдено
+        """
         item = CompanyHistory.query.get(id)
         if not item:
             return {'message': 'Событие не найдено'}, 404
 
         data = request.json or {}
         link = data.get('link')
+        title = data.get('title')
         date_str = data.get('date')
         description = data.get('description')
-
-        if not link:
-            return {'message': 'Поле link обязательно'}, 400
+        if not title:
+            return {'message': 'Поле title обязательно'}, 400
         if not date_str:
             return {'message': 'Поле date обязательно'}, 400
         if not description:
@@ -105,6 +152,7 @@ class CompanyHistoryResource(Resource):
             return {'message': 'Неверный формат даты. Используйте YYYY-MM-DD'}, 400
 
         item.link = link
+        item.title = title
         item.date = event_date
         item.description = description
 
@@ -116,7 +164,14 @@ class CompanyHistoryResource(Resource):
     @ref_ns.doc(description="Удаление события по ID")
     def delete(self, id: int) -> tuple[dict, int]:
         """
-        Удаление записи истории компании.
+        Удаление записи истории компании по ID.
+
+        Параметры:
+            id (int): ID события
+
+        **Ответы:**
+            200 OK: {"message": "Событие удалено"}
+            404 Not Found: Если событие с указанным ID не найдено
         """
         item = CompanyHistory.query.get(id)
         if not item:

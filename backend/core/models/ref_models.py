@@ -35,7 +35,8 @@ class CompanyHistory(db.Model):
     __tablename__ = 'company_history'
 
     id = db.Column(db.Integer, primary_key=True)
-    link = db.Column(db.String(500), nullable=False)
+    title = db.Column(db.String(255), nullable=False)
+    link = db.Column(db.String(500), nullable=True)
     date = db.Column(db.Date, nullable=False)
     description = db.Column(db.Text, nullable=False)
 
@@ -43,6 +44,7 @@ class CompanyHistory(db.Model):
         return {
             'id': self.id,
             'link': self.link,
+            'title': self.title,
             'date': self.date.isoformat(),
             'description': self.description
         }
