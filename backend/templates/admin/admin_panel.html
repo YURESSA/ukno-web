@@ -721,7 +721,7 @@
             </a>
             <a href="#" id="btnHome" class="nav-link">
                 <i class="fas fa-home"></i>
-                <span>Главная</span>
+                <span>Культурное пространство</span>
             </a>
             <a href="#" id="btnProjects" class="nav-link">
                 <i class="fas fa-project-diagram"></i>
@@ -1325,6 +1325,10 @@
                               placeholder="Введите текст элемента"></textarea>
                 </div>
                 <div class="mb-3">
+                    <label for="culturalSpaceOrder" class="form-label">Порядковый номер</label>
+                    <input type="number" class="form-control" id="culturalSpaceOrder" min="0" value="0">
+                </div>
+                <div class="mb-3">
                     <label class="form-label fw-semibold">Фото</label>
                     <div id="culturalSpacePhotoDropZone" class="d-flex align-items-center gap-3 border rounded p-3 mb-2"
                          style="border-style: dashed;">
@@ -1381,6 +1385,13 @@
                 <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
+                <div class="mb-3">
+                    <label for="historyTitle" class="form-label fw-semibold">Название события</label>
+                    <input type="text"
+                           id="historyTitle"
+                           class="form-control"
+                           placeholder="Введите название события">
+                </div>
                 <div class="mb-3">
                     <label for="historyDate" class="form-label fw-semibold">Дата</label>
                     <input type="date" id="historyDate" class="form-control"/>
