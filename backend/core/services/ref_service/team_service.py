@@ -4,7 +4,6 @@ from backend.core import db
 from backend.core.models.ref_models import TeamMember
 from backend.core.utilits.file_utils import save_image, remove_file_if_exists
 
-
 MAX_IMAGE_SIZE = 5 * 1024 * 1024
 
 
@@ -84,6 +83,7 @@ def delete_team_photo(member: TeamMember):
     remove_file_if_exists(member.photo)
     member.photo = None
     db.session.commit()
+
 
 def get_team_member_by_id(member_id: int) -> TeamMember | None:
     return TeamMember.query.get(member_id)

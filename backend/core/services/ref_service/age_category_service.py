@@ -1,6 +1,8 @@
+from typing import Optional
+
 from backend.core import db
 from backend.core.models.event_models import AgeCategory
-from typing import Optional
+
 
 def get_all_age_categories() -> list[AgeCategory]:
     """Получение всех возрастных категорий."""
