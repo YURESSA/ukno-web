@@ -238,7 +238,7 @@ const resetFilter = async () => {
 
   position: fixed;
   top: 150px;
-  right: -100%;
+  right: -150%;
   z-index: 100;
 
   overflow-y: scroll;
@@ -438,5 +438,46 @@ const resetFilter = async () => {
 
 :deep(.n-checkbox-box){
   --n-color-checked: #F25C03;
+}
+
+@media (max-width: 768px) {
+  .filter-wrapper{
+    width: calc(100vw - 48px);
+    padding: 24px 24px;
+    box-shadow: none;
+    border-radius: 0;
+    top: 0px;
+    z-index: 1000;
+    height: 100%;
+    overflow-x: hidden;
+  }
+  .filter-main[data-v-60029d04] {
+    gap: 20px;
+  }
+  h4{
+    font-size: 28px;
+  }
+  h5{
+    font-size: 20px;
+  }
+  :deep(.n-checkbox__label){
+    font-size: 16px;
+  }
+  :deep(.n-input-number){
+    width: 175px;
+  }
+  :deep(.n-input-wrapper){
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  :deep(.n-input){
+    --n-font-size: 16px!important;
+  }
+  .interact-button{
+    margin-top: 20px;
+    margin-bottom: 50px;
+  }
 }
 </style>

@@ -52,4 +52,16 @@ nav{
   margin-top: 100px;
   color: white;
 }
+
+@media (max-width: 768px) {
+  .navigation{
+    flex-direction: column;
+    gap: 30px;
+    align-items: center;
+  }
+  .nav-list{
+    flex-direction: column;
+    align-items: center;
+  }
+}
 </style>

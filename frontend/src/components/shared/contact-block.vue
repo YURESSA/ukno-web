@@ -10,9 +10,11 @@
             <li><a href="tel:+79905679522"><img src="/icon/header/phone.svg" alt=""></a></li>
             <li><a href=""><img src="/icon/header/vk.svg" alt=""></a></li>
             <li><a href=""><img src="/icon/header/tg.svg" alt=""></a></li>
-          </ul>
+        </ul>
         <div class="map">
-          <slot class="yand-map"></slot>
+          <div class="map-radius">
+            <slot class="yand-map"></slot>
+          </div>
           <div class="info">
             <h4>Загляните к нам!</h4>
             <div class="info-block">
@@ -59,14 +61,13 @@ h4{
   justify-content: center;
   gap: 30px;
   width: 100%;
-
-  padding: 70px;
-  border-radius: 38px;
   background-color: white;
 }
 
-.yand-map{
-  border-radius: 38px;
+.map-radius{
+  width: 100%;
+  border-radius: 40px;
+  overflow: hidden;
 }
 
 .map{
@@ -93,5 +94,24 @@ h4{
 
 .violet{
   color: #46278D;
+}
+
+@media (max-width: 768px) {
+  .contact-container{
+    gap: 20px;
+  }
+  h3{
+    margin-bottom: 6px;
+  }
+  li img{
+    width: 26px;
+    height: 26px;
+  }
+  .map{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
 }
 </style>

@@ -67,7 +67,7 @@
         </div> -->
       </div>
     </div>
-    <IconButton @click="router.push('/events')" class="button" text="записаться"><img src="/icon/arrow.svg" alt=""></IconButton>
+    <IconButton @click="router.push('/events')" class="button" text="записаться"><img src="/icon/white-arrow.svg" alt=""></IconButton>
   </div>
 </template>
 

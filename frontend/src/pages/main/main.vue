@@ -5,10 +5,10 @@
   <Events/>
   <div class="page-wrapper dark-wrapper">
     <News :news="news.news"/>
-    <History/>
+    <!-- <History/> -->
     <Partner/>
   </div>
-  <Contact class="map">
+  <Contact class="page-wrapper">
     <iframe
     src="https://yandex.ru/map-widget/v1/?um=constructor%3A467ac6eb77e4af971eecb9575ed4f0203a9875b769906a7e184a781db5718a65&amp;source=constructor"
     width="629"
@@ -73,11 +73,15 @@ watch(() => route.hash, scrollToHash);
   background-size: cover;
   background-repeat: no-repeat;
   background-position: top -500px right;
-  padding-bottom: 450px;
+  /* padding-bottom: 450px; */
   border-radius: 45px 45px 0 0;
 }
 
-.map{
-  margin-top: -400px;
+
+@media (max-width: 768px) {
+  .yand-map{
+    width: 100%;
+    height: 242px;
+  }
 }
 </style>

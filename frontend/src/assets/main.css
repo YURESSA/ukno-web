@@ -8,6 +8,39 @@
   margin-top: 120px!important;
 }
 
+h1 {
+  font-size: 94px;
+  font-weight: 700;
+}
+
+h2 {
+  font-size: 64px;
+  font-weight: 700;
+  line-height: 110%;
+  color: #333;
+}
+
+h3 {
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 110%;
+}
+
+h4 {
+  font-size: 32px;
+  font-weight: 600;
+}
+
+h5 {
+  font-size: 24px;
+}
+
+a {
+  text-decoration: none;
+  color: #333333;
+}
+
+
 .text-standart{
   font-size: 20px;
 }
@@ -24,8 +57,16 @@
   font-weight: 500;
 }
 
-.bold {
+.bold{
   font-weight: 700;
+}
+
+.text-orange{
+  color: #F25C03;
+}
+
+.text-grey{
+  color: #7B7A7A;
 }
 
 .n-collapse {
@@ -61,4 +102,40 @@
   /* Стили для стрелок */
   --n-arrow-color: #3a7bd5;
   --n-arrow-size: 24px;
+}
+
+@media (max-width: 768px) {
+  .page--margin{
+    margin-top: 0px!important;
+  }
+
+  .page-wrapper {
+    padding: 34px 24px 34px 24px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
+    font-size: 28px;
+  }
+
+  a {
+    text-decoration: none;
+    color: #333333;
+  }
+
+
+  .text-standart{
+    font-size: 20px;
+  }
+
+  .text-l {
+    font-size: 24px;
+  }
+
+  .larger-text {
+    font-size: 36px;
+  }
 }

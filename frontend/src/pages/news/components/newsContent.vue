@@ -85,4 +85,29 @@ span{
   width: max-content;
   max-width: 730px;
 }
+
+@media (max-width: 768px) {
+  h2 {
+    font-size: 28px;
+  }
+  .created-at{
+    margin-bottom: 20px;
+  }
+  .news-img {
+    gap: 5px;
+  }
+  .news-img > span {
+    font-size: 12px;
+  }
+  .news-img > img{
+    height: 160px;
+  }
+  .news-text{
+    margin-top: 20px;
+    max-width: 100%;
+  }
+  .news-content{
+    margin-bottom: 55px;
+  }
+}
 </style>

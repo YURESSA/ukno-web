@@ -1,6 +1,6 @@
 <template>
   <div class="header-wrapper">
-    <nav class="nav-wrapper">
+    <nav class="desktop-nav-wrapper" v-if="!isMobile">
       <ul class="nav-list">
         <li class="project">
           Проекты
@@ -25,16 +25,67 @@
             <img src="/icon/header/profile-fill.svg" alt="">
           </button>
         </RouterLink>
-        <RouterLink to="/profile" v-else-if="!hasToken & role === 'user'">
+        <RouterLink to="/profile" v-else-if="!hasToken && role === 'user'">
           <button>
             <h4>{{ profileData.full_name[0].toUpperCase() }}</h4>
           </button>
         </RouterLink>
-        <RouterLink to="/resident-profile" v-else-if="!hasToken & role === 'resident'">
+        <RouterLink to="/resident-profile" v-else-if="!hasToken && role === 'resident'">
           <button>
             <h4>{{ profileData.full_name[0].toUpperCase() }}</h4>
           </button>
         </RouterLink>
+      </div>
+    </nav>
+
+
+
+<!-- Мобилка -->
+    <nav v-else class="mobile-nav">
+      <div class="mobile-header">
+        <button @click="menuOpen = !menuOpen" class="menu-btn">
+          <img src="/icon/menu-icon.svg" alt="">
+        </button>
+        <div class="mobile-logo">
+          <RouterLink to="/">
+            <img src="/logo/mobile-logo.svg" alt="Логотип">
+          </RouterLink>
+        </div>
+        <div class="mobile-profile">
+          <RouterLink to="/login" v-if="hasToken">
+            <button>
+              <img src="/icon/header/profile-fill.svg" alt="">
+            </button>
+          </RouterLink>
+          <RouterLink to="/profile" v-else-if="!hasToken && role === 'user'">
+            <button>
+              <span>{{ profileData.full_name[0].toUpperCase() }}</span>
+            </button>
+          </RouterLink>
+          <RouterLink to="/resident-profile" v-else-if="!hasToken && role === 'resident'">
+            <button>
+              <span>{{ profileData.full_name[0].toUpperCase() }}</span>
+            </button>
+          </RouterLink>
+        </div>
+      </div>
+
+      <div v-if="menuOpen" class="mobile-menu">
+        <ul>
+          <li>
+            <div @click="toggleProjects" class="project-toggle">
+              Проекты
+            </div>
+            <ul v-if="showProjects" class="mobile-projects">
+              <li>Психологический клуб</li>
+              <li>Репетиторский клуб</li>
+              <li>Музейное пространство</li>
+            </ul>
+          </li>
+          <li><RouterLink to="/events" @click="menuOpen = false">События</RouterLink></li>
+          <li><RouterLink to="/news" @click="menuOpen = false">Новости</RouterLink></li>
+          <li><RouterLink to="/ukno" @click="menuOpen = false">О нас</RouterLink></li>
+        </ul>
       </div>
     </nav>
   </div>
@@ -42,10 +93,31 @@
 
 
 <script setup>
-import { computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useDataStore } from '@/stores/counter';
 
 const store = useDataStore();
+const isMobile = ref(false)
+const menuOpen = ref(false)
+const showProjects = ref(false);
+
+const checkMobile = () => {
+  const width = document.documentElement.clientWidth;
+  isMobile.value = width < 768;
+}
+
+const toggleProjects = () => {
+  showProjects.value = !showProjects.value;
+};
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
 
 const hasToken = computed(() => {
   return !store.auth_key;
@@ -56,22 +128,18 @@ const role = computed(() => {
 });
 
 const profileData = computed(() => store.getProfileData)
-
 </script>
 
 <style scoped>
 
 .header-wrapper{
-  width: calc(100% - 90px);
+  width: calc(100vw - 90px);
+  /* max-width: 100vw; */
   position: fixed;
   padding: 28px 45px;
   backdrop-filter: blur(28.399999618530273px);
   background: rgba(255, 255, 255, 0.7);
   z-index: 900;
-}
-
-.nav-wrapper{
-  position: relative;
 }
 
 .nav-list{
@@ -100,14 +168,15 @@ button{
   color: #FF8C5B;
 }
 
-button > img {
-  margin-right: -1px;
-}
 
 .project{
   position: relative;
   display: flex;
   align-items: center;
+}
+
+h4{
+  font-family: 'Manrope';
 }
 
 .project-list{
@@ -147,5 +216,77 @@ button > img {
 
 .project-list > li:hover{
   background-color: #EBEBEB;
+}
+
+/* Мобильные стили */
+
+@media (max-width: 768px) {
+  .header-wrapper{
+    width: calc(100vw - 48px);
+    position: relative;
+    padding: 56px 24px 20px 24px;
+    /* margin-bottom: 20px; */
+  }
+}
+
+.mobile-header{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mobile-profile{
+  width: 31px;
+  height: 31px;
+}
+
+.mobile-profile span{
+  font-size: 20px;
+  font-family: 'Manrope';
+  font-weight: 600;
+}
+
+.mobile-nav * button{
+  width: 31px;
+  height: 31px;
+}
+
+.mobile-nav button img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Сохраняет пропорции */
+  box-sizing: border-box;
+}
+
+.menu-btn{
+  background: none;
+}
+
+.mobile-menu{
+  display: flex;
+  justify-content: center;
+  position: absolute;
+  width: 100%;
+  top: 112px;
+  left: 0;
+  background-color: white;
+}
+
+.mobile-menu > ul{
+  width: calc(100% - 48px);
+  border-top: 1px solid #FFECE0;
+  flex-direction: column;
+  padding-top: 40px;
+  padding-bottom: 20px;
+  gap: 18px;
+}
+
+.mobile-projects {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-left: 15px;
+  padding-top: 15px;
 }
 </style>

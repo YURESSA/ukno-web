@@ -257,31 +257,32 @@ span{
 /* Мобильные стили */
 @media (max-width: 768px) {
   .page-wrapper {
-    padding: 0 16px;
-    margin-top: 0;
+    margin: 0;
+    padding: 0px 24px;
+    justify-content: flex-start;
     align-items: flex-start;
-    min-height: calc(100vh - 40px);
-    margin-bottom: 40px;
+    margin-bottom: 182px;
   }
 
   .login-wrapper {
     width: 100%;
     max-width: 100%;
-    margin-top: 20px;
+    margin-top: 119px;
   }
 
   form {
-    width: 100%;
-    max-width: 100%;
+    width: calc(100% - 48px);
     padding: 30px 20px;
     border-radius: 24px;
     gap: 20px;
+    transform: translateY(0);
     border-width: 1.5px;
-    margin: 0 auto;
+    backdrop-filter: blur(18px);
+    background: rgba(253, 253, 253, 0.18);
   }
 
   input {
-    padding: 16px 0;
+    padding: 14px 0;
     margin-bottom: 16px;
     font-size: 16px;
   }
@@ -289,57 +290,12 @@ span{
   .sumbit--btn {
     padding: 18px;
     font-size: 16px;
-    margin-top: 15px;
-    min-height: 56px;
+    margin-top: 20px;
   }
 
   .error-message {
     font-size: 16px;
-    margin-top: -15px;
-  }
-}
-
-/* Для маленьких экранов */
-@media (max-width: 480px) {
-  .page-wrapper {
-    padding: 0 12px;
-  }
-
-  form {
-    padding: 25px 16px;
-    border-radius: 20px;
-    gap: 16px;
-  }
-
-  input {
-    padding: 14px 0;
-    margin-bottom: 14px;
-    font-size: 16px;
-  }
-
-  .sumbit--btn {
-    padding: 16px;
-    font-size: 16px;
-    min-height: 52px;
-  }
-
-  .error-message {
-    font-size: 14px;
-    margin-top: -12px;
-  }
-}
-
-/* Для планшетов */
-@media (min-width: 769px) and (max-width: 1024px) and (orientation: landscape) {
-  .page-wrapper {
-    align-items: flex-start;
-    padding-top: 20px;
-    min-height: auto;
-  }
-
-  form {
-    width: 70%;
-    max-width: 450px;
+    margin-top: -10px;
   }
 }
 </style>

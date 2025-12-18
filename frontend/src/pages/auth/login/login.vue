@@ -179,28 +179,28 @@ span{
   text-align: center;
 }
 
-/* Мобильные стили */
 @media (max-width: 768px) {
   .page-wrapper {
-    padding: 20px 16px;
+    padding: 0px 24px;
+    justify-content: flex-start;
     align-items: flex-start;
-    min-height: 100vh;
   }
 
   .login-wrapper {
     width: 100%;
     max-width: 100%;
-    margin-top: 40px;
+    margin-top: 119px;
   }
 
   form {
-    width: 100%;
-    max-width: 100%;
+    width: calc(100% - 48px);
     padding: 30px 20px;
     border-radius: 24px;
     gap: 20px;
     transform: translateY(0);
     border-width: 1.5px;
+    backdrop-filter: blur(18px);
+    background: rgba(253, 253, 253, 0.18);
   }
 
   input {
@@ -221,34 +221,4 @@ span{
   }
 }
 
-/* Для маленьких экранов */
-@media (max-width: 480px) {
-  form {
-    padding: 25px 16px;
-    border-radius: 20px;
-    gap: 16px;
-  }
-
-  input {
-    padding: 12px 0;
-    margin-bottom: 12px;
-  }
-
-  .sumbit--btn {
-    padding: 16px;
-  }
-
-  .error-message {
-    font-size: 14px;
-  }
-}
-
-/* Для планшетов */
-@media (min-width: 769px) and (max-width: 1024px) {
-  form {
-    width: 80%;
-    max-width: 500px;
-    margin: 0 auto;
-  }
-}
 </style>

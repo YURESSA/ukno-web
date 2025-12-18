@@ -2,7 +2,7 @@
   <div class="page-wrapper page--margin" v-if="load">
     <div class="asterick"></div>
 
-    <div class="event-wrapper">
+    <div class="event-wrapper" v-if="!isMobile">
       <span><RouterLink to="/">Главная</RouterLink> / <RouterLink to="/events">События</RouterLink> / {{ excursion.title }}</span>
       <div class="title">
         <h2>{{ excursion.title }}</h2>
@@ -15,14 +15,6 @@
           class="event-image"
         >
       </div>
-      <IconButton
-        class="event--btn"
-        text="записаться"
-        :id="excursion.id"
-        @click="moveToBooked"
-      >
-        <img src="/icon/arrow.svg" alt="">
-      </IconButton>
 
       <div class="container">
         <div class="events-list">
@@ -80,6 +72,14 @@
           </div>
         </div>
       </div>
+      <IconButton
+        class="event--btn"
+        text="записаться"
+        :id="excursion.id"
+        @click="moveToBooked"
+      >
+        <img src="/icon/arrow.svg" alt="">
+      </IconButton>
       <div class="descript">
         <h3>Подробнее об экскурсии</h3>
         <h5>Экскурсия «{{ excursion.title }}»</h5>
@@ -107,7 +107,110 @@
         <span v-else>Произошла ошибка при загрузке карты</span>
       </Contact>
     </div>
+
+    <!-- Мобилка -->
+    <div class="event-wrapper-mobile" v-else>
+      <span class="route"><RouterLink to="/">Главная</RouterLink> / <RouterLink to="/events">События</RouterLink> / {{ excursion.title }}</span>
+      <div class="title">
+        <h2>{{ excursion.title }}</h2>
+      </div>
+      <div class="preview-img">
+        <img
+          :src="getMainImage"
+          :alt="excursion.title"
+          @error="handleImageError"
+          class="event-image"
+        >
+      </div>
+      <IconButton
+        class="event--btn"
+        text="записаться"
+        :id="excursion.id"
+        @click="moveToBooked"
+      >
+        <img src="/icon/arrow.svg" alt="">
+      </IconButton>
+
+      <div class="mobile-container">
+        <div class="events-list-mobile">
+          <div class="event-type-mobile">
+            <div class="title">
+              <h3>Автор</h3>
+            </div>
+            <div class="event-content">
+              <p>Проводит {{ excursion.conducted_by }}</p>
+            </div>
+          </div>
+          <div class="event-type-mobile">
+            <div class="title">
+              <h3>Место</h3>
+            </div>
+            <div class="event-content">
+              <p>{{ excursion.place }}</p>
+            </div>
+          </div>
+          <div class="event-type-mobile">
+            <div class="title">
+              <h3>Стоимость</h3>
+            </div>
+            <div class="event-content">
+              <p v-if="parseInt(excursion.sessions[0].cost) > 0">{{ parseInt(excursion.sessions[0].cost) }} ₽</p>
+              <p v-if="parseInt(excursion.sessions[0].cost) == 0"> Бесплатно! </p>
+            </div>
+          </div>
+          <div class="event-type-mobile">
+            <div class="title">
+              <h3>Дата и время</h3>
+            </div>
+            <div class="event-content">
+              <h2>{{ getData }}</h2>
+              <p>с {{ getTime }} до {{ totalTime }} </p>
+            </div>
+          </div>
+          <div class="">
+            <div class="title">
+              <h3>Важно</h3>
+            </div>
+            <div class="event-content">
+              <div class="important-content">
+                <p class="large-text">- {{ EventFormat.type }}</p>
+                <p class="large-text">- {{ EventFormat.remained_places }}</p>
+                <p class="large-text">- Экскурсии  {{ excursion.age_category.age_category_name }}</p>
+                <p class="large-text">- Продолжительность - {{ excursion.duration }} минут</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="descript">
+        <h3>Подробнее об экскурсии</h3>
+        <h5>Экскурсия «{{ excursion.title }}»</h5>
+        <p>{{ excursion.description }}</p>
+      </div>
+      <h2 v-if="excursion.photos.length > 1">Галерея ярких моментов</h2>
+      <div class="gallery">
+        <div
+          v-for="(photo, i) in excursion.photos.slice(1)"
+          :key="i"
+          :class="'gallery-img img' + i"
+          >
+            <img :src="baseUrl + photo.photo_url" :alt="'Фото ' + i">
+        </div>
+      </div>
+      <Contact class="map">
+        <iframe
+        v-if="src != ''"
+        :src="src"
+        width="100%"
+        height="242"
+        frameborder="0"
+        class="yand-map"
+        ></iframe>
+        <span v-else>Произошла ошибка при загрузке карты</span>
+      </Contact>
+    </div>
   </div>
+
   <div v-else class="loading">
     <Loading/>
      <!-- <h3>Загрузка...</h3> -->
@@ -115,7 +218,7 @@
 </template>
 
 <script setup>
-import { onMounted, computed, ref } from 'vue';
+import { onMounted, onUnmounted, computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useDataStore } from '@/stores/counter';
 import { baseUrl } from '@/stores/counter';
@@ -127,13 +230,39 @@ import { notification } from '@/utils/notification'
 const store = useDataStore();
 const route = useRoute();
 const router = useRouter();
+const isMobile = ref(false)
+const load = ref(false)
+
+const checkMobile = () => {
+  const width = document.documentElement.clientWidth;
+  isMobile.value = width < 768;
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
 
 const excursion = computed(() => store.getExcursionDetail);
+
 const src = computed(() => {
   const iframeUrl = excursion.value?.iframe_url;
-  return iframeUrl?.match(/src='(.*?)'/)?.[1] || '';
+  if (!iframeUrl) return '';
+
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(iframeUrl, 'text/html');
+    const iframe = doc.querySelector('iframe');
+    return iframe?.getAttribute('src') || '';
+  } catch (error) {
+    console.error('Ошибка при парсинге iframe:', error);
+    return '';
+  }
 });
-const load = ref(false)
 
 onMounted(async () => {
   document.body.style.overflow = 'hidden'
@@ -253,6 +382,7 @@ span > a{
   overflow: hidden;
   border-radius: 20px;
   margin-top: 60px;
+  margin-bottom: 47px;
 }
 
 .event--btn{
@@ -357,11 +487,6 @@ span > a{
   object-fit: cover; /* Сохраняет пропорции, заполняя весь блок */
   object-position: center; /* Центрирует изображение */
 }
-
-:deep(.contact-container){
-  box-shadow: 0px 2px 35.8px 0px #00000040;
-}
-
 
 
 .event-type * h3, .one-event * h3{
@@ -477,4 +602,32 @@ span > a{
   right: -135px;
 }
 
+@media (max-width: 768px) {
+  .asterick{
+    display: none;
+  }
+  .route{
+    display: none;
+  }
+  .preview-img{
+    margin-top: 20px;
+    margin-bottom: 0;
+  }
+}
+
+.event-wrapper-mobile{
+  width: 100%;
+  max-width: 100%;
+}
+
+.event--btn{
+  font-size: 16px;
+  margin-top: 20px;
+}
+
+.events-list-mobile{
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 </style>

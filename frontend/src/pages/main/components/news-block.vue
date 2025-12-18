@@ -28,7 +28,6 @@
 </template> -->
 
 <template>
-  {{ news[0] }}
   <div class="history-wrapper" id="history">
     <div class="container">
       <div class="img-block">
