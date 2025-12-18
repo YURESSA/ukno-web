@@ -1,4 +1,3 @@
-import os
 from typing import Any
 
 from flask_restx import Resource, reqparse
@@ -7,9 +6,8 @@ from werkzeug.datastructures import FileStorage
 
 from backend.api.admin.decorators import admin_required
 from backend.api.references import ref_ns
-from backend.core import db
-from backend.core.models.ref_models import TeamMember
-from backend.core.utilits.file_utils import save_image, remove_file_if_exists
+from backend.core.services.ref_service.team_service import get_team_members, create_team_member, upload_team_photo, \
+    delete_team_photo, get_team_member_by_id, update_team_member, delete_team_member
 
 team_member_model = ref_ns.model('TeamMember', {
     'full_name': fields.String(required=True, description='ФИО сотрудника'),
@@ -28,12 +26,21 @@ class TeamList(Resource):
     @ref_ns.doc(description="Список сотрудников команды")
     def get(self) -> tuple[list[Any], int]:
         """
-        Получение всех сотрудников компании.
+        Получение всех сотрудников команды.
 
-        Returns:
-            list[dict]: сотрудников проектов.
+        **Ответ:**
+            200 OK: Список объектов TeamMember
+            [
+                {
+                    "id": 1,
+                    "full_name": "Иван Иванов",
+                    "description": "Описание сотрудника",
+                    "photo": "/path/to/photo.jpg"
+                },
+                ...
+            ]
         """
-        members = TeamMember.query.all()
+        members = get_team_members()
         return [m.to_dict() for m in members], 200
 
     @admin_required
@@ -41,40 +48,27 @@ class TeamList(Resource):
     @ref_ns.doc(description="Добавление сотрудника команды (photo — multipart/form-data)")
     def post(self):
         """
-        Добавление сотрудника.
+        Добавление нового сотрудника команды.
+
+        Form data:
+            full_name (str, обязательное): ФИО сотрудника
+            description (str, необязательное): Описание сотрудника
+            photo (file, необязательное): Фото сотрудника
+
+        **Ответы:**
+            201 Created: Возвращает созданного сотрудника
+            400 Bad Request: Ошибка валидации
         """
         args = upload_parser.parse_args()
 
-        full_name = args.get("full_name")
-        description = args.get("description")
-        photo = args.get("photo")
-
-        if not full_name:
-            return {'message': 'Поле full_name обязательно'}, 400
-
-        photo_path = None
-
-        if photo and photo.filename:
-            if not photo.content_type.startswith("image/"):
-                return {'message': 'Файл должен быть изображением'}, 400
-
-            photo.seek(0, os.SEEK_END)
-            size = photo.tell()
-            photo.seek(0)
-
-            if size > 5 * 1024 * 1024:
-                return {'message': 'Размер файла не должен превышать 5 MB'}, 400
-
-            photo_path = save_image(photo, "team_photos")
-
-        member = TeamMember(
-            full_name=full_name,
-            description=description,
-            photo=photo_path
-        )
-
-        db.session.add(member)
-        db.session.commit()
+        try:
+            member = create_team_member(
+                full_name=args.get('full_name'),
+                description=args.get('description'),
+                photo=args.get('photo')
+            )
+        except ValueError as e:
+            return {'message': str(e)}, 400
 
         return member.to_dict(), 201
 
@@ -85,43 +79,33 @@ class TeamResource(Resource):
     @ref_ns.doc(description="Получение сотрудника команды по ID")
     def get(self, id: int) -> tuple[dict, int]:
         """
-        Получение сотрудника команды по его ID.
+        Получение сотрудника по ID.
 
-        Args:
-            id (int): ID сотрудника
-
-        Returns:
-            dict: Данные сотрудника
-            int: HTTP статус код (200 если найден, 404 если нет)
+        **Ответы:**
+            200 OK: Возвращает объект сотрудника
+            404 Not Found: Если сотрудник не найден
         """
-        member = TeamMember.query.get(id)
+        member = get_team_member_by_id(id)
         if not member:
             return {'message': 'Сотрудник не найден'}, 404
+
         return member.to_dict(), 200
 
     @admin_required
     @ref_ns.doc(description="Удаление сотрудника команды по ID")
     def delete(self, id: int) -> tuple[dict, int]:
         """
-        Удаление сотрудника компании вместе с файлом фотографии.
+        Удаление сотрудника компании вместе с фотографией.
 
-        Args:
-            id (int): ID сотрудника для удаления
-
-        Returns:
-            dict: Сообщение о результате операции
-            int: HTTP статус код (200 при успешном удалении, 404 если сотрудник не найден)
+        **Ответы:**
+            200 OK: {"message": "Сотрудник удалён"}
+            404 Not Found: Если сотрудник не найден
         """
-        member = TeamMember.query.get(id)
+        member = get_team_member_by_id(id)
         if not member:
             return {'message': 'Сотрудник не найден'}, 404
 
-        if member.photo:
-            remove_file_if_exists(member.photo)
-
-        db.session.delete(member)
-        db.session.commit()
-
+        delete_team_member(member)
         return {'message': 'Сотрудник удалён'}, 200
 
     @admin_required
@@ -129,23 +113,32 @@ class TeamResource(Resource):
     @ref_ns.doc(description="Обновление данных сотрудника (без фото)")
     def put(self, id: int):
         """
-        Обновление данных сотрудника. Фото обновляется отдельно через /team/<id>/photo.
+        Обновление данных сотрудника по ID.
+
+        Form data:
+            full_name (str, обязательное)
+            description (str, необязательное)
+
+        **Ответы:**
+            200 OK: Возвращает обновлённого сотрудника
+            400 Bad Request: Если не указано обязательное поле
+            404 Not Found: Если сотрудник не найден
         """
-        member = TeamMember.query.get(id)
+        member = get_team_member_by_id(id)
         if not member:
             return {'message': 'Сотрудник не найден'}, 404
 
         args = upload_parser.parse_args()
-        full_name = args.get('full_name')
-        description = args.get('description')
 
-        if not full_name:
-            return {'message': 'Поле full_name обязательно'}, 400
+        try:
+            member = update_team_member(
+                member,
+                full_name=args.get('full_name'),
+                description=args.get('description')
+            )
+        except ValueError as e:
+            return {'message': str(e)}, 400
 
-        member.full_name = full_name
-        member.description = description
-
-        db.session.commit()
         return member.to_dict(), 200
 
 
@@ -161,17 +154,20 @@ class TeamPhotoResource(Resource):
     def delete(self, id: int):
         """
         Удаление фото сотрудника.
+
+        **Ответы:**
+            200 OK: {"message": "Фото удалено"}
+            400 Bad Request: Фото отсутствует
+            404 Not Found: Сотрудник не найден
         """
-        member = TeamMember.query.get(id)
+        member = get_team_member_by_id(id)
         if not member:
             return {'message': 'Сотрудник не найден'}, 404
 
-        if not member.photo:
-            return {'message': 'Фото отсутствует'}, 400
-
-        remove_file_if_exists(member.photo)
-        member.photo = None
-        db.session.commit()
+        try:
+            delete_team_photo(member)
+        except ValueError as e:
+            return {'message': str(e)}, 400
 
         return {'message': 'Фото удалено'}, 200
 
@@ -180,33 +176,25 @@ class TeamPhotoResource(Resource):
     @ref_ns.doc(description="Загрузка нового фото сотрудника")
     def post(self, id: int):
         """
-        Добавление/замена фото сотрудника.
+        Добавление или замена фото сотрудника.
+
+        Form data:
+            photo (file, обязательное)
+
+        **Ответы:**
+            200 OK: {"message": "Фото загружено", "photo_path": путь к файлу}
+            400 Bad Request: Некорректный файл или превышен размер
+            404 Not Found: Сотрудник не найден
         """
-        member = TeamMember.query.get(id)
+        member = get_team_member_by_id(id)
         if not member:
             return {'message': 'Сотрудник не найден'}, 404
 
         args = photo_parser.parse_args()
-        photo = args.get('photo')
 
-        if not photo or not photo.filename:
-            return {'message': 'Файл не выбран'}, 400
+        try:
+            path = upload_team_photo(member, args.get('photo'))
+        except ValueError as e:
+            return {'message': str(e)}, 400
 
-        if not photo.content_type.startswith("image/"):
-            return {'message': 'Файл должен быть изображением'}, 400
-
-        photo.seek(0, os.SEEK_END)
-        size = photo.tell()
-        photo.seek(0)
-
-        if size > 5 * 1024 * 1024:
-            return {'message': 'Размер файла не должен превышать 5 MB'}, 400
-
-        # Удаляем старое фото
-        if member.photo:
-            remove_file_if_exists(member.photo)
-
-        member.photo = save_image(photo, "team_photos")
-        db.session.commit()
-
-        return {'message': 'Фото загружено', 'photo_path': member.photo}, 200
+        return {'message': 'Фото загружено', 'photo_path': path}, 200

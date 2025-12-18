@@ -73,10 +73,13 @@ class CulturalSpace(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     photo = db.Column(db.String(255), nullable=True)
     text = db.Column(db.Text, nullable=False)
+    order_index = db.Column(db.Integer, nullable=False, default=0)
 
     def to_dict(self):
         return {
             'id': self.id,
             'photo': self.photo,
-            'text': self.text
+            'text': self.text,
+            'order_index': self.order_index
         }
+

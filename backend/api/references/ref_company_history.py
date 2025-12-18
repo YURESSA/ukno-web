@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Any
 
 from flask import request
@@ -6,8 +5,9 @@ from flask_restx import Resource, fields
 
 from backend.api.admin.decorators import admin_required
 from backend.api.references import ref_ns
-from backend.core import db
 from backend.core.models.ref_models import CompanyHistory
+from backend.core.services.ref_service.company_history_service import get_all_history, create_history, \
+    get_history_by_id, update_history, delete_history, validate_history_data
 
 history_model = ref_ns.model('CompanyHistory', {
     'title': fields.String(required=True, description='Название события'),
@@ -37,7 +37,7 @@ class CompanyHistoryList(Resource):
                 ...
             ]
         """
-        items = CompanyHistory.query.all()
+        items = get_all_history()
         return [i.to_dict() for i in items], 200
 
     @admin_required
@@ -49,45 +49,23 @@ class CompanyHistoryList(Resource):
 
         JSON body:
             link (str): Ссылка (обязательно)
-            date (str): Дата (обязательно, формат YYYY-MM-DD)
+            date (str): Дата (формат YYYY-MM-DD)
             description (str): Описание (обязательно)
+            title (str): Название события (обязательно)
 
         **Ответы:**
             201 Created: Возвращает созданное событие
             400 Bad Request: Ошибка валидации полей
         """
+
         data = request.json or {}
-        print(data)
-        title = data.get('title')
-        link = data.get('link')
-        date_str = data.get('date')
-        description = data.get('description')
-
-        if not title:
-            return {'message': 'Поле title обязательно'}, 400
-        if not link:
-            return {'message': 'Поле link обязательно'}, 400
-        if not date_str:
-            return {'message': 'Поле date обязательно'}, 400
-        if not description:
-            return {'message': 'Поле description обязательно'}, 400
-
         try:
-            event_date = datetime.strptime(date_str, '%Y-%m-%d').date()
-        except ValueError:
-            return {'message': 'Неверный формат даты. Используйте YYYY-MM-DD'}, 400
+            title, link, date_str, description = validate_history_data(data)
+            item = create_history(title, link, date_str, description)
+        except ValueError as e:
+            return {'message': str(e)}, 400
 
-        item = CompanyHistory(
-            title=title,
-            link=link,
-            date=event_date,
-            description=description
-        )
-
-        db.session.add(item)
-        db.session.commit()
-
-        return item.to_dict(), 201
+        return item.to_dict(), 20
 
 
 @ref_ns.route('/history/<int:id>')
@@ -105,7 +83,7 @@ class CompanyHistoryResource(Resource):
             200 OK: Возвращает объект события
             404 Not Found: Если событие с указанным ID не найдено
         """
-        item = CompanyHistory.query.get(id)
+        item = get_history_by_id(id)
         if not item:
             return {'message': 'Событие не найдено'}, 404
         return item.to_dict(), 200
@@ -121,9 +99,10 @@ class CompanyHistoryResource(Resource):
             id (int): ID события
 
         JSON body:
-            link (str): Ссылка (обязательно)
+            link (str): Ссылка
             date (str): Дата (обязательно, формат YYYY-MM-DD)
             description (str): Описание (обязательно)
+            title (str): Название события (обязательно)
 
         **Ответы:**
             200 OK: Возвращает обновлённое событие
@@ -135,28 +114,11 @@ class CompanyHistoryResource(Resource):
             return {'message': 'Событие не найдено'}, 404
 
         data = request.json or {}
-        link = data.get('link')
-        title = data.get('title')
-        date_str = data.get('date')
-        description = data.get('description')
-        if not title:
-            return {'message': 'Поле title обязательно'}, 400
-        if not date_str:
-            return {'message': 'Поле date обязательно'}, 400
-        if not description:
-            return {'message': 'Поле description обязательно'}, 400
-
         try:
-            event_date = datetime.strptime(date_str, '%Y-%m-%d').date()
-        except ValueError:
-            return {'message': 'Неверный формат даты. Используйте YYYY-MM-DD'}, 400
-
-        item.link = link
-        item.title = title
-        item.date = event_date
-        item.description = description
-
-        db.session.commit()
+            title, link, date_str, description = validate_history_data(data)
+            update_history(item, title, link, date_str, description)
+        except ValueError as e:
+            return {'message': str(e)}, 400
 
         return item.to_dict(), 200
 
@@ -173,11 +135,9 @@ class CompanyHistoryResource(Resource):
             200 OK: {"message": "Событие удалено"}
             404 Not Found: Если событие с указанным ID не найдено
         """
-        item = CompanyHistory.query.get(id)
+        item = get_history_by_id(id)
         if not item:
             return {'message': 'Событие не найдено'}, 404
 
-        db.session.delete(item)
-        db.session.commit()
-
+        delete_history(item)
         return {'message': 'Событие удалено'}, 200

@@ -4,9 +4,9 @@ from flask import request
 from flask_restx import Resource, fields
 
 from backend.api.admin.decorators import admin_required
-from backend.core import db
-from backend.core.models.event_models import Category
 from backend.api.references import ref_ns
+from backend.core.services.ref_service.category_service import get_all_categories, get_category_by_name, \
+    create_category, delete_category, get_category_by_id
 
 category_model = ref_ns.model('Category', {
     'name': fields.String(required=True, description='Название категории'),
@@ -23,7 +23,7 @@ class CategoryList(Resource):
         Returns:
             list[dict]: Список категорий в виде словарей.
         """
-        categories = Category.query.all()
+        categories = get_all_categories()
         return [c.to_dict() for c in categories], 200
 
     @admin_required
@@ -45,13 +45,10 @@ class CategoryList(Resource):
         if not name:
             return {'message': 'Поле name обязательно'}, 400
 
-        # Проверка на дубли
-        if Category.query.filter_by(category_name=name).first():
+        if get_category_by_name(name):
             return {'message': 'Категория с таким именем уже существует'}, 400
 
-        category = Category(category_name=name)
-        db.session.add(category)
-        db.session.commit()
+        category = create_category(name)
         return category.to_dict(), 201
 
 
@@ -70,10 +67,9 @@ class CategoryResource(Resource):
             dict: Сообщение об успешном удалении или ошибке.
             int: HTTP статус код.
         """
-        category = Category.query.get(id)
+        category = get_category_by_id(id)
         if not category:
             return {'message': 'Категория не найдена'}, 404
 
-        db.session.delete(category)
-        db.session.commit()
+        delete_category(category)
         return {'message': 'Категория удалена'}, 200
