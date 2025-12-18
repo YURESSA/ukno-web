@@ -5,14 +5,13 @@ from flask_restx import Resource, fields
 
 from backend.api.admin.decorators import admin_required
 from backend.api.references import ref_ns
-from backend.core import db
-from backend.core.models.ref_models import CompanyProject
 from backend.core.services.ref_service.company_project_service import get_all_projects, create_project, \
     get_project_by_id, update_project, delete_project
 
 project_model = ref_ns.model('CompanyProject', {
     'title': fields.String(required=True, description='Название проекта'),
     'link': fields.String(required=True, description='Ссылка на проект'),
+    'order_index': fields.Integer(required=False, description='Порядок отображения'),
 })
 
 
@@ -57,7 +56,8 @@ class ProjectList(Resource):
         try:
             project = create_project(
                 title=data.get('title'),
-                link=data.get('link')
+                link=data.get('link'),
+                order_index=data.get('order_index'),
             )
         except ValueError as e:
             return {'message': str(e)}, 400
@@ -113,8 +113,10 @@ class ProjectResource(Resource):
             project = update_project(
                 project,
                 title=data.get('title'),
-                link=data.get('link')
+                link=data.get('link'),
+                order_index=data.get('order_index'),
             )
+
         except ValueError as e:
             return {'message': str(e)}, 400
 

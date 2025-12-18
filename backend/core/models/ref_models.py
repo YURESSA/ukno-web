@@ -7,12 +7,14 @@ class CompanyProject(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255), nullable=False)
     link = db.Column(db.String(500), nullable=False)
+    order_index = db.Column(db.Integer, nullable=False, default=0)
 
     def to_dict(self):
         return {
             'id': self.id,
             'title': self.title,
             'link': self.link,
+            'order_index': self.order_index,
         }
 
 
@@ -82,4 +84,3 @@ class CulturalSpace(db.Model):
             'text': self.text,
             'order_index': self.order_index
         }
-

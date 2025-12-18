@@ -13,9 +13,11 @@ async function loadProjectSection() {
         id: project.id,
         cells: [
             project.id,
+            project.order_index ?? 0,
             project.title,
             project.link
         ],
+
         actions: `
             <button class="btn btn-outline-danger btn-sm btn-delete-project" data-id="${project.id}">
                 <i class="fas fa-trash"></i> Удалить
@@ -23,7 +25,12 @@ async function loadProjectSection() {
         `
     }));
 
-    renderTable('Проекты компании', ['ID', 'Название', 'Ссылка'], rows);
+    renderTable(
+        'Проекты компании',
+        ['ID', 'Порядок', 'Название', 'Ссылка'],
+        rows
+    );
+
 
     document.querySelectorAll('#excursionsTable tbody tr').forEach(row => {
         row.onclick = async (e) => {
@@ -45,7 +52,7 @@ async function loadProjectSection() {
             e.stopPropagation();
             const id = btn.dataset.id;
             if (!confirm('Удалить проект?')) return;
-            const res = await fetchWithAuth(`${API_REF_BASE}/projects/${id}`, { method: 'DELETE' });
+            const res = await fetchWithAuth(`${API_REF_BASE}/projects/${id}`, {method: 'DELETE'});
             if (res.ok) {
                 showNotification('Проект удалён', 'success');
                 loadProjectSection();
@@ -61,6 +68,7 @@ function showProjectModal(project) {
     currentProjectId = project?.id || null;
     document.getElementById('projectTitle').value = project?.title || '';
     document.getElementById('projectLink').value = project?.link || '';
+    document.getElementById('projectOrderIndex').value = project?.order_index ?? 0;
     projectModal.show();
 }
 
@@ -68,6 +76,11 @@ function showProjectModal(project) {
 document.getElementById('projectSaveBtn').addEventListener('click', async () => {
     const title = document.getElementById('projectTitle').value.trim();
     const link = document.getElementById('projectLink').value.trim();
+    const order_index = parseInt(
+        document.getElementById('projectOrderIndex').value,
+        10
+    ) || 0;
+
 
     if (!title || !link) {
         showNotification('Заполните все поля', 'warning');
@@ -76,8 +89,12 @@ document.getElementById('projectSaveBtn').addEventListener('click', async () => 
 
     try {
         let res;
-        const body = JSON.stringify({ title, link });
-        const options = { method: currentProjectId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body };
+        const body = JSON.stringify({title, link, order_index});
+        const options = {
+            method: currentProjectId ? 'PUT' : 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body
+        };
         const url = currentProjectId ? `${API_REF_BASE}/projects/${currentProjectId}` : `${API_REF_BASE}/projects`;
         res = await fetchWithAuth(url, options);
 
@@ -100,6 +117,7 @@ projectModalEl.addEventListener('hidden.bs.modal', () => {
     currentProjectId = null;
     document.getElementById('projectTitle').value = '';
     document.getElementById('projectLink').value = '';
+    document.getElementById('projectOrderIndex').value = 0;
 });
 
 // Создание нового проекта
