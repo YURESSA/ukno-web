@@ -26,14 +26,19 @@ def get_profile() -> Tuple[Optional['User'], Optional[Dict], Optional[int]]:
 
 def delete_profile() -> Tuple[Dict, int]:
     """
-    Удаление аккаунта текущего пользователя.
+    Удаление аккаунта текущего пользователя с проверкой на созданные экскурсии и активные бронирования.
 
     :return: Кортеж (response_dict, http_status)
     """
     current_email = get_jwt_identity()
-    if delete_user(current_email):
+    success, message = delete_user(current_email)
+
+    if success:
         return {"message": AuthMessages.USER_DELETED_SELF}, HTTPStatus.OK
-    return {"message": AuthMessages.USER_NOT_FOUND}, HTTPStatus.NOT_FOUND
+    else:
+        if message == "Пользователь не найден":
+            return {"message": AuthMessages.USER_NOT_FOUND}, HTTPStatus.NOT_FOUND
+        return {"message": message}, HTTPStatus.BAD_REQUEST
 
 
 def get_user_info_response(user: Optional['User']) -> Tuple[Dict, int]:
@@ -50,5 +55,5 @@ def get_user_info_response(user: Optional['User']) -> Tuple[Dict, int]:
         "email": user.email,
         "full_name": user.full_name,
         "phone": user.phone,
-        "role": user.role.role_name
+        "role": user.role.value
     }, HTTPStatus.OK

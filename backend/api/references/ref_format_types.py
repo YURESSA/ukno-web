@@ -4,9 +4,10 @@ from flask import request
 from flask_restx import Resource, fields
 
 from backend.api.admin.decorators import admin_required
-from backend.core import db
-from backend.core.models.event_models import FormatType
 from backend.api.references import ref_ns
+from backend.core.models.event_models import FormatType
+from backend.core.services.ref_service.format_type_service import get_all_format_types, create_format_type, \
+    delete_format_type
 
 format_type_model = ref_ns.model('FormatType', {
     'name': fields.String(required=True, description='Название типа формата'),
@@ -23,8 +24,8 @@ class FormatTypeList(Resource):
         Returns:
             list[dict]: Список типов форматов в виде словарей.
         """
-        format_types = FormatType.query.all()
-        return [f.to_dict() for f in format_types], 200
+        items = get_all_format_types()
+        return [f.to_dict() for f in items], 200
 
     @admin_required
     @ref_ns.expect(format_type_model)
@@ -41,16 +42,11 @@ class FormatTypeList(Resource):
             int: HTTP статус код.
         """
         data = request.json or {}
-        name = data.get('name')
-        if not name:
-            return {'message': 'Поле name обязательно'}, 400
+        try:
+            format_type = create_format_type(data.get('name'))
+        except ValueError as e:
+            return {'message': str(e)}, 400
 
-        if FormatType.query.filter_by(format_type_name=name).first():
-            return {'message': 'Тип формата с таким именем уже существует'}, 400
-
-        format_type = FormatType(format_type_name=name)
-        db.session.add(format_type)
-        db.session.commit()
         return format_type.to_dict(), 201
 
 
@@ -73,6 +69,5 @@ class FormatTypeResource(Resource):
         if not format_type:
             return {'message': 'Тип формата не найден'}, 404
 
-        db.session.delete(format_type)
-        db.session.commit()
+        delete_format_type(format_type)
         return {'message': 'Тип формата удалён'}, 200

@@ -10,11 +10,18 @@ admin_login = admin_ns.model('AdminLogin', {
 
 create_parser = reqparse.RequestParser()
 create_parser.add_argument(
-    'data', type=str, location='form', required=True,
-    help='JSON строка с полями title, content, photo_author'
+    'data',
+    type=str,
+    location='form',
+    required=True,
+    help='JSON строка с полями title, content, short_description, photo_author'
 )
 create_parser.add_argument(
-    'image', type=FileStorage, location='files', action='append', required=False,
+    'image',
+    type=FileStorage,
+    location='files',
+    action='append',
+    required=False,
     help='Файлы изображений для новости (можно несколько)'
 )
 

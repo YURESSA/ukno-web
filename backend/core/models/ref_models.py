@@ -7,12 +7,14 @@ class CompanyProject(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255), nullable=False)
     link = db.Column(db.String(500), nullable=False)
+    order_index = db.Column(db.Integer, nullable=False, default=0)
 
     def to_dict(self):
         return {
             'id': self.id,
             'title': self.title,
             'link': self.link,
+            'order_index': self.order_index,
         }
 
 
@@ -35,15 +37,17 @@ class CompanyHistory(db.Model):
     __tablename__ = 'company_history'
 
     id = db.Column(db.Integer, primary_key=True)
-    link = db.Column(db.String(500), nullable=False)
-    date = db.Column(db.String(50), nullable=False)  # можно заменить на Date
+    title = db.Column(db.String(255), nullable=False)
+    link = db.Column(db.String(500), nullable=True)
+    date = db.Column(db.Date, nullable=False)
     description = db.Column(db.Text, nullable=False)
 
     def to_dict(self):
         return {
             'id': self.id,
             'link': self.link,
-            'date': self.date,
+            'title': self.title,
+            'date': self.date.isoformat(),
             'description': self.description
         }
 
@@ -71,10 +75,12 @@ class CulturalSpace(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     photo = db.Column(db.String(255), nullable=True)
     text = db.Column(db.Text, nullable=False)
+    order_index = db.Column(db.Integer, nullable=False, default=0)
 
     def to_dict(self):
         return {
             'id': self.id,
             'photo': self.photo,
-            'text': self.text
+            'text': self.text,
+            'order_index': self.order_index
         }

@@ -7,6 +7,7 @@ from backend.core.schemas.auth_schemas import login_model, change_password_model
 from backend.core.services.user_services.auth_service import change_profile_password, login_user
 from backend.core.services.user_services.profile_service import get_profile, get_user_info_response, \
     delete_profile
+from ...core.models.auth_models import RoleEnum
 
 
 @resident_ns.route('/login')
@@ -20,7 +21,7 @@ class ResidentLogin(Resource):
         :return: Словарь с JWT-токеном и HTTP-статус.
         """
         data: dict = request.get_json() or {}
-        response, status = login_user("resident", data)
+        response, status = login_user(RoleEnum.RESIDENT, data)
         return response, status
 
 

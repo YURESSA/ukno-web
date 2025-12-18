@@ -1,4 +1,3 @@
-import os
 from flask_restx import Resource, reqparse
 from werkzeug.datastructures import FileStorage
 
@@ -6,11 +5,16 @@ from backend.api.admin.decorators import admin_required
 from backend.api.references import ref_ns
 from backend.core import db
 from backend.core.models.ref_models import CulturalSpace
-from backend.core.utilits.file_utils import save_image, remove_file_if_exists
+from backend.core.services.ref_service.cultural_space_service import get_all_cultural_spaces, create_cultural_space, \
+    update_cultural_space, delete_cultural_space, upload_cultural_space_photo
 
 cultural_space_parser = reqparse.RequestParser()
 cultural_space_parser.add_argument('text', type=str, required=True, location='form')
 cultural_space_parser.add_argument('photo', type=FileStorage, required=False, location='files')
+cultural_space_parser.add_argument('order_index', type=int, required=False, location='form')
+
+photo_parser = reqparse.RequestParser()
+photo_parser.add_argument('photo', type=FileStorage, required=True, location='files')
 
 
 @ref_ns.route('/cultural-space')
@@ -27,7 +31,7 @@ class CulturalSpaceList(Resource):
                 - text (str): Основной текст элемента
                 - photo (str | None): Путь к загруженному изображению
         """
-        items = CulturalSpace.query.all()
+        items = get_all_cultural_spaces()
         return [i.to_dict() for i in items], 200
 
     @admin_required
@@ -50,39 +54,55 @@ class CulturalSpaceList(Resource):
             int: HTTP статус код (201 при успешном добавлении)
         """
         args = cultural_space_parser.parse_args()
-        text = args.get('text')
-        photo = args.get('photo')
-
-        if not text:
-            return {'message': 'Поле text обязательно'}, 400
-
-        photo_path = None
-        if photo and photo.filename:
-            if not photo.content_type.startswith("image/"):
-                return {'message': 'Файл должен быть изображением'}, 400
-
-            photo.seek(0, os.SEEK_END)
-            size = photo.tell()
-            photo.seek(0)
-
-            if size > 5 * 1024 * 1024:
-                return {'message': 'Размер файла не должен превышать 5 MB'}, 400
-
-            photo_path = save_image(photo, "cultural_space_photos")
-
-        item = CulturalSpace(
-            text=text,
-            photo=photo_path
-        )
-
-        db.session.add(item)
-        db.session.commit()
-
+        try:
+            item = create_cultural_space(args.get('text'), args.get('photo'), args.get('order_index'))
+        except ValueError as e:
+            return {'message': str(e)}, 400
         return item.to_dict(), 201
 
 
 @ref_ns.route('/cultural-space/<int:id>')
 class CulturalSpaceResource(Resource):
+
+    @ref_ns.doc(description="Получение элемента культурного пространства по ID")
+    def get(self, id: int):
+        """
+        Получение элемента культурного пространства по ID.
+
+        **Ответы:**
+            200 OK: Возвращает объект элемента
+            404 Not Found: Если элемент не найден
+        """
+        item = CulturalSpace.query.get(id)
+        if not item:
+            return {'message': 'Элемент не найден'}, 404
+        return item.to_dict(), 200
+
+    @admin_required
+    @ref_ns.expect(cultural_space_parser)
+    @ref_ns.doc(description="Обновление элемента культурного пространства (без фото)")
+    def put(self, id: int):
+        """
+        Обновление текста элемента культурного пространства.
+        Фото обновляется отдельно через /cultural-space/<id>/photo.
+
+        Form data:
+            text (str, обязательное): Новый текст элемента
+
+        **Ответы:**
+            200 OK: Возвращает обновлённый элемент
+            400 Bad Request: Ошибка валидации
+            404 Not Found: Элемент не найден
+        """
+        item = CulturalSpace.query.get(id)
+        if not item:
+            return {'message': 'Элемент не найден'}, 404
+        args = cultural_space_parser.parse_args()
+        try:
+            item = update_cultural_space(item, args.get('text'), args.get('order_index'))
+        except ValueError as e:
+            return {'message': str(e)}, 400
+        return item.to_dict(), 200
 
     @admin_required
     @ref_ns.doc(description="Удаление элемента культурного пространства по ID")
@@ -100,11 +120,55 @@ class CulturalSpaceResource(Resource):
         item = CulturalSpace.query.get(id)
         if not item:
             return {'message': 'Элемент не найден'}, 404
-
-        # Удаляем файл изображения, если он существует
-        if item.photo:
-            remove_file_if_exists(item.photo)
-
-        db.session.delete(item)
-        db.session.commit()
+        delete_cultural_space(item)
         return {'message': 'Элемент удалён'}, 200
+
+
+@ref_ns.route('/cultural-space/<int:id>/photo')
+class CulturalSpacePhotoResource(Resource):
+
+    @admin_required
+    @ref_ns.doc(description="Удаление фото элемента культурного пространства")
+    def delete(self, id: int):
+        """
+        Удаление фото элемента культурного пространства.
+
+        **Ответы:**
+            200 OK: {"message": "Фото удалено"}
+            400 Bad Request: Фото отсутствует
+            404 Not Found: Элемент не найден
+        """
+        item = CulturalSpace.query.get(id)
+        if not item:
+            return {'message': 'Элемент не найден'}, 404
+        if not item.photo:
+            return {'message': 'Фото отсутствует'}, 400
+        upload_cultural_space_photo(item, None)
+        item.photo = None
+        db.session.commit()
+        return {'message': 'Фото удалено'}, 200
+
+    @admin_required
+    @ref_ns.expect(photo_parser)
+    @ref_ns.doc(description="Загрузка нового фото элемента культурного пространства")
+    def post(self, id: int):
+        """
+        Добавление или замена фото элемента культурного пространства.
+
+        Form data:
+            photo (file, обязательное)
+
+        **Ответы:**
+            200 OK: {"message": "Фото загружено", "photo_path": путь к файлу}
+            400 Bad Request: Некорректный файл или превышен размер
+            404 Not Found: Элемент не найден
+        """
+        item = CulturalSpace.query.get(id)
+        if not item:
+            return {'message': 'Элемент не найден'}, 404
+        args = photo_parser.parse_args()
+        try:
+            photo_path = upload_cultural_space_photo(item, args.get('photo'))
+        except ValueError as e:
+            return {'message': str(e)}, 400
+        return {'message': 'Фото загружено', 'photo_path': photo_path}, 200

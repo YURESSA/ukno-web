@@ -12,6 +12,11 @@ async function loadNewsTable() {
         cells: [
             news.news_id,
             news.title,
+            news.short_description
+                ? (news.short_description.length > 100
+                    ? news.short_description.substring(0, 100) + '...'
+                    : news.short_description)
+                : '—',
             news.content.length > 100 ? news.content.substring(0, 100) + '...' : news.content,
             new Date(news.created_at).toLocaleString()
         ],
@@ -22,7 +27,7 @@ async function loadNewsTable() {
         `
     }));
 
-    renderTable('Новости', ['ID', 'Заголовок', 'Содержимое', 'Дата'], rows);
+    renderTable('Новости', ['ID', 'Заголовок', 'Краткое описание', 'Содержимое', 'Дата'], rows);
 
     // Назначение обработчиков клика по строке
     document.querySelectorAll('#excursionsTable tbody tr').forEach(row => {
@@ -79,7 +84,8 @@ async function showNewsModal(news) {
     }
 
     document.querySelector('#newsTitle').value = news ? news.title : '';
-    document.querySelector('#newsContent').value = news ? news.content : '';
+    document.querySelector('#newsContent').value = news ? news.content : ''
+    document.querySelector('#newsShortDescription').value = news ? news.short_description : '';
     document.querySelector('#PhotoAuthor').value = news ? news.photo_author : '';
     document.querySelector('#newsPhotoUpload').value = '';
     document.querySelector('#newsPhotoPreview').innerHTML = '';
@@ -179,9 +185,11 @@ async function createNews(title, content, imageFiles) {
     const formData = new FormData();
     const formattedContent = content.replace(/\n/g, '<br>');
     const photoAuthor = document.getElementById('PhotoAuthor').value.trim();
+    const shortDescription = document.getElementById('newsShortDescription').value.trim();
     formData.append('data', JSON.stringify({
         title,
         content: formattedContent,
+        short_description: shortDescription,
         photo_author: photoAuthor // <-- добавляем поле автора фото
     }));
     console.log(formData.get)
@@ -299,7 +307,13 @@ document.getElementById('saveNewsBtn').addEventListener('click', async () => {
 
 async function updateNews(newsId, title, content) {
     const formData = new FormData();
-    formData.append('data', JSON.stringify({title, content}));
+    const shortDescription = document.getElementById('newsShortDescription').value.trim();
+
+    formData.append('data', JSON.stringify({
+        title,
+        content,
+        short_description: shortDescription
+    }));
 
     const res = await fetchWithAuth(`${API_BASE}/news/${newsId}`, {
         method: 'PUT',
@@ -357,10 +371,12 @@ dropZoneNews.addEventListener('drop', async (e) => {
 newsModalEl.addEventListener('hidden.bs.modal', () => {
     currentNewsId = null;
     document.getElementById('newsTitle').value = '';
+    document.getElementById('newsShortDescription').value = '';
     document.getElementById('newsContent').value = '';
     document.getElementById('newsPhotoUpload').value = '';
     document.querySelector('#newsPhotoPreview').innerHTML = '';
 });
+
 
 document.getElementById('btnCreateNews').addEventListener('click', () => {
     showNewsModal(null); // открываем модалку для создания новости, без новости

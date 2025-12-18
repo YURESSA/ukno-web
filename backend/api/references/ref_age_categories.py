@@ -4,9 +4,9 @@ from flask import request
 from flask_restx import Resource, fields
 
 from backend.api.admin.decorators import admin_required
-from backend.core import db
-from backend.core.models.event_models import AgeCategory
 from backend.api.references import ref_ns
+from backend.core.services.ref_service.age_category_service import get_all_age_categories, get_age_category_by_name, \
+    create_age_category, get_age_category_by_id, delete_age_category
 
 age_category_model = ref_ns.model('AgeCategory', {
     'name': fields.String(required=True, description='Название возрастной категории'),
@@ -23,7 +23,7 @@ class AgeCategoryList(Resource):
         Returns:
             list[dict]: Список возрастных категорий в виде словарей.
         """
-        age_categories = AgeCategory.query.all()
+        age_categories = get_all_age_categories()
         return [a.to_dict() for a in age_categories], 200
 
     @admin_required
@@ -45,12 +45,10 @@ class AgeCategoryList(Resource):
         if not name:
             return {'message': 'Поле name обязательно'}, 400
 
-        if AgeCategory.query.filter_by(age_category_name=name).first():
+        if get_age_category_by_name(name):
             return {'message': 'Возрастная категория с таким именем уже существует'}, 400
 
-        age_category = AgeCategory(age_category_name=name)
-        db.session.add(age_category)
-        db.session.commit()
+        age_category = create_age_category(name)
         return age_category.to_dict(), 201
 
 
@@ -69,10 +67,9 @@ class AgeCategoryResource(Resource):
             dict: Сообщение об успешном удалении или ошибке.
             int: HTTP статус код.
         """
-        age_category = AgeCategory.query.get(id)
+        age_category = get_age_category_by_id(id)
         if not age_category:
             return {'message': 'Возрастная категория не найдена'}, 404
 
-        db.session.delete(age_category)
-        db.session.commit()
+        delete_age_category(age_category)
         return {'message': 'Возрастная категория удалена'}, 200

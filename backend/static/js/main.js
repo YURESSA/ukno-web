@@ -58,6 +58,32 @@ document.addEventListener('DOMContentLoaded', () => {
         loadReservations();
     };
 
+    document.getElementById('btnTeam').onclick = e => {
+        e.preventDefault();
+        setActiveMenu('btnTeam');
+        localStorage.setItem('admin_current_section', 'team');
+        loadTeamSection();
+    }
+
+    document.getElementById('btnHome').onclick = e => {
+        e.preventDefault()
+        setActiveMenu('btnHome');
+        localStorage.setItem('admin_current_section', 'home');
+        loadHomeSection();
+    }
+
+    document.getElementById('btnProjects').onclick = e => {
+        e.preventDefault();
+        setActiveMenu('btnProjects');
+        localStorage.setItem('admin_current_section', 'projects');
+        loadProjectSection();
+    }
+    document.getElementById('btnHistory').onclick = e => {
+        e.preventDefault();
+        setActiveMenu('btnHistory');
+        localStorage.setItem('admin_current_section', 'history');
+        loadHistorySection();
+    }
 
     const btnAddSession = document.getElementById('btnAddSession');
     const editingSessionId = document.getElementById('editingSessionId');
@@ -118,6 +144,22 @@ document.addEventListener('DOMContentLoaded', () => {
         case 'reservation':
             setActiveMenu('btnReservations');
             loadReservations();
+            break;
+        case 'team':
+            setActiveMenu('btnTeam');
+            loadTeamSection();
+            break;
+        case 'home':
+            setActiveMenu('btnHome');
+            loadHomeSection();
+            break;
+        case 'projects':
+            setActiveMenu('btnProjects');
+            loadProjectSection();
+            break;
+        case 'history':
+            setActiveMenu('btnHistory');
+            loadHistorySection();
             break;
         default:
             setActiveMenu('btnUsers');

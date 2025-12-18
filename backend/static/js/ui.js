@@ -117,44 +117,29 @@ function initTableFeatures(originalRows, renderBody) {
 }
 
 
-
 function showCreateButton(show, type) {
-    const btnUser = document.getElementById('btnCreateUser');
-    const btnRef = document.getElementById('btnCreateRef');
-    const btnExcurs = document.getElementById('btnCreateExcurs');
-    const btnNews = document.getElementById('btnCreateNews');
+    const buttons = {
+        user: document.getElementById('btnCreateUser'),
+        ref: document.getElementById('btnCreateRef'),
+        excursion: document.getElementById('btnCreateExcurs'),
+        news: document.getElementById('btnCreateNews'),
+        team: document.getElementById('btnCreateTeam'),
+        'cultural-space': document.getElementById('btnCreateCulturalSpace'),
+        projects: document.getElementById('btnCreateProject'),
+        history: document.getElementById('btnCreateHistory'),
+    };
 
-    if (type === 'user') {
-        btnUser.style.display = show ? 'inline-block' : 'none';
-        btnRef.style.display = 'none';
-        btnExcurs.style.display = 'none';
-        btnNews.style.display = 'none'
-    } else if (type === 'ref') {
-        btnUser.style.display = 'none';
-        btnRef.style.display = show ? 'inline-block' : 'none';
-        btnExcurs.style.display = 'none';
-        btnNews.style.display = 'none'
-    } else if (type === 'excursion') {
-        btnUser.style.display = 'none';
-        btnRef.style.display = 'none';
-        btnExcurs.style.display = show ? 'inline-block' : 'none';
-        btnNews.style.display = 'none'
-    } else if (type === 'news') {
-        btnUser.style.display = 'none';
-        btnRef.style.display = 'none';
-        btnExcurs.style.display = 'none';
-        btnNews.style.display = show ? 'inline-block' : 'none';
-    } else if (type === 'reservations') {
-        btnUser.style.display = 'none';
-        btnRef.style.display = 'none';
-        btnExcurs.style.display = 'none';
-        btnNews.style.display = 'none';
-    } else {
-        btnUser.style.display = 'none';
-        btnRef.style.display = 'none';
-        btnExcurs.style.display = 'none';
+    // Скрываем все кнопки
+    Object.values(buttons).forEach(btn => {
+        if (btn) btn.style.display = 'none';
+    });
+
+    // Показываем нужную кнопку, если она есть
+    if (show && buttons[type]) {
+        buttons[type].style.display = 'inline-block';
     }
 }
+
 
 function setActiveMenu(id) {
     document.querySelectorAll('#sidebar .nav-link').forEach(link => {

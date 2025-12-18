@@ -3,6 +3,7 @@ from http import HTTPStatus
 
 from flask_jwt_extended import get_jwt, verify_jwt_in_request, get_jwt_identity
 
+from backend.core.models.auth_models import RoleEnum
 from backend.core.services.user_services.user_service import get_user_by_email
 
 
@@ -13,8 +14,16 @@ def resident_required(fn):
         claims = get_jwt()
         email = get_jwt_identity()
         user = get_user_by_email(email)
-        if claims.get("role") != "resident" or not user:
+
+        role_str = claims.get("role", "")
+        try:
+            role_enum = RoleEnum(role_str)
+        except ValueError:
+            role_enum = None
+
+        if not user or role_enum != RoleEnum.RESIDENT:
             return {"message": "Доступ запрещён"}, HTTPStatus.FORBIDDEN
+
         return fn(*args, **kwargs)
 
     return wrapper
