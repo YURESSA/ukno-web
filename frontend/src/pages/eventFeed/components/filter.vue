@@ -239,7 +239,7 @@ const resetFilter = async () => {
   position: fixed;
   top: 150px;
   right: -150%;
-  z-index: 100;
+  z-index: 1001;
 
   overflow-y: scroll;
   height: calc(100vh - 230px);
@@ -447,7 +447,7 @@ const resetFilter = async () => {
     box-shadow: none;
     border-radius: 0;
     top: 0px;
-    z-index: 1000;
+    z-index: 1001;
     height: 100%;
     overflow-x: hidden;
   }
