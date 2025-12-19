@@ -67,6 +67,29 @@ const firstLetter = computed(() => props.full_name?.[0] ?? '')
 h3{
   max-width: 500px;
   overflow: hidden;
-  text-overflow: ellipsis
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 768px) {
+  .card-wrapper{
+    gap: 40px;
+    padding: 25px 24px;
+    width: 100%;
+    box-shadow: none;
+  }
+  .avatar{
+    height: 77px;
+    min-width: 77px;
+  }
+  .avatar > h2{
+    font-size: 40px;
+  }
+  .name > h5{
+    font-family: 'Manrope';
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 140%;
+    color: #333;
+  }
 }
 </style>

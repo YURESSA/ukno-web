@@ -1,16 +1,16 @@
 <template>
   <div class="card-wrapper">
-    <h5>Номер телефона</h5>
+    <p class="text-l bold">Номер телефона</p>
     <div class="data-wrapper">
-      <p>{{ phone }}</p> <!-- <IconButton class="edit__btn"><img src="/icon/pencil.svg" alt=""></IconButton> -->
+      <p class="text-l content">{{ phone }}</p> <!-- <IconButton class="edit__btn"><img src="/icon/pencil.svg" alt=""></IconButton> -->
     </div>
-    <h5>Электронная почта</h5>
+    <p class="text-l bold">Электронная почта</p>
     <div class="data-wrapper">
-      <p>{{ email }}</p> <!-- <IconButton class="edit__btn"><img src="/icon/pencil.svg" alt=""></IconButton> -->
+      <p class="text-l content">{{ email }}</p> <!-- <IconButton class="edit__btn"><img src="/icon/pencil.svg" alt=""></IconButton> -->
     </div>
-    <h5>Пароль</h5>
+    <p class="text-l bold">Пароль</p>
     <div class="password-data-wrapper">
-      <DefaultButton class="change__btn" text="Сменить пароль" @click="$emit('open')"></DefaultButton>
+      <DefaultButton class="change__btn text-l" text="Сменить пароль" @click="$emit('open')"></DefaultButton>
     </div>
   </div>
 </template>
@@ -61,5 +61,20 @@ const props = defineProps({
   background-color: #ECEDF1;
   font-size: 20px;
   border-radius: 30px;
+}
+
+@media (max-width: 768px) {
+  .card-wrapper{
+    padding: 0;
+    width: 100%;
+    box-shadow: none;
+  }
+  .text-l {
+    font-size: 16px;
+  }
+  .content{
+    font-size: 16px;
+    color: #989898;
+  }
 }
 </style>

@@ -84,4 +84,36 @@
   transform: rotate(180deg);
   background-repeat: no-repeat;
 }
+
+@media (max-width: 768px) {
+  .loading-wrapper{
+    position: fixed;
+    top: 0;
+  }
+
+  h4{
+    font-size: 28px;
+    text-align: center;
+  }
+  .top-semicircle{
+    width: 338px; /* Уменьшили в 2 раза */
+    height: 170px; /* Уменьшили в 2 раза */
+    background-size: 100% 100%; /* Для SVG лучше 100% */
+    top: 0px;
+  }
+
+  .bottom-semicircle{
+    content: '';
+    width: 338px;
+    height: 170px;
+    background-image: url('/loading/semicircles.svg');
+    background-size: 100% 100%;
+    background-position: center;
+    position: absolute;
+    bottom: 0px;
+    left: -10px;
+    transform: rotate(180deg);
+    background-repeat: no-repeat;
+  }
+}
 </style>

@@ -759,4 +759,13 @@ textarea::-moz-placeholder {
   font-weight: 400 !important;
 }
 
+@media (max-width: 768px) {
+  h4{
+    font-size: 28px;
+  }
+  form{
+    width: 100%;
+  }
+}
+
 </style>

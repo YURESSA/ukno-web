@@ -22,8 +22,7 @@ import { SHeader, SFooter } from '@shared';
   display: flex;
   justify-content: center;
   align-items: center;
-  height: calc(100vh - 186px);
-  min-height: 900px;
+  height: calc(100vh - 120px);
   max-height: 1000px;
   overflow: hidden;
 }
@@ -80,5 +79,15 @@ import { SHeader, SFooter } from '@shared';
   right: -50px;
   bottom: 190px;
   background-position: center;
+}
+
+@media (max-width: 768px) {
+  .icon-wrapper{
+    display: none;
+  }
+  .login-layout{
+    height: 100%;
+    min-height: calc(100vh - 85px);
+  }
 }
 </style>

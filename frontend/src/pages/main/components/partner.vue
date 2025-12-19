@@ -14,9 +14,9 @@
       <img src="/logo/8.svg" alt="">
     </div>
     <div class="partners-block">
-      <img src="/logo/12.svg" alt="">
+      <img src="/logo/9.svg" alt="">
       <img src="/logo/10.svg" alt="">
-      <img src="/logo/12.svg" alt="">
+      <img src="/logo/11.svg" alt="">
       <img src="/logo/12.svg" alt="">
     </div>
   </div>

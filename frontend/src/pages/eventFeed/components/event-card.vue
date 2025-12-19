@@ -9,12 +9,12 @@
       >
     </div>
     <div class="content">
-      <div class="title">
-        <h5>{{ excursion.title }}</h5>
+      <div class="title" @click="goToEventPage">
+        <p class="text-l bold">{{ excursion.title }}</p>
       </div>
 
       <div class="descript">
-        <p>{{ excursion.description }}</p>
+        <p class="excursion-descript">{{ excursion.description }}</p>
         <p v-if="nearestSession">
           {{ formattedDate }} | {{ formattedTime }} | {{ excursion.category.category_name }}
         </p>
@@ -23,7 +23,7 @@
         </p>
       </div>
       <div class="price">
-        <span>{{ nearestSession ? `${nearestSession.cost} ₽` : 'Бесплатно>' }}</span>
+        <span>{{ displayPrice }}</span>
       </div>
     </div>
     <IconButton
@@ -33,7 +33,7 @@
       :id="props.excursion.id"
       @click="goToEventPage"
     >
-      <img src="/icon/arrow.svg" alt="">
+      <img src="/icon/white-arrow.svg" alt="">
     </IconButton>
   </div>
   <div v-else class="loading">
@@ -94,6 +94,16 @@ const formattedTime = computed(() => {
   });
 });
 
+const displayPrice = computed(() => {
+  const price = parseInt(nearestSession.value.cost);
+  if (price === 0 || price === '0' || !price) {
+    return 'Бесплатно';
+  }
+  const formattedPrice = price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+
+  return `${formattedPrice} ₽`;
+});
+
 const getMainImage = computed(() => {
   console.log( baseUrl + props.excursion.photos[0].photo_url)
   return baseUrl + '/' + props.excursion.photos[0].photo_url;
@@ -118,9 +128,9 @@ const handleImageError = (e) => {
   max-width: 400px;
 }
 
-.title > h5{
+/* .title > p{
   min-height: 80px;
-}
+} */
 
 .preview-img > img{
   display: block;
@@ -144,8 +154,8 @@ const handleImageError = (e) => {
   flex-direction: column;
   justify-content: space-between;
   height: 100%;
-
 }
+
 
 .price{
   width: 150px;
@@ -160,5 +170,15 @@ const handleImageError = (e) => {
 
 .event--btn{
   width: 100%;
+}
+
+@media (max-width: 768px) {
+  .text-l{
+    font-size: 16px;
+  }
+  .price{
+    max-width: max-content;
+    padding: 5px 26px;
+  }
 }
 </style>

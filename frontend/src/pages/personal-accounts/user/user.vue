@@ -92,4 +92,32 @@ function closeChange(){
   border-radius: 30px;
   border: 1px solid #33333329
 }
+
+@media (max-width: 768px) {
+  .page-wrapper {
+    width: calc(100vw - 48px);
+  }
+  .user-data-wrapper{
+    padding: 25px 24px;
+    min-width: calc(100vw - 48px);
+    max-width: calc(100vw - 48px);
+    box-shadow: none;
+  }
+  .profie__btn{
+    border: none;
+    font-size: 16px;
+    background-color: #F5F5F5;
+  }
+  .bottom-btn{
+    display: flex;
+    flex-direction: column;
+  }
+  .exit--btn{
+    font-size: 16px;
+    width: 100%;
+  }
+  .profie__btn.exit--btn {
+    order: 2; /* Переместить вниз */
+  }
+}
 </style>

@@ -54,11 +54,11 @@ function close() {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); /* Полупрозрачный фон */
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 10000; /* Очень высокий z-index */
+  z-index: 10000;
 }
 
 .hidden {
@@ -80,7 +80,7 @@ function close() {
   position: fixed;
   top: 50px;
   left: 50%;
-  transform: translateX(-43%);
+  transform: translateX(-50%);
   z-index: 9999999999999;
 }
 
@@ -136,5 +136,43 @@ button{
 
 button:hover{
   background-color: #c9c9c940;
+}
+
+@media (max-width: 768px) {
+  .notification-wrapper{
+    width: 250px;
+    padding: 30px 15px 0px;
+    border-radius: 34px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    position: relative;
+  }
+
+  p {
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+
+  .notification-header{
+    height: 40px;
+    width: 40px;
+    top: -15px;
+  }
+  .notification-header > img{
+    height: 20px;
+    width: 20px;
+  }
+  button{
+    all: unset;
+    font-size: 14px;
+    margin: 10px 0px;
+    width: 300px;
+    border-radius: 15px;
+    text-align: center;
+    transition: all 0.25s ease;
+    cursor: pointer;
+  }
 }
 </style>
