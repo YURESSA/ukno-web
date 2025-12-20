@@ -1,6 +1,6 @@
 <template>
   <div class="header-wrapper">
-    <nav class="desktop-nav-wrapper" v-if="!isMobile">
+    <nav class="desktop-nav-wrapper" v-if="!$isMobile()">
       <ul class="nav-list">
         <li class="project">
           Проекты
@@ -47,7 +47,7 @@
           <img src="/icon/menu-icon.svg" alt="">
         </button>
         <div class="mobile-logo">
-          <RouterLink to="/">
+          <RouterLink to="/" class="router-main">
             <img src="/logo/mobile-logo.svg" alt="Логотип">
           </RouterLink>
         </div>
@@ -70,54 +70,44 @@
         </div>
       </div>
 
-      <div v-if="menuOpen" class="mobile-menu">
-        <ul>
-          <li>
-            <div @click="toggleProjects" class="project-toggle">
-              Проекты
-            </div>
-            <ul v-if="showProjects" class="mobile-projects">
-              <li>Психологический клуб</li>
-              <li>Репетиторский клуб</li>
-              <li>Музейное пространство</li>
-            </ul>
-          </li>
-          <li><RouterLink to="/events" @click="menuOpen = false">События</RouterLink></li>
-          <li><RouterLink to="/news" @click="menuOpen = false">Новости</RouterLink></li>
-          <li><RouterLink to="/ukno" @click="menuOpen = false">О нас</RouterLink></li>
-        </ul>
-      </div>
+      <!-- Анимированное меню с использованием Transition -->
+      <Transition name="menu-fade">
+        <div v-if="menuOpen" class="mobile-menu">
+          <ul>
+            <li>
+              <div @click="toggleProjects" class="project-toggle">
+                Проекты
+              </div>
+              <Transition name="slide-fade">
+                <ul v-if="showProjects" class="mobile-projects">
+                  <li>Психологический клуб</li>
+                  <li>Репетиторский клуб</li>
+                  <li>Музейное пространство</li>
+                </ul>
+              </Transition>
+            </li>
+            <li><RouterLink to="/events" @click="menuOpen = false">События</RouterLink></li>
+            <li><RouterLink to="/news" @click="menuOpen = false">Новости</RouterLink></li>
+            <li><RouterLink to="/ukno" @click="menuOpen = false">О нас</RouterLink></li>
+          </ul>
+        </div>
+      </Transition>
     </nav>
   </div>
 </template>
 
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed } from 'vue';
 import { useDataStore } from '@/stores/counter';
 
 const store = useDataStore();
-const isMobile = ref(false)
 const menuOpen = ref(false)
 const showProjects = ref(false);
-
-const checkMobile = () => {
-  const width = document.documentElement.clientWidth;
-  isMobile.value = width < 768;
-}
 
 const toggleProjects = () => {
   showProjects.value = !showProjects.value;
 };
-
-onMounted(() => {
-  checkMobile()
-  window.addEventListener('resize', checkMobile)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', checkMobile)
-})
 
 const hasToken = computed(() => {
   return !store.auth_key;
@@ -134,7 +124,6 @@ const profileData = computed(() => store.getProfileData)
 
 .header-wrapper{
   width: calc(100vw - 90px);
-  /* max-width: 100vw; */
   position: fixed;
   padding: 28px 45px;
   backdrop-filter: blur(28.399999618530273px);
@@ -147,7 +136,6 @@ const profileData = computed(() => store.getProfileData)
   margin: 0 auto;
   justify-content: space-around;
   align-items: center;
-  /* transform: translateX(28px); */
 }
 
 .profile{
@@ -218,6 +206,46 @@ h4{
   background-color: #EBEBEB;
 }
 
+/* Анимации для мобильного меню */
+.menu-fade-enter-active,
+.menu-fade-leave-active {
+  transition: all 0.3s ease;
+  transform-origin: top;
+}
+
+.menu-fade-enter-from,
+.menu-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px) scaleY(0.95);
+}
+
+.menu-fade-enter-to,
+.menu-fade-leave-from {
+  opacity: 1;
+  transform: translateY(0) scaleY(1);
+}
+
+/* Анимация для подменю проектов */
+.slide-fade-enter-active {
+  transition: all 0.3s ease;
+}
+
+.slide-fade-leave-active {
+  transition: all 0.2s ease;
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-5px);
+}
+
+.slide-fade-enter-to,
+.slide-fade-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* Мобильные стили */
 
 @media (max-width: 768px) {
@@ -225,7 +253,6 @@ h4{
     width: calc(100vw - 48px);
     position: relative;
     padding: 56px 24px 20px 24px;
-    /* margin-bottom: 20px; */
   }
 }
 
@@ -234,6 +261,10 @@ h4{
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+}
+
+.mobile-logo {
+  height: 100%;
 }
 
 .mobile-profile{
@@ -255,7 +286,7 @@ h4{
 .mobile-nav button img {
   width: 100%;
   height: 100%;
-  object-fit: contain; /* Сохраняет пропорции */
+  object-fit: contain;
   box-sizing: border-box;
 }
 
@@ -271,6 +302,8 @@ h4{
   top: 112px;
   left: 0;
   background-color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  z-index: 999;
 }
 
 .mobile-menu > ul{
@@ -288,5 +321,11 @@ h4{
   gap: 10px;
   margin-left: 15px;
   padding-top: 15px;
+  padding-bottom: 10px;
+}
+
+.mobile-logo > .router-main {
+  display: block;
+  height: 100%;
 }
 </style>

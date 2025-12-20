@@ -98,10 +98,6 @@ span{
   border: none;
 }
 
-.button * img{
-  filter: invert(1) brightness(1.5);
-}
-
 h3{
   font-weight: 500;
 }

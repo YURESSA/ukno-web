@@ -527,6 +527,10 @@ form {
   margin-top: 30px;
 }
 
+.participants--btn {
+  background: none;
+}
+
 input, textarea {
   font-family: 'Manrope', Arial, Helvetica, sans-serif;
   font-size: 20px;

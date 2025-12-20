@@ -255,6 +255,9 @@
     border: 2px solid #E2E2E2;
     padding: 10px 16px;
     border-radius: 12px 0 0 12px;
+    background: white;
+    color: #9E9E9E;
+    touch-action: manipulation;
   }
 
   .left--btn{
@@ -284,5 +287,17 @@
 
   .offer{
     color: #A9A9A9;
+  }
+
+  @media (max-width: 768px) {
+    h5{
+      font-size: 16px;
+    }
+    .participants--btn:hover {
+      background-color: white;
+    }
+    .participants--btn:active {
+      background-color: #F25C03;
+    }
   }
   </style>

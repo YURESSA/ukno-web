@@ -38,7 +38,7 @@
         <div class="content">
           <p>{{ news[0].content }}</p>
         </div>
-        <RouterLink to=""><IconButton class="link-button" text="команды"><img src="/icon/white-arrow.svg" alt=""></IconButton></RouterLink>
+        <RouterLink to=""><IconButton class="link-button" text="Открыть новость"><img src="/icon/white-arrow.svg" alt=""></IconButton></RouterLink>
       </div>
     </div>
   </div>
@@ -90,13 +90,29 @@ const imageUrl = computed(() => baseUrl + props.news[0].images[0])
 }
 
 .link-button{
-  border-color: white;
+  border: 1px solid white;
   width: 100%;
   color: white;
+  background: none;
 }
 
 .content > p{
   margin-top: 20px;
+}
+
+@media (max-width: 756px) {
+  .img-block > img {
+    width: 342px;
+    height: 167px;
+  }
+  .container{
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  .content {
+    margin: 30px 0;
+  }
 }
 </style>
 
