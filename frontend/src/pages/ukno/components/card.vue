@@ -1,7 +1,7 @@
 <template>
   <div class="info-card-wrapper">
     <div class="card">
-      <div class="angel"></div>
+      <div class="flower"></div>
       <div class="title">
         <h3>{{ title }}</h3>
       </div>
@@ -43,13 +43,13 @@ defineProps({
   overflow-x: hidden;
 }
 
-.angel{
+.flower{
   content: "";
   width: 200px;
   height: 200px;
   position: absolute;
   background-image: url('/public/about-us/icon/andels.svg');
-  z-index: 99;
+  z-index: 1;
   background-repeat: no-repeat;
   right: -6px;
   top: 0px;
@@ -60,11 +60,15 @@ defineProps({
 .info-card-wrapper:hover .card {
   transform: translateY(60px);
   background-color: #FF6C36;
+  color: white;
 }
 
 
-.info-card-wrapper:hover .angel {
+.info-card-wrapper:hover .flower {
   opacity: 1;
 }
 
+.title {
+  z-index: 2;
+}
 </style>

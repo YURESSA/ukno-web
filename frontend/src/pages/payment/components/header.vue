@@ -49,4 +49,10 @@ h4{
   border: none;
   background-color: #EDEDED8A;
 }
+
+@media (max-width: 768px) {
+  h4{
+    font-size: 16px;
+  }
+}
 </style>

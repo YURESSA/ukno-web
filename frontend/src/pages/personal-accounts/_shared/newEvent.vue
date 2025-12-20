@@ -304,7 +304,7 @@ const submitEvent = async () => {
     console.log(formDataToSend)
 
     await store.PostNewEvent(formDataToSend);
-    await notification('Произошла ошибка, попробуйте ещё раз', 'positive');
+    await notification('Событие успешно создано!', 'positive');
     router.back();
   } catch (error) {
     console.error('Upload failed:', error);
@@ -375,7 +375,7 @@ input, textarea, select {
   border-radius: 8px;
   padding-left: 20px;
   transition: all 0.5s ease;
-  font-size: 20px;
+  font-size: 14px;
   font-weight: 400 !important;
   font-family: 'Manrope' !important;
 }
@@ -404,6 +404,11 @@ input:focus, textarea:focus {
 input::placeholder,
 textarea::placeholder {
   font-weight: 400 !important;
+}
+
+.participants--btn {
+  background: white;
+  color: #9E9E9E;
 }
 
 input::-webkit-input-placeholder,

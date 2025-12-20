@@ -1,13 +1,13 @@
 <template>
   <div class="page-wrapper" id="about">
-    <div class="container text-medium">
+    <div class="container text-medium" v-if="!$isMobile()">
       <div class="design-img">
         <!-- <img class="absolut--img left-ear" src="/icon/main/leftEar.png" alt=""> -->
         <!-- <img class="absolut--img bottom-ear" src="/icon/main/bottomEar.png" alt=""> -->
       </div>
       <div class="title">
         <h3>Кто мы такие?</h3>
-        <img class="absolut--img flower-big" src="/icon/main/flower-big.png" alt="">
+        <img class="absolut--img flower-big" src="/icon/main/flower-big.png" alt="" v-if="!$isMobile()">
       </div>
       <div class="about-content">
         <div class="content-wrapper">
@@ -15,7 +15,7 @@
             <p> Резиденты кластера «Хлебзавод №6» вместе с другими участниками проводим экскурсии и создаем  пространство для  креативных идей, вдохновения и развития</p>
           </div>
           <div class="content">
-            <img class="absolut--img flower-small" src="/icon/main/flower-small.png" alt="">
+            <img class="absolut--img flower-small" src="/icon/main/flower-small.png" alt="" v-if="!$isMobile()">
             <p>Мы находимся на территории бывшего <br>
               хлебозавода №6, который работал с 1978 года. <br>
               Сегодня мы сохраняем дух прошлого, создавая <br> новое будущее.</p>
@@ -24,29 +24,101 @@
         <div class="content-wrapper">
           <div class="content">
             <!-- <img class="absolut--img mouse" src="/icon/main/mouse.png" alt=""> -->
-            <img class="absolut--img ear" src="/icon/main/ear.png" alt="">
+            <img class="absolut--img ear" src="/icon/main/ear.png" alt="" v-if="!$isMobile()">
           </div>
           <div class="content border">
             <p>С 2025 года мы открыли новое <br> пространство для молодежных инициатив, <br> образовательных мероприятий и <br> творческих проектов.</p>
           </div>
           <div class="content">
-            <img class="absolut--img bread" src="/icon/main/bread1.png" alt="">
+            <img class="absolut--img bread" src="/icon/main/bread1.png" alt="" v-if="!$isMobile()">
           </div>
         </div>
       </div>
       <UsResult></UsResult>
+    </div>
+
+    <div class="mobile-about-us">
+      <div class="title">
+        <h2>Кто мы такие?</h2>
+      </div>
+      <div
+        class="content-list"
+        ref="slider"
+        @touchstart="pauseAutoScroll"
+        @mousedown="pauseAutoScroll"
+        @wheel="pauseAutoScroll"
+      >
+        <div class="about-card" v-for="(item, i) in cards" :key="i">
+          <p>{{ item }}</p>
+        </div>
+
+        <div class="about-card" v-for="(item, i) in cards" :key="'clone-' + i">
+          <p>{{ item }}</p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import UsResult from './us-result.vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+
+const slider = ref(null)
+
+const cards = [
+  'Резиденты кластера «Хлебзавод №6» вместе с другими участниками проводим экскурсии и создаем пространство для креативных идей, вдохновения и развития',
+  'Мы находимся на территории бывшего хлебозавода №6, который работал с 1978 года. Сегодня мы сохраняем дух прошлого, создавая новое будущее',
+  'С 2025 года мы открыли новое пространство для молодежных инициатив, образовательных мероприятий и творческих проектов'
+]
+
+let position = 0
+let speed = 0.4
+let isPaused = false
+let animationId = null
+let resumeTimeout = null
+
+const autoScroll = () => {
+  if (!slider.value) return
+
+  if (!isPaused) {
+    position += speed
+    slider.value.scrollLeft = position
+  }
+
+  if (position >= slider.value.scrollWidth / 2) {
+    position = 0
+    slider.value.scrollLeft = 0
+  }
+
+  animationId = requestAnimationFrame(autoScroll)
+}
+
+const pauseAutoScroll = () => {
+  isPaused = true
+  clearTimeout(resumeTimeout)
+
+  resumeTimeout = setTimeout(() => {
+    position = slider.value.scrollLeft
+    isPaused = false
+  }, 2000)
+}
+
+onMounted(() => {
+  animationId = requestAnimationFrame(autoScroll)
+})
+
+onBeforeUnmount(() => {
+  cancelAnimationFrame(animationId)
+  clearTimeout(resumeTimeout)
+})
+
 </script>
 
 <style scoped>
 .page-wrapper{
   background-color: #FFD6BD;
-  padding-bottom: 0;
+  padding: 24px 0 48px 0;
   height: calc(100% + 150px);
 }
 
@@ -141,5 +213,44 @@ import UsResult from './us-result.vue';
 
 .border > p {
   text-align: center;
+}
+
+
+.content-list {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 20px;
+  overflow-x: scroll;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-behavior: auto;
+}
+
+.content-list::-webkit-scrollbar {
+  display: none;
+}
+
+.about-card {
+  width: 286px;
+  height: 129px;
+  padding: 22px;
+  text-align: left;
+  border: 1px solid white;
+  flex-shrink: 0;
+}
+
+.about-card > p {
+  width: 100%;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 140%;
+  color: #333;
+}
+
+.mobile-about-us > .title > h2 {
+  margin-left: 24px;
+  margin-bottom: 28px;
+  text-align: left;
 }
 </style>

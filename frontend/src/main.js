@@ -3,6 +3,7 @@ import './assets/main.css'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+import VueMobileDetection from "vue-mobile-detection";
 
 import App from './App.vue'
 import router from './router/index.js'
@@ -14,3 +15,4 @@ const app = createApp(App)
 app.use(pinia)
 app.use(router)
 app.mount('#app')
+app.use(VueMobileDetection);

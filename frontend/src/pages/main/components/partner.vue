@@ -47,4 +47,14 @@
 h3{
   margin-bottom: 30px;
 }
+
+@media (max-width: 756px) {
+  h3{
+    margin-bottom: 20px;
+  }
+  .partners-block > img{
+    width: 68px;
+    height: 57px;
+  }
+}
 </style>

@@ -2,7 +2,7 @@
   <div class="page-wrapper page--margin" v-if="load">
     <div class="asterick"></div>
 
-    <div class="event-wrapper" v-if="!isMobile">
+    <div class="event-wrapper" v-if="!$isMobile()">
       <span><RouterLink to="/">Главная</RouterLink> / <RouterLink to="/events">События</RouterLink> / {{ excursion.title }}</span>
       <div class="title">
         <h2>{{ excursion.title }}</h2>
@@ -184,7 +184,7 @@
       </div>
       <div class="descript">
         <h3>Подробнее об экскурсии</h3>
-        <h5>Экскурсия «{{ excursion.title }}»</h5>
+        <h5 style="font-size: 16px;">Экскурсия «{{ excursion.title }}»</h5>
         <p>{{ excursion.description }}</p>
       </div>
       <h2 v-if="excursion.photos.length > 1">Галерея ярких моментов</h2>
@@ -218,7 +218,7 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, computed, ref } from 'vue';
+import { onMounted, computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useDataStore } from '@/stores/counter';
 import { baseUrl } from '@/stores/counter';
@@ -230,22 +230,7 @@ import { notification } from '@/utils/notification'
 const store = useDataStore();
 const route = useRoute();
 const router = useRouter();
-const isMobile = ref(false)
 const load = ref(false)
-
-const checkMobile = () => {
-  const width = document.documentElement.clientWidth;
-  isMobile.value = width < 768;
-}
-
-onMounted(() => {
-  checkMobile()
-  window.addEventListener('resize', checkMobile)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', checkMobile)
-})
 
 const excursion = computed(() => store.getExcursionDetail);
 
@@ -451,9 +436,9 @@ span > a{
 .descript{
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: 20px;
   margin-top: 50px;
-  margin-bottom: 50px;
+  margin-bottom: 20px;
 }
 
 .gallery{
