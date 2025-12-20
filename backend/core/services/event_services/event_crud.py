@@ -8,13 +8,12 @@ from werkzeug.datastructures import FileStorage
 from backend.core import db
 from backend.core.models.event_models import Event, Category, FormatType, AgeCategory, Tag
 from backend.core.services.email_service.email_service import send_event_deletion_email
-
 from backend.core.services.event_services.event_photo_service import process_photos, add_photos
 from backend.core.services.event_services.event_session_service import delete_event_session, \
     clear_sessions_and_schedules, add_sessions
 from backend.core.services.user_services.user_service import get_user_by_email
-from backend.core.utilits.model_utils import get_model_by_name
 from backend.core.utilits.file_utils import remove_file_if_exists, generate_reservations_csv
+from backend.core.utilits.model_utils import get_model_by_name
 
 
 def get_event(event_id: int, resident_id: Optional[int] = None) -> Optional[Event]:
@@ -114,6 +113,10 @@ def create_event(
     Создаёт новое событие (экскурсию) с сессиями, тегами и фото.
 
     :param data: Словарь с данными события.
+                 Допустимые поля: title, short_description, description, duration, place, conducted_by,
+                 is_active, working_hours, contact_email, iframe_url, telegram, vk,
+                 distance_to_center, time_to_nearest_stop, category, format_type, age_category,
+                 sessions, tags
     :param email: Email пользователя (создателя события).
     :param files: Список загруженных файлов для фото экскурсии.
     :return: Кортеж (созданное событие или None, сообщение/данные, HTTP-статус ошибки или None)
@@ -133,6 +136,7 @@ def create_event(
 
         event = Event(
             title=data.get("title"),
+            short_description=data.get("short_description"),
             description=data.get("description"),
             duration=data.get("duration"),
             category_id=category.category_id,
@@ -179,7 +183,7 @@ def update_event(event_id: int, data: dict) -> Tuple[Optional[Event], dict, int]
 
     :param event_id: ID экскурсии для обновления.
     :param data: Словарь с данными для обновления.
-                 Допустимые поля: title, description, duration, place, conducted_by,
+                 Допустимые поля: title, short_description, description, duration, place, conducted_by,
                  is_active, working_hours, contact_email, iframe_url, telegram, vk,
                  distance_to_center, time_to_nearest_stop, category, format_type, age_category
     :return: Кортеж (обновленный объект Event или None, словарь с сообщением/данными, HTTP-статус)
@@ -190,7 +194,7 @@ def update_event(event_id: int, data: dict) -> Tuple[Optional[Event], dict, int]
         return None, {"message": "Экскурсия не найдена"}, HTTPStatus.NOT_FOUND
 
     allowed_fields = [
-        'title', 'description', 'duration', 'place', 'conducted_by',
+        'title', 'short_description', 'description', 'duration', 'place', 'conducted_by',
         'is_active', 'working_hours', 'contact_email', 'iframe_url',
         'telegram', 'vk', 'distance_to_center', 'time_to_nearest_stop'
     ]

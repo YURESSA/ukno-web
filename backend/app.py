@@ -6,7 +6,6 @@ from flask import send_from_directory, render_template
 
 from backend.core import create_app, db
 from backend.core.config import Config
-from backend.core.models.auth_models import Role
 from backend.core.models.event_models import Category, AgeCategory, FormatType
 from backend.core.scripts.clear_unpaid import cleanup_unpaid_reservations
 from backend.core.scripts.create_superuser import create_superuser
@@ -14,7 +13,6 @@ from backend.core.scripts.ensure_data import ensure_data_exists
 
 
 def seed_reference_data():
-    ensure_data_exists(db, Role, 'roles.json', 'role_id', 'role_name')
     ensure_data_exists(db, Category, 'categories.json', 'category_id', 'category_name')
     ensure_data_exists(db, AgeCategory, 'age_categories.json', 'age_category_id', 'age_category_name')
     ensure_data_exists(db, FormatType, 'format_types.json', 'format_type_id', 'format_type_name')
@@ -41,7 +39,11 @@ def register_static_routes(app):
 
 def run_cleanup(app):
     with app.app_context():
-        cleanup_unpaid_reservations()
+        try:
+            count = cleanup_unpaid_reservations()
+            app.logger.info(f"Очистка неоплаченных броней выполнена, удалено {count}")
+        except Exception as e:
+            app.logger.exception("Ошибка при очистке броней: %s", e)
 
 
 def main():

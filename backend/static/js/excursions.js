@@ -52,15 +52,28 @@ async function loadExcursions() {
 
     const rows = data.excursions.map(item => ({
         id: item.excursion_id,  // добавляем id
-        cells: [item.excursion_id, item.title, (item.description ? item.description.slice(0, 100) + '...' : ''), item.category?.category_name || '', item.format_type?.format_type_name || '', item.age_category?.age_category_name || '',],
+        cells: [
+            item.excursion_id,
+            item.title,
+            item.short_description ? item.short_description.slice(0, 50) + '...' : '', // краткое описание
+            item.description ? item.description.slice(0, 100) + '...' : '',           // полное описание
+            item.category?.category_name || '',
+            item.format_type?.format_type_name || '',
+            item.age_category?.age_category_name || '',
+        ],
         actions: `
-          <button class="btn btn-outline-danger btn-sm btn-delete-excursion" data-id="${item.excursion_id}">
-            <i class="fas fa-trash"></i> Удалить
-          </button>
-        `
+      <button class="btn btn-outline-danger btn-sm btn-delete-excursion" data-id="${item.excursion_id}">
+        <i class="fas fa-trash"></i> Удалить
+      </button>
+    `
     }));
 
-    renderTable('События', ['ID', 'Название', 'Описание', 'Категория', 'Формат', 'Возраст'], rows);
+
+    renderTable(
+        'События',
+        ['ID', 'Название', 'Краткое описание', 'Описание', 'Категория', 'Формат', 'Возраст'],
+        rows
+    );
 
     document.querySelectorAll('#excursionsTable tbody tr').forEach(row => {
         row.onclick = async (e) => {
@@ -109,6 +122,7 @@ function showExcursionModal(excursion) {
     originalExcursionData = {...excursion};
 
     document.getElementById('modalTitle').value = excursion.title || '';
+    document.getElementById('modalShortDescription').value = excursion.short_description || '';
     document.getElementById('modalDescription').value = excursion.description || '';
     document.getElementById('modalCategory').value = excursion.category?.category_name || '';
     document.getElementById('modalFormat').value = excursion.format_type?.format_type_name || '';
@@ -156,7 +170,25 @@ function getChangedFields() {
     const updated = collectExcursionFormData();
     const changed = {};
 
-    const fieldsToCheck = ['title', 'description', 'duration', 'place', 'conducted_by', 'working_hours', 'contact_email', 'iframe_url', 'telegram', 'vk', 'distance_to_center', 'time_to_nearest_stop', 'is_active', 'category', 'format_type', 'age_category'];
+    const fieldsToCheck = [
+        'title',
+        'short_description',
+        'description',
+        'duration',
+        'place',
+        'conducted_by',
+        'working_hours',
+        'contact_email',
+        'iframe_url',
+        'telegram',
+        'vk',
+        'distance_to_center',
+        'time_to_nearest_stop',
+        'is_active',
+        'category',
+        'format_type',
+        'age_category'
+    ];
 
     for (const field of fieldsToCheck) {
         const original = originalExcursionData[field];
@@ -178,7 +210,6 @@ function getChangedFields() {
             const updatedValue = updated[field] || '';
             const originalValue = original || '';
             if (updatedValue !== originalValue || field === 'title') {
-                // Гарантированно включаем title всегда
                 changed[field] = updated[field];
             }
         }
@@ -493,6 +524,7 @@ document.getElementById('modalSave').onclick = async () => {
     const isNew = !currentExcursionId;
 
     const excursionData = collectExcursionFormData();
+    console.log(excursionData);
 
     if (isNew) {
         const formData = new FormData();
@@ -676,6 +708,7 @@ document.getElementById('btnCreateExcurs').onclick = () => {
 
     // Очистить все поля модалки
     document.getElementById('modalTitle').value = '';
+    document.getElementById('modalShortDescription').value = '';
     document.getElementById('modalDescription').value = '';
     document.getElementById('modalCategory').value = '';
     document.getElementById('modalFormat').value = '';
@@ -703,6 +736,7 @@ document.getElementById('btnCreateExcurs').onclick = () => {
 function collectExcursionFormData() {
     return {
         title: document.getElementById('modalTitle').value,
+        short_description: document.getElementById('modalShortDescription').value,
         description: document.getElementById('modalDescription').value,
         category: document.getElementById('modalCategory').value,
         format_type: document.getElementById('modalFormat').value,

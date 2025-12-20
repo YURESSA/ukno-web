@@ -1,5 +1,8 @@
+import logging
 import os
+from time import time
 
+import flask
 from flask import Flask
 from flask_cors import CORS
 
@@ -23,6 +26,50 @@ def create_app(testing=False):
     if testing:
         app.config["TESTING"] = True
         app.config["JWT_SECRET_KEY"] = "test-secret"
+
+    app.logger.setLevel(logging.INFO)
+    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+        log_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs', 'app.log')
+        os.makedirs(os.path.dirname(log_file), exist_ok=True)
+
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setLevel(logging.INFO)
+        formatter = logging.Formatter('[%(asctime)s] [%(levelname)s] %(message)s')
+        file_handler.setFormatter(formatter)
+
+        if not any(isinstance(h, logging.FileHandler) for h in app.logger.handlers):
+            app.logger.addHandler(file_handler)
+
+        app.logger.info("Приложение Flask создано и расширения инициализированы")
+
+    @app.before_request
+    def start_timer():
+        flask.g.start_time = time()
+
+    @app.after_request
+    def log_request_info(response):
+        duration = round((time() - flask.g.start_time) * 1000, 2)
+
+        if response.status_code >= 400:
+            app.logger.error(
+                f"{flask.request.remote_addr} {flask.request.method} {flask.request.path} "
+                f"{response.status_code} {duration}ms "
+                f"UA:{flask.request.headers.get('User-Agent')}"
+            )
+
+        return response
+
+    @app.errorhandler(Exception)
+    def handle_exception(e):
+        duration = round((time() - flask.g.start_time) * 1000, 2)
+
+        app.logger.exception(
+            f"UNHANDLED ERROR: {flask.request.remote_addr} {flask.request.method} {flask.request.path} "
+            f"{duration}ms UA:{flask.request.headers.get('User-Agent')}"
+        )
+
+        return {"message": "Internal server error"}, 500
+
     return app
 
 
@@ -44,3 +91,6 @@ def register_apps(app):
 
     from backend.api.login import login_ns
     api.add_namespace(login_ns, path='/api')
+
+    from backend.api.frontend_logs import frontend_logs_ns
+    api.add_namespace(frontend_logs_ns, path='/api/frontend-logs')

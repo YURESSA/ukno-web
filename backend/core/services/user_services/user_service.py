@@ -4,8 +4,8 @@ from typing import Optional, List, Tuple, Dict
 from flask_jwt_extended import create_access_token, get_jwt_identity
 
 from backend.core import db
-from backend.core.models.auth_models import User, Role
-from backend.core.services.user_services.role_service import get_role_by_name
+from backend.core.models.auth_models import User, RoleEnum
+from backend.core.models.event_models import Event, Reservation
 
 
 def get_user_by_email(email: str) -> Optional[User]:
@@ -28,13 +28,13 @@ def get_all_users(role: Optional[str] = None) -> List[User]:
     query = User.query
 
     if role:
-        query = query.filter(User.role.has(role_name=role))
+        query = query.filter(User.role.has(role=role))
 
     users = query.all()
     return users
 
 
-def create_user(email: str, password: str, full_name: str, phone: str, role_name: str) -> Optional[User]:
+def create_user(email: str, password: str, full_name: str, phone: str, role: RoleEnum) -> Optional[User]:
     """
     Создание нового пользователя.
 
@@ -42,39 +42,50 @@ def create_user(email: str, password: str, full_name: str, phone: str, role_name
     :param password: Пароль пользователя
     :param full_name: Полное имя пользователя
     :param phone: Телефон пользователя
-    :param role_name: Название роли пользователя
+    :param role: Название роли пользователя
     :return: Объект User или None, если роль не найдена или пользователь с таким email уже существует
     """
-    role = get_role_by_name(role_name)
-    if not role or User.query.filter_by(email=email).first():
+    if User.query.filter_by(email=email).first():
         return None
 
     new_user = User(
         email=email,
         full_name=full_name,
         phone=phone,
-        role_id=role.role_id
+        role=role
     )
     new_user.set_password(password)
 
     db.session.add(new_user)
     db.session.commit()
+
     return new_user
 
 
-def delete_user(email: str) -> bool:
+def delete_user(email: str) -> Tuple[bool, str]:
     """
-    Удаление пользователя по email.
+    Удаление пользователя по email с проверкой на созданные экскурсии и бронирования.
 
     :param email: Email пользователя
-    :return: True, если пользователь удалён, False если пользователь не найден
+    :return: Кортеж (успех, сообщение)
     """
-    user = get_user_by_email(email)
-    if user:
-        db.session.delete(user)
-        db.session.commit()
-        return True
-    return False
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return False, "Пользователь не найден"
+
+    # Проверка, есть ли созданные экскурсии
+    created_events = Event.query.filter_by(created_by=user.user_id).count()
+    if created_events > 0:
+        return False, f"Невозможно удалить пользователя: у него есть {created_events} созданных экскурсий"
+
+    # Проверка активных бронирований
+    active_reservations = Reservation.query.filter_by(user_id=user.user_id, is_cancelled=False).count()
+    if active_reservations > 0:
+        return False, f"Невозможно удалить пользователя: у него есть {active_reservations} активных бронирований"
+
+    db.session.delete(user)
+    db.session.commit()
+    return True, "Пользователь успешно удалён"
 
 
 def authenticate_user(email: str, password: str, required_role: Optional[str] = None) -> Optional[str]:
@@ -90,10 +101,19 @@ def authenticate_user(email: str, password: str, required_role: Optional[str] = 
     if not user or not user.check_password(password):
         return None
 
-    if required_role and user.role.role_name != required_role:
-        return None
+    if required_role:
+        try:
+            required_enum = RoleEnum(required_role)
+        except ValueError:
+            return None
 
-    return create_access_token(identity=user.email, additional_claims={"role": user.role.role_name})
+        if user.role != required_enum:
+            return None
+
+    return create_access_token(
+        identity=user.email,
+        additional_claims={"role": user.role.value}
+    )
 
 
 def change_password(email: str, old_password: str, new_password: str) -> bool:
@@ -163,25 +183,30 @@ def update_user(email: str, data: dict) -> Optional['User']:
     if not user:
         return None
 
-    if 'email' in data and data['email'] != user.email:
-        existing = User.query.filter_by(email=data['email']).first()
+    if "email" in data and data["email"] != user.email:
+        existing = User.query.filter_by(email=data["email"]).first()
         if existing:
             raise ValueError("Email уже используется другим пользователем")
-        user.email = data['email']
+        user.email = data["email"]
 
-    if 'full_name' in data:
-        user.full_name = data['full_name']
-    if 'phone' in data:
-        user.phone = data['phone']
-    if 'password' in data and data['password']:
-        user.set_password(data['password'])
+    if "full_name" in data:
+        user.full_name = data["full_name"]
 
-    if 'role_name' in data:
-        role_name = data['role_name']
-        role = Role.query.filter_by(role_name=role_name).first()
-        if not role:
-            raise ValueError(f"Роль '{role_name}' не найдена")
-        user.role_id = role.role_id
+    if "phone" in data:
+        user.phone = data["phone"]
+
+    if "password" in data and data["password"]:
+        user.set_password(data["password"])
+
+    if "role_name" in data:
+        role_name = data["role_name"]
+
+        try:
+            new_role = RoleEnum(role_name)
+        except ValueError:
+            raise ValueError(f"Роль '{role_name}' не найдена. Допустимые значения: admin, resident, user")
+
+        user.role = new_role
 
     db.session.commit()
     return user

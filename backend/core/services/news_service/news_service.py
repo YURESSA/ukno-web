@@ -30,6 +30,7 @@ def create_news_with_images(user_email: str, data_str: str, image_files: List[Fi
 
     title = data.get("title")
     content = data.get("content")
+    short_description = data.get("short_description")
     photo_author = data.get("photo_author")
     if not all([title, content]):
         return {"message": "Поля title и content обязательны"}, HTTPStatus.BAD_REQUEST
@@ -41,6 +42,7 @@ def create_news_with_images(user_email: str, data_str: str, image_files: List[Fi
     news = News(
         title=title,
         content=content,
+        short_description=short_description,
         author_id=user.user_id,
         photo_author=photo_author
     )
@@ -100,12 +102,15 @@ def update_news(news_id: int, form_data: dict, files: Optional[dict] = None) -> 
 
     title = data.get("title")
     content = data.get("content")
+    short_description = data.get("short_description")
     photo_author = data.get("photo_author")
 
-    if title:
+    if title is not None:
         news.title = title
-    if content:
+    if content is not None:
         news.content = content
+    if short_description is not None:
+        news.short_description = short_description
     if photo_author is not None:
         news.photo_author = photo_author
 

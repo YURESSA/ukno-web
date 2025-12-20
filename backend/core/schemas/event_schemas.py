@@ -32,6 +32,7 @@ cancel_model = api.model('CancelReservationRequest', {
 event_model = api.model('Event', {
     'excursion_id': fields.Integer(readonly=True, description='ID экскурсии'),
     'title': fields.String(required=True, description='Название экскурсии'),
+    'short_description': fields.String(description='Краткое описание'),
     'description': fields.String(description='Описание'),
     'duration': fields.Integer(description='Продолжительность (мин)'),
     'place': fields.String(description='Место проведения'),
@@ -48,6 +49,7 @@ event_model = api.model('Event', {
 
 event_create_model = api.model('EventCreate', {
     'title': fields.String(required=True, description='Название экскурсии'),
+    'short_description': fields.String(description='Краткое описание'),
     'description': fields.String(description='Описание'),
     'duration': fields.Integer(description='Продолжительность (мин)'),
     'category': fields.String(required=True, description='Категория'),

@@ -5,7 +5,7 @@ from flask_jwt_extended import get_jwt_identity
 
 from backend.core import db
 from backend.core.messages import AuthMessages
-from backend.core.models.auth_models import User
+from backend.core.models.auth_models import User, RoleEnum
 from backend.core.services.user_services.user_service import create_user, get_user_by_email, authenticate_user
 from backend.core.utilits.user_utils import parse_user_data
 
@@ -38,28 +38,25 @@ def change_profile_password(data: dict) -> Tuple[Dict, int]:
     return {"message": "Пароль успешно изменён"}, HTTPStatus.OK
 
 
-def register_user(default_role: str, data: Dict, current_user_role: str = "user") -> Tuple[Dict, int]:
+def register_user(default_role: RoleEnum, data: Dict, current_user_role: RoleEnum = RoleEnum.USER) -> Tuple[Dict, int]:
     """
     Регистрирует нового пользователя с указанной ролью.
     Если текущий пользователь не админ, роль игнорируется и используется default_role.
-
-    :param default_role: Роль по умолчанию для нового пользователя
-    :param data: Словарь с данными пользователя (email, password, full_name, phone, role_name)
-    :param current_user_role: Роль текущего пользователя, совершающего регистрацию
-    :return: Кортеж из словаря с сообщением и HTTP-статуса
     """
-    email, password, full_name, phone, role_name = parse_user_data(data, default_role)
 
-    if current_user_role != "admin":
-        role_name = default_role
+    is_admin = current_user_role == RoleEnum.ADMIN
+    email, password, full_name, phone, role_enum = parse_user_data(data, default_role)
 
-    new_user = create_user(email, password, full_name, phone, role_name)
+    if not is_admin:
+        role_enum = default_role
+
+    new_user = create_user(email, password, full_name, phone, role_enum)
     if not new_user:
         return {"message": AuthMessages.USER_ALREADY_EXISTS}, HTTPStatus.CONFLICT
     return {"message": AuthMessages.USER_CREATED}, HTTPStatus.CREATED
 
 
-def login_user(role: str, data: dict) -> Tuple[Dict, int]:
+def login_user(role: RoleEnum, data: dict) -> Tuple[Dict, int]:
     """
     Универсальная функция авторизации пользователя по роли.
 
@@ -81,7 +78,7 @@ def login_user(role: str, data: dict) -> Tuple[Dict, int]:
     if not user.check_password(password):
         return {"message": "Неверный пароль"}, HTTPStatus.UNAUTHORIZED
 
-    if user.role.role_name.lower() != role.lower():
+    if user.role != role:
         return {"message": "Доступ запрещён для этой роли"}, HTTPStatus.FORBIDDEN
 
     token = authenticate_user(email, password)
@@ -90,6 +87,6 @@ def login_user(role: str, data: dict) -> Tuple[Dict, int]:
 
     return {
         "access_token": token,
-        "role": role,
+        "role": user.role.value,
         "message": f"Добро пожаловать, {user.full_name or 'пользователь'}!"
     }, HTTPStatus.OK
