@@ -67,7 +67,7 @@
         </div> -->
       </div>
     </div>
-    <IconButton @click="router.push('/events')" class="button" text="записаться"><img src="/icon/arrow.svg" alt=""></IconButton>
+    <IconButton @click="router.push('/events')" class="button" text="записаться"><img src="/icon/white-arrow.svg" alt=""></IconButton>
   </div>
 </template>
 
@@ -96,10 +96,6 @@ span{
   color: white;
   margin-bottom: 65px;
   border: none;
-}
-
-.button * img{
-  filter: invert(1) brightness(1.5);
 }
 
 h3{

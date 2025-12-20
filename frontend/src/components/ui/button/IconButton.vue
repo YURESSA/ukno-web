@@ -21,18 +21,17 @@ button{
   width: max-content;
   border-radius: 15px;
   padding: 15px 20px;
-  color: #333333;
+  color: #fff;
   font-size: 20px;
-  background: none;
-  border: 1px solid #333333;
+  background: #FF6C36;
 }
 
 button:hover{
-  background: rgb(226, 223, 223);
+  background: #DD5827;
 }
 
 button:active{
-  background-color: rgb(212, 195, 195);
+  background-color: #FFA280;
 }
 
 .text {

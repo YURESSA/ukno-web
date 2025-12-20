@@ -4,29 +4,31 @@
         <h3>Контакты</h3>
         <p>Улица 8 Марта, 203, Екатеринбург, Свердловская область, 620085</p>
         <p>Режим работы: ежедневно с 10:00 до 21:00</p>
-        <p>E-mail: mb@mail.ru</p>
+        <p>E-mail: bureau@ukno.ru</p>
         <p><a href="tel:+79905679522"></a>+7(990)567-95-22</p>
         <ul>
             <li><a href="tel:+79905679522"><img src="/icon/header/phone.svg" alt=""></a></li>
             <li><a href=""><img src="/icon/header/vk.svg" alt=""></a></li>
             <li><a href=""><img src="/icon/header/tg.svg" alt=""></a></li>
-          </ul>
+        </ul>
         <div class="map">
-          <slot class="yand-map"></slot>
+          <div class="map-radius">
+            <slot class="yand-map"></slot>
+          </div>
           <div class="info">
             <h4>Загляните к нам!</h4>
             <div class="info-block">
               <img src="/icon/footer/city.svg" alt="">
               <div class="text">
-                <h3 class="green">6 км</h3>
-                <p>от центра города</p>
+                <h3 class="green">15 минут</h3>
+                <p>от метро Ботаническая</p>
               </div>
             </div>
             <div class="info-block">
               <img src="/icon/footer/bus.svg" alt="">
               <div class="text">
-                <h3 class="violet">7 мин</h3>
-                <p>от  ближайшей остановки</p>
+                <h3 class="violet">3 минуты</h3>
+                <p>от ближайшей остановки  </p>
               </div>
             </div>
           </div>
@@ -59,14 +61,13 @@ h4{
   justify-content: center;
   gap: 30px;
   width: 100%;
-
-  padding: 70px;
-  border-radius: 38px;
   background-color: white;
 }
 
-.yand-map{
-  border-radius: 38px;
+.map-radius{
+  width: 100%;
+  border-radius: 40px;
+  overflow: hidden;
 }
 
 .map{
@@ -93,5 +94,24 @@ h4{
 
 .violet{
   color: #46278D;
+}
+
+@media (max-width: 768px) {
+  .contact-container{
+    gap: 20px;
+  }
+  h3{
+    margin-bottom: 6px;
+  }
+  li img{
+    width: 26px;
+    height: 26px;
+  }
+  .map{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
 }
 </style>

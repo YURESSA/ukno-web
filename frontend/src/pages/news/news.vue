@@ -50,7 +50,7 @@ const scrollToNews = (attempt = 0) => {
 };
 
 onMounted(async () => {
-  document.body.style.overflow = 'hidden';
+  document.body.classList.add('body-no-scroll');
   try {
     await store.FetchNews();
 
@@ -58,7 +58,7 @@ onMounted(async () => {
     nextTick(() => {
       setTimeout(() => {
         load.value = true
-        document.body.style.overflow = 'auto'
+        document.body.classList.remove('body-no-scroll');
       }, 1000)
 
       // Первая попытка скролла
@@ -69,7 +69,7 @@ onMounted(async () => {
     });
   } catch (error) {
     console.error('Ошибка при загрузке новостей:', error);
-    document.body.style.overflow = 'auto';
+    document.body.classList.remove('body-no-scroll');
   }
 });
 
@@ -137,5 +137,17 @@ a{
 
 a:hover{
   color: #333333;
+}
+
+@media (max-width: 768px) {
+  .header-wrapper[data-v-d588c1b3] {
+    width: calc(100vw - 48px);
+    position: relative;
+    padding: 56px 24px 20px 24px;
+    margin-bottom: 20px;
+  }
+  .page-wrapper{
+    padding-top: 0px;
+  }
 }
 </style>

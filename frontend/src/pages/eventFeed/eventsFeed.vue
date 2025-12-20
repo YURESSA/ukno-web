@@ -9,6 +9,7 @@
           round
           clearable
           @keydown.enter="sendSearch"
+          class="search"
         >
           <template #prefix>
             <n-icon :component="SearchOutline" />
@@ -37,6 +38,9 @@
               @update:modelValue="handleTitleSortChange"
             />
           </div>
+          <div class="sorting-mobile">
+            <IconButton class="sort--btn" @click="openSorting"><img src="/icon/filter/sorting.svg" alt=""></IconButton>
+          </div>
           <div class="filter">
             <IconButton class="sort--btn" text="Фильтры" @click="openFilter"><img src="/icon/filter/filter.svg" alt=""></IconButton>
           </div>
@@ -44,7 +48,7 @@
       </div>
       <div class="feed">
         <div class="event-count">
-          <p v-if="excursions.length">{{ excursions.length }} предложения</p>
+          <p v-if="excursions.excursions.length">{{ excursions.excursions.length }} предложения</p>
         </div>
         <div class="events">
           <EventCard
@@ -57,9 +61,12 @@
     </div>
     <Filter
     :class="{ 'filter-open': isFilterOpen }"
-    @close="closeFilter"/>
+    @close="closeAll"/>
+    <Sorting
+    :class="{ 'sorting-open': isSortingOpen }"
+    @close="closeAll"/>
   </div>
-  <div class="filter-open-wrapper" v-if="isFilterOpen" @click="closeFilter"></div>
+  <div class="filter-open-wrapper" v-if="isFilterOpen || isSortingOpen" @click="closeAll"></div>
 </template>
 
 <script setup>
@@ -71,6 +78,7 @@ import IconButton from '@/components/UI/button/IconButton.vue';
 import DropDown from '@/components/UI/dropDown/dropDown.vue';
 import EventCard from './components/event-card.vue';
 import Filter from './components/filter.vue';
+import Sorting from './components/sorting.vue';
 import { useDataStore } from '@/stores/counter';
 
 const store = useDataStore();
@@ -78,15 +86,16 @@ const store = useDataStore();
 const searchQuery = ref('');
 const sortByTitle = ref('');
 const sortByPrice = ref('');
-const filterStatus = ref(false);
 const isFilterOpen = ref(false);
-const { excursions } = storeToRefs(store);
+const isSortingOpen = ref(false);
+// const { excursions } = storeToRefs(store);
+const excursions = computed(() => store.getExcursions )
 console.log(excursions.value)
 
-// Отслеживаем изменения excursions
-watch(excursions, (newVal) => {
-  console.log('Экскурсии обновились:', newVal);
-}, { deep: true });
+// // Отслеживаем изменения excursions
+// watch(excursions, (newVal) => {
+//   console.log('Экскурсии обновились:', newVal);
+// }, { deep: true });
 
 onMounted(async () => {
   try {
@@ -97,7 +106,7 @@ onMounted(async () => {
 });
 
 function openFilter() {
-  document.body.style.overflow = 'hidden'
+  document.body.classList.add('body-no-scroll');
   isFilterOpen.value = true;
   window.scrollTo({
     top: 0,
@@ -105,9 +114,15 @@ function openFilter() {
   });
 }
 
-function closeFilter(){
-  document.body.style.overflow = 'auto'
+function openSorting(){
+  document.body.classList.add('body-no-scroll');
+  isSortingOpen.value = true;
+}
+
+function closeAll(){
+  document.body.classList.remove('body-no-scroll');
   isFilterOpen.value = false;
+  isSortingOpen.value = false;
 }
 
 const handleTitleSortChange = (value) => {
@@ -162,6 +177,25 @@ const sendSearch = async () => {
 
 .filter-open {
   right: 0;
+}
+
+.sorting-open{
+  bottom: 0;
+  opacity: 1;
+}
+
+.sort--btn{
+  background: none;
+  border: 1px solid #E2E2E2;
+  color: #333;
+}
+
+.sort--btn:hover{
+  background-color: rgb(202, 202, 202);
+}
+
+.sort--btn:active{
+  background-color: rgb(230, 230, 230);
 }
 
 .filter-open-wrapper{
@@ -226,5 +260,51 @@ h3{
 .event-count{
   font-size: 20px;
   font-weight: 700;
+}
+
+@media (min-width: 768px) {
+  .sorting-mobile{
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .feed-actions{
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 5px;
+  }
+  .feed-setting{
+    margin: 0;
+  }
+  .feed{
+    margin-top: 20px;
+  }
+  .sorting{
+    display: none;
+  }
+  .sort--btn{
+    padding: 11px 9px;
+  }
+  :deep(.sort--btn span){
+    display: none;
+  }
+  :deep(.sort--btn .slot-content){
+    margin: 0;
+  }
+  .search, .sort--btn{
+    height: 37px;
+  }
+  .event-count{
+    display: none;
+  }
+  .sort--btn{
+    background: none;
+    border: 1px solid #E2E2E2;
+  }
+  .filter-open-wrapper{
+    z-index: 1000;
+  }
 }
 </style>

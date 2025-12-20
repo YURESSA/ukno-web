@@ -527,6 +527,10 @@ form {
   margin-top: 30px;
 }
 
+.participants--btn {
+  background: none;
+}
+
 input, textarea {
   font-family: 'Manrope', Arial, Helvetica, sans-serif;
   font-size: 20px;
@@ -757,6 +761,15 @@ textarea::-webkit-input-placeholder {
 input::-moz-placeholder,
 textarea::-moz-placeholder {
   font-weight: 400 !important;
+}
+
+@media (max-width: 768px) {
+  h4{
+    font-size: 28px;
+  }
+  form{
+    width: 100%;
+  }
 }
 
 </style>

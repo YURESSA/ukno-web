@@ -1,12 +1,12 @@
 <template>
   <div class="welcom-wrapper page--margin">
     <div class="welcom-img"></div>
-    <h1 class="text-orange">Молодежное бюро</h1>
+    <h1 class="text-orange">Молодежное бюро <span v-if="$isMobile()">5 этаж</span></h1>
     <p class="text-grey">Культурно-образовательный центр, где <br>
       история встречает современность, а творчество  <br>
       и  саморазвитие вдохновляют</p>
-      <div class="sprout"></div>
-      <div class="ear"></div>
+      <div class="sprout" v-if="!$isMobile()"></div>
+      <div class="ear" v-if="!$isMobile()"></div>
   </div>
 </template>
 
@@ -65,10 +65,34 @@ p{
   border-radius: 48px;
   background-image: url('/img/welcom.png');
   background-repeat: no-repeat;
-  background-size: cover; /* Заполняет весь контейнер, сохраняя пропорции */
-  background-position: center; /* Центрирует изображение */
+  background-size: cover;
+  background-position: center;
   z-index: 10;
   /* max-width: 1035px; */
+}
+
+@media (max-width: 768px) {
+  h2{
+  order: 1;
+  }
+  p{
+    order: 2;
+    text-align: left;
+    color: #333333;
+  }
+  .welcom-img {
+    order: 3;
+    width: 100%;
+    height: 232px;
+    border-radius: 12px;
+    background-size: cover;
+    background-position: center bottom; /* Фокус на нижней части */
+    background-repeat: no-repeat;
+  }
+  .welcom-wrapper{
+    margin-top: 36px!important;
+    padding: 0 24px;
+  }
 }
 
 </style>

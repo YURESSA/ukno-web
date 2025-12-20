@@ -7,7 +7,7 @@
           type="email"
           class="text-l text-medium"
           name="email"
-          placeholder="e-mail *"
+          placeholder="E-mail *"
           v-model="formData.email"
           required
           autocomplete="off"
@@ -89,7 +89,13 @@ const handleSubmit = async () => {
     await store.GetProfile();
 
     await notification('Вход выполнен успешно!', 'positive');
-    router.back();
+    const previousRoute = router.options.history.state.back;
+
+    if (previousRoute === '/register') {
+      router.push('/');
+    } else {
+      router.back();
+    }
 
   } catch (error) {
     if (error.response?.status === 401) {
@@ -172,4 +178,47 @@ input:focus {
 span{
   text-align: center;
 }
+
+@media (max-width: 768px) {
+  .page-wrapper {
+    padding: 0px 24px;
+    justify-content: flex-start;
+    align-items: flex-start;
+  }
+
+  .login-wrapper {
+    width: 100%;
+    max-width: 100%;
+    margin-top: 119px;
+  }
+
+  form {
+    width: calc(100% - 48px);
+    padding: 30px 20px;
+    border-radius: 24px;
+    gap: 20px;
+    transform: translateY(0);
+    border-width: 1.5px;
+    backdrop-filter: blur(18px);
+    background: rgba(253, 253, 253, 0.18);
+  }
+
+  input {
+    padding: 14px 0;
+    margin-bottom: 16px;
+    font-size: 16px;
+  }
+
+  .sumbit--btn {
+    padding: 18px;
+    font-size: 16px;
+    margin-top: 20px;
+  }
+
+  .error-message {
+    font-size: 16px;
+    margin-top: -10px;
+  }
+}
+
 </style>

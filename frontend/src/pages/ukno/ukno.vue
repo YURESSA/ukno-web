@@ -4,38 +4,80 @@
 
     <div class="about-us">
       <div class="title">
-        <h2>Уральский клуб нового <br> образования</h2>
-        <img src="/public/about-us/time-photo.jpg" alt="">
+        <h2>Молодёжное бюро <br> 5 этаж</h2>
+        <img src="/public/about-us/young-buro.png" class="team-img" alt="">
       </div>
       <div class="who-we">
         <img src="/public/about-us/IMG_7642 2.png" alt="">
         <h3 class="text-orange">Кто мы</h3>
-        <p>Мы — живое сообщество педагогов, психологов, инженеров и самих подростков, которые вместе создают образование будущего. Не лекции и учебники, а реальные проекты, эксперименты и осмысленное общение.</p>
+        <p>Мы - команда Уральского клуба нового образования — живое сообщество педагогов, психологов, инженеров и самих подростков, которые вместе создают образование будущего. Не лекции и учебники, а реальные проекты, эксперименты и осмысленное общение.</p>
       </div>
     </div>
 
     <div class="why-trust">
-      <div class="ear"></div>
-      <div class="left-ear"></div>
+      <div class="ear" v-if="!$isMobile()"></div>
+      <div class="left-ear" v-if="!$isMobile()"></div>
       <div class="title">
         <h3>Почему нам  <br> можно <span class="text-orange">доверять</span></h3>
         <p>Мы не просто говорим об изменениях в образовании — мы их создаём каждый день.</p>
       </div>
-      <div class="info-card">
+      <div class="info-card" v-if="!$isMobile()">
         <Card :title="'75+'" :content="'75+ партнёров — школы, вузы, технологические компании'"/>
         <Card :title="'31'" :content="'31 год опыта — работаем с 1994 года'"/>
         <Card :title="'8'" :content="'8 авторских программ — от робототехники до 3D-моделирования'"/>
         <Card :title="'18'" :content="'18 наставников прошли обучение в Сколково'"/>
       </div>
+      <div class="info-mobile-card" v-if="$isMobile()">
+        <div class="card-mobile">
+          <div class="title">
+            <h3>75+</h3>
+          </div>
+          <div class="content">
+            <p>75+ партнёров — школы, вузы, технологические компании</p>
+          </div>
+          <img src="/about-us/icon/mobile-wave.svg" class="wave-mobile" alt="">
+        </div>
+
+        <div class="card-mobile card-mobile--orange">
+          <div class="title">
+            <h3>31</h3>
+          </div>
+          <div class="content">
+            <p>31 год опыта — работаем с 1994 года</p>
+          </div>
+          <img src="/about-us/icon/mobile-union.svg" class="union-mobile" alt="">
+        </div>
+
+        <div class="card-mobile">
+          <div class="title">
+            <h3>8</h3>
+          </div>
+          <div class="content">
+            <p>8 авторских программ — от робототехники до 3D-моделирования</p>
+          </div>
+          <img src="/about-us/icon/mobile-circles.svg" class="circle-mobile" alt="">
+        </div>
+
+        <div class="card-mobile card-mobile--orange">
+          <div class="title">
+            <h3>18</h3>
+          </div>
+          <div class="content">
+            <p>18 наставников прошли обучение в Сколково</p>
+          </div>
+          <img src="/about-us/icon/mobile-leaf.svg" class="leaf-mobile-left" alt="">
+          <img src="/about-us/icon/mobile-leaf.svg" class="leaf-mobile-right" alt="">
+        </div>
+      </div>
     </div>
 
     <div class="what-we-do">
       <div class="title">
-        <h3>Что именно мы <br> делаем</h3>
+        <h3>Мы делаем не только бюро, а ещё:</h3>
       </div>
       <div class="info-block">
         <div class="teenager age-block">
-          <div class="book"></div>
+          <div class="book" v-if="!$isMobile()"></div>
           <h3 class="text-orange">Для подростков</h3>
           <p>Проектные школы с погружением в инженерию и IT</p>
           <p>Хакатоны и акселераторы технологических проектов</p>
@@ -52,53 +94,145 @@
         </div>
       </div>
     </div>
-    <div class="principles">
-      <h3>Наши принципы:</h3>
-      <div class="parinciples-wrapper">
-        <div class="principles-element">
-          <div class="line"></div>
-          <div class="title">
-            <h3 class="text-orange">Равенство</h3>
-          </div>
-          <div class="info">
-              <div class="dot dot-first"></div>
-            <p>У нас нет "учителей" и "учеников", <br> есть партнёры по проектам.</p>
+
+    <div class="team">
+      <div class="title">
+        <h3 v-if="!$isMobile()">У нас очень <span class="custom-text">классная</span> команда. Знакомьтесь!</h3>
+        <h3>Наша команда</h3>
+      </div>
+      <div class="person-list">
+        <div class="person-card">
+          <img src="/about-us/time-photo.png" alt="">
+          <p class="name">Денис Борисович</p>
+          <p class="profession">курирует организацию корпоративных мероприятий.</p>
+        </div>
+        <div class="person-card">
+          <img src="/about-us/time-photo.png" alt="">
+          <p class="name">Денис Борисович</p>
+          <p class="profession">курирует организацию корпоративных мероприятий.</p>
+        </div>
+        <div class="person-card">
+          <img src="/about-us/time-photo.png" alt="">
+          <p class="name">Денис Борисович</p>
+          <p class="profession">курирует организацию корпоративных мероприятий.</p>
+        </div>
+        <div class="person-card">
+          <img src="/about-us/time-photo.png" alt="">
+          <p class="name">Денис Борисович</p>
+          <p class="profession">курирует организацию корпоративных мероприятий.</p>
+        </div>
+        <div class="person-card">
+          <img src="/about-us/time-photo.png" alt="">
+          <p class="name">Денис Борисович</p>
+          <p class="profession">курирует организацию корпоративных мероприятий.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="advantages">
+      <div class="first advantages-item">
+        <h3 class="step">01</h3>
+        <div class="advantages-content">
+          <h3 class="advantages-name">Равенство</h3>
+          <p>У нас нет "учителей" и "учеников", есть партнёры по проектам.</p>
+        </div>
+      </div>
+      <div class="second advantages-item">
+        <h3 class="step">02</h3>
+        <div class="advantages-content">
+          <h3 class="advantages-name">Действие</h3>
+          <p>Не ждём изменений, а создаём их.</p>
+        </div>
+      </div>
+      <div class="third advantages-item">
+        <h3 class="step">03</h3>
+        <div class="advantages-content">
+          <h3 class="advantages-name">Развитие без <br> остановки</h3>
+          <p>Сами постоянно учимся и вдохновляем других.</p>
+        </div>
+      </div>
+      <div class="fourth advantages-item">
+        <h3 class="step">04</h3>
+        <div class="advantages-content">
+          <h3 class="advantages-name">Безопасная среда</h3>
+          <p>Можно ошибаться, спорить, пробовать новое.</p>
+        </div>
+      </div>
+      <div class="five advantages-item">
+        <h3 class="step">05</h3>
+        <div class="advantages-content">
+          <h3 class="advantages-name">Настоящие задачи</h3>
+          <p>Работаем с реальными кейсами, а не учебными примерами.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline">
+      <h3>История нашего бюро</h3>
+      <div class="timeline-wrapper" ref="timelineWrapper">
+        <div class="line-bg">
+          <div class="line-fill" :style="{ height: fillHeight + '%' }"></div>
+        </div>
+        <div class="timeline-element">
+          <div class="dot"></div>
+          <div class="info timeline-element-right">
+            <p class="date text-l">12 октября <br> 2025</p>
+            <div class="event-info">
+              <p class="text-l">Проведение экспедиции</p>
+              <p>В ходе экспедиции был осуществлён сбор полевых данных и образцов в соответствии с поставленными научными задачами.</p>
+            </div>
           </div>
         </div>
-        <div class="principles-element">
-          <div class="title">
-            <h3 class="text-orange">Действие </h3>
-          </div>
-          <div class="info">
-              <div class="dot dot-second"></div>
-            <p>Не ждём изменений, а создаём их.</p>
-          </div>
-        </div>
-        <div class="principles-element">
-          <div class="title">
-            <h3 class="text-orange">Развитие без <br> остановки</h3>
-          </div>
-          <div class="info">
-              <div class="dot dot-third"></div>
-            <p>Развитие без остановки</p>
+        <div class="timeline-element">
+          <div class="dot"></div>
+          <div
+            class="info"
+            :class="{
+              'timeline-element-right': $isMobile(),
+              'timeline-element-left': !$isMobile()
+            }"
+          >
+            <p class="date text-l">12 октября <br> 2025</p>
+            <div class="event-info">
+              <p class="text-l">Проведение экспедиции</p>
+              <p>В ходе экспедиции был осуществлён сбор полевых данных и образцов в соответствии с поставленными научными задачами.</p>
+            </div>
           </div>
         </div>
-        <div class="principles-element">
-          <div class="title">
-            <h3 class="text-orange">Безопасная среда</h3>
-          </div>
-          <div class="info">
-              <div class="dot dot-fourth"></div>
-            <p>Можно ошибаться, спорить, пробовать новое.</p>
+        <div class="timeline-element">
+          <div class="dot"></div>
+          <div class="info timeline-element-right">
+            <p class="date text-l">12 октября <br> 2025</p>
+            <div class="event-info">
+              <p class="text-l">Проведение экспедиции</p>
+              <p>В ходе экспедиции был осуществлён сбор полевых данных и образцов в соответствии с поставленными научными задачами.</p>
+            </div>
           </div>
         </div>
-        <div class="principles-element">
-          <div class="title">
-            <h3 class="text-orange">Настоящие задачи</h3>
+        <div class="timeline-element">
+          <div class="dot"></div>
+          <div
+            class="info"
+            :class="{
+              'timeline-element-right': $isMobile(),
+              'timeline-element-left': !$isMobile()
+            }"
+          >
+            <p class="date text-l">12 октября <br> 2025</p>
+            <div class="event-info">
+              <p class="text-l">Проведение экспедиции</p>
+              <p>В ходе экспедиции был осуществлён сбор полевых данных и образцов в соответствии с поставленными научными задачами.</p>
+            </div>
           </div>
-          <div class="info">
-            <div class="dot dot-fifth"></div>
-            <p>Работаем с реальными кейсами, а не учебными <br> примерами.</p>
+        </div>
+        <div class="timeline-element">
+          <div class="dot"></div>
+          <div class="info timeline-element-right">
+            <p class="date text-l">12 октября <br> 2025</p>
+            <div class="event-info">
+              <p class="text-l">Проведение экспедиции</p>
+              <p>В ходе экспедиции был осуществлён сбор полевых данных и образцов в соответствии с поставленными научными задачами.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -107,16 +241,25 @@
     <div class="more-info">
       <div class="vk-link">
         <h3 class="bold">Хотите узнать больше?</h3>
-        <p>Присоединяйтесь к нам в ВКонтакте</p>
-        <IconButton
-          class="link--btn"
-          text="Узнать больше"
-          @click="openNewTab('https://vk.com/bureau5')"
-        >
-          <img src="/public/about-us/icon/arrow.svg" alt="">
-        </IconButton>
+        <p>Присоединяйтесь к нам в Телеграмм и ВКонтакте</p>
+        <div class="button-wrapper">
+          <IconButton
+            class="link--btn"
+            text="Телеграмм"
+            @click="openNewTab('https://t.me/buro5etag')"
+          >
+            <img src="/about-us/icon/arrow.svg" alt="">
+          </IconButton>
+          <IconButton
+            class="link--btn"
+            text="ВКонтакте"
+            @click="openNewTab('https://vk.com/bureau5')"
+          >
+            <img src="/about-us/icon/arrow.svg" alt="">
+          </IconButton>
+        </div>
       </div>
-      <div class="img-block">
+      <div class="img-block" v-if="!$isMobile()">
         <div class="cirle"></div>
         <div class="flower"></div>
         <div class="big-book"></div>
@@ -127,11 +270,66 @@
 
 <script setup>
 import IconButton from '@/components/UI/button/IconButton.vue';
-import Card from '@/pages/ukno/components/card.vue'
+import Card from '@/pages/ukno/components/card.vue';
+import { ref, onMounted, onUnmounted, getCurrentInstance  } from 'vue';
 
 const openNewTab = (url) => {
   window.open(url, '_blank', 'noopener,noreferrer');
 };
+
+const instance = getCurrentInstance()
+const fillHeight = ref(0)
+const timelineWrapper = ref(null)
+const isMobile = instance?.appContext.config.globalProperties.$isMobile
+const mobileMode = isMobile ? isMobile() : false
+
+const updateTimeline = () => {
+  const wrapper = timelineWrapper.value
+  if (!wrapper) return
+
+  const rect = wrapper.getBoundingClientRect()
+  const windowHeight = window.innerHeight
+  var start = null
+  if (mobileMode) {
+    start = windowHeight * 0.75
+  } else {
+    start = windowHeight * 0.55
+  }
+  const progress = (start - rect.top) / rect.height
+  const percent = Math.min(Math.max(progress * 100, 0), 100)
+
+  fillHeight.value = percent
+
+  const dots = wrapper.querySelectorAll('.dot')
+  const elements = wrapper.querySelectorAll('.timeline-element')
+  const contentElements = wrapper.querySelectorAll('.info')
+
+  dots.forEach((dot, index) => {
+    const dotRect = dot.getBoundingClientRect()
+    const dotTrigger = windowHeight * 0.75
+
+    if (dotRect.top < dotTrigger) {
+      dot.classList.add('active')
+      elements[index]?.classList.add('active')
+      if (mobileMode) {
+        contentElements[index]?.classList.add('active-mobile')
+      }
+    } else {
+      dot.classList.remove('active')
+      elements[index]?.classList.remove('active')
+      contentElements[index]?.classList.remove('active-mobile')
+    }
+  })
+}
+
+onMounted(() => {
+  window.addEventListener('scroll', updateTimeline)
+  updateTimeline()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', updateTimeline)
+})
 </script>
 
 <style scoped>
@@ -144,13 +342,14 @@ const openNewTab = (url) => {
 .about-us{
   display: flex;
   gap: 30px;
-  margin-bottom: 105px;
+  margin-bottom: 80px;
 }
 
-.about-us > .title > img{
+.team-img{
   width: 800px;
   height: 420px;
   border-radius: 15px;
+  transform: translateY(-40px);
 }
 
 .who-we{
@@ -162,8 +361,90 @@ const openNewTab = (url) => {
   margin-bottom: 30px;
 }
 
-.who-we > h3{
-  margin-bottom: 30px;
+.team{
+  width: 100%;
+  margin-bottom: 100px;
+}
+
+.custom-text {
+  display: inline-block;
+  border-radius: 23px;
+  padding: 4px 20px;
+  background-color: #ff6c36;
+  transform: rotate(-3deg);
+  color: white;
+}
+
+.person-list {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+  margin-top: 60px;
+}
+
+.person-card{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  width: 242px;
+  padding: 20px;
+  border-radius: 14px;
+  border: 2px solid #F25C03;
+}
+
+.name {
+  font-weight: bold;
+  margin-top: 20px;
+}
+
+.advantages{
+  background-color: #FF6C36;
+  border-radius: 45px;
+  display: flex;
+  flex-direction: column;
+  color: white;
+  height: max-content;
+  margin-bottom: 100px;
+}
+
+.advantages-item {
+  display: flex;
+  align-items: center;
+  margin-top: -110px;
+  border-radius: 45px 45px 0 0px;
+  padding: 70px 30px 180px 30px;
+}
+
+.first{
+  margin-top: 0px;
+}
+
+.second{
+  background-color: white;
+  color: #333333;
+}
+
+.third{
+  background-color: #333333;
+}
+
+.fourth{
+  background: linear-gradient(41deg, #ffbda5 0%, #ff6c36 100%);
+}
+
+.five {
+  background-color: white;
+  color: #333333;
+}
+
+.step {
+  margin-right: 180px;
+}
+
+.advantages-name{
+  min-width: 380px;
+  margin-right: 80px;
 }
 
 .why-trust{
@@ -254,11 +535,11 @@ const openNewTab = (url) => {
   background-color: #ff6c36;
   padding: 57px 55px;
   overflow: hidden;
+  color: white;
 }
 
 .parents > h3{
   margin-bottom: 30px;
-  color: white;
 }
 
 .book{
@@ -285,29 +566,41 @@ const openNewTab = (url) => {
   z-index: 1;
 }
 
-.principles{
+.timeline{
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 110px;
+  margin-bottom: 310px;
 }
 
-.principles-element{
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.parinciples-wrapper{
+.timeline-wrapper{
   display: flex;
   flex-direction: column;
-  gap: 110px;
+  gap: 152px;
   width: 100%;
   position: relative;
 }
 
-.line{
+.timeline-element{
+  display: flex;
+  align-items: center;
+  width: 100%;
+  position: relative;
+  justify-content: center;
+  filter: saturate(0.9) brightness(0.9);
+  transition: all 0.3s ease;
+}
+
+.timeline-element.active {
+  filter: saturate(1) brightness(1);
+}
+
+.info.active-mobile{
+  margin-left: -109px;
+}
+
+/* .line{
   position: absolute;
   width: 8px;
   height: 100%;
@@ -315,6 +608,24 @@ const openNewTab = (url) => {
   left: 50%;
   transform: translateX(-50%);
   background-color: #F25C03;
+} */
+
+.line-bg {
+  position: absolute;
+  width: 8px;
+  height: 100%;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #fde4d6;
+  overflow: hidden;
+}
+
+.line-fill {
+  width: 100%;
+  height: 0;
+  background-color: #F25C03;
+  transition: height 0.2s ease-out;
 }
 
 .dot{
@@ -328,20 +639,69 @@ const openNewTab = (url) => {
   background-color: #F25C03;
 }
 
-.dot-second{
-  top: 172px;
+.dot {
+  background-color: #fde4d6;
+  transform: translateX(-50%) scale(0.7);
+  transition: all 0.3s ease;
 }
 
-.dot-third{
-  top: 360px;
+.dot.active {
+  background-color: #F25C03;
+  box-shadow: 0 0 20px rgba(242, 92, 3, 0.8);
+  transform: translateX(-50%) scale(1);
 }
 
-.dot-fourth{
-  top: 550px;
+.info {
+  position: relative;
+  display: flex;
+  align-items: start;
+  justify-content: flex-start;
+  margin-top: -116px;
+  transform: translateY(56px);
 }
 
-.dot-fifth{
-  top: 740px;
+.timeline-element-right {
+  margin-right: -260px;
+}
+
+.timeline-element-left {
+  margin-left: -260px;
+}
+
+.date {
+  min-width: max-content;
+  padding: 20px 60px 30px 20px;
+  border-radius: 25px;
+  background-color: #F25C03;
+  color: white;
+  font-weight: 600;
+}
+
+.timeline-element-left > .date {
+  text-align: end;
+  padding: 20px 20px 30px 60px;
+}
+
+.event-info {
+  position: absolute;
+  padding: 30px 30px 40px 30px;
+  width: max-content;
+  max-width: 490px;
+  border-radius: 30px;
+  backdrop-filter: blur(20.399999618530273px);
+  box-shadow: 0 5px 22px -6px rgba(172, 66, 3, 0.2);
+  background: linear-gradient(176deg, rgba(255, 255, 255, 0.25) 0%, rgba(242, 92, 3, 0.25) 100%);
+  z-index: 999;
+}
+
+.timeline-element-right > .event-info {
+  top: 60px;
+  left: 82px;
+}
+
+.timeline-element-left > .event-info {
+  top: 60px;
+  right: 82px;
 }
 
 .more-info{
@@ -364,12 +724,18 @@ const openNewTab = (url) => {
   margin-bottom: 10px;
 }
 
+.button-wrapper {
+  display: flex;
+  gap: 15px;
+}
+
 .link--btn{
   width: 100%;
   margin-top: 30px;
   border: 2px solid #f25c03;
   border-radius: 14px;
   padding: 15px 17px;
+  color: #333333;
   background-color: #fff;
   height: 53px;
 }
@@ -417,4 +783,221 @@ const openNewTab = (url) => {
   right: 50%;
   transform: translate(50%, -50%);
 }
+
+@media (max-width: 768px) {
+  .about-us{
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 40px;
+  }
+  .team-img{
+    width: 342px;
+    height: 188px;
+    transform: translateY(-20px);
+  }
+  .who-we > img {
+    display: none;
+  }
+  .who-we > p{
+    text-align: justify;
+  }
+  .why-trust{
+    margin-bottom: 40px;
+  }
+  .parents, .teenager {
+    padding: 24px;
+    height: max-content;
+  }
+  .teenager > h3 {
+    margin: 0;
+  }
+  .parents > .circle {
+    width: 226px;
+    height: 226px;
+    background-size: contain;
+    bottom: -55px;
+    right: -40px;
+    z-index: 1;
+  }
+  .parents > h3, .parents > p {
+    z-index: 2;
+    margin: 0;
+  }
+
+  .what-we-do{
+    margin-bottom: 40px;
+  }
+
+  .what-we-do > .info-block {
+    flex-wrap: wrap;
+  }
+
+  .person-list {
+    gap: 24px;
+    margin-top: 35px;
+  }
+
+  .person-card {
+    flex: 1;
+    padding: 11px;
+  }
+
+  .person-card > img {
+    display: block;
+    width: 100%;
+  }
+  .advantages {
+    width: 100vw;
+    margin-left: -24px;
+  }
+  .advantages-item{
+    padding-top: 24px;
+    padding-left: 24px;
+    padding-right: 24px;
+    align-items: flex-start;
+  }
+  .advantages-content {
+    max-width: fit-content;
+  }
+  .advantages-content > h3 {
+    margin: 0;
+    margin-bottom: 20px;
+    min-width: auto;
+    max-width: max-content;
+  }
+  .step{
+    margin-right: 24px;
+  }
+
+  .timeline {
+    margin-bottom: 250px;
+  }
+
+  .timeline-wrapper {
+    gap: 269px;
+  }
+
+  .line-bg, .dot{
+    left: 1px;
+  }
+
+  .info {
+    transition: all 0.3s ease;
+  }
+
+  .timeline-element-right {
+    margin: 0;
+    margin-left: 1000px;
+    margin-top: -90px;
+  }
+
+  .date {
+    padding: 10px;
+    padding-right: 38px;
+    font-size: 16px;
+  }
+  .event-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 221px;
+    padding: 10px;
+    padding-bottom: 24px;
+    top: 42px!important;
+    left: 49px!important;
+  }
+  .event-info > .text-l {
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .more-info{
+    all: unset;
+  }
+  .vk-link {
+    width: 100%;
+  }
+  .vk-link > p {
+    width: 290px;
+  }
+  .button-wrapper {
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 30px;
+  }
+  .link--btn {
+    font-size: 16px;
+    margin-top: 0px;
+  }
+  .link--btn:hover {
+    background: white;
+  }
+}
+
+.info-mobile-card{
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 20px;
+}
+
+.card-mobile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 131px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px;
+  border-radius: 14px;
+  border: 2px solid #f25c03;
+}
+
+.card-mobile > .title, .card-mobile > .content{
+  z-index: 2;
+}
+
+.card-mobile--orange {
+  background-color: #FF6C36;
+  color: white;
+}
+
+.wave-mobile{
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  z-index: 1;
+}
+
+.union-mobile{
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  z-index: 1;
+}
+
+.circle-mobile{
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  z-index: 1;
+}
+
+.leaf-mobile-left {
+  position: absolute;
+  bottom: 0;
+  right: 80px;
+  z-index: 1;
+}
+
+.leaf-mobile-right {
+  position: absolute;
+  bottom: 0;
+  right: -15px;
+  z-index: 1;
+  transform: scaleX(-1);
+}
+
 </style>

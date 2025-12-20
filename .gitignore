@@ -46,7 +46,12 @@ Thumbs.db
 /backend/migrations/
 /backend/media/
 <<<<<<< HEAD
+<<<<<<< HEAD
 /media/
 =======
 /media/
 >>>>>>> main-frontend
+=======
+/media/
+frontend/.env
+>>>>>>> origin/main-frontend
