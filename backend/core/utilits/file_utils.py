@@ -7,7 +7,6 @@ from typing import List, Dict
 from ics import Calendar, Event
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
-
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
@@ -44,6 +43,7 @@ def remove_file_if_exists(file_path: str) -> None:
 
     :param file_path: путь к файлу
     """
+    file_path = os.path.join(Config.PROJECT_ROOT, file_path)
     if os.path.exists(file_path):
         try:
             os.remove(file_path)
@@ -136,3 +136,33 @@ def create_ical_from_reservation(reservation) -> bytes:
 
     c.events.add(e)
     return c.serialize().encode('utf-8')
+
+
+def save_file(file, subfolder: str = "") -> str:
+    """
+    Сохраняет загруженный файл в указанную папку проекта и возвращает относительный путь.
+
+    :param file: объект загруженного файла (FileStorage)
+    :param subfolder: подкаталог внутри папки загрузок
+    :return: относительный путь к сохранённому файлу (например, 'media/uploads/requisites/filename.pdf')
+    """
+    # Основная папка загрузок
+    folder_path = os.path.join(Config.PROJECT_ROOT, Config.UPLOAD_FOLDER, subfolder)
+
+    # Создаём папку, если не существует
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+
+    # Генерируем безопасное уникальное имя файла
+    original_filename = secure_filename(file.filename)
+    name, ext = os.path.splitext(original_filename)
+    unique_suffix = uuid.uuid4().hex
+    filename = f"{name}_{unique_suffix}{ext}"
+
+    # Полный путь для сохранения
+    filepath = os.path.join(folder_path, filename)
+    file.save(filepath)
+
+    # Относительный путь для базы и фронтенда
+    relative_path = os.path.join('media', 'uploads', subfolder, filename).replace("\\", "/")
+    return relative_path
