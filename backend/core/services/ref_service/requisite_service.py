@@ -1,4 +1,3 @@
-import os
 from backend.core import db
 from backend.core.models.ref_models import Requisite
 from backend.core.utilits.file_utils import save_file, remove_file_if_exists
@@ -49,6 +48,7 @@ def delete_requisite(item: Requisite):
         remove_file_if_exists(item.file)
     db.session.delete(item)
     db.session.commit()
+
 
 def delete_requisite_file(item):
     """
