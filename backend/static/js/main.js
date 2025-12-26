@@ -85,6 +85,19 @@ document.addEventListener('DOMContentLoaded', () => {
         loadHistorySection();
     }
 
+    document.getElementById('btnPartners').onclick = e => {
+        e.preventDefault();
+        setActiveMenu('btnPartners');
+        localStorage.setItem('admin_current_section', 'partners');
+        loadPartnersSection();
+    }
+    document.getElementById('btnRequisites').onclick = e => {
+        e.preventDefault();
+        setActiveMenu('btnRequisites');
+        localStorage.setItem('admin_current_section', 'requisites');
+        loadRequisitesSection();
+    }
+
     const btnAddSession = document.getElementById('btnAddSession');
     const editingSessionId = document.getElementById('editingSessionId');
     const sessionDatetimeModal = document.getElementById('sessionDatetimeModal');
@@ -160,6 +173,14 @@ document.addEventListener('DOMContentLoaded', () => {
         case 'history':
             setActiveMenu('btnHistory');
             loadHistorySection();
+            break;
+        case 'partners':
+            setActiveMenu('btnPartners');
+            loadPartnersSection();
+            break;
+        case 'requisites':
+            setActiveMenu('btnRequisites');
+            loadRequisitesSection();
             break;
         default:
             setActiveMenu('btnUsers');
