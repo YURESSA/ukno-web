@@ -1,4 +1,6 @@
 import io
+import json
+from http import HTTPStatus
 
 import pytest
 from flask_jwt_extended import create_access_token
@@ -366,11 +368,6 @@ def created_history(client, admin_access_token):
     del_resp = client.delete(f"/api/references/history/{history_id}", headers=headers)
     if del_resp.status_code not in (HTTPStatus.OK, HTTPStatus.NOT_FOUND):
         raise AssertionError("Не удалось удалить тестовое событие после теста")
-
-
-import pytest
-import json
-from http import HTTPStatus
 
 
 @pytest.fixture
