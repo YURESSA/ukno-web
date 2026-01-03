@@ -79,7 +79,6 @@ class TestAdminNews:
         assert news["content"] == "Обновлённое содержание"
 
 
-
 def test_admin_delete_news_not_found(client, admin_access_token):
     headers = {"Authorization": f"Bearer {admin_access_token}"}
     delete_resp = client.delete("/api/admin/news/9999999", headers=headers)

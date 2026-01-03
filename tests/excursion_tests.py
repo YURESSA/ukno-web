@@ -56,7 +56,8 @@ def _assert_get_excursion_by_id_success(client, url, expected_id):
         "is_active": True,
         "working_hours": "Пн-Пт с 16:00 до 20:00, Сб с 10:00 до 14:00",
         "contact_email": "math_tutor@ekbmail.ru",
-        "iframe_url": "<iframe src='https://yandex.ru/map-widget/v1/?um=constructor%3Atutoringcenter' width='600' height='450'></iframe>",
+        "iframe_url": "<iframe src='https://yandex.ru/map-widget/v1/?um=constructor%3Atutoringcenter' "
+                      "width='600' height='450'></iframe>",
         "telegram": "@ekb_math_tutor",
         "vk": "https://vk.com/ekbmathtutor",
         "distance_to_center": 1300,
