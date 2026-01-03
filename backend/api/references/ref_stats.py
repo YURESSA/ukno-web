@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 from flask_restx import Resource
 
 from backend.api.references import ref_ns

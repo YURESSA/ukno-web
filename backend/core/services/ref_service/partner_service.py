@@ -8,8 +8,10 @@ from backend.core.utilits.file_utils import save_image, remove_file_if_exists
 def get_all_partners():
     return Partner.query.order_by(Partner.order_index).all()
 
+
 def get_partner_by_id(partner_id: int):
     return db.session.get(Partner, partner_id)
+
 
 def create_partner(name: str, link: str = None, photo=None, order_index: int = 0):
     if not name:

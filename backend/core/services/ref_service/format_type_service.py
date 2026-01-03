@@ -5,8 +5,10 @@ from backend.core.models.event_models import FormatType
 def get_all_format_types():
     return FormatType.query.all()
 
+
 def get_format_type(id):
     return db.session.get(FormatType, id)
+
 
 def create_format_type(name: str) -> FormatType:
     if not name:

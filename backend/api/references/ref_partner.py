@@ -93,8 +93,11 @@ class PartnerPhotoResource(Resource):
         try:
             delete_partner_photo(id)
         except ValueError as e:
-            return ({'message': str(e)}, HTTPStatus.NOT_FOUND
-            if str(e) == "Партнёр не найден" else HTTPStatus.BAD_REQUEST)
+            status = (
+                HTTPStatus.NOT_FOUND if str(e) == "Партнёр не найден"
+                else HTTPStatus.BAD_REQUEST
+            )
+            return {'message': str(e)}, status
 
         return {'message': 'Фото удалено'}, HTTPStatus.OK
 

@@ -6,8 +6,10 @@ from backend.core.utilits.file_utils import save_file, remove_file_if_exists
 def get_all_requisites():
     return Requisite.query.order_by(Requisite.id.desc()).all()
 
+
 def get_requisite_by_id(requisite_id: int):
     return db.session.get(Requisite, requisite_id)
+
 
 def create_requisite(title: str, file):
     if not title:
