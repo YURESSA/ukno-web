@@ -22,7 +22,7 @@ class News(db.Model):
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now)
 
-    author_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=True)
     author = db.relationship('User', foreign_keys=[author_id], backref='news')
     photo_author = db.Column(db.String(200), nullable=True)
 

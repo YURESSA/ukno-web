@@ -9,7 +9,9 @@ def created_news_id(client, admin_access_token):
     data = {
         "data": json.dumps({
             "title": "Тестовая новость для набора тестов",
-            "content": "Начальное содержание"
+            "content": "Начальное содержание",
+            "short_description": "Краткое описание тестовой новости",
+            "photo_author": "Тестовый автор"
         }),
         "image": (open("tests/test_image.jpg", "rb"), "test_image.jpg")
     }
@@ -23,8 +25,18 @@ def created_news_id(client, admin_access_token):
     )
     assert post_resp.status_code in (HTTPStatus.OK, HTTPStatus.CREATED)
     post_json = post_resp.get_json()
+
+    assert "news_id" in post_json
     news_id = post_json.get("news_id")
     assert news_id is not None
+
+    get_resp = client.get(f"/api/admin/news/{news_id}", headers=headers)
+    assert get_resp.status_code == HTTPStatus.OK
+    news_data = get_resp.get_json()
+    assert news_data["title"] == "Тестовая новость для набора тестов"
+    assert news_data["content"] == "Начальное содержание"
+    assert news_data["short_description"] == "Краткое описание тестовой новости"
+    assert news_data["photo_author"] == "Тестовый автор"
 
     yield news_id
 
@@ -37,8 +49,9 @@ def created_news_id(client, admin_access_token):
 
 
 class TestAdminNews:
+
     def test_create_news(self, client, admin_access_token):
-        pass
+        pass  # пока оставляем пустым
 
     def test_update_news(self, client, admin_access_token, created_news_id):
         update_data = {
@@ -57,8 +70,14 @@ class TestAdminNews:
         assert put_resp.status_code == HTTPStatus.OK
         put_json = put_resp.get_json()
         assert put_json.get("message") == "Новость обновлена"
-        assert put_json["news"]["title"] == "Обновлённый заголовок"
-        assert put_json["news"]["content"] == "Обновлённое содержание"
+        news = put_json.get("news")
+
+        print("Новость после обновления:", news)
+
+        assert news is not None
+        assert news["title"] == "Обновлённый заголовок"
+        assert news["content"] == "Обновлённое содержание"
+
 
 
 def test_admin_delete_news_not_found(client, admin_access_token):

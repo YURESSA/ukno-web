@@ -40,6 +40,7 @@ def get_excursion_payload():
     data = {
         "title": "Новая экскурсия",
         "description": "Описание экскурсии",
+        "short_description": "Краткое описание экскурсии",
         "duration": 60,
         "category": "Воркшоп",
         "format_type": "Индивидуальная",
