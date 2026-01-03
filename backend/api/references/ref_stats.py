@@ -24,4 +24,4 @@ class ExcursionStats(Resource):
             int: HTTP статус код (200)
         """
         stats = get_excursion_stats()
-        return stats, 200
+        return stats, HTTPStatus.OK

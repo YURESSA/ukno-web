@@ -8,6 +8,8 @@ from backend.core.utilits.file_utils import save_image, remove_file_if_exists
 def get_all_partners():
     return Partner.query.order_by(Partner.order_index).all()
 
+def get_partner_by_id(partner_id: int):
+    return db.session.get(Partner, partner_id)
 
 def create_partner(name: str, link: str = None, photo=None, order_index: int = 0):
     if not name:
@@ -76,3 +78,17 @@ def upload_partner_photo(item: Partner, photo):
     item.photo = save_image(photo, "partner_photos")
     db.session.commit()
     return item.photo
+
+
+def delete_partner_photo(partner_id: int) -> None:
+    """Удаляет фото партнёра по ID."""
+    partner = db.session.get(Partner, partner_id)
+    if not partner:
+        raise ValueError("Партнёр не найден")
+
+    if not partner.photo:
+        raise ValueError("Фото отсутствует")
+
+    remove_file_if_exists(partner.photo)
+    partner.photo = None
+    db.session.commit()

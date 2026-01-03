@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from typing import Any
 
 from flask import request
@@ -24,7 +25,7 @@ class AgeCategoryList(Resource):
             list[dict]: Список возрастных категорий в виде словарей.
         """
         age_categories = get_all_age_categories()
-        return [a.to_dict() for a in age_categories], 200
+        return [a.to_dict() for a in age_categories], HTTPStatus.OK
 
     @admin_required
     @ref_ns.expect(age_category_model)
@@ -43,13 +44,13 @@ class AgeCategoryList(Resource):
         data = request.json or {}
         name = data.get('name')
         if not name:
-            return {'message': 'Поле name обязательно'}, 400
+            return {'message': 'Поле name обязательно'}, HTTPStatus.BAD_REQUEST
 
         if get_age_category_by_name(name):
-            return {'message': 'Возрастная категория с таким именем уже существует'}, 400
+            return {'message': 'Возрастная категория с таким именем уже существует'}, HTTPStatus.BAD_REQUEST
 
         age_category = create_age_category(name)
-        return age_category.to_dict(), 201
+        return age_category.to_dict(), HTTPStatus.CREATED
 
 
 @ref_ns.route('/age-categories/<int:id>')
@@ -69,7 +70,7 @@ class AgeCategoryResource(Resource):
         """
         age_category = get_age_category_by_id(id)
         if not age_category:
-            return {'message': 'Возрастная категория не найдена'}, 404
+            return {'message': 'Возрастная категория не найдена'}, HTTPStatus.NOT_FOUND
 
         delete_age_category(age_category)
-        return {'message': 'Возрастная категория удалена'}, 200
+        return {'message': 'Возрастная категория удалена'}, HTTPStatus.OK

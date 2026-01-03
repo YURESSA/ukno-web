@@ -9,6 +9,10 @@ def get_all_cultural_spaces():
     return CulturalSpace.query.order_by(CulturalSpace.order_index).all()
 
 
+def get_cultural_space_by_id(id):
+    return db.session.get(CulturalSpace, id)
+
+
 def create_cultural_space(text: str, photo=None, order_index: int = 0):
     if not text:
         raise ValueError('Поле text обязательно')
@@ -67,3 +71,16 @@ def upload_cultural_space_photo(item: CulturalSpace, photo):
     item.photo = save_image(photo, "cultural_space_photos")
     db.session.commit()
     return item.photo
+
+
+def delete_cultural_space_photo(cultural_space_id: int) -> None:
+    item = db.session.get(CulturalSpace, cultural_space_id)
+    if not item:
+        raise ValueError('Элемент не найден')
+
+    if not item.photo:
+        raise ValueError('Фото отсутствует')
+
+    remove_file_if_exists(item.photo)
+    item.photo = None
+    db.session.commit()

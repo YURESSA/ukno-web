@@ -16,7 +16,7 @@ def get_category_by_name(name: str) -> Optional[Category]:
 
 def get_category_by_id(category_id: int) -> Optional[Category]:
     """Поиск категории по ID."""
-    return Category.query.get(category_id)
+    return db.session.get(Category, category_id)
 
 
 def create_category(name: str) -> Category:

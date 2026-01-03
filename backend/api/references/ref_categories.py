@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from typing import Any
 
 from flask import request
@@ -24,7 +25,7 @@ class CategoryList(Resource):
             list[dict]: Список категорий в виде словарей.
         """
         categories = get_all_categories()
-        return [c.to_dict() for c in categories], 200
+        return [c.to_dict() for c in categories], HTTPStatus.OK
 
     @admin_required
     @ref_ns.expect(category_model)
@@ -43,13 +44,13 @@ class CategoryList(Resource):
         data = request.json or {}
         name = data.get('name')
         if not name:
-            return {'message': 'Поле name обязательно'}, 400
+            return {'message': 'Поле name обязательно'}, HTTPStatus.BAD_REQUEST
 
         if get_category_by_name(name):
-            return {'message': 'Категория с таким именем уже существует'}, 400
+            return {'message': 'Категория с таким именем уже существует'}, HTTPStatus.BAD_REQUEST
 
         category = create_category(name)
-        return category.to_dict(), 201
+        return category.to_dict(), HTTPStatus.CREATED
 
 
 @ref_ns.route('/categories/<int:id>')
@@ -69,7 +70,7 @@ class CategoryResource(Resource):
         """
         category = get_category_by_id(id)
         if not category:
-            return {'message': 'Категория не найдена'}, 404
+            return {'message': 'Категория не найдена'}, HTTPStatus.BAD_REQUEST
 
         delete_category(category)
-        return {'message': 'Категория удалена'}, 200
+        return {'message': 'Категория удалена'}, HTTPStatus.OK
