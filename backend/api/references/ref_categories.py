@@ -70,7 +70,7 @@ class CategoryResource(Resource):
         """
         category = get_category_by_id(id)
         if not category:
-            return {'message': 'Категория не найдена'}, HTTPStatus.BAD_REQUEST
+            return {'message': 'Категория не найдена'}, HTTPStatus.NOT_FOUND
 
         delete_category(category)
         return {'message': 'Категория удалена'}, HTTPStatus.OK
