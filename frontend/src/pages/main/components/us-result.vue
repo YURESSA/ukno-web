@@ -68,7 +68,7 @@
       <div class="carousel-item">
         <img
           class="carousel-img"
-          src="/public/img/result-test-img.png"
+          src="/img/result-test-img.png"
         >
         <div class="content-description">
           <p class="text-standart medium">
@@ -79,7 +79,7 @@
       <div class="carousel-item">
         <img
           class="carousel-img"
-          src="/public/img/result-test-img.png"
+          src="/img/result-test-img.png"
         >
         <div class="content-description">
           <p class="text-standart medium">
@@ -90,7 +90,7 @@
       <div class="carousel-item">
         <img
           class="carousel-img"
-          src="/public/img/result-test-img.png"
+          src="/img/result-test-img.png"
         >
         <div class="content-description">
           <p class="text-standart medium">
@@ -101,7 +101,7 @@
       <div class="carousel-item">
         <img
           class="carousel-img"
-          src="/public/img/result-test-img.png"
+          src="/img/result-test-img.png"
         >
         <div class="content-description">
           <p class="text-standart medium">
@@ -135,8 +135,8 @@ import { NCarousel, NIcon } from "naive-ui";
 .result-wrapper{
   background-color: white;
   border-radius: 38px 38px 0px 0px;
-  padding: 80px 50px;
-  padding-bottom: 230px;
+  padding: 80px 50px 20px;
+  /* padding-bottom: 230px; */
 }
 
 h3{
@@ -180,6 +180,7 @@ li{
 }
 
 .carousel-item{
+  width: 80%;
   min-width: 960px;
   max-width: 1280px;
   position: relative;
@@ -258,5 +259,11 @@ li{
 
 .custom-arrow > button:active{
   background: #F25C03;
+}
+
+@media (max-width: 1500px) {
+  .carousel-item{
+    max-width: 1180px;
+  }
 }
 </style>

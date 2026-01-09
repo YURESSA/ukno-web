@@ -19,6 +19,7 @@ import changeEvent from '@/pages/personal-accounts/_shared/changeEvent.vue'
 import News from '@/pages/news/news.vue'
 import Requesits from '@/pages/requesits/requesits.vue'
 import Ukno from '@/pages/ukno/ukno.vue'
+import NotFoundPage from '@/components/shared/NotFoundPage.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -117,6 +118,11 @@ const router = createRouter({
       component: changeEvent,
       meta: { requiresAuth: true, requiredRole: 'resident' },
     },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'NotFound',
+      component: NotFoundPage
+    }
   ],
     scrollBehavior(to, from, savedPosition) {
     return { top: 0 }

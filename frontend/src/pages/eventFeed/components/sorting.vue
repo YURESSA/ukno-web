@@ -2,63 +2,6 @@
   <div class="sorting-wrapper">
     <div class="sort-filters">
       <button class="close__button"><img src="/icon/filter/close.svg" alt="Закрыть" @click="emit('close')"></button>
-      <!-- Сортировка по цене -->
-      <div class="sort-group">
-        <h3 class="sort-title">Цена</h3>
-        <div class="radio-group">
-          <label class="radio-label">
-            <input
-              type="radio"
-              name="priceSort"
-              value="price"
-              v-model="sortByPrice"
-              class="radio-input"
-            >
-            <span class="radio-custom"></span>
-            <span class="radio-text">По возрастанию</span>
-          </label>
-          <label class="radio-label">
-            <input
-              type="radio"
-              name="priceSort"
-              value="-price"
-              v-model="sortByPrice"
-              class="radio-input"
-            >
-            <span class="radio-custom"></span>
-            <span class="radio-text">По убыванию</span>
-          </label>
-        </div>
-      </div>
-      <!-- Сортировка по названию -->
-      <div class="sort-group">
-        <h3 class="sort-title">Название</h3>
-        <div class="radio-group">
-          <label class="radio-label">
-            <input
-              type="radio"
-              name="titleSort"
-              value="title"
-              v-model="sortByTitle"
-              class="radio-input"
-            >
-            <span class="radio-custom"></span>
-            <span class="radio-text">От А до Я</span>
-          </label>
-          <label class="radio-label">
-            <input
-              type="radio"
-              name="titleSort"
-              value="-title"
-              v-model="sortByTitle"
-              class="radio-input"
-            >
-            <span class="radio-custom"></span>
-            <span class="radio-text">От Я до А</span>
-          </label>
-        </div>
-      </div>
-      <BaseButton class="sendButton" text="Сохранить" @click="sendSort"/>
     </div>
   </div>
 </template>

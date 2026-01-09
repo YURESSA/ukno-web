@@ -4,11 +4,12 @@
 
     <div class="about-us">
       <div class="title">
-        <h2>Молодёжное бюро <br> 5 этаж</h2>
-        <img src="/public/about-us/young-buro.png" class="team-img" alt="">
+        <h2 v-if="!$isMobile()">Молодёжное бюро <br> 5 этаж</h2>
+        <h2 v-if="$isMobile()">Молодёжное <br>  бюро</h2>
+        <img src="/about-us/young-buro.png" class="team-img" alt="">
       </div>
       <div class="who-we">
-        <img src="/public/about-us/IMG_7642 2.png" alt="">
+        <img src="/about-us/IMG_7642 2.png" alt="">
         <h3 class="text-orange">Кто мы</h3>
         <p>Мы - команда Уральского клуба нового образования — живое сообщество педагогов, психологов, инженеров и самих подростков, которые вместе создают образование будущего. Не лекции и учебники, а реальные проекты, эксперименты и осмысленное общение.</p>
       </div>
@@ -128,7 +129,7 @@
         </div>
       </div>
     </div>
-
+    <h2 v-if="$isMobile()">Наши ценности</h2>
     <div class="advantages">
       <div class="first advantages-item">
         <h3 class="step">01</h3>
@@ -787,13 +788,20 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .about-us{
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 0px;
     margin-bottom: 40px;
   }
+
+  .about-us > .title > h2 {
+    font-size: 40px;
+  }
   .team-img{
-    width: 342px;
-    height: 188px;
+    width: 100%;
+    max-height: 190px;
     transform: translateY(-20px);
+  }
+  .who-we {
+    padding-top: 20px;
   }
   .who-we > img {
     display: none;
@@ -803,6 +811,10 @@ onUnmounted(() => {
   }
   .why-trust{
     margin-bottom: 40px;
+  }
+  .why-trust > .title {
+    flex-wrap: wrap;
+    gap: 30px;
   }
   .parents, .teenager {
     padding: 24px;
@@ -846,15 +858,27 @@ onUnmounted(() => {
     display: block;
     width: 100%;
   }
+
+  .team {
+    margin-bottom: 40px;
+  }
+
   .advantages {
     width: 100vw;
     margin-left: -24px;
+    margin-top: 30px;
+    margin-bottom: 0px;
+    border-radius: 14px;
   }
   .advantages-item{
     padding-top: 24px;
     padding-left: 24px;
     padding-right: 24px;
     align-items: flex-start;
+    border-radius: 14px 14px 0 0px;
+  }
+  .advantages-item:last-of-type{
+    padding-bottom: 84px;
   }
   .advantages-content {
     max-width: fit-content;
@@ -870,7 +894,8 @@ onUnmounted(() => {
   }
 
   .timeline {
-    margin-bottom: 250px;
+    gap: 30px;
+    margin-bottom: 260px;
   }
 
   .timeline-wrapper {
@@ -948,6 +973,8 @@ onUnmounted(() => {
   align-items: flex-start;
   justify-content: space-between;
   padding: 24px;
+  overflow: hidden;
+  padding-bottom: 20px;
   border-radius: 14px;
   border: 2px solid #f25c03;
 }

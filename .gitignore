@@ -47,3 +47,4 @@ Thumbs.db
 /backend/media/
 /media/
 frontend/.env
+frontend/dist

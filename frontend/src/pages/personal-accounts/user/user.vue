@@ -13,7 +13,7 @@
       <DefaultButton @click="logOut" class="profie__btn" text="Выйти"/>
     </div>
   </div>
-  <ChangePassword @close="closeChange" :role="profileData.role" v-if="openPasswordModal"/>
+  <ChangePassword :class="{ 'drop-open': openPasswordModal }" @close="closeChange" :role="profileData.role" v-if="openPasswordModal"/>
 </template>
 
 <script setup>
@@ -31,6 +31,7 @@ const store = useDataStore();
 const profileData = computed(() => store.profileData);
 const reservationsData = computed(() => store.reservationsData);
 const openPasswordModal = ref(false);
+const isChangeOpen = ref(false);
 
 onMounted(async () => {
   try {
@@ -119,5 +120,10 @@ function closeChange(){
   .profie__btn.exit--btn {
     order: 2; /* Переместить вниз */
   }
+}
+
+.drop-open{
+  bottom: 0;
+  opacity: 1;
 }
 </style>

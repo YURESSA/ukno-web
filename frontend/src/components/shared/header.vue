@@ -71,39 +71,63 @@
       </div>
 
       <!-- Анимированное меню с использованием Transition -->
-      <Transition name="menu-fade">
-        <div v-if="menuOpen" class="mobile-menu">
-          <ul>
-            <li>
-              <div @click="toggleProjects" class="project-toggle">
-                Проекты
-              </div>
-              <Transition name="slide-fade">
-                <ul v-if="showProjects" class="mobile-projects">
-                  <li>Психологический клуб</li>
-                  <li>Репетиторский клуб</li>
-                  <li>Музейное пространство</li>
-                </ul>
-              </Transition>
-            </li>
-            <li><RouterLink to="/events" @click="menuOpen = false">События</RouterLink></li>
-            <li><RouterLink to="/news" @click="menuOpen = false">Новости</RouterLink></li>
-            <li><RouterLink to="/ukno" @click="menuOpen = false">О нас</RouterLink></li>
-          </ul>
-        </div>
-      </Transition>
+      <Teleport to="body">
+        <Transition name="menu-fade">
+          <div v-if="menuOpen" class="mobile-overlay" @click.self="menuOpen = false">
+            <div class="mobile-menu">
+              <ul>
+                <li>
+                  <div @click="toggleProjects" class="project-toggle">
+                    Проекты
+                  </div>
+                  <Transition name="slide-fade">
+                    <ul v-if="showProjects" class="mobile-projects">
+                      <li>Психологический клуб</li>
+                      <li>Репетиторский клуб</li>
+                      <li>Музейное пространство</li>
+                    </ul>
+                  </Transition>
+                </li>
+                <li><RouterLink to="/events" @click="menuOpen = false">События</RouterLink></li>
+                <li><RouterLink to="/news" @click="menuOpen = false">Новости</RouterLink></li>
+                <li><RouterLink to="/ukno" @click="menuOpen = false">О нас</RouterLink></li>
+              </ul>
+            </div>
+          </div>
+        </Transition>
+      </Teleport>
     </nav>
   </div>
 </template>
 
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onUnmounted } from 'vue';
 import { useDataStore } from '@/stores/counter';
 
 const store = useDataStore();
 const menuOpen = ref(false)
 const showProjects = ref(false);
+
+watch(menuOpen, (open) => {
+  if (open) {
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${window.scrollY}px`;
+    document.body.style.width = '100%';
+  } else {
+    const scrollY = Math.abs(parseInt(document.body.style.top || '0'));
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    window.scrollTo(0, scrollY);
+  }
+});
+
+onUnmounted(() => {
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.width = '';
+});
 
 const toggleProjects = () => {
   showProjects.value = !showProjects.value;
@@ -294,6 +318,13 @@ h4{
   background: none;
 }
 
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 998;
+}
+
+
 .mobile-menu{
   display: flex;
   justify-content: center;
@@ -302,7 +333,7 @@ h4{
   top: 112px;
   left: 0;
   background-color: white;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); */
   z-index: 999;
 }
 

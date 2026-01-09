@@ -83,7 +83,7 @@
 
 <script setup>
 import { onMounted, watch, computed  } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useDataStore } from '@/stores/counter';
 import Welcome from './components/welcome-block.vue';
 import AboutUs from './components/about-us.vue';
@@ -95,6 +95,7 @@ import Contact from '../../components/shared/contact-block.vue';
 import Alert from '@/components/UI/alert.vue';
 import IconButton from '@/components/UI/button/IconButton.vue';
 
+const router = useRouter();
 const route = useRoute();
 const store = useDataStore();
 
@@ -147,7 +148,7 @@ watch(() => route.hash, scrollToHash);
     height: 242px;
   }
   .dark-wrapper {
-    border-radius: 0;
+    border-radius: 22px;
   }
   .button {
     width: 100%;
@@ -171,7 +172,9 @@ watch(() => route.hash, scrollToHash);
   padding: 24px;
   padding-top: 40px;
   border-radius: 14px;
+  gap: 30px;
   border: 2px solid #f25c03;
+  overflow: hidden;
 }
 
 .card-mobile > .title, .card-mobile > .content{

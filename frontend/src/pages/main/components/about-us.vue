@@ -7,7 +7,7 @@
       </div>
       <div class="title">
         <h3>Кто мы такие?</h3>
-        <img class="absolut--img flower-big" src="/icon/main/flower-big.png" alt="" v-if="!$isMobile()">
+        <img class="absolut--img flower-big" src="/icon/main/flower-big.png" alt="">
       </div>
       <div class="about-content">
         <div class="content-wrapper">
@@ -15,7 +15,7 @@
             <p> Резиденты кластера «Хлебзавод №6» вместе с другими участниками проводим экскурсии и создаем  пространство для  креативных идей, вдохновения и развития</p>
           </div>
           <div class="content">
-            <img class="absolut--img flower-small" src="/icon/main/flower-small.png" alt="" v-if="!$isMobile()">
+            <img class="absolut--img flower-small" src="/icon/main/flower-small.png" alt="">
             <p>Мы находимся на территории бывшего <br>
               хлебозавода №6, который работал с 1978 года. <br>
               Сегодня мы сохраняем дух прошлого, создавая <br> новое будущее.</p>
@@ -24,20 +24,20 @@
         <div class="content-wrapper">
           <div class="content">
             <!-- <img class="absolut--img mouse" src="/icon/main/mouse.png" alt=""> -->
-            <img class="absolut--img ear" src="/icon/main/ear.png" alt="" v-if="!$isMobile()">
+            <img class="absolut--img ear" src="/icon/main/ear.png" alt="">
           </div>
           <div class="content border">
             <p>С 2025 года мы открыли новое <br> пространство для молодежных инициатив, <br> образовательных мероприятий и <br> творческих проектов.</p>
           </div>
           <div class="content">
-            <img class="absolut--img bread" src="/icon/main/bread1.png" alt="" v-if="!$isMobile()">
+            <img class="absolut--img bread" src="/icon/main/bread1.png" alt="">
           </div>
         </div>
       </div>
       <UsResult></UsResult>
     </div>
 
-    <div class="mobile-about-us">
+    <div class="mobile-about-us" v-if="$isMobile()">
       <div class="title">
         <h2>Кто мы такие?</h2>
       </div>
@@ -119,6 +119,7 @@ onBeforeUnmount(() => {
 .page-wrapper{
   background-color: #FFD6BD;
   padding: 24px 0 48px 0;
+  padding-bottom: 0px;
   height: calc(100% + 150px);
 }
 
@@ -252,5 +253,11 @@ onBeforeUnmount(() => {
   margin-left: 24px;
   margin-bottom: 28px;
   text-align: left;
+}
+
+@media (max-width: 768px) {
+  .page-wrapper{
+    padding-bottom: 48px;
+  }
 }
 </style>

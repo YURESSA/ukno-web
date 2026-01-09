@@ -53,4 +53,17 @@
   font-size: 20px;
   font-family: 'Manrope', Arial, Helvetica, sans-serif;
 }
+
+@media (max-width: 768px) {
+  .requesits-wrapper {
+    width: 80%;
+    padding: 24px;
+    margin: 0 auto;
+    margin-top: 50px;
+    margin-bottom: 50px;
+  }
+  h5 {
+    font-size: 20px;
+  }
+}
 </style>

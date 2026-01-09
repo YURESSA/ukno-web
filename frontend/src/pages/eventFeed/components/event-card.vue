@@ -14,7 +14,7 @@
       </div>
 
       <div class="descript">
-        <p class="excursion-descript">{{ excursion.description }}</p>
+        <p class="excursion-descript">{{ excursion.short_description }}</p>
         <p v-if="nearestSession">
           {{ formattedDate }} | {{ formattedTime }} | {{ excursion.category.category_name }}
         </p>
