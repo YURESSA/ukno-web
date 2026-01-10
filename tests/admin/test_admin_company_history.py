@@ -1,6 +1,7 @@
 import json
 from http import HTTPStatus
 
+
 class TestAdminCompanyHistory:
 
     def test_get_all_history_admin(self, client, admin_access_token, created_history):
