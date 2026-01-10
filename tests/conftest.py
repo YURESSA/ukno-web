@@ -427,9 +427,9 @@ def created_partner(client, admin_access_token):
     }
     resp = client.post(
         "/api/references/partners",
-        data=data,  # передаём form-data
+        data=data,
         headers=headers,
-        content_type="multipart/form-data"  # обязательно
+        content_type="multipart/form-data"
     )
     assert resp.status_code == HTTPStatus.CREATED
     partner = resp.get_json()
