@@ -59,7 +59,7 @@ class TestAdminCulturalSpacePhoto:
         file_data = io.BytesIO(b"fake image content")
         file_data.name = "test.jpg"
         resp = client.post(
-            f"/api/references/cultural-space/999999/photo",
+            "/api/references/cultural-space/999999/photo",
             data={"photo": (file_data, file_data.name)},
             headers=headers,
             content_type='multipart/form-data'

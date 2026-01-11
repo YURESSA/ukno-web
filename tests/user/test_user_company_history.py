@@ -1,5 +1,6 @@
 from http import HTTPStatus
 
+
 class TestUserCompanyHistory:
 
     def test_get_all_history_user(self, client, created_history):
