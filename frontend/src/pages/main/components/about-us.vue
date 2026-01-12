@@ -6,7 +6,7 @@
         <!-- <img class="absolut--img bottom-ear" src="/icon/main/bottomEar.png" alt=""> -->
       </div>
       <div class="title">
-        <h3>Юра лох? ДА! И вот почему</h3>
+        <h3>Юра лох ):)</h3>
         <img class="absolut--img flower-big" src="/icon/main/flower-big.png" alt="">
       </div>
       <div class="about-content">
