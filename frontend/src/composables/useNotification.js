@@ -5,7 +5,6 @@ const notificationMessage = ref('')
 const notificationType = ref('negative')
 let resolvePromise = null
 
-// Выносим функции наружу
 const blockClicks = (event) => {
   if (event.target.closest('.notification-wrapper')) {
     return
