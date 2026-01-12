@@ -732,6 +732,14 @@
                 <i class="fas fa-history"></i>
                 <span>История</span>
             </a>
+            <a href="#" id="btnPartners" class="nav-link">
+                <i class="fas fa-handshake"></i>
+                <span>Партнёры</span>
+            </a>
+            <a href="#" id="btnRequisites" class="nav-link">
+                <i class="fas fa-file-alt"></i>
+                <span>Реквизиты</span>
+            </a>
         </div>
     </nav>
 
@@ -777,6 +785,15 @@
                             data-bs-target="#historyModal">
                         <i class="fas fa-plus"></i> Добавить событие
                     </button>
+                    <button id="btnCreatePartner" class="btn btn-success" style="display: none;" data-bs-toggle="modal"
+                            data-bs-target="#partnerModal">
+                        <i class="fas fa-plus"></i> Добавить партнёра
+                    </button>
+                    <button id="btnCreateRequisites" class="btn btn-success mb-3" style="display:none;"
+                            data-bs-toggle="modal"
+                            data-bs-target="#requisiteModal">
+                        <i class="fas fa-plus"></i> Добавить реквизит
+                    </button>
                 </div>
             </div>
         </header>
@@ -793,6 +810,38 @@
                 </div>
             </div>
         </main>
+    </div>
+</div>
+
+<div class="modal fade" id="requisiteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content rounded-4 shadow-sm border-0">
+            <div class="modal-header bg-primary bg-opacity-10 rounded-top d-flex align-items-center gap-2">
+                <i class="fas fa-file-alt fs-4 text-primary"></i>
+                <h5 class="fw-bold mb-0">Реквизит</h5>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Название</label>
+                    <input id="requisiteTitle" type="text" class="form-control" placeholder="Введите название">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Файл</label>
+                    <div class="d-flex align-items-center gap-3 border rounded p-3 mb-2" style="border-style: dashed;">
+                        <input type="file" id="requisiteFileUpload" class="form-control flex-grow-1"/>
+                        <button type="button" id="btnUploadRequisiteFile" class="btn btn-primary">
+                            <i class="fas fa-upload"></i> Загрузить файл
+                        </button>
+                    </div>
+                    <div id="requisiteFilePreview" class="d-flex flex-wrap gap-2"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i> Отмена</button>
+                <button id="requisiteSaveBtn" class="btn btn-success"><i class="fas fa-save"></i> Сохранить</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1350,6 +1399,98 @@
     </div>
 </div>
 
+<div class="modal fade" id="partnerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content rounded-4 shadow-sm border-0">
+
+            <!-- Header -->
+            <div class="modal-header bg-primary bg-opacity-10 rounded-top d-flex align-items-center gap-2">
+                <i class="fas fa-handshake fs-4 text-primary"></i>
+                <h5 class="fw-bold mb-0">Партнёр</h5>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body">
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Название</label>
+                    <input
+                            type="text"
+                            id="partnerName"
+                            class="form-control"
+                            placeholder="Введите название партнёра"
+                    >
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Ссылка</label>
+                    <input
+                            type="url"
+                            id="partnerLink"
+                            class="form-control"
+                            placeholder="https://example.com"
+                    >
+                </div>
+
+                <div class="mb-3">
+                    <label for="partnerOrder" class="form-label">Порядковый номер</label>
+                    <input
+                            type="number"
+                            class="form-control"
+                            id="partnerOrder"
+                            min="0"
+                            value="0"
+                    >
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Фото</label>
+
+                    <div
+                            id="partnerPhotoDropZone"
+                            class="d-flex align-items-center gap-3 border rounded p-3 mb-2"
+                            style="border-style: dashed;"
+                    >
+                        <input
+                                type="file"
+                                id="partnerPhotoUpload"
+                                accept="image/*"
+                                class="form-control-file flex-grow-1"
+                        >
+
+                        <button
+                                type="button"
+                                id="btnUploadPartnerPhoto"
+                                class="btn btn-primary"
+                        >
+                            <i class="fas fa-camera"></i> Добавить фото
+                        </button>
+                    </div>
+                </div>
+
+                <div
+                        id="partnerPhotoPreview"
+                        class="mb-3 d-flex flex-wrap gap-2"
+                ></div>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Отмена
+                </button>
+                <button id="partnerSaveBtn" class="btn btn-success">
+                    <i class="fas fa-save"></i> Сохранить
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
 <div class="modal fade" id="projectModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content rounded-4 shadow-sm border-0">
@@ -1452,6 +1593,8 @@
 <script src="{{ url_for('static', filename='js/cultural_space.js') }}"></script>
 <script src="{{ url_for('static', filename='js/projects.js') }}"></script>
 <script src="{{ url_for('static', filename='js/history.js') }}"></script>
+<script src="{{ url_for('static', filename='js/partners.js') }}"></script>
+<script src="{{ url_for('static', filename='js/requisites.js') }}"></script>
 
 <script src="https://unpkg.com/tabulator-tables@5.6.1/dist/js/tabulator.min.js"></script>
 </body>

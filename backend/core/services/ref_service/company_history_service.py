@@ -12,7 +12,7 @@ def get_all_history() -> list[CompanyHistory]:
 
 def get_history_by_id(history_id: int) -> Optional[CompanyHistory]:
     """Получение события по ID."""
-    return CompanyHistory.query.get(history_id)
+    return db.session.get(CompanyHistory, history_id)
 
 
 def create_history(title: str, link: str, date_str: str, description: str) -> CompanyHistory:

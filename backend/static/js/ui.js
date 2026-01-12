@@ -127,6 +127,8 @@ function showCreateButton(show, type) {
         'cultural-space': document.getElementById('btnCreateCulturalSpace'),
         projects: document.getElementById('btnCreateProject'),
         history: document.getElementById('btnCreateHistory'),
+        partners: document.getElementById('btnCreatePartner'),
+        requisites: document.getElementById('btnCreateRequisites'),
     };
 
     // Скрываем все кнопки

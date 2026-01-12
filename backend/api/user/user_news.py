@@ -4,6 +4,7 @@ from flask_restx import Resource
 
 from . import user_ns
 from backend.core.models.news_models import News
+from ...core import db
 
 
 @user_ns.route('/news')
@@ -36,7 +37,7 @@ class NewsDetail(Resource):
             dict: Информация о новости.
             tuple: Словарь с сообщением об ошибке и HTTP статус, если новость не найдена.
         """
-        news = News.query.get(news_id)
+        news = db.session.get(News, news_id)
         if not news:
             return {"message": "Новость не найдена"}, HTTPStatus.NOT_FOUND
         return news.to_dict(), HTTPStatus.OK

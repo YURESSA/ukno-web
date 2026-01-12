@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from typing import Any
 
 from flask import request
@@ -5,7 +6,6 @@ from flask_restx import Resource, fields
 
 from backend.api.admin.decorators import admin_required
 from backend.api.references import ref_ns
-from backend.core.models.ref_models import CompanyHistory
 from backend.core.services.ref_service.company_history_service import get_all_history, create_history, \
     get_history_by_id, update_history, delete_history, validate_history_data
 
@@ -38,7 +38,7 @@ class CompanyHistoryList(Resource):
             ]
         """
         items = get_all_history()
-        return [i.to_dict() for i in items], 200
+        return [i.to_dict() for i in items], HTTPStatus.OK
 
     @admin_required
     @ref_ns.expect(history_model)
@@ -63,9 +63,9 @@ class CompanyHistoryList(Resource):
             title, link, date_str, description = validate_history_data(data)
             item = create_history(title, link, date_str, description)
         except ValueError as e:
-            return {'message': str(e)}, 400
+            return {'message': str(e)}, HTTPStatus.BAD_REQUEST
 
-        return item.to_dict(), 20
+        return item.to_dict(), HTTPStatus.CREATED
 
 
 @ref_ns.route('/history/<int:id>')
@@ -85,8 +85,8 @@ class CompanyHistoryResource(Resource):
         """
         item = get_history_by_id(id)
         if not item:
-            return {'message': 'Событие не найдено'}, 404
-        return item.to_dict(), 200
+            return {'message': 'Событие не найдено'}, HTTPStatus.NOT_FOUND
+        return item.to_dict(), HTTPStatus.OK
 
     @admin_required
     @ref_ns.expect(history_model)
@@ -109,18 +109,18 @@ class CompanyHistoryResource(Resource):
             400 Bad Request: Ошибка валидации полей
             404 Not Found: Если событие с указанным ID не найдено
         """
-        item = CompanyHistory.query.get(id)
+        item = get_history_by_id(id)
         if not item:
-            return {'message': 'Событие не найдено'}, 404
+            return {'message': 'Событие не найдено'}, HTTPStatus.NOT_FOUND
 
         data = request.json or {}
         try:
             title, link, date_str, description = validate_history_data(data)
             update_history(item, title, link, date_str, description)
         except ValueError as e:
-            return {'message': str(e)}, 400
+            return {'message': str(e)}, HTTPStatus.BAD_REQUEST
 
-        return item.to_dict(), 200
+        return item.to_dict(), HTTPStatus.OK
 
     @admin_required
     @ref_ns.doc(description="Удаление события по ID")
@@ -137,7 +137,7 @@ class CompanyHistoryResource(Resource):
         """
         item = get_history_by_id(id)
         if not item:
-            return {'message': 'Событие не найдено'}, 404
+            return {'message': 'Событие не найдено'}, HTTPStatus.NOT_FOUND
 
         delete_history(item)
-        return {'message': 'Событие удалено'}, 200
+        return {'message': 'Событие удалено'}, HTTPStatus.OK

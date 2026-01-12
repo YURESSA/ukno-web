@@ -16,7 +16,7 @@ def get_age_category_by_name(name: str) -> Optional[AgeCategory]:
 
 def get_age_category_by_id(category_id: int) -> Optional[AgeCategory]:
     """Поиск возрастной категории по ID."""
-    return AgeCategory.query.get(category_id)
+    return db.session.get(AgeCategory, category_id)
 
 
 def create_age_category(name: str) -> AgeCategory:

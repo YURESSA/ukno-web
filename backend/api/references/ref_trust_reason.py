@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from typing import Any
 
 from flask import request
@@ -5,8 +6,8 @@ from flask_restx import Resource, fields
 
 from backend.api.admin.decorators import admin_required
 from backend.api.references import ref_ns
-from backend.core import db
-from backend.core.models.ref_models import TrustReason
+from backend.core.services.ref_service.trust_reason_service import get_all_trust_reasons, create_trust_reason, \
+    delete_trust_reason
 
 trust_reason_model = ref_ns.model('TrustReason', {
     'title': fields.String(required=True, description='Название причины доверия'),
@@ -25,8 +26,8 @@ class TrustReasonList(Resource):
         Returns:
             list[dict]: Список причин.
         """
-        reasons = TrustReason.query.all()
-        return [r.to_dict() for r in reasons], 200
+        reasons = get_all_trust_reasons()
+        return [r.to_dict() for r in reasons], HTTPStatus.OK
 
     @admin_required
     @ref_ns.expect(trust_reason_model)
@@ -40,20 +41,14 @@ class TrustReasonList(Resource):
             description (str): Описание
         """
         data = request.json or {}
-
-        title = data.get('title')
-        if not title:
-            return {'message': 'Поле title обязательно'}, 400
-
-        reason = TrustReason(
-            title=title,
-            description=data.get('description')
-        )
-
-        db.session.add(reason)
-        db.session.commit()
-
-        return reason.to_dict(), 201
+        try:
+            reason = create_trust_reason(
+                title=data.get('title'),
+                description=data.get('description')
+            )
+        except ValueError as e:
+            return {'message': str(e)}, HTTPStatus.BAD_REQUEST
+        return reason.to_dict(), HTTPStatus.CREATED
 
 
 @ref_ns.route('/trust-reasons/<int:id>')
@@ -65,11 +60,8 @@ class TrustReasonResource(Resource):
         """
         Удаление причины доверия по ID.
         """
-        reason = TrustReason.query.get(id)
-        if not reason:
-            return {'message': 'Причина не найдена'}, 404
-
-        db.session.delete(reason)
-        db.session.commit()
-
-        return {'message': 'Причина удалена'}, 200
+        try:
+            delete_trust_reason(id)
+        except ValueError as e:
+            return {'message': str(e)}, HTTPStatus.NOT_FOUND
+        return {'message': 'Причина удалена'}, HTTPStatus.OK
