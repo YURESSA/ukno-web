@@ -38,7 +38,7 @@
         <div class="content">
           <p>{{ news[0].content }}</p>
         </div>
-        <RouterLink to=""><IconButton class="link-button" text="Открыть новость"><img src="/icon/white-arrow.svg" alt=""></IconButton></RouterLink>
+        <RouterLink to="/news"><IconButton class="link-button" text="Открыть новость"><img src="/icon/white-arrow.svg" alt=""></IconButton></RouterLink>
       </div>
     </div>
   </div>

@@ -1,6 +1,6 @@
 <template>
   <div class="page-wrapper page--margin">
-    <div class="feed-wrapper">
+    <div class="feed-wrapper" v-if="excursions">
       <h3>Подбери <span class="text-orange">событие</span> на свой вкус</h3>
       <div class="feed-actions">
         <n-input
@@ -47,9 +47,9 @@
         </div>
       </div>
       <div class="feed">
-        <div class="event-count">
+        <!-- <div class="event-count">
           <p v-if="excursions.excursions.length">{{ excursions.excursions.length }} предложения</p>
-        </div>
+        </div> -->
         <div class="events">
           <EventCard
             v-for="(excursion, i) in excursions['excursions']"
@@ -62,24 +62,86 @@
     <Filter
     :class="{ 'filter-open': isFilterOpen }"
     @close="closeAll"/>
-    <Sorting
+    <!-- <Sorting
     :class="{ 'sorting-open': isSortingOpen }"
-    @close="closeAll"/>
+    @close="closeAll"/> -->
+    <DropMenu
+    :class="{ 'drop-open': isSortingOpen }"
+    @close="closeAll">
+      <!-- Сортировка по цене -->
+      <div class="sort-group">
+        <h3 class="sort-title">Цена</h3>
+        <div class="radio-group">
+          <label class="radio-label">
+            <input
+              type="radio"
+              name="priceSort"
+              value="price"
+              v-model="sortByPrice"
+              class="radio-input"
+            >
+            <span class="radio-custom"></span>
+            <span class="radio-text">По возрастанию</span>
+          </label>
+          <label class="radio-label">
+            <input
+              type="radio"
+              name="priceSort"
+              value="-price"
+              v-model="sortByPrice"
+              class="radio-input"
+            >
+            <span class="radio-custom"></span>
+            <span class="radio-text">По убыванию</span>
+          </label>
+        </div>
+      </div>
+      <!-- Сортировка по названию -->
+      <div class="sort-group">
+        <h3 class="sort-title">Название</h3>
+        <div class="radio-group">
+          <label class="radio-label">
+            <input
+              type="radio"
+              name="titleSort"
+              value="title"
+              v-model="sortByTitle"
+              class="radio-input"
+            >
+            <span class="radio-custom"></span>
+            <span class="radio-text">От А до Я</span>
+          </label>
+          <label class="radio-label">
+            <input
+              type="radio"
+              name="titleSort"
+              value="-title"
+              v-model="sortByTitle"
+              class="radio-input"
+            >
+            <span class="radio-custom"></span>
+            <span class="radio-text">От Я до А</span>
+          </label>
+        </div>
+      </div>
+      <BaseButton class="sendButton" text="Сохранить" @click="sendSort"/>
+    </DropMenu>
   </div>
   <div class="filter-open-wrapper" v-if="isFilterOpen || isSortingOpen" @click="closeAll"></div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { NInput, NIcon } from 'naive-ui';
 import { SearchOutline } from "@vicons/ionicons5";
-import { storeToRefs } from 'pinia';
 import IconButton from '@/components/UI/button/IconButton.vue';
 import DropDown from '@/components/UI/dropDown/dropDown.vue';
+import BaseButton from '@/components/UI/button/BaseButton.vue';
 import EventCard from './components/event-card.vue';
 import Filter from './components/filter.vue';
 import Sorting from './components/sorting.vue';
 import { useDataStore } from '@/stores/counter';
+import DropMenu from '@/components/shared/dropMenu.vue';
 
 const store = useDataStore();
 
@@ -92,10 +154,7 @@ const isSortingOpen = ref(false);
 const excursions = computed(() => store.getExcursions )
 console.log(excursions.value)
 
-// // Отслеживаем изменения excursions
-// watch(excursions, (newVal) => {
-//   console.log('Экскурсии обновились:', newVal);
-// }, { deep: true });
+
 
 onMounted(async () => {
   try {
@@ -179,7 +238,7 @@ const sendSearch = async () => {
   right: 0;
 }
 
-.sorting-open{
+.drop-open{
   bottom: 0;
   opacity: 1;
 }
@@ -306,5 +365,87 @@ h3{
   .filter-open-wrapper{
     z-index: 1000;
   }
+}
+
+
+
+
+.sort-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sort-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 5px 0;
+  user-select: none;
+}
+
+.radio-input {
+  display: none;
+}
+
+.radio-custom {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #ddd;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.radio-custom::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #F25C03;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.radio-input:checked + .radio-custom {
+  border-color: #F25C03;
+}
+
+.radio-input:checked + .radio-custom::after {
+  opacity: 1;
+}
+
+.radio-text {
+  font-size: 14px;
+  color: #555;
+}
+
+.radio-label:hover .radio-custom {
+  border-color: #F25C03;
+}
+
+.radio-label:hover .radio-text {
+  color: #333;
+}
+
+.sendButton{
+  font-size: 16px;
 }
 </style>

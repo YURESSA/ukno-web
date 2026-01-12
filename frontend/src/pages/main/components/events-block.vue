@@ -81,7 +81,7 @@ const router = useRouter();
 <style scoped>
 .page-wrapper{
   margin: 0 auto;
-  margin-top: -200px;
+  /* margin-top: -200px; */
   max-width: 1800px;
 }
 

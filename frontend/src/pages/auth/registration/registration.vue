@@ -17,12 +17,13 @@
         <input
           type="tel"
           name="phone"
-          placeholder="Номер телефона *"
+          placeholder="+7 (___) ___-__-__"
           class="text-l text-medium"
           v-model="formData.phone"
           required
           autocomplete="off"
-          @input="clearError('phone')"
+          @input="formatPhoneInput"
+          @blur="validatePhone"
         >
         <span class="error-message" v-if="showErrors && errors.phone">{{ errors.phone }}</span>
 
@@ -119,16 +120,44 @@ const validateEmail = () => {
 };
 
 // Валидация телефона
+const formatPhoneInput = (event) => {
+  let value = event.target.value.replace(/\D/g, '');
+
+  if (value.startsWith('7') || value.startsWith('8')) {
+    value = '+7' + value.substring(1);
+  } else if (!value.startsWith('+7')) {
+    value = '+7' + value;
+  }
+
+  // Форматирование с скобками и дефисами
+  let formatted = value;
+  if (value.length > 2) {
+    formatted = value.substring(0, 2) + ' ' + value.substring(2, 5);
+  }
+  if (value.length > 5) {
+    formatted += ' ' + value.substring(5, 8);
+  }
+  if (value.length > 8) {
+    formatted += '-' + value.substring(8, 10);
+  }
+  if (value.length > 10) {
+    formatted += '-' + value.substring(10, 12);
+  }
+
+  formData.value.phone = formatted;
+  clearError('phone');
+};
+
 const validatePhone = () => {
+  // Убираем все пробелы и дефисы для проверки
+  const cleanPhone = formData.value.phone.replace(/[\s\-()]/g, '');
   const phoneRegex = /^(\+7|8)[0-9]{10}$/;
-  const cleanPhone = formData.value.phone.replace(/[^\d+]/g, '');
 
   if (!phoneRegex.test(cleanPhone)) {
-    errors.value.phone = 'Введите корректный номер телефона';
+    errors.value.phone = 'Введите корректный номер телефона (+7 XXX XXX-XX-XX)';
   } else {
     errors.value.phone = '';
   }
-  formData.value.phone = cleanPhone;
 };
 
 // Валидация пароля

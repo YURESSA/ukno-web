@@ -65,14 +65,14 @@ h4{
 }
 
 .map-radius{
-  width: 100%;
+  width: max-content;
   border-radius: 40px;
   overflow: hidden;
 }
 
 .map{
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: center;
   gap: 100px;
 }

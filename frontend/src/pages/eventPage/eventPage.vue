@@ -74,7 +74,7 @@
       </div>
       <IconButton
         class="event--btn"
-        text="записаться"
+        text="Записаться"
         :id="excursion.id"
         @click="moveToBooked"
       >
@@ -83,7 +83,7 @@
       <div class="descript">
         <h3>Подробнее об экскурсии</h3>
         <h5>Экскурсия «{{ excursion.title }}»</h5>
-        <p>{{ excursion.description }}</p>
+        <p class="descript-hidden">{{ excursion.description }}</p>
       </div>
       <h2 v-if="excursion.photos.length > 1">Галерея ярких моментов</h2>
       <div class="gallery">
@@ -124,7 +124,7 @@
       </div>
       <IconButton
         class="event--btn"
-        text="записаться"
+        text="Записаться"
         :id="excursion.id"
         @click="moveToBooked"
       >
@@ -134,24 +134,25 @@
       <div class="mobile-container">
         <div class="events-list-mobile">
           <div class="event-type-mobile">
-            <div class="title">
-              <h3>Автор</h3>
+            <div class="content-icon">
+              <img src="/icon/eventPage/calendar.svg" alt="">
+            </div>
+            <div class="event-content">
+              <h2>{{ getData }}</h2>
+              <p>с {{ getTime }} до {{ totalTime }} </p>
+            </div>
+          </div>
+          <div class="event-type-mobile">
+            <div class="content-icon">
+              <img src="/icon/eventPage/person.svg" alt="">
             </div>
             <div class="event-content">
               <p>Проводит {{ excursion.conducted_by }}</p>
             </div>
           </div>
           <div class="event-type-mobile">
-            <div class="title">
-              <h3>Место</h3>
-            </div>
-            <div class="event-content">
-              <p>{{ excursion.place }}</p>
-            </div>
-          </div>
-          <div class="event-type-mobile">
-            <div class="title">
-              <h3>Стоимость</h3>
+            <div class="content-icon">
+              <img src="/icon/eventPage/wallet.svg" alt="">
             </div>
             <div class="event-content">
               <p v-if="parseInt(excursion.sessions[0].cost) > 0">{{ parseInt(excursion.sessions[0].cost) }} ₽</p>
@@ -159,17 +160,16 @@
             </div>
           </div>
           <div class="event-type-mobile">
-            <div class="title">
-              <h3>Дата и время</h3>
+            <div class="content-icon">
+              <img src="/icon/eventPage/ping.svg" alt="">
             </div>
             <div class="event-content">
-              <h2>{{ getData }}</h2>
-              <p>с {{ getTime }} до {{ totalTime }} </p>
+              <p>{{ excursion.place }}</p>
             </div>
           </div>
-          <div class="">
-            <div class="title">
-              <h3>Важно</h3>
+          <div class="event-type-mobile">
+            <div class="content-icon">
+              <img src="/icon/eventPage/important.svg" alt="">
             </div>
             <div class="event-content">
               <div class="important-content">
@@ -185,7 +185,9 @@
       <div class="descript">
         <h3>Подробнее об экскурсии</h3>
         <h5 style="font-size: 16px;">Экскурсия «{{ excursion.title }}»</h5>
-        <p>{{ excursion.description }}</p>
+        <p :class="{ 'descript-hidden': !descriptOpen }">{{ excursion.description }}</p>
+        <button v-if="!descriptOpen" class="orange" @click="descriptOpen = !descriptOpen">Показать ещё</button>
+        <button v-if="descriptOpen" class="orange" @click="descriptOpen = !descriptOpen">Скрыть описание</button>
       </div>
       <h2 v-if="excursion.photos.length > 1">Галерея ярких моментов</h2>
       <div class="gallery">
@@ -230,7 +232,8 @@ import { notification } from '@/utils/notification'
 const store = useDataStore();
 const route = useRoute();
 const router = useRouter();
-const load = ref(false)
+const load = ref(false);
+const descriptOpen = ref(false);
 
 const excursion = computed(() => store.getExcursionDetail);
 
@@ -438,7 +441,25 @@ span > a{
   flex-direction: column;
   gap: 20px;
   margin-top: 50px;
-  margin-bottom: 20px;
+  margin-bottom: 40px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.55);
+}
+
+.descript > button {
+  all: unset;
+  color: #F25C03;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.descript-hidden {
+  max-height: 100px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #333 0%, #fff 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .gallery{
@@ -598,6 +619,66 @@ span > a{
     margin-top: 20px;
     margin-bottom: 0;
   }
+  .preview-img > img {
+    height: 115px;
+  }
+
+  .gallery {
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    width: 100%;
+    max-width: 100vw;
+    margin-left: -16px;
+    margin-right: -16px;
+    padding: 0 16px 16px 16px;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .gallery::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .gallery::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
+
+  .gallery::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+  }
+
+  .gallery-img {
+    flex: 0 0 auto;
+    width: 80vw;
+    max-width: 300px;
+    height: 200px;
+    margin-right: 20px;
+  }
+
+  .img0, .img1, .img2, .img3 {
+    width: 80vw !important;
+    max-width: 300px !important;
+  }
+
+  .gallery-img:last-child {
+    margin-right: 0;
+  }
+
+  .gallery-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+  }
+
+  .descript > button {
+    font-size: 16px;
+  }
 }
 
 .event-wrapper-mobile{
@@ -613,6 +694,12 @@ span > a{
 .events-list-mobile{
   display: flex;
   flex-direction: column;
+  gap: 20px;
+}
+
+.event-type-mobile {
+  display: flex;
+  flex-direction: row;
   gap: 20px;
 }
 </style>
