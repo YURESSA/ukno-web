@@ -29,6 +29,9 @@
 
 <template>
   <div class="history-wrapper" id="history">
+    <div class="title" id="news">
+      <h3>Новости молодежного бюро</h3>
+    </div>
     <div class="container">
       <div class="img-block">
         <img :src="imageUrl" alt="">
