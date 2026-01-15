@@ -15,6 +15,14 @@ export const useDataStore = defineStore('data', {
     reservationsData: [],
     newsData: [],
     excursionsStats: [],
+    users: [],
+    categories: [],
+    format: [],
+    age: [],
+    adminExcursions: [],
+    Adminreservations: [],
+    teamData: [],
+    project: []
   }),
   actions: {
     setTokenRole(auth_key, role) {
@@ -368,7 +376,451 @@ export const useDataStore = defineStore('data', {
         console.error('Ошибка при получении данных:', error.response?.data || error.message)
         throw error
       }
-    }
+    },
+    // Админка
+    async FetchUsers(){
+      try {
+        const response = await axios.get(`${baseUrl}/api/admin/users`, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+          },
+        })
+        console.log('Данные успешно получены:', response.data)
+        this.users = response.data
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async PostAdminNewUser(jsonData) {
+      try {
+        const response = await axios.post(`${baseUrl}/api/admin/users`, jsonData, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+            'Content-Type': 'application/json'
+          },
+        })
+        console.log('Пользователь успешно добавлен:', response.data)
+      } catch (error) {
+        console.error('Ошибка при создании:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async PutAdminUser(jsonData, email) {
+      try {
+        const response = await axios.put(`${baseUrl}/api/admin/users/detail/${email}`, jsonData, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+            'Content-Type': 'application/json',
+          },
+        })
+        console.log('Успешная смена данных пользователя:', response.data)
+      } catch (error) {
+        console.error('Ошибка при смене данных пользователя:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async DeleteAdminUser(email) {
+      try {
+        const response = await axios.delete(
+          `${baseUrl}/api/admin/users/detail/${email}`,
+          {
+            headers: {
+              Authorization: `Bearer ${this.auth_key}`,
+            },
+          },
+        )
+        console.log('Пользователь успешно удален:', response.data)
+      } catch (error) {
+        console.error('Ошибка при удалении :', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async FetchCategories(){
+      try {
+        const response = await axios.get(`${baseUrl}/api/references/categories`, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+          },
+        })
+        console.log('Данные успешно получены:', response.data)
+        this.categories = response.data
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async deleteCatigories(id) {
+      try {
+        const response = await axios.delete(
+          `${baseUrl}/api/references/categories/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${this.auth_key}`,
+            },
+          },
+        )
+        console.log('Категория успешно удален:', response.data)
+      } catch (error) {
+        console.error('Ошибка при удалении категории:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async PostAdminNewCategories(jsonData) {
+      try {
+        const response = await axios.post(`${baseUrl}/api/references/categories`, jsonData, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+            'Content-Type': 'application/json'
+          },
+        })
+        console.log('Категория успешно добавлена:', response.data)
+      } catch (error) {
+        console.error('Ошибка при создании:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async FetchFormat(){
+      try {
+        const response = await axios.get(`${baseUrl}/api/references/format-types`, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+          },
+        })
+        console.log('Данные успешно получены:', response.data)
+        this.format = response.data
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async PostAdminNewFormat(jsonData) {
+      try {
+        const response = await axios.post(`${baseUrl}/api/references/format-types`, jsonData, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+            'Content-Type': 'application/json'
+          },
+        })
+        console.log('Формат успешно добавлен:', response.data)
+      } catch (error) {
+        console.error('Ошибка при создании:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async deleteFormat(id) {
+      try {
+        const response = await axios.delete(
+          `${baseUrl}/api/references/format-types/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${this.auth_key}`,
+            },
+          },
+        )
+        console.log('Формат успешно удален:', response.data)
+      } catch (error) {
+        console.error('Ошибка при удалении формата:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async FetchAge(){
+      try {
+        const response = await axios.get(`${baseUrl}/api/references/age-categories`, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+          },
+        })
+        console.log('Данные успешно получены:', response.data)
+        this.age = response.data
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async PostAdminNewAge(jsonData) {
+      try {
+        const response = await axios.post(`${baseUrl}/api/references/age-categories`, jsonData, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+            'Content-Type': 'application/json'
+          },
+        })
+        console.log('Возраст успешно добавлен:', response.data)
+      } catch (error) {
+        console.error('Ошибка при создании:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async deleteAge(id) {
+      try {
+        const response = await axios.delete(
+          `${baseUrl}/api/references/age-categories/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${this.auth_key}`,
+            },
+          },
+        )
+        console.log('Возраст успешно удален:', response.data)
+      } catch (error) {
+        console.error('Ошибка при удалении возраста:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async FetchAdminExcursion(){
+      try {
+        const response = await axios.get(`${baseUrl}/api/admin/excursions`, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+          },
+        })
+        console.log('Данные успешно получены:', response.data)
+        this.adminExcursions = response.data
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async PostAdminNewExcursion(jsonData) {
+      try {
+        const response = await axios.post(`${baseUrl}/api/admin/excursions`, jsonData, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+            'Content-Type': 'application/json'
+          },
+        })
+        console.log('Экскурсия успешно добавлена:', response.data)
+      } catch (error) {
+        console.error('Ошибка при создании события:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async deleteAdminExcursion(id) {
+      try {
+        const response = await axios.delete(
+          `${baseUrl}/api/admin/excursions/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${this.auth_key}`,
+            },
+          },
+        )
+        console.log('Событие успешно удалено:', response.data)
+      } catch (error) {
+        console.error('Ошибка при удалении события:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async PostNewExcursion(formData) {
+      try {
+        const dto = JSON.parse(formData.get('data'))
+        console.log('DTO to backend:', dto, typeof dto.category_id, dto.category_id)
+        const response = await axios.post(`${baseUrl}/api/admin/excursions`, formData, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+        console.log('Upload success:', response.data)
+      } catch (error) {
+        console.error('Ошибка при создании:', error.response?.data || error.message)
+        console.error('status', error.response?.status)
+        console.error('data', error.response?.data)
+        throw error
+      }
+    },
+
+    async PatchExcursion(excursionId, payload) {
+      return axios.patch(`${baseUrl}/api/admin/excursions/${excursionId}`, payload, {
+        headers: {
+          Authorization: `Bearer ${this.auth_key}`,
+          'Content-Type': 'application/json'
+        }
+      })
+    },
+
+    async PostExcursionPhoto(excursionId, file) {
+      const fd = new FormData()
+      fd.append('photo', file)
+      return axios.post(`${baseUrl}/api/admin/excursions/${excursionId}/photos`, fd, {
+        headers: { Authorization: `Bearer ${this.auth_key}` }
+      })
+    },
+
+    async DeleteExcursionPhoto(excursionId, photoId) {
+      return axios.delete(`${baseUrl}/api/admin/excursions/${excursionId}/photos/${photoId}`, {
+        headers: { Authorization: `Bearer ${this.auth_key}` }
+      })
+    },
+
+    async PostExcursionSession(excursionId, payload) {
+      return axios.post(`${baseUrl}/api/admin/excursions/${excursionId}/sessions`, payload, {
+        headers: { Authorization: `Bearer ${this.auth_key}` }
+      })
+    },
+
+    async PatchExcursionSession(excursionId, sessionId, payload) {
+      return axios.patch(`${baseUrl}/api/admin/excursions/${excursionId}/sessions/${sessionId}`, payload, {
+        headers: { Authorization: `Bearer ${this.auth_key}` }
+      })
+    },
+
+    async DeleteExcursionSession(excursionId, sessionId) {
+      return axios.delete(`${baseUrl}/api/admin/excursions/${excursionId}/sessions/${sessionId}`, {
+        headers: { Authorization: `Bearer ${this.auth_key}` }
+      })
+    },
+    async getAdminNews(){
+      try {
+        const response = await axios.get(`${baseUrl}/api/admin/news`, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+          },
+        })
+        console.log('Данные успешно получены:', response.data)
+        this.newsData = response.data
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async FetchAdminNews() {
+      try {
+        const response = await axios.get(`${baseUrl}/api/admin/news`, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+          },
+        })
+        console.log('Данные успешно получены:', response.data)
+        this.newsData = response.data
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    // POST /api/admin/news  (formData: data + image[])
+    async PostAdminNews(formData) {
+      const apiBase = baseUrl.replace(/\/$/, '')
+      return axios.post(`${apiBase}/api/admin/news`, formData, {
+        headers: { Authorization: `Bearer ${this.auth_key}` }
+      })
+    },
+
+    // PUT /api/admin/news/{news_id}  (formData: data + image[])
+    async PutAdminNews(newsId, formData) {
+      const apiBase = baseUrl.replace(/\/$/, '')
+      return axios.put(`${apiBase}/api/admin/news/${newsId}`, formData, {
+        headers: { Authorization: `Bearer ${this.auth_key}` }
+      })
+    },
+
+    async DeleteAdminNews(newsId) {
+      const apiBase = baseUrl.replace(/\/$/, '')
+      return axios.delete(`${apiBase}/api/admin/news/${newsId}`, {
+        headers: { Authorization: `Bearer ${this.auth_key}` }
+      })
+    },
+
+    async FetchAdminNewsPhotos(newsId) {
+      const apiBase = baseUrl.replace(/\/$/, '')
+      const res = await axios.get(`${apiBase}/api/admin/news/${newsId}/photos`, {
+        headers: { Authorization: `Bearer ${this.auth_key}` }
+      })
+      const photos = res.data?.photos ?? res.data ?? []
+      this.adminNewsPhotos = { ...this.adminNewsPhotos, [newsId]: photos }
+      return res
+    },
+
+    async PostAdminNewsPhoto(newsId, file) {
+      const apiBase = baseUrl.replace(/\/$/, '')
+      const fd = new FormData()
+      fd.append('photo', file)
+      return axios.post(`${apiBase}/api/admin/news/${newsId}/photos`, fd, {
+        headers: { Authorization: `Bearer ${this.auth_key}` }
+      })
+    },
+
+    async DeleteAdminNewsPhoto(newsId, photoId) {
+      const apiBase = baseUrl.replace(/\/$/, '')
+      return axios.delete(`${apiBase}/api/admin/news/${newsId}/photos/${photoId}`, {
+        headers: { Authorization: `Bearer ${this.auth_key}` }
+      })
+    },
+    async FetchAdminReservations() {
+      try {
+        const response = await axios.get(`${baseUrl}/api/admin/reservations`, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+          },
+        })
+        console.log('Данные успешно получены:', response.data)
+        this.Adminreservations = response.data
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+
+    async FetchAdminReservationById(reservationId) {
+      const apiBase = baseUrl.replace(/\/$/, '')
+      return axios.get(`${apiBase}/api/admin/reservations/${reservationId}`, {
+        headers: { Authorization: `Bearer ${this.auth_key}` }
+      })
+    },
+
+    async DeleteAdminReservation(reservationId) {
+      const apiBase = baseUrl.replace(/\/$/, '')
+      return axios.delete(`${apiBase}/api/admin/reservations/${reservationId}`, {
+        headers: { Authorization: `Bearer ${this.auth_key}` }
+      })
+    },
+    async FetchTeam() {
+      try {
+        const response = await axios.get(`${baseUrl}/api/references/team`, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+          },
+        })
+        console.log('Данные успешно получены:', response.data)
+        this.teamData = response.data
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async FetchProject() {
+      try {
+        const response = await axios.get(`${baseUrl}/api/references/projects`, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+          },
+        })
+        console.log('Данные успешно получены:', response.data)
+        this.project = response.data
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async PostTeam({ full_name, description, photoFile }) {
+      const apiBase = baseUrl.replace(/\/$/, '')
+      const fd = new FormData()
+      fd.append('full_name', full_name)
+      if (description != null) fd.append('description', description)
+      if (photoFile) fd.append('photo', photoFile)
+
+      return axios.post(`${apiBase}/api/references/team`, fd, {
+        headers: { Authorization: `Bearer ${this.auth_key}` }
+      })
+    },
+
+    async DeleteTeam(id) {
+      const apiBase = baseUrl.replace(/\/$/, '')
+      return axios.delete(`${apiBase}/api/references/team/${id}`, {
+        headers: { Authorization: `Bearer ${this.auth_key}` }
+      })
+    },
   },
   getters: {
     getProfileData: (state) => state.profileData,
@@ -376,7 +828,15 @@ export const useDataStore = defineStore('data', {
     getExcursionDetail: (state) => state.excursionDetail,
     getResidentEvents: (state) => state.residentExcursions,
     getNews: (state) => state.newsData,
-    getExcursionsStats: (state) => state.excursionsStats
+    getExcursionsStats: (state) => state.excursionsStats,
+    getUsers: (state) => (state).users,
+    getCategories: (state) => (state).categories,
+    getFormat: (state) => (state).format,
+    getAge: (state) => state.age,
+    getAdminExcursion: (state) => state.adminExcursions,
+    getAdminreservation: (state) => state.Adminreservations,
+    getTeamData: (s) => s.teamData,
+    getProject: (s) => s.project
   },
   persist: {
     key: 'data-store',

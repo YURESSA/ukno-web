@@ -28,11 +28,11 @@
 </template> -->
 
 <template>
+  <div class="title" id="news">
+    <h3>Новости молодежного бюро</h3>
+  </div>
   <div class="history-wrapper" id="history">
-    <div class="title" id="news">
-      <h3>Новости молодежного бюро</h3>
-    </div>
-    <div class="container">
+    <div class="container" v-if="news">
       <div class="img-block">
         <img :src="imageUrl" alt="">
       </div>
@@ -54,7 +54,7 @@ import { baseUrl } from '@/stores/counter';
 import { computed } from 'vue';
 
 const props = defineProps({
-  news: Object,
+  news: Array,
 })
 
 const imageUrl = computed(() => baseUrl + props.news[0].images[0])
@@ -78,6 +78,7 @@ const imageUrl = computed(() => baseUrl + props.news[0].images[0])
   height: 430px;
   object-fit: cover;
   object-position: center;
+  border-radius: 15px;
 }
 
 .content-block{
@@ -115,6 +116,9 @@ const imageUrl = computed(() => baseUrl + props.news[0].images[0])
   }
   .content {
     margin: 30px 0;
+  }
+  .history-wrapper{
+    margin-bottom: 40px;
   }
 }
 </style>

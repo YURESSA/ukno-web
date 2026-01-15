@@ -102,30 +102,10 @@
         <h3>Наша команда</h3>
       </div>
       <div class="person-list">
-        <div class="person-card">
-          <img src="/about-us/time-photo.png" alt="">
-          <p class="name">Денис Борисович</p>
-          <p class="profession">курирует организацию корпоративных мероприятий.</p>
-        </div>
-        <div class="person-card">
-          <img src="/about-us/time-photo.png" alt="">
-          <p class="name">Денис Борисович</p>
-          <p class="profession">курирует организацию корпоративных мероприятий.</p>
-        </div>
-        <div class="person-card">
-          <img src="/about-us/time-photo.png" alt="">
-          <p class="name">Денис Борисович</p>
-          <p class="profession">курирует организацию корпоративных мероприятий.</p>
-        </div>
-        <div class="person-card">
-          <img src="/about-us/time-photo.png" alt="">
-          <p class="name">Денис Борисович</p>
-          <p class="profession">курирует организацию корпоративных мероприятий.</p>
-        </div>
-        <div class="person-card">
-          <img src="/about-us/time-photo.png" alt="">
-          <p class="name">Денис Борисович</p>
-          <p class="profession">курирует организацию корпоративных мероприятий.</p>
+        <div class="person-card" v-for="k in teams" :key="k.id">
+          <img :src="'https://yuressa.uxp.ru/' + k.photo" alt="">
+          <p class="name">k.full_name</p>
+          <p class="profession">k.description</p>
         </div>
       </div>
     </div>
@@ -177,7 +157,7 @@
         <div class="timeline-element">
           <div class="dot"></div>
           <div class="info timeline-element-right">
-            <p class="date text-l">12 октября <br> 2025</p>
+            <p class="date text-l">12 октября <br> 2000</p>
             <div class="event-info">
               <p class="text-l">Проведение экспедиции</p>
               <p>В ходе экспедиции был осуществлён сбор полевых данных и образцов в соответствии с поставленными научными задачами.</p>
@@ -272,7 +252,12 @@
 <script setup>
 import IconButton from '@/components/UI/button/IconButton.vue';
 import Card from '@/pages/ukno/components/card.vue';
-import { ref, onMounted, onUnmounted, getCurrentInstance  } from 'vue';
+import { ref, onMounted, onUnmounted, getCurrentInstance, computed  } from 'vue';
+import { useDataStore } from '@/stores/counter';
+
+const store = useDataStore();
+
+const teams = computed(() => store.getTeamData)
 
 const openNewTab = (url) => {
   window.open(url, '_blank', 'noopener,noreferrer');
@@ -323,7 +308,8 @@ const updateTimeline = () => {
   })
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await store.FetchTeam();
   window.addEventListener('scroll', updateTimeline)
   updateTimeline()
 })
@@ -790,6 +776,10 @@ onUnmounted(() => {
     flex-wrap: wrap;
     gap: 0px;
     margin-bottom: 40px;
+  }
+
+  .what-we-do>.title {
+    margin-bottom: 30px;
   }
 
   .about-us > .title > h2 {

@@ -35,6 +35,11 @@
             <h4>{{ profileData.full_name[0].toUpperCase() }}</h4>
           </button>
         </RouterLink>
+        <RouterLink to="/admin-profile" v-else-if="!hasToken && role === 'admin'">
+          <button>
+            <h4>{{ profileData.full_name[0].toUpperCase() }}</h4>
+          </button>
+        </RouterLink>
       </div>
     </nav>
 
@@ -67,6 +72,11 @@
               <span>{{ profileData.full_name[0].toUpperCase() }}</span>
             </button>
           </RouterLink>
+          <RouterLink to="/admin-profile" v-else-if="!hasToken && role === 'admin'">
+            <button>
+              <h4>{{ profileData.full_name[0].toUpperCase() }}</h4>
+            </button>
+          </RouterLink>
         </div>
       </div>
 
@@ -82,9 +92,7 @@
                   </div>
                   <Transition name="slide-fade">
                     <ul v-if="showProjects" class="mobile-projects">
-                      <li>Психологический клуб</li>
-                      <li>Репетиторский клуб</li>
-                      <li>Музейное пространство</li>
+                      <li v-for="p in projects" :key="p.id">{{p.title}}</li>
                     </ul>
                   </Transition>
                 </li>
@@ -102,12 +110,13 @@
 
 
 <script setup>
-import { ref, computed, watch, onUnmounted } from 'vue';
+import { ref, computed, watch, onUnmounted, onMounted } from 'vue';
 import { useDataStore } from '@/stores/counter';
 
 const store = useDataStore();
 const menuOpen = ref(false)
 const showProjects = ref(false);
+const projects = computed(() => store.getProject)
 
 watch(menuOpen, (open) => {
   if (open) {
@@ -122,6 +131,11 @@ watch(menuOpen, (open) => {
     window.scrollTo(0, scrollY);
   }
 });
+
+onMounted(async () => {
+  await store.FetchProject();
+});
+
 
 onUnmounted(() => {
   document.body.style.position = '';
