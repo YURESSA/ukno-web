@@ -104,8 +104,8 @@
       <div class="person-list">
         <div class="person-card" v-for="k in teams" :key="k.id">
           <img :src="'https://yuressa.uxp.ru/' + k.photo" alt="">
-          <p class="name">k.full_name</p>
-          <p class="profession">k.description</p>
+          <p class="name">{{ k.full_name }}</p>
+          <p class="profession">{{ k.description }}</p>
         </div>
       </div>
     </div>
@@ -378,6 +378,12 @@ onUnmounted(() => {
   padding: 20px;
   border-radius: 14px;
   border: 2px solid #F25C03;
+}
+
+.person-card > img {
+  display: block;
+  width: 100%;
+  border-radius: 14px;
 }
 
 .name {
