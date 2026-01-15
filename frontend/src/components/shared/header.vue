@@ -96,7 +96,6 @@
                     </ul>
                   </Transition>
                 </li>
-                {{ projects }}
                 <li><RouterLink to="/events" @click="menuOpen = false">События</RouterLink></li>
                 <li><RouterLink to="/news" @click="menuOpen = false">Новости</RouterLink></li>
                 <li><RouterLink to="/ukno" @click="menuOpen = false">О нас</RouterLink></li>
