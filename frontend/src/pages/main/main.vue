@@ -73,7 +73,7 @@
   <Contact class="page-wrapper">
     <iframe
     src="https://yandex.ru/map-widget/v1/?um=constructor%3A467ac6eb77e4af971eecb9575ed4f0203a9875b769906a7e184a781db5718a65&amp;source=constructor"
-    width="629"
+    width="max-content"
     height="462"
     frameborder="0"
     class="yand-map"

@@ -10,7 +10,7 @@
         <li><RouterLink to="/events">СОБЫТИЯ</RouterLink></li>
         <li><RouterLink :to="{ path: '/news'}">НОВОСТИ</RouterLink></li>
         <li><RouterLink :to="{ path: '/', hash: '#contact' }">КОНТАКТЫ</RouterLink></li>
-        <li><RouterLink :to="{ path: '/requesits'}">РЕКВИЗИТЫ</RouterLink></li>
+        <li><RouterLink :to="{ path: '/requesits'}">РЕКВИЗИТЫ ОГРАНИЗАЦИИ</RouterLink></li>
       </ul>
       </nav>
     </div>
