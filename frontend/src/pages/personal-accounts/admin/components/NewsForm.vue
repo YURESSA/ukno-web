@@ -150,7 +150,6 @@ function makeEmpty () {
 function fileUrl(path) {
   if (!path) return ''
   if (/^https?:\/\//i.test(path)) return path
-  console.log(props.mediaBaseUrl.replace(/\/$/, '') + '/' + String(path).replace(/^\//, ''))
   return props.mediaBaseUrl.replace(/\/$/, '') + '/' + String(path).replace(/^\//, '')
 }
 

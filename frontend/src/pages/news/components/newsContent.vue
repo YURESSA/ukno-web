@@ -41,7 +41,6 @@ const formattedDate = computed(() => {
 });
 
 const getMainImage = computed(() => {
-  console.log( baseUrl + props.news.images)
   return baseUrl + props.news.images[0];
 });
 </script>

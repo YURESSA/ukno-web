@@ -1,7 +1,7 @@
 @import url('./base.css');
 
 .page-wrapper {
-  padding: 50px 70px;
+  padding: 50px 30px;
 }
 
 .page--margin{
@@ -9,7 +9,7 @@
 }
 
 h1 {
-  font-size: 94px;
+  font-size: 75px;
   font-weight: 700;
 }
 

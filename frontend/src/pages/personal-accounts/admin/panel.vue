@@ -1087,7 +1087,6 @@ const excursionColumns = [
           style: { color: 'red', fontSize: '14px', padding: '5px 10px', fontWeight: '500', height: '50px' },
           onClick: (e) => {
             e?.stopPropagation?.()
-            console.log(row.excursion_id)
             deleteExcursion(row.excursion_id)
           }
         },

@@ -8,8 +8,6 @@ import LoginLayout from '@/layouts/LoginLayout.vue'
 import EventsFeed from '@/pages/eventFeed/eventsFeed.vue'
 import EventPage from '@/pages/eventPage/eventPage.vue'
 import Login from '@/pages/auth/login/login.vue'
-import AdminLogin from '@/pages/auth/admin/adminLogin.vue'
-import ResidentLogin from '@/pages/auth/resident/residentLogin.vue'
 import Registration from '@/pages/auth/registration/registration.vue'
 import Payment from '@/pages/payment/payment.vue'
 import UserProfile from '@/pages/personal-accounts/user/user.vue'
@@ -72,16 +70,6 @@ const router = createRouter({
           path: '/login',
           name: 'LoginPage',
           component: Login,
-        },
-        {
-          path: '/resident-login',
-          name: 'ResidentLogin',
-          component: ResidentLogin,
-        },
-        {
-          path: '/admin-login',
-          name: 'AdminLogin',
-          component: AdminLogin,
         },
         {
           path: '/register',

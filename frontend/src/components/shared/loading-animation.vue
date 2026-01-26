@@ -1,10 +1,12 @@
 <template>
   <div class="loading-wrapper">
-    <div class="mill-wrapper">
-      <div class="mill"></div>
-      <div class="blades"></div>
+    <div class="loading-content">
+      <div class="mill-wrapper">
+        <div class="mill"></div>
+        <div class="blades"></div>
+      </div>
+      <h4>Создаём пространство...</h4>
     </div>
-    <h4>Создаём пространство...</h4>
     <div class="top-semicircle"></div>
     <div class="bottom-semicircle"></div>
   </div>
@@ -22,6 +24,14 @@
   overflow: hidden;
   background-color: white;
   z-index: 999;
+}
+
+.loading-content{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
 }
 
 .mill-wrapper{

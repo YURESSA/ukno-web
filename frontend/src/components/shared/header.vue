@@ -5,9 +5,7 @@
         <li class="project">
           Проекты
           <ul class="project-list">
-            <li>Психологический клуб</li>
-            <li>Репетиторский клуб</li>
-            <li>Музейное пространство</li>
+            <a v-for="p in projects" :key="p.id" :href="p.link" target="_blank"><li>{{p.title}}</li></a>
           </ul>
         </li>
         <li><RouterLink to="/events">События</RouterLink></li>
@@ -92,7 +90,7 @@
                   </div>
                   <Transition name="slide-fade">
                     <ul v-if="showProjects" class="mobile-projects">
-                      <li v-for="p in projects" :key="p.id">{{p.title}}</li>
+                      <a v-for="p in projects" :key="p.id" :href="p.link" target="_blank"><li>{{p.title}}</li></a>
                     </ul>
                   </Transition>
                 </li>
@@ -231,7 +229,7 @@ h4{
   height: 70px;
 }
 
-.project-list > li{
+.project-list li{
   padding: 6px 12px;
   width: 260px;
   transition: all 0.3s ease;
@@ -240,7 +238,7 @@ h4{
   cursor: pointer;
 }
 
-.project-list > li:hover{
+.project-list li:hover{
   background-color: #EBEBEB;
 }
 

@@ -256,7 +256,6 @@ onMounted(async () => {
       load.value = true
     }, 1000)
     await store.FetchExcursionsStats();
-    console.log('Загрузил')
     formDataExcursion.value = {
       title: excursion.value.title,
       description: excursion.value.description,
@@ -449,7 +448,6 @@ const submitEvent = async () => {
 
         try {
           await store.PostNewPhoto(excursion.value.excursion_id, formData);
-          console.log('Файл успешно загружен:', file.name);
         } catch (error) {
           console.error('Ошибка загрузки файла:', file.name, error);
         }

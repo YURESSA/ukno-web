@@ -102,8 +102,8 @@
         <h3>Наша команда</h3>
       </div>
       <div class="person-list">
-        <div class="person-card" v-for="k in teams" :key="k.id">
-          <img :src="'https://yuressa.uxp.ru/' + k.photo" alt="">
+        <div class="person-card" v-for="(k, index) in teams" :key="k.id">
+          <img :class="{'uneven-person': teams.length % 2 && index === teams.length - 1}" :src="'https://yuressa.uxp.ru/' + k.photo" alt="">
           <p class="name">{{ k.full_name }}</p>
           <p class="profession">{{ k.description }}</p>
         </div>
@@ -148,72 +148,34 @@
       </div>
     </div>
 
+
     <div class="timeline">
       <h3>История нашего бюро</h3>
       <div class="timeline-wrapper" ref="timelineWrapper">
         <div class="line-bg">
           <div class="line-fill" :style="{ height: fillHeight + '%' }"></div>
         </div>
-        <div class="timeline-element">
-          <div class="dot"></div>
-          <div class="info timeline-element-right">
-            <p class="date text-l">12 октября <br> 2000</p>
-            <div class="event-info">
-              <p class="text-l">Проведение экспедиции</p>
-              <p>В ходе экспедиции был осуществлён сбор полевых данных и образцов в соответствии с поставленными научными задачами.</p>
-            </div>
-          </div>
-        </div>
-        <div class="timeline-element">
+        <div
+          v-for="(event, index) in sortHistory"
+          :key="event.id"
+          class="timeline-element"
+        >
           <div class="dot"></div>
           <div
             class="info"
             :class="{
+              // На мобильных: все элементы справа
               'timeline-element-right': $isMobile(),
-              'timeline-element-left': !$isMobile()
+              // На десктопе: четные элементы слева, нечетные - справа
+              'timeline-element-left': !$isMobile() && index % 2 === 1,
+              'timeline-element-right': !$isMobile() && index % 2 === 0
             }"
           >
-            <p class="date text-l">12 октября <br> 2025</p>
-            <div class="event-info">
-              <p class="text-l">Проведение экспедиции</p>
-              <p>В ходе экспедиции был осуществлён сбор полевых данных и образцов в соответствии с поставленными научными задачами.</p>
-            </div>
-          </div>
-        </div>
-        <div class="timeline-element">
-          <div class="dot"></div>
-          <div class="info timeline-element-right">
-            <p class="date text-l">12 октября <br> 2025</p>
-            <div class="event-info">
-              <p class="text-l">Проведение экспедиции</p>
-              <p>В ходе экспедиции был осуществлён сбор полевых данных и образцов в соответствии с поставленными научными задачами.</p>
-            </div>
-          </div>
-        </div>
-        <div class="timeline-element">
-          <div class="dot"></div>
-          <div
-            class="info"
-            :class="{
-              'timeline-element-right': $isMobile(),
-              'timeline-element-left': !$isMobile()
-            }"
-          >
-            <p class="date text-l">12 октября <br> 2025</p>
-            <div class="event-info">
-              <p class="text-l">Проведение экспедиции</p>
-              <p>В ходе экспедиции был осуществлён сбор полевых данных и образцов в соответствии с поставленными научными задачами.</p>
-            </div>
-          </div>
-        </div>
-        <div class="timeline-element">
-          <div class="dot"></div>
-          <div class="info timeline-element-right">
-            <p class="date text-l">12 октября <br> 2025</p>
-            <div class="event-info">
-              <p class="text-l">Проведение экспедиции</p>
-              <p>В ходе экспедиции был осуществлён сбор полевых данных и образцов в соответствии с поставленными научными задачами.</p>
-            </div>
+            <a v-if="event.link" :href="event.link" target="_blank"><p class="date text-l" v-html="formatDate(event.date)"></p></a>
+            <a v-if="event.link" :href="event.link" target="_blank" class="event-info">
+                <p class="text-l">{{ event.title }}</p>
+                <p>{{ event.description }}</p>
+            </a>
           </div>
         </div>
       </div>
@@ -257,7 +219,26 @@ import { useDataStore } from '@/stores/counter';
 
 const store = useDataStore();
 
-const teams = computed(() => store.getTeamData)
+const teams = computed(() => store.getTeamData);
+const history = computed(() => store.getHistory);
+
+const sortHistory = computed(() => {
+  if(!history.value) {return}
+  return [...history.value].sort((a, b) => a.date - b.date )
+})
+
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  const day = date.getDate();
+  const months = [
+    'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+    'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+  ];
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+
+  return `${day} ${month}<br>${year}`;
+}
 
 const openNewTab = (url) => {
   window.open(url, '_blank', 'noopener,noreferrer');
@@ -279,7 +260,7 @@ const updateTimeline = () => {
   if (mobileMode) {
     start = windowHeight * 0.75
   } else {
-    start = windowHeight * 0.55
+    start = windowHeight * 0.75
   }
   const progress = (start - rect.top) / rect.height
   const percent = Math.min(Math.max(progress * 100, 0), 100)
@@ -310,6 +291,7 @@ const updateTimeline = () => {
 
 onMounted(async () => {
   await store.FetchTeam();
+  await store.FetchHistory();
   window.addEventListener('scroll', updateTimeline)
   updateTimeline()
 })
@@ -373,8 +355,8 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: center;
-  width: 242px;
+  justify-content: space-between;
+  width: 234px;
   padding: 20px;
   border-radius: 14px;
   border: 2px solid #F25C03;
@@ -384,6 +366,8 @@ onUnmounted(() => {
   display: block;
   width: 100%;
   border-radius: 14px;
+  height: 260px;
+  object-fit: cover;
 }
 
 .name {
@@ -676,10 +660,11 @@ onUnmounted(() => {
 }
 
 .event-info {
+  display: block;
   position: absolute;
   padding: 30px 30px 40px 30px;
   width: max-content;
-  max-width: 490px;
+  max-width: 430px;
   border-radius: 30px;
   backdrop-filter: blur(20.399999618530273px);
   box-shadow: 0 5px 22px -6px rgba(172, 66, 3, 0.2);
@@ -701,7 +686,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
+  width: calc(100% - 30px);
   height: 640px;
   border: 2px solid #ff6c36;
   border-radius: 38px;
@@ -853,6 +838,11 @@ onUnmounted(() => {
   .person-card > img {
     display: block;
     width: 100%;
+    height: 150px;
+  }
+
+  .uneven-person {
+    height: 250px!important;
   }
 
   .team {

@@ -22,7 +22,9 @@ export const useDataStore = defineStore('data', {
     adminExcursions: [],
     Adminreservations: [],
     teamData: [],
-    project: []
+    project: [],
+    culturalSpace: [],
+    history: []
   }),
   actions: {
     setTokenRole(auth_key, role) {
@@ -44,7 +46,6 @@ export const useDataStore = defineStore('data', {
             'Content-Type': 'application/json',
           },
         })
-        console.log('Успешная регистрация:', response.data)
       } catch (error) {
         console.error('Ошибка при регистрации:', error.response?.data || error.message)
         throw error
@@ -57,9 +58,7 @@ export const useDataStore = defineStore('data', {
             'Content-Type': 'application/json',
           },
         })
-        console.log('Успешный вход:', response.data)
         this.setTokenRole(response.data.access_token, response.data.role)
-        console.log(this.auth_key)
       } catch (error) {
         console.error('Ошибка при входе:', error.response?.data || error.message)
         throw error
@@ -72,9 +71,7 @@ export const useDataStore = defineStore('data', {
             'Content-Type': 'application/json',
           },
         })
-        console.log('Успешный вход:', response.data)
         this.setTokenRole(response.data.access_token, response.data.role)
-        console.log(this.auth_key)
       } catch (error) {
         console.error('Ошибка при входе резидента:', error.response?.data || error.message)
         throw error
@@ -88,7 +85,6 @@ export const useDataStore = defineStore('data', {
             'Content-Type': 'application/json',
           },
         })
-        console.log('Успешная смена пароля:', response.data)
       } catch (error) {
         console.error('Ошибка при смене пароля:', error.response?.data || error.message)
         throw error
@@ -101,9 +97,7 @@ export const useDataStore = defineStore('data', {
             'Content-Type': 'application/json',
           },
         })
-        console.log('Успешный вход:', response.data)
         this.setTokenRole(response.data.access_token, response.data.role)
-        console.log(this.auth_key)
       } catch (error) {
         console.error('Ошибка при входе:', error.response?.data || error.message)
         throw error
@@ -112,7 +106,6 @@ export const useDataStore = defineStore('data', {
     async FetchExcursions() {
       try {
         const response = await axios.get(`${baseUrl}/api/user/excursions`)
-        console.log('Данные успешно получены:', response.data)
         this.excursions = response.data
       } catch (error) {
         console.error('Ошибка при получении данных:', error.response?.data || error.message)
@@ -122,8 +115,6 @@ export const useDataStore = defineStore('data', {
     async GetFilterExcursions(props) {
       try {
         const response = await axios.get(`${baseUrl}/api/user/excursions?${props}`)
-        console.log(response)
-        console.log('Данные успешно получены:', response.data)
         this.excursions = response.data
       } catch (error) {
         console.error('Ошибка при получении данных:', error.response?.data || error.message)
@@ -133,7 +124,6 @@ export const useDataStore = defineStore('data', {
     async FetchExcursionDetail(excursion_id) {
       try {
         const response = await axios.get(`${baseUrl}/api/user/excursions_detail/${excursion_id}`)
-        console.log('Данные успешно получены:', response.data)
         this.excursionDetail = response.data
       } catch (error) {
         console.error('Ошибка при получении данных:', error.response?.data || error.message)
@@ -149,7 +139,6 @@ export const useDataStore = defineStore('data', {
             }
           }
         );
-        console.log('Данные успешно получены:', response.data)
         this.excursionDetail = response.data
       } catch (error) {
         console.error('Ошибка при получении данных:', error.response?.data || error.message)
@@ -166,11 +155,8 @@ export const useDataStore = defineStore('data', {
         })
         if (response.data.payment_url) {
           window.location.href = response.data.payment_url;
-        } else {
-          console.log('Бронирование прошло успешно!')
         }
       } catch (error) {
-        console.log(this.auth_key)
         console.error('Ошибка при бронировании:', error.response?.data || error.message)
         throw error
       }
@@ -182,7 +168,6 @@ export const useDataStore = defineStore('data', {
             Authorization: `Bearer ${this.auth_key}`,
           },
         })
-        console.log('Данные профиля успешно получены:', response.data)
         this.profileData = response.data
       } catch (error) {
         console.error('Ошибка при получении данных профиля:', error.response?.data || error.message)
@@ -196,7 +181,6 @@ export const useDataStore = defineStore('data', {
             Authorization: `Bearer ${this.auth_key}`,
           },
         })
-        console.log('Данные профиля успешно получены:', response.data)
         this.profileData = response.data
       } catch (error) {
         console.error('Ошибка при получении данных профиля:', error.response?.data || error.message)
@@ -210,7 +194,6 @@ export const useDataStore = defineStore('data', {
             Authorization: `Bearer ${this.auth_key}`,
           },
         })
-        console.log('Данные бронирования успешно получены:', response.data)
         this.reservationsData = response.data
       } catch (error) {
         console.error(
@@ -230,7 +213,6 @@ export const useDataStore = defineStore('data', {
             'Content-Type': 'application/json',
           },
         })
-        console.log('Данные бронирования успешно удалены:', response.data)
       } catch (error) {
         console.error(
           'Ошибка при удалении данных бронирования:',
@@ -247,7 +229,6 @@ export const useDataStore = defineStore('data', {
             'Content-Type': 'multipart/form-data',
           },
         })
-        console.log('Upload success:', response.data)
       } catch (error) {
         console.error('Ошибка при создании:', error.response?.data || error.message)
         throw error
@@ -260,9 +241,7 @@ export const useDataStore = defineStore('data', {
             Authorization: `Bearer ${this.auth_key}`,
           },
         })
-        console.log('Данные успешно получены:', response.data)
         this.residentExcursions = response.data
-        console.log(response.data)
       } catch (error) {
         console.error('Ошибка при получении данных:', error.response?.data || error.message)
         throw error
@@ -278,7 +257,6 @@ export const useDataStore = defineStore('data', {
             },
           },
         )
-        console.log('Событие успешно удалено:', response.data)
       } catch (error) {
         console.error('Ошибка при удалении:', error.response?.data || error.message)
         throw error
@@ -294,7 +272,6 @@ export const useDataStore = defineStore('data', {
             },
           },
         )
-        console.log('Сессия успешно удалена:', response.data)
       } catch (error) {
         console.error('Ошибка при удалении:', error.response?.data || error.message)
         throw error
@@ -310,7 +287,6 @@ export const useDataStore = defineStore('data', {
             },
           },
         )
-        console.log('Фото успешно удалено:', response.data)
       } catch (error) {
         console.error('Ошибка при удалении фото:', error.response?.data || error.message)
         throw error
@@ -324,7 +300,6 @@ export const useDataStore = defineStore('data', {
             'Content-Type': 'application/json'
           },
         })
-        console.log('Сессия успешно обновлена:', response.data)
       } catch (error) {
         console.error('Ошибка при обновлении данных:', error.response?.data || error.message)
         throw error
@@ -337,7 +312,6 @@ export const useDataStore = defineStore('data', {
             Authorization: `Bearer ${this.auth_key}`,
           },
         })
-        console.log('Фото успешно добавлено:', response.data)
       } catch (error) {
         console.error('Ошибка при добавлении фото:', error.response?.data || error.message)
         throw error
@@ -351,7 +325,6 @@ export const useDataStore = defineStore('data', {
             'Content-Type': 'application/json'
           },
         })
-        console.log('Сессия успешно добавлена:', response.data)
       } catch (error) {
         console.error('Ошибка при создании:', error.response?.data || error.message)
         throw error
@@ -360,7 +333,6 @@ export const useDataStore = defineStore('data', {
     async FetchNews() {
       try {
         const response = await axios.get(`${baseUrl}/api/user/news`)
-        console.log('Новости успешно получены:', response.data)
         this.newsData = response.data
       } catch (error) {
         console.error('Ошибка при получении новостей:', error.response?.data || error.message)
@@ -370,7 +342,6 @@ export const useDataStore = defineStore('data', {
     async FetchExcursionsStats(){
       try {
         const response = await axios.get(`${baseUrl}/api/references/excursion-stats`)
-        console.log('Данные успешно получены:', response.data)
         this.excursionsStats = response.data
       } catch (error) {
         console.error('Ошибка при получении данных:', error.response?.data || error.message)
@@ -796,8 +767,25 @@ export const useDataStore = defineStore('data', {
             Authorization: `Bearer ${this.auth_key}`,
           },
         })
-        console.log('Данные успешно получены:', response.data)
         this.project = response.data
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async FetchCulturalSpace() {
+      try {
+        const response = await axios.get(`${baseUrl}/api/references/cultural-space`)
+        this.culturalSpace = response.data
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async FetchHistory() {
+      try {
+        const response = await axios.get(`${baseUrl}/api/references/history`)
+        this.history = response.data
       } catch (error) {
         console.error('Ошибка при получении данных:', error.response?.data || error.message)
         throw error
@@ -836,7 +824,9 @@ export const useDataStore = defineStore('data', {
     getAdminExcursion: (state) => state.adminExcursions,
     getAdminreservation: (state) => state.Adminreservations,
     getTeamData: (s) => s.teamData,
-    getProject: (s) => s.project
+    getProject: (s) => s.project,
+    getCulturalSpace: (s) => s.culturalSpace,
+    getHistory: (s) => s.history
   },
   persist: {
     key: 'data-store',

@@ -274,7 +274,6 @@ const moveToBooked = () => {
 };
 
 const getMainImage = computed(() => {
-  console.log( baseUrl + excursion.value.photos[0].photo_url)
   return baseUrl + '/' + excursion.value.photos[0].photo_url;
 });
 

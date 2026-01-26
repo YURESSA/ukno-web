@@ -10,7 +10,7 @@
     </div>
     <p class="text-l bold">Пароль</p>
     <div class="password-data-wrapper">
-      <DefaultButton class="change__btn text-l" text="Сменить пароль" @touchstart="$emit('open')" @click="$emit('open')"></DefaultButton>
+      <DefaultButton class="change__btn text-l" text="Сменить пароль" @click="$emit('open')"></DefaultButton>
     </div>
   </div>
 </template>

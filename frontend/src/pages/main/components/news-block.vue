@@ -39,7 +39,7 @@
       <div class="content-block">
         <h3>{{ news[0].title }}</h3>
         <div class="content">
-          <p>{{ news[0].content }}</p>
+          <p>{{ news[0].short_description }}</p>
         </div>
         <RouterLink to="/news"><IconButton class="link-button" text="Открыть новость"><img src="/icon/white-arrow.svg" alt=""></IconButton></RouterLink>
       </div>
@@ -62,8 +62,13 @@ const imageUrl = computed(() => baseUrl + props.news[0].images[0])
 
 <style scoped>
 .history-wrapper{
-  margin-top: 50px;
+  margin-top: 56px;
   margin-bottom: 120px;
+}
+
+.title{
+  width: 100%;
+  max-width: 1800px;
 }
 
 .container{
@@ -74,6 +79,7 @@ const imageUrl = computed(() => baseUrl + props.news[0].images[0])
 }
 
 .img-block > img {
+  display: block;
   width: 310px;
   height: 430px;
   object-fit: cover;
@@ -100,14 +106,24 @@ const imageUrl = computed(() => baseUrl + props.news[0].images[0])
   background: none;
 }
 
+.link-button:hover {
+  background-color: #4E4E4E;
+}
+
+.link-button:active {
+  background-color: #949494;
+}
+
 .content > p{
   margin-top: 20px;
+  max-width: 1000px;
 }
 
 @media (max-width: 756px) {
   .img-block > img {
-    width: 342px;
+    width: 100%;
     height: 167px;
+    border-radius: 0px;
   }
   .container{
     display: flex;
