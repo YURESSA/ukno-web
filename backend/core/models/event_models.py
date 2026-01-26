@@ -278,6 +278,10 @@ class Reservation(db.Model):
         return {
             'reservation_id': self.reservation_id,
             'session_id': self.session_id,
+            'event_id': (
+                self.session.event.event_id
+                if self.session and self.session.event else None
+            ),
             'user_id': self.user_id,
             'booked_at': self.booked_at.isoformat(),
             'full_name': self.full_name,
