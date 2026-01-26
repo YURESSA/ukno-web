@@ -5,9 +5,7 @@
         <li class="project">
           Проекты
           <ul class="project-list">
-            <li>Психологический клуб</li>
-            <li>Репетиторский клуб</li>
-            <li>Музейное пространство</li>
+            <a v-for="p in projects" :key="p.id" :href="p.link" target="_blank"><li>{{p.title}}</li></a>
           </ul>
         </li>
         <li><RouterLink to="/events">События</RouterLink></li>
@@ -31,6 +29,11 @@
           </button>
         </RouterLink>
         <RouterLink to="/resident-profile" v-else-if="!hasToken && role === 'resident'">
+          <button>
+            <h4>{{ profileData.full_name[0].toUpperCase() }}</h4>
+          </button>
+        </RouterLink>
+        <RouterLink to="/admin-profile" v-else-if="!hasToken && role === 'admin'">
           <button>
             <h4>{{ profileData.full_name[0].toUpperCase() }}</h4>
           </button>
@@ -67,6 +70,11 @@
               <span>{{ profileData.full_name[0].toUpperCase() }}</span>
             </button>
           </RouterLink>
+          <RouterLink to="/admin-profile" v-else-if="!hasToken && role === 'admin'">
+            <button>
+              <h4>{{ profileData.full_name[0].toUpperCase() }}</h4>
+            </button>
+          </RouterLink>
         </div>
       </div>
 
@@ -82,9 +90,7 @@
                   </div>
                   <Transition name="slide-fade">
                     <ul v-if="showProjects" class="mobile-projects">
-                      <li>Психологический клуб</li>
-                      <li>Репетиторский клуб</li>
-                      <li>Музейное пространство</li>
+                      <a v-for="p in projects" :key="p.id" :href="p.link" target="_blank"><li>{{p.title}}</li></a>
                     </ul>
                   </Transition>
                 </li>
@@ -102,12 +108,13 @@
 
 
 <script setup>
-import { ref, computed, watch, onUnmounted } from 'vue';
+import { ref, computed, watch, onUnmounted, onMounted } from 'vue';
 import { useDataStore } from '@/stores/counter';
 
 const store = useDataStore();
 const menuOpen = ref(false)
 const showProjects = ref(false);
+const projects = computed(() => store.getProject)
 
 watch(menuOpen, (open) => {
   if (open) {
@@ -122,6 +129,11 @@ watch(menuOpen, (open) => {
     window.scrollTo(0, scrollY);
   }
 });
+
+onMounted(async () => {
+  await store.FetchProject();
+});
+
 
 onUnmounted(() => {
   document.body.style.position = '';
@@ -217,7 +229,7 @@ h4{
   height: 70px;
 }
 
-.project-list > li{
+.project-list li{
   padding: 6px 12px;
   width: 260px;
   transition: all 0.3s ease;
@@ -226,7 +238,7 @@ h4{
   cursor: pointer;
 }
 
-.project-list > li:hover{
+.project-list li:hover{
   background-color: #EBEBEB;
 }
 

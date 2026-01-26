@@ -160,6 +160,7 @@ input:focus {
   border-radius: 30px;
   border: 2px solid #333333;
   background-color: rgba(255, 255, 255, 0);
+  color: #333333;
   margin-top: 10px;
 }
 
@@ -189,7 +190,7 @@ span{
   .login-wrapper {
     width: 100%;
     max-width: 100%;
-    margin-top: 119px;
+    /* margin-top: 119px; */
   }
 
   form {

@@ -33,7 +33,6 @@ const filteredReservations = computed(() => {
   if (!props.reservationsData?.reservations) return []
 
   const now = new Date()
-  console.log(props.reservationsData.reservations)
   const filterReservations = props.reservationsData.reservations.filter(res =>
     !res.is_cancelled && new Date(res.session_start_datetime) > now
   ).sort((a, b) => new Date(a.session_start_datetime) - new Date(b.session_start_datetime))
@@ -66,7 +65,6 @@ async function deletReserv(id){
           break;
       }
   }
-  console.log(filteredReservations)
 }
 </script>
 

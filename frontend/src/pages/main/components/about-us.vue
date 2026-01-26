@@ -26,7 +26,7 @@
             <!-- <img class="absolut--img mouse" src="/icon/main/mouse.png" alt=""> -->
             <img class="absolut--img ear" src="/icon/main/ear.png" alt="">
           </div>
-          <div class="content border">
+          <div class="content border center-content">
             <p>С 2025 года мы открыли новое <br> пространство для молодежных инициатив, <br> образовательных мероприятий и <br> творческих проектов.</p>
           </div>
           <div class="content">
@@ -34,7 +34,7 @@
           </div>
         </div>
       </div>
-      <UsResult></UsResult>
+      <UsResult :data="culturalData"></UsResult>
     </div>
 
     <div class="mobile-about-us" v-if="$isMobile()">
@@ -65,6 +65,9 @@ import UsResult from './us-result.vue';
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 const slider = ref(null)
+const props = defineProps({
+  culturalData: Array,
+})
 
 const cards = [
   'Резиденты кластера «Хлебзавод №6» вместе с другими участниками проводим экскурсии и создаем пространство для креативных идей, вдохновения и развития',
@@ -152,7 +155,7 @@ onBeforeUnmount(() => {
 
 .bread{
   bottom: -250px;
-  left: -120px;
+  left: -100px;
 }
 
 /* .left-ear{
@@ -173,6 +176,7 @@ onBeforeUnmount(() => {
 .about-content{
   margin-top: 40px;
   margin-bottom: 120px;
+  overflow-x: clip;
 }
 
 .content-wrapper{
@@ -193,6 +197,10 @@ onBeforeUnmount(() => {
 
 .content > p{
   max-width: 485px;
+}
+
+.content-wrapper > .center-content {
+  width: 65%;
 }
 
 .right-border{
@@ -258,6 +266,12 @@ onBeforeUnmount(() => {
 @media (max-width: 768px) {
   .page-wrapper{
     padding-bottom: 48px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .bread {
+    left: -80px;
   }
 }
 </style>

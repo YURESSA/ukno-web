@@ -65,47 +65,14 @@
           </button>
         </div>
       </template>
-      <div class="carousel-item">
+      <div class="carousel-item" v-for="info in filteredData" :key="info.order_index">
         <img
           class="carousel-img"
-          src="/img/result-test-img.png"
+          :src="baseUrl + info.photo"
         >
         <div class="content-description">
           <p class="text-standart medium">
-            С 2025 года мы открыли новое пространство для молодежных инициатив.
-          </p>
-        </div>
-      </div>
-      <div class="carousel-item">
-        <img
-          class="carousel-img"
-          src="/img/result-test-img.png"
-        >
-        <div class="content-description">
-          <p class="text-standart medium">
-            С 2025 года мы открыли новое пространство для молодежных инициатив.
-          </p>
-        </div>
-      </div>
-      <div class="carousel-item">
-        <img
-          class="carousel-img"
-          src="/img/result-test-img.png"
-        >
-        <div class="content-description">
-          <p class="text-standart medium">
-            С 2025 года мы открыли новое пространство для молодежных инициатив.
-          </p>
-        </div>
-      </div>
-      <div class="carousel-item">
-        <img
-          class="carousel-img"
-          src="/img/result-test-img.png"
-        >
-        <div class="content-description">
-          <p class="text-standart medium">
-            С 2025 года мы открыли новое пространство для молодежных инициатив.
+            {{ info.text }}
           </p>
         </div>
       </div>
@@ -127,8 +94,18 @@
 
 <script setup>
 // import eventsBlock from './events-block.vue';
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { NCarousel, NIcon } from "naive-ui";
+import { baseUrl } from "@/stores/counter";
+
+const props = defineProps({
+  data: Array
+})
+
+const filteredData = computed( () => {
+  if (!props.data) return []
+  return [...props.data].sort((a, b) => a.order_index - b.order_index)
+})
 </script>
 
 <style scoped>
@@ -189,7 +166,8 @@ li{
 
 .carousel-img {
   width: 100%;
-  /* object-fit: cover; */
+  height: 680px;
+  object-fit: cover;
   border-radius: 31px;
 }
 

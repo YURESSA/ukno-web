@@ -1,7 +1,7 @@
 <template>
   <Welcome />
   <Alert/>
-  <about-us></about-us>
+  <about-us :culturalData="culturalSpace"></about-us>
   <Events v-if="!$isMobile()"/>
   <div class="events-mobile page-wrapper" v-if="$isMobile()">
     <div class="title text-orange">
@@ -73,7 +73,7 @@
   <Contact class="page-wrapper">
     <iframe
     src="https://yandex.ru/map-widget/v1/?um=constructor%3A467ac6eb77e4af971eecb9575ed4f0203a9875b769906a7e184a781db5718a65&amp;source=constructor"
-    width="629"
+    width="100%"
     height="462"
     frameborder="0"
     class="yand-map"
@@ -115,11 +115,13 @@ const scrollToHash = () => {
 };
 
 const news = computed(() => store.getNews);
+const culturalSpace = computed(() => store.getCulturalSpace);
 
 onMounted(async () => {
   scrollToHash
   try {
     await store.FetchNews();
+    await store.FetchCulturalSpace();
   } catch (error) {
     console.error('Ошибка при загрузке новостей:', error);
   }

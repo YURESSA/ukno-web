@@ -35,6 +35,7 @@
   left: -55px;
   bottom: 40px;
   background-position: center;
+  z-index: -1;
 }
 
 .ear{
@@ -47,6 +48,7 @@
   bottom: -10px;
   background-position: center;
   background-repeat: no-repeat;
+  z-index: -1;
 }
 
 h2{

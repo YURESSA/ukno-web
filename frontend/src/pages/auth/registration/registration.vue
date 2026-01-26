@@ -296,7 +296,7 @@ span{
   .login-wrapper {
     width: 100%;
     max-width: 100%;
-    margin-top: 119px;
+    /* margin-top: 119px; */
   }
 
   form {

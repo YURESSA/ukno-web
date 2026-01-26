@@ -152,7 +152,6 @@ const isFilterOpen = ref(false);
 const isSortingOpen = ref(false);
 // const { excursions } = storeToRefs(store);
 const excursions = computed(() => store.getExcursions )
-console.log(excursions.value)
 
 
 
@@ -185,7 +184,6 @@ function closeAll(){
 }
 
 const handleTitleSortChange = (value) => {
-  console.log('Выбрана сортировка:', value);
   sendSort();
 };
 
@@ -204,7 +202,6 @@ const sendSort = async () => {
   if (sortValues.length > 0) {
     params.append('sort', sortValues.join(','));
   }
-  console.log(sortValues)
   try {
     await store.GetFilterExcursions(params.toString());
   } catch (error) {

@@ -49,8 +49,6 @@ onMounted(async () => {
 });
 
 const formattedDate = (nearestSession) => {
-  console.log(nearestSession)
-  console.log(events.value)
   const date = new Date(nearestSession.start_datetime);
   return date.toLocaleDateString('ru-RU', {
     day: 'numeric',

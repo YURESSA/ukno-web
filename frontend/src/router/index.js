@@ -8,12 +8,12 @@ import LoginLayout from '@/layouts/LoginLayout.vue'
 import EventsFeed from '@/pages/eventFeed/eventsFeed.vue'
 import EventPage from '@/pages/eventPage/eventPage.vue'
 import Login from '@/pages/auth/login/login.vue'
-import AdminLogin from '@/pages/auth/admin/adminLogin.vue'
-import ResidentLogin from '@/pages/auth/resident/residentLogin.vue'
 import Registration from '@/pages/auth/registration/registration.vue'
 import Payment from '@/pages/payment/payment.vue'
 import UserProfile from '@/pages/personal-accounts/user/user.vue'
 import ResidentProfile from '@/pages/personal-accounts/resident/resident.vue'
+import AdminProfile from '@/pages/personal-accounts/admin/admin.vue'
+import AdminPanel from '@/pages/personal-accounts/admin/panel.vue'
 import NewEvent from '@/pages/personal-accounts/_shared/newEvent.vue'
 import changeEvent from '@/pages/personal-accounts/_shared/changeEvent.vue'
 import News from '@/pages/news/news.vue'
@@ -72,16 +72,6 @@ const router = createRouter({
           component: Login,
         },
         {
-          path: '/resident-login',
-          name: 'ResidentLogin',
-          component: ResidentLogin,
-        },
-        {
-          path: '/admin-login',
-          name: 'AdminLogin',
-          component: AdminLogin,
-        },
-        {
           path: '/register',
           name: 'RegisterPage',
           component: Registration,
@@ -105,6 +95,18 @@ const router = createRouter({
       name: 'ResidentProfile',
       component: ResidentProfile,
       meta: { requiresAuth: true, requiredRole: 'resident' },
+    },
+    {
+      path: '/admin-profile',
+      name: 'AdminProfile',
+      component: AdminProfile,
+      meta: { requiresAuth: true, requiredRole: 'admin' },
+    },
+    {
+      path: '/panel',
+      name: 'AdminPanel',
+      component: AdminPanel,
+      meta: { requiresAuth: true, requiredRole: 'admin' },
     },
     {
       path: '/newEvent',

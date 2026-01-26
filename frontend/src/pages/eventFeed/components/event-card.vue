@@ -1,11 +1,12 @@
 <template>
-  <div class="card-wrapper" v-if="excursion && excursion.photos">
+  <div class="card-wrapper" v-if="excursion?.photos?.[0]?.photo_url">
     <div class="preview-img">
       <img
         :src="getMainImage"
         :alt="excursion.title"
         @error="handleImageError"
         class="event-image"
+        loading="lazy"
       >
     </div>
     <div class="content">
@@ -47,6 +48,7 @@ import { useRouter } from 'vue-router';
 import IconButton from '@/components/UI/button/IconButton.vue';
 import { baseUrl } from '@/stores/counter';
 
+
 const props = defineProps({
   excursion: {
     type: Object,
@@ -59,8 +61,6 @@ const router = useRouter();
 const goToEventPage = () => {
   router.push(`/events/${props.excursion.excursion_id}`);
 };
-
-console.log(props.excursion)
 
 const nearestSession = computed(() => {
   if (!props.excursion.sessions || props.excursion.sessions.length === 0) return null;
@@ -105,8 +105,7 @@ const displayPrice = computed(() => {
 });
 
 const getMainImage = computed(() => {
-  console.log( baseUrl + props.excursion.photos[0].photo_url)
-  return baseUrl + '/' + props.excursion.photos[0].photo_url;
+  return baseUrl + props.excursion.photos[0].photo_url;
 });
 
 const handleImageError = (e) => {

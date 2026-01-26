@@ -83,7 +83,7 @@
       </div>
       <div class="filter-component">
         <h5>Возрастная категория</h5>
-        <n-checkbox-group v-model:value="formData.age_category" @update:value="handleFormatTypeChange">
+        <n-checkbox-group v-model:value="formData.age_category">
           <n-space class="checkbox-group" item-style="display: flex;">
             <n-checkbox size="large" value="Для детей (0-6 лет)">
               Для детей (0-6 лет)
@@ -113,7 +113,7 @@ import { ref, defineEmits, watch, onMounted, computed } from 'vue'
 import { NCheckbox, NCheckboxGroup, NSpace, NInputNumber, NSlider, NDatePicker } from 'naive-ui'
 import BaseButton from '@UI/button/BaseButton.vue'
 import DefaultButton from '@UI/button/DefaultButton.vue'
-import IconButton from '@/components/UI/button/IconButton.vue'
+// import IconButton from '@/components/UI/button/IconButton.vue'
 import { useDataStore } from '@/stores/counter';
 
 const store = useDataStore();
@@ -145,10 +145,10 @@ const formData = ref({
   start_date: '',
   end_date: '',
   participants_count: 1,
-  format_type: '',
+  format_type: [],
   min_price: '',
   max_price: '',
-  age_category: '',
+  age_category: [],
 });
 
 
@@ -204,8 +204,6 @@ function buildQueryString(formData) {
       params.append(key, value);
     }
   }
-
-  console.log(params.toString());
   return params.toString();
 }
 
@@ -226,10 +224,10 @@ const resetFilter = async () => {
       start_date: '',
       end_date: '',
       participants_count: 1,
-      format_type: '',
+      format_type: [],
       min_price: '',
       max_price: '',
-      age_category: '',
+      age_category: [],
     }
   } catch (error) {
     console.error('Ошибка при загрузке экскурсий:', error);
