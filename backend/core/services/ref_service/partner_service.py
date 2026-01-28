@@ -1,21 +1,21 @@
 import os
 
 from backend.core import db
-from backend.core.models.ref_models import CulturalSpace
+from backend.core.models.ref_models import Partner
 from backend.core.utilits.file_utils import save_image, remove_file_if_exists
 
 
-def get_all_cultural_spaces():
-    return CulturalSpace.query.order_by(CulturalSpace.order_index).all()
+def get_all_partners():
+    return Partner.query.order_by(Partner.order_index).all()
 
 
-def get_cultural_space_by_id(id):
-    return db.session.get(CulturalSpace, id)
+def get_partner_by_id(partner_id: int):
+    return db.session.get(Partner, partner_id)
 
 
-def create_cultural_space(text: str, photo=None, order_index: int = 0):
-    if not text:
-        raise ValueError('Поле text обязательно')
+def create_partner(name: str, link: str = None, photo=None, order_index: int = 0):
+    if not name:
+        raise ValueError('Поле name обязательно')
 
     photo_path = None
     if photo:
@@ -28,32 +28,41 @@ def create_cultural_space(text: str, photo=None, order_index: int = 0):
         if size > 5 * 1024 * 1024:
             raise ValueError('Размер файла не должен превышать 5 MB')
 
-        photo_path = save_image(photo, "cultural_space_photos")
+        photo_path = save_image(photo, "partner_photos")
 
-    item = CulturalSpace(text=text, photo=photo_path, order_index=order_index)
+    item = Partner(
+        name=name,
+        link=link,
+        photo=photo_path,
+        order_index=order_index
+    )
     db.session.add(item)
     db.session.commit()
     return item
 
 
-def update_cultural_space(item: CulturalSpace, text: str, order_index: int = None):
-    if not text:
-        raise ValueError('Поле text обязательно')
-    item.text = text
+def update_partner(item: Partner, name: str, link: str = None, order_index: int = None):
+    if not name:
+        raise ValueError('Поле name обязательно')
+
+    item.name = name
+    item.link = link
+
     if order_index is not None:
         item.order_index = order_index
+
     db.session.commit()
     return item
 
 
-def delete_cultural_space(item: CulturalSpace):
+def delete_partner(item: Partner):
     if item.photo:
         remove_file_if_exists(item.photo)
     db.session.delete(item)
     db.session.commit()
 
 
-def upload_cultural_space_photo(item: CulturalSpace, photo):
+def upload_partner_photo(item: Partner, photo):
     if not photo:
         raise ValueError('Файл не выбран')
     if not photo.content_type.startswith("image/"):
@@ -68,19 +77,20 @@ def upload_cultural_space_photo(item: CulturalSpace, photo):
     if item.photo:
         remove_file_if_exists(item.photo)
 
-    item.photo = save_image(photo, "cultural_space_photos")
+    item.photo = save_image(photo, "partner_photos")
     db.session.commit()
     return item.photo
 
 
-def delete_cultural_space_photo(cultural_space_id: int) -> None:
-    item = db.session.get(CulturalSpace, cultural_space_id)
-    if not item:
-        raise ValueError('Элемент не найден')
+def delete_partner_photo(partner_id: int) -> None:
+    """Удаляет фото партнёра по ID."""
+    partner = db.session.get(Partner, partner_id)
+    if not partner:
+        raise ValueError("Партнёр не найден")
 
-    if not item.photo:
-        raise ValueError('Фото отсутствует')
+    if not partner.photo:
+        raise ValueError("Фото отсутствует")
 
-    remove_file_if_exists(item.photo)
-    item.photo = None
+    remove_file_if_exists(partner.photo)
+    partner.photo = None
     db.session.commit()

@@ -39,8 +39,69 @@ def _assert_get_excursion_by_id_success(client, url, expected_id):
     r = client.get(url)
     assert r.status_code == HTTPStatus.OK
     data = r.get_json()
-    assert "excursion" in data
-    assert data["excursion"]["excursion_id"] == expected_id
+    assert "excursion" in data, "В ответе отсутствует ключ 'excursion'"
+    excursion = data["excursion"]
+
+    expected_data = {
+        "excursion_id": expected_id,
+        "title": "Новая экскурсия",
+        "description": "Описание экскурсии",
+        "short_description": "Краткое описание экскурсии",
+        "duration": 60,
+        "category": {"category_name": "Воркшоп"},
+        "format_type": {"format_type_name": "Индивидуальная"},
+        "age_category": {"age_category_name": "Для школьников (7-17 лет)"},
+        "place": "Образовательный центр «Знание»",
+        "conducted_by": "Репетитор Алексей Кузнецов",
+        "is_active": True,
+        "working_hours": "Пн-Пт с 16:00 до 20:00, Сб с 10:00 до 14:00",
+        "contact_email": "math_tutor@ekbmail.ru",
+        "iframe_url": "<iframe src='https://yandex.ru/map-widget/v1/?um=constructor%3Atutoringcenter' "
+                      "width='600' height='450'></iframe>",
+        "telegram": "@ekb_math_tutor",
+        "vk": "https://vk.com/ekbmathtutor",
+        "distance_to_center": 1300,
+        "time_to_nearest_stop": 9,
+        "sessions": [
+            {"start_datetime": "2025-07-08T17:00:00", "max_participants": 1, "cost": 1200}
+        ],
+        "tags": ["репетиторство", "математика", "школьники", "образование", "подготовка к экзаменам"],
+        "additional_info": {
+            "max_participants": 1,
+            "materials_provided": True,
+            "location_description": "Центр расположен недалеко от станции метро «Чкаловская»."
+        }
+    }
+    for field in [
+        "title", "description", "short_description", "duration",
+        "category", "format_type", "age_category", "place",
+        "conducted_by", "is_active", "working_hours",
+        "contact_email", "iframe_url", "telegram", "vk",
+        "distance_to_center", "time_to_nearest_stop"
+    ]:
+        if field == "category":
+            assert excursion[field]["category_name"] == expected_data[field][
+                "category_name"], f"Поле {field} не совпадает"
+        elif field == "format_type":
+            assert excursion[field]["format_type_name"] == expected_data[field][
+                "format_type_name"], f"Поле {field} не совпадает"
+        elif field == "age_category":
+            assert excursion[field]["age_category_name"] == expected_data[field][
+                "age_category_name"], f"Поле {field} не совпадает"
+        else:
+            assert excursion[field] == expected_data[field], f"Поле {field} не совпадает"
+
+    assert "sessions" in excursion, "В экскурсии нет ключа 'sessions'"
+    assert len(excursion["sessions"]) == len(expected_data["sessions"]), "Количество сессий не совпадает"
+    for got_sess, exp_sess in zip(excursion["sessions"], expected_data["sessions"]):
+        for key in ["start_datetime", "max_participants", "cost"]:
+            got_value = got_sess[key]
+            if key == "cost":
+                got_value = float(got_value)
+            assert got_value == exp_sess[key], f"Сессия: поле {key} не совпадает"
+
+    if "excursion_id" in expected_data:
+        assert excursion["excursion_id"] == expected_data["excursion_id"], "ID экскурсии не совпадает"
 
 
 def _assert_get_not_found(client, url):

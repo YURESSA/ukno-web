@@ -86,4 +86,4 @@ def delete_team_photo(member: TeamMember):
 
 
 def get_team_member_by_id(member_id: int) -> TeamMember | None:
-    return TeamMember.query.get(member_id)
+    return db.session.get(TeamMember, member_id)

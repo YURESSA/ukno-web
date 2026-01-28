@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from typing import Any
 
 from flask import request
@@ -35,7 +36,7 @@ class ProjectList(Resource):
             ]
         """
         projects = get_all_projects()
-        return [p.to_dict() for p in projects], 200
+        return [p.to_dict() for p in projects], HTTPStatus.OK
 
     @admin_required
     @ref_ns.expect(project_model)
@@ -60,9 +61,9 @@ class ProjectList(Resource):
                 order_index=data.get('order_index'),
             )
         except ValueError as e:
-            return {'message': str(e)}, 400
+            return {'message': str(e)}, HTTPStatus.BAD_REQUEST
 
-        return project.to_dict(), 201
+        return project.to_dict(), HTTPStatus.CREATED
 
 
 @ref_ns.route('/projects/<int:id>')
@@ -82,8 +83,8 @@ class ProjectResource(Resource):
         """
         project = get_project_by_id(id)
         if not project:
-            return {'message': 'Проект не найден'}, 404
-        return project.to_dict(), 200
+            return {'message': 'Проект не найден'}, HTTPStatus.NOT_FOUND
+        return project.to_dict(), HTTPStatus.OK
 
     @admin_required
     @ref_ns.expect(project_model)
@@ -106,7 +107,7 @@ class ProjectResource(Resource):
         """
         project = get_project_by_id(id)
         if not project:
-            return {'message': 'Проект не найден'}, 404
+            return {'message': 'Проект не найден'}, HTTPStatus.NOT_FOUND
 
         data = request.json or {}
         try:
@@ -118,9 +119,9 @@ class ProjectResource(Resource):
             )
 
         except ValueError as e:
-            return {'message': str(e)}, 400
+            return {'message': str(e)}, HTTPStatus.BAD_REQUEST
 
-        return project.to_dict(), 200
+        return project.to_dict(), HTTPStatus.OK
 
     @admin_required
     @ref_ns.doc(description="Удаление проекта компании по ID")
@@ -137,7 +138,7 @@ class ProjectResource(Resource):
         """
         project = get_project_by_id(id)
         if not project:
-            return {'message': 'Проект не найден'}, 404
+            return {'message': 'Проект не найден'}, HTTPStatus.NOT_FOUND
 
         delete_project(project)
-        return {'message': 'Проект удалён'}, 200
+        return {'message': 'Проект удалён'}, HTTPStatus.OK

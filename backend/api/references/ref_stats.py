@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 from flask_restx import Resource
 
 from backend.api.references import ref_ns
@@ -24,4 +26,4 @@ class ExcursionStats(Resource):
             int: HTTP статус код (200)
         """
         stats = get_excursion_stats()
-        return stats, 200
+        return stats, HTTPStatus.OK

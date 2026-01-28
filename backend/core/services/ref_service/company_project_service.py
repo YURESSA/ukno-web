@@ -1,13 +1,16 @@
+from sqlalchemy import select
+
 from backend.core import db
 from backend.core.models.ref_models import CompanyProject
 
 
 def get_all_projects():
-    return CompanyProject.query.order_by(CompanyProject.order_index).all()
+    stmt = select(CompanyProject).order_by(CompanyProject.order_index)
+    return db.session.execute(stmt).scalars().all()
 
 
 def get_project_by_id(project_id: int) -> CompanyProject | None:
-    return CompanyProject.query.get(project_id)
+    return db.session.get(CompanyProject, project_id)
 
 
 def create_project(title: str, link: str, order_index: int | None = None) -> CompanyProject:

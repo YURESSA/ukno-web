@@ -84,3 +84,37 @@ class CulturalSpace(db.Model):
             'text': self.text,
             'order_index': self.order_index
         }
+
+
+class Partner(db.Model):
+    __tablename__ = 'partner'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    photo = db.Column(db.String(255), nullable=True)
+    link = db.Column(db.String(500), nullable=True)
+    order_index = db.Column(db.Integer, nullable=False, default=0)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'photo': self.photo,
+            'link': self.link,
+            'order_index': self.order_index
+        }
+
+
+class Requisite(db.Model):
+    __tablename__ = 'requisite'
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255), nullable=False)
+    file = db.Column(db.String(255), nullable=True)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'file': self.file
+        }

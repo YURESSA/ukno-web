@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 from flask import request, current_app
 from flask_restx import Resource, fields
 
@@ -30,4 +32,4 @@ class FrontendLogResource(Resource):
             f"stack={data.get('stack')}"
         )
 
-        return {"status": "logged"}, 201
+        return {"status": "logged"}, HTTPStatus.CREATED

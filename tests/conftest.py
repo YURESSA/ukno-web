@@ -1,5 +1,6 @@
 import io
 import json
+from http import HTTPStatus
 
 import pytest
 from flask_jwt_extended import create_access_token
@@ -40,6 +41,7 @@ def get_excursion_payload():
     data = {
         "title": "Новая экскурсия",
         "description": "Описание экскурсии",
+        "short_description": "Краткое описание экскурсии",
         "duration": 60,
         "category": "Воркшоп",
         "format_type": "Индивидуальная",
@@ -247,3 +249,285 @@ def create_event_session(excursion_id, start_datetime, max_participants, cost):
     db.session.add(session)
     db.session.commit()
     return session
+
+
+@pytest.fixture()
+def created_news_id(client, admin_access_token):
+    data = {
+        "data": json.dumps({
+            "title": "Тестовая новость для набора тестов",
+            "content": "Начальное содержание",
+            "short_description": "Краткое описание тестовой новости",
+            "photo_author": "Тестовый автор"
+        }),
+        "image": (open("tests/test_image.jpg", "rb"), "test_image.jpg")
+    }
+    headers = {"Authorization": f"Bearer {admin_access_token}"}
+
+    post_resp = client.post(
+        "/api/admin/news",
+        data=data,
+        headers=headers,
+        content_type="multipart/form-data"
+    )
+    assert post_resp.status_code in (HTTPStatus.OK, HTTPStatus.CREATED)
+    post_json = post_resp.get_json()
+
+    assert "news_id" in post_json
+    news_id = post_json.get("news_id")
+    assert news_id is not None
+
+    get_resp = client.get(f"/api/admin/news/{news_id}", headers=headers)
+    assert get_resp.status_code == HTTPStatus.OK
+    news_data = get_resp.get_json()
+    assert news_data["title"] == "Тестовая новость для набора тестов"
+    assert news_data["content"] == "Начальное содержание"
+    assert news_data["short_description"] == "Краткое описание тестовой новости"
+    assert news_data["photo_author"] == "Тестовый автор"
+
+    yield news_id
+
+    delete_resp = client.delete(
+        f"/api/admin/news/{news_id}",
+        headers=headers
+    )
+    if delete_resp.status_code not in (HTTPStatus.OK, HTTPStatus.NOT_FOUND):
+        raise AssertionError("Не удалось удалить новость в фикстуре")
+
+
+@pytest.fixture
+def created_age_category(client, admin_access_token):
+    """
+    Фикстура создаёт тестовую возрастную категорию и удаляет её после использования.
+    """
+    headers = {"Authorization": f"Bearer {admin_access_token}"}
+    payload = {"name": "Тестовая категория (для фикстуры)"}
+
+    resp = client.post(
+        "/api/references/age-categories",
+        data=json.dumps(payload),
+        headers={**headers, "Content-Type": "application/json"}
+    )
+    assert resp.status_code == HTTPStatus.CREATED
+    data = resp.get_json()
+    category_id = data["age_category_id"]
+
+    yield {"age_category_id": category_id, "age_category_name": payload["name"]}
+
+    del_resp = client.delete(f"/api/references/age-categories/{category_id}", headers=headers)
+    if del_resp.status_code not in (HTTPStatus.OK, HTTPStatus.NOT_FOUND):
+        raise AssertionError("Не удалось удалить тестовую возрастную категорию после теста")
+
+
+@pytest.fixture
+def created_category(client, admin_access_token):
+    """Фикстура создаёт тестовую категорию и удаляет её после теста"""
+    headers = {"Authorization": f"Bearer {admin_access_token}"}
+    payload = {"name": "Тестовая категория (фикстура)"}
+
+    resp = client.post(
+        "/api/references/categories",
+        data=json.dumps(payload),
+        headers={**headers, "Content-Type": "application/json"}
+    )
+    assert resp.status_code == HTTPStatus.CREATED
+    data = resp.get_json()
+    category_id = data["category_id"]
+
+    yield {"category_id": category_id, "category_name": payload["name"]}
+
+    del_resp = client.delete(f"/api/references/categories/{category_id}", headers=headers)
+    if del_resp.status_code not in (HTTPStatus.OK, HTTPStatus.NOT_FOUND):
+        raise AssertionError("Не удалось удалить тестовую категорию после теста")
+
+
+@pytest.fixture
+def created_history(client, admin_access_token):
+    """
+    Фикстура создаёт тестовое событие в истории компании и удаляет его после использования.
+    """
+    headers = {"Authorization": f"Bearer {admin_access_token}"}
+    payload = {
+        "title": "Тестовое событие",
+        "link": "https://example.com/test-event",
+        "date": "2025-12-11",
+        "description": "Описание тестового события"
+    }
+
+    resp = client.post(
+        "/api/references/history",
+        data=json.dumps(payload),
+        headers={**headers, "Content-Type": "application/json"}
+    )
+    assert resp.status_code == HTTPStatus.CREATED
+    data = resp.get_json()
+    history_id = data["id"]
+
+    yield {"id": history_id, **payload}
+
+    del_resp = client.delete(f"/api/references/history/{history_id}", headers=headers)
+    if del_resp.status_code not in (HTTPStatus.OK, HTTPStatus.NOT_FOUND):
+        raise AssertionError("Не удалось удалить тестовое событие после теста")
+
+
+@pytest.fixture
+def created_cultural_space(client, admin_access_token):
+    """Создает тестовый элемент культурного пространства и удаляет после использования"""
+    headers = {"Authorization": f"Bearer {admin_access_token}"}
+    payload = {"text": "Тестовый элемент", "order_index": 1}
+
+    resp = client.post(
+        "/api/references/cultural-space",
+        data=payload,
+        headers=headers
+    )
+    assert resp.status_code == HTTPStatus.CREATED
+    data = resp.get_json()
+    space_id = data["id"]
+
+    yield {"id": space_id, "text": payload["text"], "order_index": payload["order_index"]}
+
+    client.delete(f"/api/references/cultural-space/{space_id}", headers=headers)
+
+
+@pytest.fixture
+def created_format_type(client, admin_access_token):
+    """
+    Создаёт тестовый тип формата и удаляет его после использования.
+    """
+    headers = {"Authorization": f"Bearer {admin_access_token}"}
+    payload = {"name": "Тестовый формат"}
+
+    resp = client.post(
+        "/api/references/format-types",
+        data=json.dumps(payload),
+        headers={**headers, "Content-Type": "application/json"}
+    )
+    assert resp.status_code == HTTPStatus.CREATED
+    data = resp.get_json()
+    type_id = data["format_type_id"]
+
+    yield {"format_type_id": type_id, "format_type_name": payload["name"]}
+
+    del_resp = client.delete(
+        f"/api/references/format-types/{type_id}", headers=headers
+    )
+    if del_resp.status_code not in (HTTPStatus.OK, HTTPStatus.NOT_FOUND):
+        raise AssertionError("Не удалось удалить тестовый тип формата после теста")
+
+
+@pytest.fixture
+def created_partner(client, admin_access_token):
+    """Создаёт тестового партнёра и удаляет его после теста."""
+    headers = {"Authorization": f"Bearer {admin_access_token}"}
+    data = {
+        "name": "Тестовый партнёр",
+        "link": "https://example.com",
+        "order_index": 1
+    }
+    resp = client.post(
+        "/api/references/partners",
+        data=data,
+        headers=headers,
+        content_type="multipart/form-data"
+    )
+    assert resp.status_code == HTTPStatus.CREATED
+    partner = resp.get_json()
+    yield partner
+    client.delete(f"/api/references/partners/{partner['id']}", headers=headers)
+
+
+@pytest.fixture
+def created_project(client, admin_access_token):
+    headers = {"Authorization": f"Bearer {admin_access_token}"}
+    payload = {
+        "title": "Тестовый проект",
+        "link": "https://example.com/project",
+        "order_index": 1,
+    }
+
+    resp = client.post(
+        "/api/references/projects",
+        data=json.dumps(payload),
+        headers={**headers, "Content-Type": "application/json"},
+    )
+
+    assert resp.status_code == HTTPStatus.CREATED
+    project = resp.get_json()
+
+    yield project
+
+    client.delete(
+        f"/api/references/projects/{project['id']}",
+        headers=headers,
+    )
+
+
+@pytest.fixture
+def created_requisite(client, admin_access_token):
+    headers = {"Authorization": f"Bearer {admin_access_token}"}
+
+    data = {
+        "title": "Тестовый реквизит",
+        "file": (io.BytesIO(b"test content"), "test.pdf"),
+    }
+
+    resp = client.post(
+        "/api/references/requisites",
+        data=data,
+        headers=headers,
+        content_type="multipart/form-data"
+    )
+
+    assert resp.status_code == HTTPStatus.CREATED
+    item = resp.get_json()
+
+    yield item
+
+    client.delete(f"/api/references/requisites/{item['id']}", headers=headers)
+
+
+@pytest.fixture
+def created_team_member(client, admin_access_token):
+    headers = {"Authorization": f"Bearer {admin_access_token}"}
+
+    data = {
+        "full_name": "Фикстурный сотрудник",
+        "description": "Описание",
+    }
+
+    resp = client.post(
+        "/api/references/team",
+        data=data,
+        headers=headers,
+        content_type="multipart/form-data",
+    )
+    assert resp.status_code == HTTPStatus.CREATED
+    member = resp.get_json()
+
+    yield member
+
+    client.delete(f"/api/references/team/{member['id']}", headers=headers)
+
+
+@pytest.fixture
+def created_team_member_with_photo(client, admin_access_token):
+    headers = {"Authorization": f"Bearer {admin_access_token}"}
+
+    data = {
+        "full_name": "С фото",
+        "photo": (io.BytesIO(b"image"), "photo.jpg"),
+    }
+
+    resp = client.post(
+        "/api/references/team",
+        data=data,
+        headers=headers,
+        content_type="multipart/form-data",
+    )
+    assert resp.status_code == HTTPStatus.CREATED
+    member = resp.get_json()
+
+    yield member
+
+    client.delete(f"/api/references/team/{member['id']}", headers=headers)
