@@ -14,7 +14,7 @@ create_parser.add_argument(
     type=str,
     location='form',
     required=True,
-    help='JSON строка с полями title, content, short_description, photo_author'
+    help='JSON строка с полями title, content, short_description, photo_author, created_at'
 )
 create_parser.add_argument(
     'image',

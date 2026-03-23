@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import datetime
 from http import HTTPStatus
 from typing import Tuple, Optional, List, Dict
 
@@ -32,6 +33,16 @@ def create_news_with_images(user_email: str, data_str: str, image_files: List[Fi
     content = data.get("content")
     short_description = data.get("short_description")
     photo_author = data.get("photo_author")
+    created_at = data.get("created_at")
+
+    if created_at:
+        try:
+            created_at = datetime.fromisoformat(created_at)
+        except ValueError:
+            return {"message": "Неверный формат даты"}, 400
+    else:
+        created_at = datetime.now()
+
     if not all([title, content]):
         return {"message": "Поля title и content обязательны"}, HTTPStatus.BAD_REQUEST
 
@@ -44,7 +55,8 @@ def create_news_with_images(user_email: str, data_str: str, image_files: List[Fi
         content=content,
         short_description=short_description,
         author_id=user.user_id,
-        photo_author=photo_author
+        photo_author=photo_author,
+        created_at=created_at
     )
     db.session.add(news)
     db.session.flush()
@@ -104,6 +116,16 @@ def update_news(news_id: int, form_data: dict, files: Optional[dict] = None) -> 
     content = data.get("content")
     short_description = data.get("short_description")
     photo_author = data.get("photo_author")
+    created_at = data.get("created_at")
+
+    if created_at:
+        try:
+            created_at = datetime.fromisoformat(created_at)
+            news.created_at = created_at
+        except ValueError:
+            return {"message": "Неверный формат даты"}, 400
+    else:
+        created_at = datetime.now()
 
     if title is not None:
         news.title = title

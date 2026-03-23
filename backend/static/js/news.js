@@ -56,6 +56,25 @@ async function showNewsModal(news) {
     const header = document.getElementById('newsModalHeader');
     const icon = document.getElementById('newsModalIcon');
     const text = document.getElementById('newsModalText');
+    const createdAtInput = document.getElementById('newsCreatedAt');
+
+    if (news && news.created_at) {
+        const date = new Date(news.created_at);
+
+        // важно: local формат для input
+        const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+            .toISOString()
+            .slice(0, 16);
+
+        createdAtInput.value = local;
+    } else {
+        const now = new Date();
+        const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+            .toISOString()
+            .slice(0, 16);
+
+        createdAtInput.value = local;
+    }
 
     if (!news) {
         currentNewsId = null;
@@ -98,7 +117,6 @@ async function showNewsModal(news) {
 
     newsModal.show();
 }
-
 
 
 function addPhotoToPreview(container, photo, newsId) {
@@ -186,11 +204,13 @@ async function createNews(title, content, imageFiles) {
     const formattedContent = content.replace(/\n/g, '<br>');
     const photoAuthor = document.getElementById('PhotoAuthor').value.trim();
     const shortDescription = document.getElementById('newsShortDescription').value.trim();
+    const createdAt = document.getElementById('newsCreatedAt').value;
     formData.append('data', JSON.stringify({
         title,
         content: formattedContent,
         short_description: shortDescription,
-        photo_author: photoAuthor // <-- добавляем поле автора фото
+        photo_author: photoAuthor, // <-- добавляем поле автора фото
+        created_at: createdAt ? new Date(createdAt).toISOString() : null
     }));
     console.log(formData.get)
     imageFiles.forEach(file => formData.append('image', file));
@@ -308,11 +328,13 @@ document.getElementById('saveNewsBtn').addEventListener('click', async () => {
 async function updateNews(newsId, title, content) {
     const formData = new FormData();
     const shortDescription = document.getElementById('newsShortDescription').value.trim();
+    const createdAt = document.getElementById('newsCreatedAt').value;
 
     formData.append('data', JSON.stringify({
         title,
         content,
-        short_description: shortDescription
+        short_description: shortDescription,
+        created_at: createdAt ? new Date(createdAt).toISOString() : null
     }));
 
     const res = await fetchWithAuth(`${API_BASE}/news/${newsId}`, {
@@ -374,6 +396,7 @@ newsModalEl.addEventListener('hidden.bs.modal', () => {
     document.getElementById('newsShortDescription').value = '';
     document.getElementById('newsContent').value = '';
     document.getElementById('newsPhotoUpload').value = '';
+    document.getElementById('newsCreatedAt').value = '';
     document.querySelector('#newsPhotoPreview').innerHTML = '';
 });
 
