@@ -6,7 +6,7 @@ from werkzeug.datastructures import FileStorage
 
 from backend.core import db
 from backend.core.models.news_models import NewsImage, News
-from backend.core.utilits.file_utils import save_image
+from backend.core.utilits.file_utils import save_image, remove_file_if_exists
 
 
 def get_photos_for_news(news_id: int) -> Tuple[Optional[List[Dict]], Optional[Dict], HTTPStatus]:
@@ -45,9 +45,11 @@ def add_photo_to_news(news_id: int, photo_file: FileStorage) -> Tuple[Optional[L
         return None, {"message": f"Ошибка при добавлении фото: {str(e)}"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-def delete_photo_from_news(news_id: int, photo_id: int) -> Tuple[Dict, HTTPStatus]:
+from http import HTTPStatus
+
+def delete_photo_from_news(news_id: int, photo_id: int) -> tuple[dict, HTTPStatus]:
     """
-    Удаляет фото новости по ID.
+    Удаляет фото новости по ID и из S3.
 
     :param news_id: ID новости
     :param photo_id: ID фото
@@ -56,12 +58,15 @@ def delete_photo_from_news(news_id: int, photo_id: int) -> Tuple[Dict, HTTPStatu
     photo = NewsImage.query.filter_by(news_id=news_id, id=photo_id).first()
     if not photo:
         return {"message": "Фото не найдено"}, HTTPStatus.NOT_FOUND
+
     try:
-        full_path = os.path.join(os.getcwd(), photo.image_path)
-        if os.path.exists(full_path):
-            os.remove(full_path)
+        # Удаляем файл через общую функцию
+        remove_file_if_exists(photo.image_path)
+
+        # Удаляем запись из базы
         db.session.delete(photo)
         db.session.commit()
         return {"message": "Фото удалено"}, HTTPStatus.OK
+
     except Exception as e:
         return {"message": f"Ошибка при удалении фото: {str(e)}"}, HTTPStatus.INTERNAL_SERVER_ERROR

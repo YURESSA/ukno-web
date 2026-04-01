@@ -1,8 +1,9 @@
 import os
 import sys
+from io import BytesIO
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from flask import send_from_directory, render_template
+from flask import send_from_directory, render_template, send_file, abort
 
 from backend.core import create_app, db
 from backend.core.config import Config
@@ -10,6 +11,7 @@ from backend.core.models.event_models import Category, AgeCategory, FormatType
 from backend.core.scripts.clear_unpaid import cleanup_unpaid_reservations
 from backend.core.scripts.create_superuser import create_superuser
 from backend.core.scripts.ensure_data import ensure_data_exists
+from backend.core.utilits.file_utils import s3
 
 
 def seed_reference_data():
@@ -19,14 +21,23 @@ def seed_reference_data():
 
 
 def register_static_routes(app):
-    upload_folder_abs = os.path.join(Config.PROJECT_ROOT, Config.UPLOAD_FOLDER)
 
-    @app.route('/media/uploads/<path:filename>')
+    @app.route("/media/uploads/<path:filename>")
     def uploaded_file(filename):
-        if Config.PRODUCTION:
-            return send_from_directory('/app/media/uploads', filename)
-        else:
-            return send_from_directory(str(upload_folder_abs), filename)
+        """
+        Отдаёт файл из S3 по пути media/uploads/...
+        filename: news/IMG_6201_abc.jpg
+        """
+        key = filename
+        try:
+            response = s3.get_object(Bucket=Config.BUCKET, Key=key)
+            file_data = response["Body"].read()
+            return send_file(BytesIO(file_data), download_name=filename)
+        except s3.exceptions.NoSuchKey:
+            abort(404)
+        except Exception as e:
+            print(f"Ошибка при отдаче файла {key}: {e}")
+            abort(500)
 
     @app.route('/admin-panel/', strict_slashes=False)
     def admin_page():

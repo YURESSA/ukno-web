@@ -57,3 +57,8 @@ class Config:
     YOOKASSA_REDIRECT_URI = os.environ.get("YOOKASSA_REDIRECT_URI")
 
     PRODUCTION = str_to_bool(os.getenv("PRODUCTION", "False"))
+    S3_ENDPOINT = os.environ.get("S3_ENDPOINT")
+    S3_ACCESS_KEY = os.environ.get("S3_ACCESS_KEY")
+    S3_SECRET_KEY = os.environ.get("S3_SECRET_KEY")
+    BUCKET = os.environ.get("BUCKET")
+

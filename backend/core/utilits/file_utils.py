@@ -12,43 +12,65 @@ from werkzeug.utils import secure_filename
 
 from backend.core import Config
 
+import boto3
+from botocore.client import Config as BotoConfig
 
-def save_image(file: FileStorage, subfolder: str = "") -> str:
+
+
+s3 = boto3.client(
+    "s3",
+    endpoint_url=Config.S3_ENDPOINT,
+    aws_access_key_id=Config.S3_ACCESS_KEY,
+    aws_secret_access_key=Config.S3_SECRET_KEY,
+    config=BotoConfig(signature_version="s3v4", s3={"addressing_style": "path"}),
+)
+
+
+
+def save_file_to_s3(file: FileStorage, subfolder: str = "") -> str:
     """
-    Сохраняет загруженное изображение в указанную папку проекта и возвращает относительный путь.
-
-    :param file: объект загруженного файла (FileStorage)
-    :param subfolder: подкаталог внутри папки загрузок
-    :return: относительный путь к сохранённому файлу (например, 'media/uploads/news/filename.png')
+    Загружает файл в S3 и возвращает путь в виде 'media/uploads/...'.
     """
-    folder_path = os.path.join(Config.PROJECT_ROOT, Config.UPLOAD_FOLDER, subfolder)
-
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
-
-    original_filename = secure_filename(file.filename)
+    original_filename = secure_filename(getattr(file, "filename", "file"))
     name, ext = os.path.splitext(original_filename)
     unique_suffix = uuid.uuid4().hex
     filename = f"{name}_{unique_suffix}{ext}"
 
-    filepath = os.path.join(folder_path, filename)
-    file.save(filepath)
+    key = f"{subfolder}/{filename}".strip("/")
 
-    return os.path.join('media/uploads', subfolder, filename).replace("\\", "/")
+    # Читаем данные
+    if hasattr(file, "read"):
+        file_obj = BytesIO(file.read())
+    else:
+        file_obj = BytesIO(file)
+    file_obj.seek(0)
+
+    s3.upload_fileobj(file_obj, BUCKET, key)
+
+    return os.path.join('media', 'uploads', subfolder, filename).replace("\\", "/")
+
+
+def remove_file_from_s3(relative_path: str) -> None:
+    """
+    Удаляет файл из S3, если он существует. relative_path — путь вида 'media/uploads/...'
+    """
+    key = "/".join(relative_path.split("/")[2:])  # удаляем 'media/uploads'
+    try:
+        s3.delete_object(Bucket=BUCKET, Key=key)
+    except Exception as e:
+        print(f"Ошибка при удалении файла {key} из S3: {e}")
+
+
+def save_image(file: FileStorage, subfolder: str = "") -> str:
+    return save_file_to_s3(file, subfolder)
+
+
+def save_file(file: FileStorage, subfolder: str = "") -> str:
+    return save_file_to_s3(file, subfolder)
 
 
 def remove_file_if_exists(file_path: str) -> None:
-    """
-    Удаляет файл, если он существует.
-
-    :param file_path: путь к файлу
-    """
-    file_path = os.path.join(Config.PROJECT_ROOT, file_path)
-    if os.path.exists(file_path):
-        try:
-            os.remove(file_path)
-        except Exception as e:
-            print(f"Ошибка при удалении файла {file_path}: {e}")
+    remove_file_from_s3(file_path)
 
 
 def format_datetime(value: datetime) -> str:
@@ -137,32 +159,3 @@ def create_ical_from_reservation(reservation) -> bytes:
     c.events.add(e)
     return c.serialize().encode('utf-8')
 
-
-def save_file(file, subfolder: str = "") -> str:
-    """
-    Сохраняет загруженный файл в указанную папку проекта и возвращает относительный путь.
-
-    :param file: объект загруженного файла (FileStorage)
-    :param subfolder: подкаталог внутри папки загрузок
-    :return: относительный путь к сохранённому файлу (например, 'media/uploads/requisites/filename.pdf')
-    """
-    # Основная папка загрузок
-    folder_path = os.path.join(Config.PROJECT_ROOT, Config.UPLOAD_FOLDER, subfolder)
-
-    # Создаём папку, если не существует
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
-
-    # Генерируем безопасное уникальное имя файла
-    original_filename = secure_filename(file.filename)
-    name, ext = os.path.splitext(original_filename)
-    unique_suffix = uuid.uuid4().hex
-    filename = f"{name}_{unique_suffix}{ext}"
-
-    # Полный путь для сохранения
-    filepath = os.path.join(folder_path, filename)
-    file.save(filepath)
-
-    # Относительный путь для базы и фронтенда
-    relative_path = os.path.join('media', 'uploads', subfolder, filename).replace("\\", "/")
-    return relative_path
