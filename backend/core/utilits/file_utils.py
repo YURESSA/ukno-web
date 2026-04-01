@@ -45,7 +45,7 @@ def save_file_to_s3(file: FileStorage, subfolder: str = "") -> str:
         file_obj = BytesIO(file)
     file_obj.seek(0)
 
-    s3.upload_fileobj(file_obj, BUCKET, key)
+    s3.upload_fileobj(file_obj, Config.BUCKET, key)
 
     return os.path.join('media', 'uploads', subfolder, filename).replace("\\", "/")
 
@@ -56,7 +56,7 @@ def remove_file_from_s3(relative_path: str) -> None:
     """
     key = "/".join(relative_path.split("/")[2:])  # удаляем 'media/uploads'
     try:
-        s3.delete_object(Bucket=BUCKET, Key=key)
+        s3.delete_object(Bucket=Config.BUCKET, Key=key)
     except Exception as e:
         print(f"Ошибка при удалении файла {key} из S3: {e}")
 
