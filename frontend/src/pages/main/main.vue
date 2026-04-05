@@ -68,7 +68,7 @@
   <div class="page-wrapper dark-wrapper">
     <News :news="news.news"/>
     <!-- <History/> -->
-    <Partner/>
+    <Partner :partners="partners" />
   </div>
   <Contact class="page-wrapper">
     <iframe
@@ -115,12 +115,14 @@ const scrollToHash = () => {
 };
 
 const news = computed(() => store.getNews);
+const partners = computed(() => store.getPartners);
 const culturalSpace = computed(() => store.getCulturalSpace);
 
 onMounted(async () => {
   scrollToHash
   try {
     await store.FetchNews();
+    await store.FetchPartners();
     await store.FetchCulturalSpace();
   } catch (error) {
     console.error('Ошибка при загрузке новостей:', error);

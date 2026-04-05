@@ -14,7 +14,7 @@
       >
       <span>{{ news.photo_author }}</span>
     </div>
-    <div class="news-text" v-html="news.content">
+    <div class="news-text" v-html="safeHtml">
 
     </div>
   </div>
@@ -23,6 +23,7 @@
 <script setup>
 import { computed } from 'vue';
 import { baseUrl } from '@/stores/counter';
+import DOMPurify from 'dompurify';
 
 const props = defineProps({
   news: {
@@ -30,6 +31,8 @@ const props = defineProps({
     required: true
   }
 });
+
+const safeHtml = computed(() => DOMPurify.sanitize(props.news.content));
 
 const formattedDate = computed(() => {
   const date = new Date(props.news.created_at);

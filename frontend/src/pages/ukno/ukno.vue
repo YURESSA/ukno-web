@@ -103,9 +103,9 @@
       </div>
       <div class="person-list">
         <div class="person-card" v-for="(k, index) in teams" :key="k.id">
-          <img :class="{'uneven-person': teams.length % 2 && index === teams.length - 1}" :src="'https://yuressa.uxp.ru/' + k.photo" alt="">
+          <img :class="{'uneven-person': teams.length % 2 && index === teams.length - 1}" :src="baseUrl + k.photo" alt="">
           <p class="name">{{ k.full_name }}</p>
-          <p class="profession">{{ k.description }}</p>
+          <div class="profession" v-html="k.description"></div>
         </div>
       </div>
     </div>
@@ -215,7 +215,7 @@
 import IconButton from '@/components/UI/button/IconButton.vue';
 import Card from '@/pages/ukno/components/card.vue';
 import { ref, onMounted, onUnmounted, getCurrentInstance, computed  } from 'vue';
-import { useDataStore } from '@/stores/counter';
+import { baseUrl, useDataStore } from '@/stores/counter';
 
 const store = useDataStore();
 
@@ -373,6 +373,7 @@ onUnmounted(() => {
 .name {
   font-weight: bold;
   margin-top: 20px;
+  margin-bottom: 10px;
 }
 
 .advantages{

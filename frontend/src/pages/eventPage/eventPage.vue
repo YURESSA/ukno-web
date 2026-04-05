@@ -83,7 +83,9 @@
       <div class="descript">
         <h3>Подробнее об экскурсии</h3>
         <h5>Экскурсия «{{ excursion.title }}»</h5>
-        <p class="descript-hidden">{{ excursion.description }}</p>
+        <div class="description-wrapper" v-html="safeExcursion" :class="{ 'descript-hidden': !descriptOpen }"></div>
+        <button v-if="!descriptOpen" class="orange" @click="descriptOpen = !descriptOpen">Показать ещё</button>
+        <button v-if="descriptOpen" class="orange" @click="descriptOpen = !descriptOpen">Скрыть описание</button>
       </div>
       <h2 v-if="excursion.photos.length > 1">Галерея ярких моментов</h2>
       <div class="gallery">
@@ -185,7 +187,7 @@
       <div class="descript">
         <h3>Подробнее об экскурсии</h3>
         <h5 style="font-size: 16px;">Экскурсия «{{ excursion.title }}»</h5>
-        <p :class="{ 'descript-hidden': !descriptOpen }">{{ excursion.description }}</p>
+        <div class="description-wrapper" v-html="safeExcursion" :class="{ 'descript-hidden': !descriptOpen }"></div>
         <button v-if="!descriptOpen" class="orange" @click="descriptOpen = !descriptOpen">Показать ещё</button>
         <button v-if="descriptOpen" class="orange" @click="descriptOpen = !descriptOpen">Скрыть описание</button>
       </div>
@@ -228,6 +230,7 @@ import IconButton from '@/components/UI/button/IconButton.vue';
 import Contact from '../../components/shared/contact-block.vue';
 import Loading from '@/components/shared/loading-animation.vue';
 import { notification } from '@/utils/notification'
+import DOMPurify from 'dompurify';
 
 const store = useDataStore();
 const route = useRoute();
@@ -236,6 +239,7 @@ const load = ref(false);
 const descriptOpen = ref(false);
 
 const excursion = computed(() => store.getExcursionDetail);
+const safeExcursion = computed(() => DOMPurify.sanitize(excursion.value.description));
 
 const src = computed(() => {
   const iframeUrl = excursion.value?.iframe_url;
@@ -450,15 +454,35 @@ span > a{
   color: #F25C03;
   font-size: 20px;
   font-weight: bold;
+  cursor: pointer;
+}
+
+.description-wrapper {
+  position: relative;
+  max-height: 1000px;
+  transition: max-height 0.3s ease-out;
+  overflow: hidden;
+}
+
+.description-wrapper::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(180deg, transparent 0%, #fff 100%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s linear;
 }
 
 .descript-hidden {
   max-height: 100px;
-  overflow: hidden;
-  background: linear-gradient(180deg, #333 0%, #fff 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+}
+
+.descript-hidden::after {
+  opacity: 1;
 }
 
 .gallery{

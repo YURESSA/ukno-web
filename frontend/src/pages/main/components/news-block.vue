@@ -32,7 +32,7 @@
     <h3>Новости молодежного бюро</h3>
   </div>
   <div class="history-wrapper" id="history">
-    <div class="container" v-if="news">
+    <div class="container" v-if="news && news.length > 0">
       <div class="img-block">
         <img :src="imageUrl" alt="">
       </div>
@@ -49,7 +49,6 @@
 
 <script setup>
 import IconButton from '@/components/UI/button/IconButton.vue';
-import NewsCard from '@/components/shared/news-card.vue';
 import { baseUrl } from '@/stores/counter';
 import { computed } from 'vue';
 
@@ -57,7 +56,14 @@ const props = defineProps({
   news: Array,
 })
 
-const imageUrl = computed(() => baseUrl + props.news[0].images[0])
+console.log(!props.news)
+
+const imageUrl = computed(() => {
+  if (props.news && props.news.length > 0 && props.news[0].images) {
+    return baseUrl + props.news[0].images[0];
+  }
+  return '';
+})
 </script>
 
 <style scoped>

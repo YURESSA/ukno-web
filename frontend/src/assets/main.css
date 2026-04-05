@@ -40,6 +40,18 @@ a {
   color: #333333;
 }
 
+.editor-link {
+  color: #F25C03;
+  text-decoration: underline;
+}
+
+blockquote {
+  border-left: 4px solid #F25C03;
+  padding-left: 1em;
+  color: #666;
+  margin: 1em 0;
+}
+
 
 .text-standart{
   font-size: 20px;
