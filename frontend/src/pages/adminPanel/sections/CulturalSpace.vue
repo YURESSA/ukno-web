@@ -36,6 +36,7 @@
             list-type="image-card"
             :max="1"
             @change="handleUploadChange"
+            @remove="handleRemove"
             accept="image/*"
           >
             Загрузить
@@ -62,12 +63,13 @@ import { ref, onMounted, h, inject, watch, computed } from 'vue'
 import { useDataStore, baseUrl } from '@/stores/counter'
 import {
   NButton, useMessage, NSpace, NH2, NDataTable,
-  NModal, NForm, NFormItem, NInput, NUpload, NImage
+  NModal, NForm, NFormItem, NInput, NUpload, NImage, useDialog
 } from 'naive-ui'
 
 const store = useDataStore()
 const data = computed(() => store.getCulturalSpace)
 const message = useMessage()
+const dialog = useDialog();
 const addEvent = inject('admin-add-event')
 
 const showModal = ref(false)
@@ -76,6 +78,8 @@ const loading = ref(false)
 const submitLoading = ref(false)
 
 const fileList = ref([])
+const newFiles = ref([]);
+
 const model = ref({
   id: null,
   text: '',
@@ -132,6 +136,48 @@ const openCreateModal = () => {
   showModal.value = true
 }
 
+const handleRemove = (options) => {
+  const { file } = options;
+
+  // Если это новый файл (только что выбрали), просто удаляем из локальной очереди
+  if (file.id !== 'server-file') {
+    model.value.photo = null;
+    return true;
+  }
+
+  // Если это файл, который уже на сервере
+  return new Promise((resolve) => {
+    dialog.warning({
+      title: 'Удаление фото',
+      content: 'Вы уверены, что хотите полностью удалить фото этого элемента с сервера?',
+      positiveText: 'Удалить',
+      negativeText: 'Отмена',
+      onPositiveClick: async () => {
+        try {
+          submitLoading.value = true;
+          // Вызываем правильный метод стора для культурного пространства
+          await store.DeleteCulturalSpacePhoto(model.value.id);
+
+          message.success('Фото удалено с сервера');
+          model.value.photo_url = '';
+
+          // Обновляем данные в таблице
+          await store.FetchCulturalSpace();
+          resolve(true);
+        } catch (e) {
+          console.error(e);
+          message.error('Ошибка при удалении фото');
+          resolve(false);
+        } finally {
+          submitLoading.value = false;
+        }
+      },
+      onNegativeClick: () => resolve(false)
+    });
+  });
+};
+
+
 const openEditModal = (row) => {
   isEditMode.value = true
   const fullPhotoUrl = getImageUrl(row.photo)
@@ -145,7 +191,7 @@ const openEditModal = (row) => {
   }
 
   fileList.value = row.photo ? [{
-    id: 'curr',
+    id: 'server-file',
     name: 'photo.png',
     status: 'finished',
     url: fullPhotoUrl
@@ -158,6 +204,9 @@ const handleUploadChange = (data) => {
   const lastFile = data.fileList.slice(-1)
   fileList.value = lastFile
   model.value.photo = lastFile.length > 0 && lastFile[0].file ? lastFile[0].file : null
+  newFiles.value = data.fileList
+  .filter(item => item.file)
+  .map(item => item.file);
 }
 
 const handleSave = async () => {
@@ -213,7 +262,7 @@ const handleDelete = async () => {
       showModal.value = false
       store.FetchCulturalSpace()
     } catch (e) {
-      message.error('Ошибка при удалении')
+      message.error('Ошибка при удалении', e)
     }
   }
 }

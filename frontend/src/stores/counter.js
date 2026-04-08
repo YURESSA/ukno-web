@@ -25,7 +25,8 @@ export const useDataStore = defineStore('data', {
     teamData: [],
     project: [],
     culturalSpace: [],
-    history: []
+    history: [],
+    requisitesData: []
   }),
   actions: {
     setTokenRole(auth_key, role) {
@@ -771,6 +772,21 @@ export const useDataStore = defineStore('data', {
         throw error;
       }
     },
+    async UpdatePhotoMember(id, formData) {
+      try {
+        const response = await axios.post(`${baseUrl}/api/references/team/${id}/photo`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${this.auth_key}`,
+          },
+        });
+        await this.FetchTeam();
+        return response.data;
+      } catch (error) {
+        console.error('Ошибка при добавлении:', error.response?.data || error.message);
+        throw error;
+      }
+    },
     async UpdateTeamMember(id, formData) {
       try {
         const response = await axios.put(`${baseUrl}/api/references/team/${id}`, formData, {
@@ -781,6 +797,19 @@ export const useDataStore = defineStore('data', {
       } catch (error) {
         console.error('Ошибка при смене данных:', error.response?.data || error.message)
         throw error
+      }
+    },
+    async DeletePhotoMember(id) {
+      try {
+        await axios.delete(`${baseUrl}/api/references/team/${id}/photo`, {
+          headers: {
+            'Authorization': `Bearer ${this.auth_key}`,
+          },
+        });
+        await this.FetchTeam();
+      } catch (error) {
+        console.error('Ошибка при удалении:', error.response?.data || error.message);
+        throw error;
       }
     },
     async DeleteTeamMember(id) {
@@ -794,19 +823,6 @@ export const useDataStore = defineStore('data', {
       } catch (error) {
         console.error('Ошибка при удалении:', error.response?.data || error.message);
         throw error;
-      }
-    },
-    async FetchProject() {
-      try {
-        const response = await axios.get(`${baseUrl}/api/references/projects`, {
-          headers: {
-            Authorization: `Bearer ${this.auth_key}`,
-          },
-        })
-        this.project = response.data
-      } catch (error) {
-        console.error('Ошибка при получении данных:', error.response?.data || error.message)
-        throw error
       }
     },
     async FetchCulturalSpace() {
@@ -845,14 +861,89 @@ export const useDataStore = defineStore('data', {
         throw error
       }
     },
-
     async UpdateCulturalSpacePhoto(id, formData) {
-      // Фото обновляется через отдельный POST эндпоинт
-      return await axios.post(`${baseUrl}/api/references/cultural-space/${id}/photo`, formData)
+      try {
+        const response = await axios.post(`${baseUrl}/api/references/cultural-space/${id}/photo`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${this.auth_key}`,
+          },
+        });
+        await this.FetchCulturalSpace();
+        return response.data;
+      } catch (error) {
+        console.error('Ошибка при добавлении:', error.response?.data || error.message);
+        throw error;
+      }
     },
-
+    async DeleteCulturalSpacePhoto(id) {
+      try {
+        await axios.delete(`${baseUrl}/api/references/cultural-space/${id}/photo`, {
+          headers: {
+            'Authorization': `Bearer ${this.auth_key}`,
+          },
+        });
+      } catch (error) {
+        console.error('Ошибка при удалении:', error.response?.data || error.message);
+        throw error;
+      }
+    },
     async DeleteCulturalSpace(id) {
       return await axios.delete(`${baseUrl}/api/references/cultural-space/${id}`)
+    },
+    async FetchProject() {
+      try {
+        const response = await axios.get(`${baseUrl}/api/references/projects`, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+          },
+        })
+        this.project = response.data
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async AddProject(payload) {
+      try {
+        const response = await axios.post(`${baseUrl}/api/references/projects`, payload, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+          },
+        })
+        this.project = response.data
+        await this.FetchProject();
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async UpdateProject(id, payload) {
+      try {
+        const response = await axios.put(`${baseUrl}/api/references/projects/${id}`, payload, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+          },
+        })
+        this.project = response.data
+        await this.FetchProject();
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async DeleteProject(id) {
+      try {
+        const response = await axios.delete(`${baseUrl}/api/references/projects/${id}`, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+          },
+        })
+        await this.FetchProject();
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
     },
     async FetchHistory() {
       try {
@@ -863,23 +954,158 @@ export const useDataStore = defineStore('data', {
         throw error
       }
     },
-    async PostTeam({ full_name, description, photoFile }) {
-      const apiBase = baseUrl.replace(/\/$/, '')
-      const fd = new FormData()
-      fd.append('full_name', full_name)
-      if (description != null) fd.append('description', description)
-      if (photoFile) fd.append('photo', photoFile)
-
-      return axios.post(`${apiBase}/api/references/team`, fd, {
-        headers: { Authorization: `Bearer ${this.auth_key}` }
-      })
+    async AddHistory(payload) {
+      try {
+        const response = await axios.post(`${baseUrl}/api/references/history`, payload, {
+          headers: { Authorization: `Bearer ${this.auth_key}` }
+        })
+        await this.FetchHistory();
+        this.history = response.data
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
     },
-
-    async DeleteTeam(id) {
-      const apiBase = baseUrl.replace(/\/$/, '')
-      return axios.delete(`${apiBase}/api/references/team/${id}`, {
+    async UpdateHistory(id, payload) {
+      try {
+        const response = await axios.put(`${baseUrl}/api/references/history/${id}`, payload, {
+          headers: { Authorization: `Bearer ${this.auth_key}` }
+        })
+        await this.FetchHistory();
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async DeleteHistory(id) {
+      try {
+        const response = await axios.delete(`${baseUrl}/api/references/history/${id}`, {
+          headers: { Authorization: `Bearer ${this.auth_key}` }
+        })
+        await this.FetchHistory();
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async AddPartner(formData) {
+      try {
+        const response = await axios.post(`${baseUrl}/api/references/partners`, formData, {
         headers: { Authorization: `Bearer ${this.auth_key}` }
       })
+        await this.FetchPartners();
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async UpdatePartner(id, formData) {
+      try {
+        const response = await axios.put(`${baseUrl}/api/references/partners/${id}`, formData, {
+        headers: { Authorization: `Bearer ${this.auth_key}` }
+      })
+        await this.FetchPartners();
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async UpdatePartnerPhoto(id, formData) {
+      try {
+        const response = await axios.post(`${baseUrl}/api/references/partners/${id}/photo`, formData, {
+        headers: { Authorization: `Bearer ${this.auth_key}` }
+      })
+        await this.FetchPartners();
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async DeletePartnerPhoto(id) {
+      try {
+        const response = await axios.delete(`${baseUrl}/api/references/partners/${id}/photo`, {
+        headers: { Authorization: `Bearer ${this.auth_key}` }
+      })
+        await this.FetchPartners();
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async DeletePartner(id) {
+      try {
+        const response = await axios.delete(`${baseUrl}/api/references/partners/${id}`, {
+        headers: { Authorization: `Bearer ${this.auth_key}` }
+      })
+        await this.FetchPartners();
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async FetchRequisites() {
+      try {
+        const response = await axios.get(`${baseUrl}/api/references/requisites`)
+        this.requisitesData = response.data
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async AddRequisite(formData) {
+      try {
+        const response = await axios.post(`${baseUrl}/api/references/requisites`, formData, {
+          headers: { Authorization: `Bearer ${this.auth_key}` }
+        })
+        await this.FetchRequisites();
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async UpdateRequisite(id, formData) {
+      try {
+        const response = await axios.put(`${baseUrl}/api/references/requisites/${id}`, formData, {
+          headers: { Authorization: `Bearer ${this.auth_key}` }
+        })
+        await this.FetchRequisites();
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async UpdateRequisiteFile(id, formData) {
+      try {
+        const response = await axios.post(`${baseUrl}/api/references/requisites/${id}/file`, formData, {
+          headers: { Authorization: `Bearer ${this.auth_key}` }
+        })
+        await this.FetchRequisites();
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async DeleteRequisiteFile(id) {
+      try {
+        const response = await axios.delete(`${baseUrl}/api/references/requisites/${id}/file`, {
+          headers: { Authorization: `Bearer ${this.auth_key}` }
+        })
+        await this.FetchPartners();
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async DeleteRequisite(id) {
+      try {
+        const response = await axios.delete(`${baseUrl}/api/references/requisites/${id}`, {
+          headers: { Authorization: `Bearer ${this.auth_key}` }
+        })
+        await this.FetchPartners();
+      } catch (error) {
+        console.error('Ошибка при получении данных:', error.response?.data || error.message)
+        throw error
+      }
     },
   },
   getters: {
@@ -899,7 +1125,8 @@ export const useDataStore = defineStore('data', {
     getTeamData: (s) => s.teamData,
     getProject: (s) => s.project,
     getCulturalSpace: (s) => s.culturalSpace,
-    getHistory: (s) => s.history
+    getHistory: (s) => s.history,
+    getRequisites: (s) => s.requisitesData
   },
   persist: {
     key: 'data-store',

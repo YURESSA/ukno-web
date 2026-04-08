@@ -30,6 +30,7 @@
           <n-upload
             v-model:file-list="fileList"
             @change="handleUploadChange"
+            @remove="handleRemove"
             :max="1"
             list-type="image-card"
             accept="image/*"
@@ -57,12 +58,13 @@ import { ref, onMounted, h, inject, watch, computed } from 'vue'
 import { baseUrl, useDataStore } from '@/stores/counter'
 import {
   NButton, useMessage, NSpace, NH2, NDataTable,
-  NModal, NForm, NFormItem, NInput, NUpload, NImage
+  NModal, NForm, NFormItem, NInput, NUpload, NImage, useDialog
 } from 'naive-ui'
 import Editor from '@/components/ui/Editor.vue'
 
 const store = useDataStore()
 const message = useMessage()
+const dialog = useDialog();
 const team = computed(() => store.getTeamData)
 const fileList = ref([])
 
@@ -161,15 +163,17 @@ const handleSave = async () => {
   const formData = new FormData()
   formData.append('full_name', memberModel.value.full_name)
   formData.append('description', memberModel.value.description || '')
-  if (memberModel.value.photo) {
-    formData.append('photo', memberModel.value.photo)
-  }
 
   try {
     submitLoading.value = true
     if (isEditMode.value) {
-      // Вызываем метод обновления (убедись, что он есть в сторе)
+
       await store.UpdateTeamMember(memberModel.value.id, formData)
+      if (memberModel.value.photo) {
+        const photoData = new FormData()
+        photoData.append('photo', memberModel.value.photo)
+        await store.UpdatePhotoMember(memberModel.value.id, photoData)
+      }
       message.success('Данные обновлены')
     } else {
       await store.AddTeamMember(formData)
@@ -184,6 +188,47 @@ const handleSave = async () => {
     submitLoading.value = false
   }
 }
+
+const handleRemove = (options) => {
+  const { file } = options;
+
+  // Если это новый файл (только что выбрали), просто удаляем из локальной очереди
+  if (file.id !== 'existing-photo') {
+    memberModel.value.photo = null;
+    return true;
+  }
+
+  // Если это файл, который уже на сервере
+  return new Promise((resolve) => {
+    dialog.warning({
+      title: 'Удаление фото',
+      content: 'Вы уверены, что хотите полностью удалить фото этого элемента с сервера?',
+      positiveText: 'Удалить',
+      negativeText: 'Отмена',
+      onPositiveClick: async () => {
+        try {
+          submitLoading.value = true;
+          // Вызываем правильный метод стора для культурного пространства
+          await store.DeletePhotoMember(memberModel.value.id);
+
+          message.success('Фото удалено с сервера');
+          memberModel.value.photo_url = '';
+
+          // Обновляем данные в таблице
+          await store.FetchCulturalSpace();
+          resolve(true);
+        } catch (e) {
+          console.error(e);
+          message.error('Ошибка при удалении фото');
+          resolve(false);
+        } finally {
+          submitLoading.value = false;
+        }
+      },
+      onNegativeClick: () => resolve(false)
+    });
+  });
+};
 
 const handleDelete = async () => {
   if (confirm('Удалить этого сотрудника?')) {

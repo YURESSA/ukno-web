@@ -171,6 +171,30 @@ const router = createRouter({
           component: () => import('@/pages/adminPanel/sections/CulturalSpace.vue'),
           meta: { title: 'Культурное пространство' }
         },
+        {
+          path: 'project',
+          name: 'AdminProject',
+          component: () => import('@/pages/adminPanel/sections/ProjectSection.vue'),
+          meta: { title: 'Проекты' }
+        },
+        {
+          path: 'history',
+          name: 'AdminHistory',
+          component: () => import('@/pages/adminPanel/sections/HistorySection.vue'),
+          meta: { title: 'История Бюро' }
+        },
+        {
+          path: 'partner',
+          name: 'AdminPartner',
+          component: () => import('@/pages/adminPanel/sections/PartnerSection.vue'),
+          meta: { title: 'Партнёры' }
+        },
+        {
+          path: 'requisites',
+          name: 'AdminRequisites',
+          component: () => import('@/pages/adminPanel/sections/RequisitesSection.vue'),
+          meta: { title: 'Реквизиты' }
+        },
       ]
     },
     {

@@ -75,11 +75,11 @@ const menuItems = [
   { path: '/panel/news', label: 'Новости', name: 'AdminNews' },
   { path: '/panel/reservations', label: 'Брони', name: 'AdminReservations' },
   { path: '/panel/team', label: 'Команда', name: 'AdminTeam' },
-  { path: '/panel/cultural-space', label: 'Культурное пространство', name: '' },
-  { path: '/panel/project', label: 'Проекты', name: '' },
-  { path: '/panel/history', label: 'История', name: '' },
-  { path: '/panel/parther', label: 'Партнёры', name: '' },
-  { path: '/panel/requisites', label: 'Резвизиты', name: '' },
+  { path: '/panel/cultural-space', label: 'Культурное пространство', name: 'CulturalSpace' },
+  { path: '/panel/project', label: 'Проекты', name: 'AdminProject' },
+  { path: '/panel/history', label: 'История', name: 'AdminHistory' },
+  { path: '/panel/partner', label: 'Партнёры', name: 'AdminParther' },
+  { path: '/panel/requisites', label: 'Резвизиты', name: 'AdminRequisites' },
 ];
 
 const currentSectionTitle = computed(() => route.meta.title || 'Управление');

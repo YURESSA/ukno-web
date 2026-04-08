@@ -345,7 +345,7 @@ function confirmDelete() {
         showModal.value = false;
         await store.FetchAdminNews(); // Обновляем таблицу
       } catch (e) {
-        message.error('Не удалось удалить новость');
+        message.error('Не удалось удалить новость', e);
       } finally {
         loading.value = false;
       }
