@@ -61,7 +61,6 @@ import { onMounted, ref, shallowRef, onUnmounted } from 'vue';
 
 const store = useDataStore();
 
-// --- Состояние ---
 const eventAddress = ref("");
 const coords = ref(null);
 const suggestions = ref([]);
@@ -73,12 +72,10 @@ const myPlacemark = shallowRef(null);
 
 let debounceTimer = null;
 
-// --- Конфигурация ---
 const API_KEY = import.meta.env.VITE_YANDEX_API_KEY;
 const BACKEND_URL = import.meta.env.VITE_FRONTEND_URL;
 
 onMounted(() => {
-  // Инициализация глобального колбэка для скрипта Яндекса
   window.initYandexMapCallback = () => {
     initMap();
   };
@@ -90,7 +87,6 @@ onMounted(() => {
 
   const script = document.createElement('script');
   script.type = 'text/javascript';
-  // Загружаем только графическое ядро API
   script.src = `https://api-maps.yandex.ru/2.1/?apikey=${API_KEY}&lang=ru_RU&load=package.full&onload=initYandexMapCallback`;
   script.onerror = () => {
     loadingStatus.value = "Ошибка загрузки карты. Проверьте API ключ.";
@@ -98,7 +94,7 @@ onMounted(() => {
   document.head.appendChild(script);
 });
 
-// Инициализация карты
+
 function initMap() {
   const container = document.getElementById('map-container');
   if (!container) return;
@@ -111,14 +107,11 @@ function initMap() {
     }, {
       // ПРИМЕНЯЕМ СТИЛИЗАЦИЮ
       // Мы используем фильтры, чтобы подогнать карту под твою палитру
-      yandexMapDisablePoiInteractivity: true, // Отключаем лишние клики по иконкам
+      yandexMapDisablePoiInteractivity: true,
     });
 
-    // Добавляем слой стилизации через CSS-фильтры на контейнер карты
-    // Это самый надежный способ для версии 2.1 быстро сменить гамму
     const mapCanvas = container.querySelector('ymaps[class$="-map"]');
     if (mapCanvas) {
-      // Немного тонируем карту в сторону твоего фонового цвета #FFD6BD
       container.style.backgroundColor = '#e5e5e5';
     }
 
@@ -135,7 +128,6 @@ function initMap() {
   }
 }
 
-// Поиск подсказок через твой БЭКЕНД
 function handleInput() {
   clearTimeout(debounceTimer);
   suggestions.value = [];
@@ -143,7 +135,6 @@ function handleInput() {
   if (eventAddress.value.length < 3) return;
 
   debounceTimer = setTimeout(async () => {
-    // Обращаемся к твоему новому эндпоинту в core/services
     console.log(eventAddress)
     const url = `${BACKEND_URL}api/yandex/map-helper?suggest=${encodeURIComponent(eventAddress.value)}`;
     console.log(url)
@@ -167,10 +158,9 @@ function handleInput() {
     } catch (e) {
       console.error("Ошибка Suggest API через бэкенд:", e);
     }
-  }, 800); // Задержка 800мс для комфортного ввода
+  }, 800);
 }
 
-// Выбор подсказки и поиск координат на ФРОНТЕНДЕ
 function selectSuggestion(val) {
   eventAddress.value = val;
   suggestions.value = [];
@@ -187,7 +177,6 @@ function selectSuggestion(val) {
   }
 }
 
-// Геокодирование текста (по кнопке "Найти")
 function geocodeByText() {
   if (!eventAddress.value || !window.ymaps) return;
 
@@ -201,7 +190,6 @@ function geocodeByText() {
   });
 }
 
-// Обратное геокодирование (Координаты -> Адрес)
 function reverseGeocode(c) {
   ymaps.geocode(c).then((res) => {
     const obj = res.geoObjects.get(0);
@@ -211,7 +199,6 @@ function reverseGeocode(c) {
   });
 }
 
-// Обновление позиции маркера
 function updateMarker(newCoords) {
   coords.value = newCoords;
   if (myPlacemark.value) {
