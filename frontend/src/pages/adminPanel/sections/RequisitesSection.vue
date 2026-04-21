@@ -150,7 +150,7 @@ const handleRemove = (options) => {
           await store.FetchRequisites()
           resolve(true)
         } catch (e) {
-          message.error('Ошибка при удалении')
+          message.error('Ошибка при удалении', e)
           resolve(false)
         }
       },
@@ -193,7 +193,7 @@ const handleSave = async () => {
     showModal.value = false
     await store.FetchRequisites()
   } catch (e) {
-    message.error('Ошибка при сохранении')
+    message.error('Ошибка при сохранении', e)
   } finally {
     submitLoading.value = false
   }
@@ -207,7 +207,7 @@ const handleDelete = async () => {
       showModal.value = false
       await store.FetchRequisites()
     } catch (e) {
-      message.error('Ошибка при удалении')
+      message.error('Ошибка при удалении', e)
     }
   }
 }
