@@ -180,7 +180,7 @@ function selectSuggestion(val) {
 function geocodeByText() {
   if (!eventAddress.value || !window.ymaps) return;
 
-  ymaps.geocode(eventAddress.value, { boundedBy: SV_BOUNDS, results: 1 }).then((res) => {
+  ymaps.geocode(eventAddress.value, { results: 1 }).then((res) => {
     const obj = res.geoObjects.get(0);
     if (obj) {
       const foundCoords = obj.geometry.getCoordinates();
@@ -261,7 +261,7 @@ onUnmounted(() => {
   position: relative;
   flex: 1;
   display: flex;
-  gap: 10px;
+  gap: 100px;
 }
 
 .input-wrapper {
