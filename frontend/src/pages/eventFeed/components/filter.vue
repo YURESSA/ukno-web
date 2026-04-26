@@ -71,12 +71,19 @@
             <n-input-number v-model:value="priceRange[0]" :step="100" placeholder="Сумма от" size="small" :show-button="false" />
             <n-input-number class="right-input" v-model:value="priceRange[1]" :step="100" placeholder="Сумма до" size="small" :show-button="false" />
           </n-space>
-          <n-slider v-model:value="priceRange" range :step="100" :min="excursionsStats.cost.min" :max="excursionsStats.cost.max" />
+          <n-slider
+            v-if="excursionsStats?.cost"
+            v-model:value="priceRange"
+            range
+            :step="100"
+            :min="excursionsStats.cost.min"
+            :max="excursionsStats.cost.max"
+          />
         </n-space>
       </div>
       <div class="filter-component">
         <h5>Возрастная категория</h5>
-        <n-checkbox-group v-model:value="formData.age_category" @update:value="handleFormatTypeChange">
+        <n-checkbox-group v-model:value="formData.age_category">
           <n-space class="checkbox-group" item-style="display: flex;">
             <n-checkbox size="large" value="Для детей (0-6 лет)">
               Для детей (0-6 лет)
@@ -106,7 +113,7 @@ import { ref, defineEmits, watch, onMounted, computed } from 'vue'
 import { NCheckbox, NCheckboxGroup, NSpace, NInputNumber, NSlider, NDatePicker } from 'naive-ui'
 import BaseButton from '@UI/button/BaseButton.vue'
 import DefaultButton from '@UI/button/DefaultButton.vue'
-import IconButton from '@/components/UI/button/IconButton.vue'
+// import IconButton from '@/components/UI/button/IconButton.vue'
 import { useDataStore } from '@/stores/counter';
 
 const store = useDataStore();
@@ -124,7 +131,13 @@ const allFormatOptions = computed(() => {
   return [...excursionsStats.value.categories.map(item => item.category_name)];
 });
 
-const priceRange = ref([excursionsStats.value.cost.min, excursionsStats.value.cost.max])
+const priceRange = ref([0, 5000])
+
+watch(excursionsStats, (val) => {
+  if (!val?.cost) return
+  priceRange.value = [val.cost.min, val.cost.max]
+}, { immediate: true })
+
 const range = ref([Date.now(), Date.now() + 7 * 24 * 60 * 60 * 1000]);
 
 const formData = ref({
@@ -132,10 +145,10 @@ const formData = ref({
   start_date: '',
   end_date: '',
   participants_count: 1,
-  format_type: '',
+  format_type: [],
   min_price: '',
   max_price: '',
-  age_category: '',
+  age_category: [],
 });
 
 
@@ -191,8 +204,6 @@ function buildQueryString(formData) {
       params.append(key, value);
     }
   }
-
-  console.log(params.toString());
   return params.toString();
 }
 
@@ -213,10 +224,10 @@ const resetFilter = async () => {
       start_date: '',
       end_date: '',
       participants_count: 1,
-      format_type: '',
+      format_type: [],
       min_price: '',
       max_price: '',
-      age_category: '',
+      age_category: [],
     }
   } catch (error) {
     console.error('Ошибка при загрузке экскурсий:', error);
@@ -478,6 +489,9 @@ const resetFilter = async () => {
   .interact-button{
     margin-top: 20px;
     margin-bottom: 50px;
+  }
+  .interact-button > button{
+    max-width: 160px;
   }
 }
 </style>

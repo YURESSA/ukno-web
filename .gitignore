@@ -45,18 +45,6 @@ yarn-error.log
 Thumbs.db
 /backend/migrations/
 /backend/media/
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-/media/
-=======
-/media/
->>>>>>> main-frontend
-=======
 /media/
 frontend/.env
->>>>>>> origin/main-frontend
-=======
-/media/
-frontend/.env
->>>>>>> f1372bde949e81b92285b182534b182a833e0f65
+frontend/dist

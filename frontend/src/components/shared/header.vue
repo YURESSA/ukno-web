@@ -5,9 +5,7 @@
         <li class="project">
           Проекты
           <ul class="project-list">
-            <li>Психологический клуб</li>
-            <li>Репетиторский клуб</li>
-            <li>Музейное пространство</li>
+            <a v-for="p in projects" :key="p.id" :href="p.link" target="_blank"><li>{{p.title}}</li></a>
           </ul>
         </li>
         <li><RouterLink to="/events">События</RouterLink></li>
@@ -31,6 +29,11 @@
           </button>
         </RouterLink>
         <RouterLink to="/resident-profile" v-else-if="!hasToken && role === 'resident'">
+          <button>
+            <h4>{{ profileData.full_name[0].toUpperCase() }}</h4>
+          </button>
+        </RouterLink>
+        <RouterLink to="/admin-profile" v-else-if="!hasToken && role === 'admin'">
           <button>
             <h4>{{ profileData.full_name[0].toUpperCase() }}</h4>
           </button>
@@ -67,43 +70,76 @@
               <span>{{ profileData.full_name[0].toUpperCase() }}</span>
             </button>
           </RouterLink>
+          <RouterLink to="/admin-profile" v-else-if="!hasToken && role === 'admin'">
+            <button>
+              <h4>{{ profileData.full_name[0].toUpperCase() }}</h4>
+            </button>
+          </RouterLink>
         </div>
       </div>
 
       <!-- Анимированное меню с использованием Transition -->
-      <Transition name="menu-fade">
-        <div v-if="menuOpen" class="mobile-menu">
-          <ul>
-            <li>
-              <div @click="toggleProjects" class="project-toggle">
-                Проекты
-              </div>
-              <Transition name="slide-fade">
-                <ul v-if="showProjects" class="mobile-projects">
-                  <li>Психологический клуб</li>
-                  <li>Репетиторский клуб</li>
-                  <li>Музейное пространство</li>
-                </ul>
-              </Transition>
-            </li>
-            <li><RouterLink to="/events" @click="menuOpen = false">События</RouterLink></li>
-            <li><RouterLink to="/news" @click="menuOpen = false">Новости</RouterLink></li>
-            <li><RouterLink to="/ukno" @click="menuOpen = false">О нас</RouterLink></li>
-          </ul>
-        </div>
-      </Transition>
+      <Teleport to="body">
+        <Transition name="menu-fade">
+          <div v-if="menuOpen" class="mobile-overlay" @click.self="menuOpen = false">
+            <div class="mobile-menu">
+              <ul>
+                <li>
+                  <div @click="toggleProjects" class="project-toggle">
+                    Проекты
+                  </div>
+                  <Transition name="slide-fade">
+                    <ul v-if="showProjects" class="mobile-projects">
+                      <a v-for="p in projects" :key="p.id" :href="p.link" target="_blank"><li>{{p.title}}</li></a>
+                    </ul>
+                  </Transition>
+                </li>
+                <li><RouterLink to="/events" @click="menuOpen = false">События</RouterLink></li>
+                <li><RouterLink to="/news" @click="menuOpen = false">Новости</RouterLink></li>
+                <li><RouterLink to="/ukno" @click="menuOpen = false">О нас</RouterLink></li>
+              </ul>
+            </div>
+          </div>
+        </Transition>
+      </Teleport>
     </nav>
   </div>
 </template>
 
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onUnmounted, onMounted } from 'vue';
 import { useDataStore } from '@/stores/counter';
 
 const store = useDataStore();
 const menuOpen = ref(false)
 const showProjects = ref(false);
+const projects = computed(() => store.getProject)
+
+watch(menuOpen, (open) => {
+  if (open) {
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${window.scrollY}px`;
+    document.body.style.width = '100%';
+  } else {
+    const scrollY = Math.abs(parseInt(document.body.style.top || '0'));
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    window.scrollTo(0, scrollY);
+  }
+});
+
+onMounted(async () => {
+  await store.FetchProject();
+});
+
+
+onUnmounted(() => {
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.width = '';
+});
 
 const toggleProjects = () => {
   showProjects.value = !showProjects.value;
@@ -193,7 +229,7 @@ h4{
   height: 70px;
 }
 
-.project-list > li{
+.project-list li{
   padding: 6px 12px;
   width: 260px;
   transition: all 0.3s ease;
@@ -202,7 +238,7 @@ h4{
   cursor: pointer;
 }
 
-.project-list > li:hover{
+.project-list li:hover{
   background-color: #EBEBEB;
 }
 
@@ -294,6 +330,13 @@ h4{
   background: none;
 }
 
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 998;
+}
+
+
 .mobile-menu{
   display: flex;
   justify-content: center;
@@ -302,7 +345,7 @@ h4{
   top: 112px;
   left: 0;
   background-color: white;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); */
   z-index: 999;
 }
 

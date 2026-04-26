@@ -32,7 +32,7 @@ h5 {
   font-family: 'Roboto Flex', Arial, Helvetica, sans-serif;
   font-variation-settings:
     'wght' 700,
-    'wdth' 151,  /* Эта ось теперь доступна! */
+    'wdth' 151,
     'opsz' 100;
 }
 

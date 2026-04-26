@@ -28,17 +28,20 @@
 </template> -->
 
 <template>
+  <div class="title" id="news">
+    <h3>Новости молодежного бюро</h3>
+  </div>
   <div class="history-wrapper" id="history">
-    <div class="container">
+    <div class="container" v-if="news && news.length > 0">
       <div class="img-block">
         <img :src="imageUrl" alt="">
       </div>
       <div class="content-block">
         <h3>{{ news[0].title }}</h3>
         <div class="content">
-          <p>{{ news[0].content }}</p>
+          <p>{{ news[0].short_description }}</p>
         </div>
-        <RouterLink to=""><IconButton class="link-button" text="Открыть новость"><img src="/icon/white-arrow.svg" alt=""></IconButton></RouterLink>
+        <RouterLink to="/news"><IconButton class="link-button" text="Открыть новость"><img src="/icon/white-arrow.svg" alt=""></IconButton></RouterLink>
       </div>
     </div>
   </div>
@@ -46,21 +49,32 @@
 
 <script setup>
 import IconButton from '@/components/UI/button/IconButton.vue';
-import NewsCard from '@/components/shared/news-card.vue';
 import { baseUrl } from '@/stores/counter';
 import { computed } from 'vue';
 
 const props = defineProps({
-  news: Object,
+  news: Array,
 })
 
-const imageUrl = computed(() => baseUrl + props.news[0].images[0])
+console.log(!props.news)
+
+const imageUrl = computed(() => {
+  if (props.news && props.news.length > 0 && props.news[0].images) {
+    return baseUrl + props.news[0].images[0];
+  }
+  return '';
+})
 </script>
 
 <style scoped>
 .history-wrapper{
-  margin-top: 50px;
+  margin-top: 56px;
   margin-bottom: 120px;
+}
+
+.title{
+  width: 100%;
+  max-width: 1800px;
 }
 
 .container{
@@ -71,10 +85,12 @@ const imageUrl = computed(() => baseUrl + props.news[0].images[0])
 }
 
 .img-block > img {
+  display: block;
   width: 310px;
   height: 430px;
   object-fit: cover;
   object-position: center;
+  border-radius: 15px;
 }
 
 .content-block{
@@ -96,14 +112,24 @@ const imageUrl = computed(() => baseUrl + props.news[0].images[0])
   background: none;
 }
 
+.link-button:hover {
+  background-color: #4E4E4E;
+}
+
+.link-button:active {
+  background-color: #949494;
+}
+
 .content > p{
   margin-top: 20px;
+  max-width: 1000px;
 }
 
 @media (max-width: 756px) {
   .img-block > img {
-    width: 342px;
+    width: 100%;
     height: 167px;
+    border-radius: 0px;
   }
   .container{
     display: flex;
@@ -112,6 +138,9 @@ const imageUrl = computed(() => baseUrl + props.news[0].images[0])
   }
   .content {
     margin: 30px 0;
+  }
+  .history-wrapper{
+    margin-bottom: 40px;
   }
 }
 </style>

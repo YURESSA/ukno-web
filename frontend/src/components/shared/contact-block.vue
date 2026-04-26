@@ -16,7 +16,7 @@
             <slot class="yand-map"></slot>
           </div>
           <div class="info">
-            <h4>Загляните к нам!</h4>
+            <h4 v-if="!$isMobile()">Загляните к нам!</h4>
             <div class="info-block">
               <img src="/icon/footer/city.svg" alt="">
               <div class="text">
@@ -66,21 +66,23 @@ h4{
 
 .map-radius{
   width: 100%;
+  max-width: 1000px;
   border-radius: 40px;
   overflow: hidden;
 }
 
 .map{
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: center;
-  gap: 100px;
+  gap: 70px;
 }
 
 .info{
   display: flex;
   flex-direction: column;
   gap: 45px;
+  min-width: max-content;
 }
 
 .info-block{
@@ -112,6 +114,11 @@ h4{
     flex-direction: column;
     align-items: center;
     gap: 20px;
+  }
+  .map-radius{
+    width: 100%;
+    border-radius: 40px;
+    overflow: hidden;
   }
 }
 </style>

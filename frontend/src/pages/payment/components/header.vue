@@ -18,8 +18,6 @@ const props = defineProps({
 });
 
 function closePage(){
-  console.log('History state:', window.history.state);
-  console.log('History length:', window.history.length);
   router.back();
 }
 </script>

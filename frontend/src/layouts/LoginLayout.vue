@@ -22,8 +22,9 @@ import { SHeader, SFooter } from '@shared';
   display: flex;
   justify-content: center;
   align-items: center;
-  height: calc(100vh - 120px);
-  max-height: 1000px;
+  height: calc(100vh - 112px);
+  /* max-height: 1000px; */
+  /* padding-bottom: 90px; */
   overflow: hidden;
 }
 
@@ -87,7 +88,7 @@ import { SHeader, SFooter } from '@shared';
   }
   .login-layout{
     height: 100%;
-    min-height: calc(100vh - 85px);
+    min-height: calc(100vh - 112px);
   }
 }
 </style>

@@ -1,7 +1,7 @@
 <template>
   <Welcome />
   <Alert/>
-  <about-us></about-us>
+  <about-us :culturalData="culturalSpace"></about-us>
   <Events v-if="!$isMobile()"/>
   <div class="events-mobile page-wrapper" v-if="$isMobile()">
     <div class="title text-orange">
@@ -68,12 +68,12 @@
   <div class="page-wrapper dark-wrapper">
     <News :news="news.news"/>
     <!-- <History/> -->
-    <Partner/>
+    <Partner :partners="partners" />
   </div>
   <Contact class="page-wrapper">
     <iframe
     src="https://yandex.ru/map-widget/v1/?um=constructor%3A467ac6eb77e4af971eecb9575ed4f0203a9875b769906a7e184a781db5718a65&amp;source=constructor"
-    width="629"
+    width="100%"
     height="462"
     frameborder="0"
     class="yand-map"
@@ -83,7 +83,7 @@
 
 <script setup>
 import { onMounted, watch, computed  } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useDataStore } from '@/stores/counter';
 import Welcome from './components/welcome-block.vue';
 import AboutUs from './components/about-us.vue';
@@ -95,6 +95,7 @@ import Contact from '../../components/shared/contact-block.vue';
 import Alert from '@/components/UI/alert.vue';
 import IconButton from '@/components/UI/button/IconButton.vue';
 
+const router = useRouter();
 const route = useRoute();
 const store = useDataStore();
 
@@ -114,11 +115,15 @@ const scrollToHash = () => {
 };
 
 const news = computed(() => store.getNews);
+const partners = computed(() => store.getPartners);
+const culturalSpace = computed(() => store.getCulturalSpace);
 
 onMounted(async () => {
   scrollToHash
   try {
     await store.FetchNews();
+    await store.FetchPartners();
+    await store.FetchCulturalSpace();
   } catch (error) {
     console.error('Ошибка при загрузке новостей:', error);
   }
@@ -147,7 +152,7 @@ watch(() => route.hash, scrollToHash);
     height: 242px;
   }
   .dark-wrapper {
-    border-radius: 0;
+    border-radius: 22px;
   }
   .button {
     width: 100%;
@@ -171,7 +176,9 @@ watch(() => route.hash, scrollToHash);
   padding: 24px;
   padding-top: 40px;
   border-radius: 14px;
+  gap: 30px;
   border: 2px solid #f25c03;
+  overflow: hidden;
 }
 
 .card-mobile > .title, .card-mobile > .content{

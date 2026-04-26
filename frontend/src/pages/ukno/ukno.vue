@@ -4,11 +4,12 @@
 
     <div class="about-us">
       <div class="title">
-        <h2>Молодёжное бюро <br> 5 этаж</h2>
-        <img src="/public/about-us/young-buro.png" class="team-img" alt="">
+        <h2 v-if="!$isMobile()">Молодёжное бюро <br> 5 этаж</h2>
+        <h2 v-if="$isMobile()">Молодёжное <br>  бюро</h2>
+        <img src="/about-us/young-buro.png" class="team-img" alt="">
       </div>
       <div class="who-we">
-        <img src="/public/about-us/IMG_7642 2.png" alt="">
+        <img src="/about-us/IMG_7642 2.png" alt="">
         <h3 class="text-orange">Кто мы</h3>
         <p>Мы - команда Уральского клуба нового образования — живое сообщество педагогов, психологов, инженеров и самих подростков, которые вместе создают образование будущего. Не лекции и учебники, а реальные проекты, эксперименты и осмысленное общение.</p>
       </div>
@@ -101,34 +102,14 @@
         <h3>Наша команда</h3>
       </div>
       <div class="person-list">
-        <div class="person-card">
-          <img src="/about-us/time-photo.png" alt="">
-          <p class="name">Денис Борисович</p>
-          <p class="profession">курирует организацию корпоративных мероприятий.</p>
-        </div>
-        <div class="person-card">
-          <img src="/about-us/time-photo.png" alt="">
-          <p class="name">Денис Борисович</p>
-          <p class="profession">курирует организацию корпоративных мероприятий.</p>
-        </div>
-        <div class="person-card">
-          <img src="/about-us/time-photo.png" alt="">
-          <p class="name">Денис Борисович</p>
-          <p class="profession">курирует организацию корпоративных мероприятий.</p>
-        </div>
-        <div class="person-card">
-          <img src="/about-us/time-photo.png" alt="">
-          <p class="name">Денис Борисович</p>
-          <p class="profession">курирует организацию корпоративных мероприятий.</p>
-        </div>
-        <div class="person-card">
-          <img src="/about-us/time-photo.png" alt="">
-          <p class="name">Денис Борисович</p>
-          <p class="profession">курирует организацию корпоративных мероприятий.</p>
+        <div class="person-card" v-for="(k, index) in teams" :key="k.id">
+          <img :class="{'uneven-person': teams.length % 2 && index === teams.length - 1}" :src="baseUrl + k.photo" alt="">
+          <p class="name">{{ k.full_name }}</p>
+          <div class="profession" v-html="k.description"></div>
         </div>
       </div>
     </div>
-
+    <h2 v-if="$isMobile()">Наши ценности</h2>
     <div class="advantages">
       <div class="first advantages-item">
         <h3 class="step">01</h3>
@@ -167,72 +148,34 @@
       </div>
     </div>
 
+
     <div class="timeline">
       <h3>История нашего бюро</h3>
       <div class="timeline-wrapper" ref="timelineWrapper">
         <div class="line-bg">
           <div class="line-fill" :style="{ height: fillHeight + '%' }"></div>
         </div>
-        <div class="timeline-element">
-          <div class="dot"></div>
-          <div class="info timeline-element-right">
-            <p class="date text-l">12 октября <br> 2025</p>
-            <div class="event-info">
-              <p class="text-l">Проведение экспедиции</p>
-              <p>В ходе экспедиции был осуществлён сбор полевых данных и образцов в соответствии с поставленными научными задачами.</p>
-            </div>
-          </div>
-        </div>
-        <div class="timeline-element">
+        <div
+          v-for="(event, index) in sortHistory"
+          :key="event.id"
+          class="timeline-element"
+        >
           <div class="dot"></div>
           <div
             class="info"
             :class="{
+              // На мобильных: все элементы справа
               'timeline-element-right': $isMobile(),
-              'timeline-element-left': !$isMobile()
+              // На десктопе: четные элементы слева, нечетные - справа
+              'timeline-element-left': !$isMobile() && index % 2 === 1,
+              'timeline-element-right': !$isMobile() && index % 2 === 0
             }"
           >
-            <p class="date text-l">12 октября <br> 2025</p>
-            <div class="event-info">
-              <p class="text-l">Проведение экспедиции</p>
-              <p>В ходе экспедиции был осуществлён сбор полевых данных и образцов в соответствии с поставленными научными задачами.</p>
-            </div>
-          </div>
-        </div>
-        <div class="timeline-element">
-          <div class="dot"></div>
-          <div class="info timeline-element-right">
-            <p class="date text-l">12 октября <br> 2025</p>
-            <div class="event-info">
-              <p class="text-l">Проведение экспедиции</p>
-              <p>В ходе экспедиции был осуществлён сбор полевых данных и образцов в соответствии с поставленными научными задачами.</p>
-            </div>
-          </div>
-        </div>
-        <div class="timeline-element">
-          <div class="dot"></div>
-          <div
-            class="info"
-            :class="{
-              'timeline-element-right': $isMobile(),
-              'timeline-element-left': !$isMobile()
-            }"
-          >
-            <p class="date text-l">12 октября <br> 2025</p>
-            <div class="event-info">
-              <p class="text-l">Проведение экспедиции</p>
-              <p>В ходе экспедиции был осуществлён сбор полевых данных и образцов в соответствии с поставленными научными задачами.</p>
-            </div>
-          </div>
-        </div>
-        <div class="timeline-element">
-          <div class="dot"></div>
-          <div class="info timeline-element-right">
-            <p class="date text-l">12 октября <br> 2025</p>
-            <div class="event-info">
-              <p class="text-l">Проведение экспедиции</p>
-              <p>В ходе экспедиции был осуществлён сбор полевых данных и образцов в соответствии с поставленными научными задачами.</p>
-            </div>
+            <a v-if="event.link" :href="event.link" target="_blank"><p class="date text-l" v-html="formatDate(event.date)"></p></a>
+            <a v-if="event.link" :href="event.link" target="_blank" class="event-info">
+                <p class="text-l">{{ event.title }}</p>
+                <p>{{ event.description }}</p>
+            </a>
           </div>
         </div>
       </div>
@@ -271,7 +214,31 @@
 <script setup>
 import IconButton from '@/components/UI/button/IconButton.vue';
 import Card from '@/pages/ukno/components/card.vue';
-import { ref, onMounted, onUnmounted, getCurrentInstance  } from 'vue';
+import { ref, onMounted, onUnmounted, getCurrentInstance, computed  } from 'vue';
+import { baseUrl, useDataStore } from '@/stores/counter';
+
+const store = useDataStore();
+
+const teams = computed(() => store.getTeamData);
+const history = computed(() => store.getHistory);
+
+const sortHistory = computed(() => {
+  if(!history.value) {return}
+  return [...history.value].sort((a, b) => a.date - b.date )
+})
+
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  const day = date.getDate();
+  const months = [
+    'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+    'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+  ];
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+
+  return `${day} ${month}<br>${year}`;
+}
 
 const openNewTab = (url) => {
   window.open(url, '_blank', 'noopener,noreferrer');
@@ -293,7 +260,7 @@ const updateTimeline = () => {
   if (mobileMode) {
     start = windowHeight * 0.75
   } else {
-    start = windowHeight * 0.55
+    start = windowHeight * 0.75
   }
   const progress = (start - rect.top) / rect.height
   const percent = Math.min(Math.max(progress * 100, 0), 100)
@@ -322,7 +289,9 @@ const updateTimeline = () => {
   })
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await store.FetchTeam();
+  await store.FetchHistory();
   window.addEventListener('scroll', updateTimeline)
   updateTimeline()
 })
@@ -386,16 +355,25 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: center;
-  width: 242px;
+  justify-content: space-between;
+  width: 234px;
   padding: 20px;
   border-radius: 14px;
   border: 2px solid #F25C03;
 }
 
+.person-card > img {
+  display: block;
+  width: 100%;
+  border-radius: 14px;
+  height: 260px;
+  object-fit: cover;
+}
+
 .name {
   font-weight: bold;
   margin-top: 20px;
+  margin-bottom: 10px;
 }
 
 .advantages{
@@ -683,10 +661,11 @@ onUnmounted(() => {
 }
 
 .event-info {
+  display: block;
   position: absolute;
   padding: 30px 30px 40px 30px;
   width: max-content;
-  max-width: 490px;
+  max-width: 430px;
   border-radius: 30px;
   backdrop-filter: blur(20.399999618530273px);
   box-shadow: 0 5px 22px -6px rgba(172, 66, 3, 0.2);
@@ -708,7 +687,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
+  width: calc(100% - 30px);
   height: 640px;
   border: 2px solid #ff6c36;
   border-radius: 38px;
@@ -787,13 +766,24 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .about-us{
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 0px;
     margin-bottom: 40px;
   }
+
+  .what-we-do>.title {
+    margin-bottom: 30px;
+  }
+
+  .about-us > .title > h2 {
+    font-size: 40px;
+  }
   .team-img{
-    width: 342px;
-    height: 188px;
+    width: 100%;
+    max-height: 190px;
     transform: translateY(-20px);
+  }
+  .who-we {
+    padding-top: 20px;
   }
   .who-we > img {
     display: none;
@@ -803,6 +793,10 @@ onUnmounted(() => {
   }
   .why-trust{
     margin-bottom: 40px;
+  }
+  .why-trust > .title {
+    flex-wrap: wrap;
+    gap: 30px;
   }
   .parents, .teenager {
     padding: 24px;
@@ -845,16 +839,33 @@ onUnmounted(() => {
   .person-card > img {
     display: block;
     width: 100%;
+    height: 150px;
   }
+
+  .uneven-person {
+    height: 250px!important;
+  }
+
+  .team {
+    margin-bottom: 40px;
+  }
+
   .advantages {
     width: 100vw;
     margin-left: -24px;
+    margin-top: 30px;
+    margin-bottom: 0px;
+    border-radius: 14px;
   }
   .advantages-item{
     padding-top: 24px;
     padding-left: 24px;
     padding-right: 24px;
     align-items: flex-start;
+    border-radius: 14px 14px 0 0px;
+  }
+  .advantages-item:last-of-type{
+    padding-bottom: 84px;
   }
   .advantages-content {
     max-width: fit-content;
@@ -870,7 +881,8 @@ onUnmounted(() => {
   }
 
   .timeline {
-    margin-bottom: 250px;
+    gap: 30px;
+    margin-bottom: 260px;
   }
 
   .timeline-wrapper {
@@ -948,6 +960,8 @@ onUnmounted(() => {
   align-items: flex-start;
   justify-content: space-between;
   padding: 24px;
+  overflow: hidden;
+  padding-bottom: 20px;
   border-radius: 14px;
   border: 2px solid #f25c03;
 }

@@ -301,8 +301,6 @@ const submitEvent = async () => {
     // 4. Добавляем остальные данные в формате JSON
     formDataToSend.append('data', JSON.stringify(formData.value));
 
-    console.log(formDataToSend)
-
     await store.PostNewEvent(formDataToSend);
     await notification('Событие успешно создано!', 'positive');
     router.back();

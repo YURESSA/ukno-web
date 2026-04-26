@@ -91,7 +91,6 @@
       setTimeout(() => {
         load.value = true
       }, 1000)
-      console.log(excursion.value)
     } catch (error) {
       console.error('Ошибка при загрузке экскурсий:', error);
       await notification('Произошла ошибка, попробуйте ещё раз', 'negative');
@@ -165,7 +164,6 @@
     if (hasErrors) {
       return;
     }
-    console.log(JSON.stringify(formData.value))
     try {
       await store.PostReservation(JSON.stringify(formData.value));
       await notification('Бронирование прошло успешно!', 'positive');

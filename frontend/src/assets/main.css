@@ -1,7 +1,7 @@
 @import url('./base.css');
 
 .page-wrapper {
-  padding: 50px 70px;
+  padding: 50px 30px;
 }
 
 .page--margin{
@@ -9,7 +9,7 @@
 }
 
 h1 {
-  font-size: 94px;
+  font-size: 75px;
   font-weight: 700;
 }
 
@@ -38,6 +38,18 @@ h5 {
 a {
   text-decoration: none;
   color: #333333;
+}
+
+.editor-link {
+  color: #F25C03;
+  text-decoration: underline;
+}
+
+blockquote {
+  border-left: 4px solid #F25C03;
+  padding-left: 1em;
+  color: #666;
+  margin: 1em 0;
 }
 
 

@@ -149,5 +149,31 @@ a:hover{
   .page-wrapper{
     padding-top: 0px;
   }
+  .img-wrapper{
+    width: 188px;
+    height: 182px;
+    background-size: 100%;
+  }
+  .top-right-asterisk{
+    top: 0px;
+    right: -75px;
+  }
+
+  .top-left-asterisk{
+    top: 300px;
+    left: -75px;
+  }
+
+  .bottom-right-asterisk{
+    top: 650px;
+    right: -75px;
+    transform: rotate(-16deg);
+  }
+
+  .bottom-left-asterisk{
+    top: 1066px;
+    left: -75px;
+    transform: rotate(-16deg);
+  }
 }
 </style>

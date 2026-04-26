@@ -1,49 +1,46 @@
 <template>
-  <div class="modal-wrapper" @click="$emit('close')">
-    <div class="modal" @click.stop>
-      <form @submit.prevent="handleSubmit" autocomplete="off">
-        <div class="header-form">
-          <h4>Сменить пароль</h4>
-          <IconButton @click="$emit('close')" class="close_btn"><img src="/icon/maki_cross.svg" alt=""></IconButton>
-        </div>
-        <input
-          type="password"
-          name="password"
-          placeholder="Старый пароль *"
-          v-model="formData.old_password"
-          required
-          autocomplete="new-password"
-          @input="clearError('password')"
-          minlength="5"
-        >
-        <input
-          type="password"
-          name="password"
-          placeholder="Новый пароль *"
-          v-model="formData.new_password"
-          required
-          autocomplete="new-password"
-          @input="clearError('password')"
-          minlength="5"
-        >
-        <span class="error-message" v-if="showErrors && errors.password">{{ errors.password }}</span>
-
-        <input
-          type="password"
-          name="passwordConfirmation"
-          placeholder="Повторите пароль *"
-          v-model="passwordConfirmation"
-          required
-          autocomplete="new-password"
-          @input="clearError('passwordConfirmation')"
-        >
-        <span class="error-message" v-if="showErrors && errors.passwordConfirmation">{{ errors.passwordConfirmation }}</span>
-        <div class="button-wrapper">
-          <BaseButton text="Сохранить" />
-          <DefaultButton class="reset-button" text="Сбросить" @click="resetForm" type="button" />
-        </div>
-      </form>
-    </div>
+  <div class="modal" @click.stop>
+    <form @submit.prevent="handleSubmit" autocomplete="off">
+      <div class="header-form">
+        <h4>Сменить пароль</h4>
+        <IconButton @click="$emit('close')" class="close_btn"><img src="/icon/maki_cross.svg" alt=""></IconButton>
+      </div>
+      <input
+        type="password"
+        name="password"
+        placeholder="Старый пароль *"
+        v-model="formData.old_password"
+        required
+        autocomplete="new-password"
+        @input="clearError('password')"
+        minlength="5"
+      >
+      <input
+        type="password"
+        name="password"
+        placeholder="Новый пароль *"
+        v-model="formData.new_password"
+        required
+        autocomplete="new-password"
+        @input="clearError('password')"
+        minlength="5"
+      >
+      <span class="error-message" v-if="showErrors && errors.password">{{ errors.password }}</span>
+      <input
+        type="password"
+        name="passwordConfirmation"
+        placeholder="Повторите пароль *"
+        v-model="passwordConfirmation"
+        required
+        autocomplete="new-password"
+        @input="clearError('passwordConfirmation')"
+      >
+      <span class="error-message" v-if="showErrors && errors.passwordConfirmation">{{ errors.passwordConfirmation }}</span>
+      <div class="button-wrapper">
+        <BaseButton text="Сохранить" />
+        <DefaultButton class="reset-button" text="Сбросить" @click="resetForm" type="button" />
+      </div>
+    </form>
   </div>
 </template>
 
@@ -152,18 +149,6 @@ function resetForm(){
 </script>
 
 <style scoped>
-.modal-wrapper{
-  display: block;
-  content: '';
-  width: 100%;
-  height: 100vh;
-  position: fixed;
-  top: 0;
-  overflow: hidden;
-  background-color: rgba(128, 128, 128, 0.459);
-  z-index: 99;
-}
-
 .header-form{
   display: flex;
   justify-content: space-between;
@@ -184,6 +169,7 @@ function resetForm(){
   top: 50%;
   left: 50%;
   transform: translateY(-50%) translateX(-50%);
+  z-index: 1000;
 }
 
 form {

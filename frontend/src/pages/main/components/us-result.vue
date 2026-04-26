@@ -65,47 +65,14 @@
           </button>
         </div>
       </template>
-      <div class="carousel-item">
+      <div class="carousel-item" v-for="info in filteredData" :key="info.order_index">
         <img
           class="carousel-img"
-          src="/public/img/result-test-img.png"
+          :src="baseUrl + info.photo"
         >
         <div class="content-description">
           <p class="text-standart medium">
-            С 2025 года мы открыли новое пространство для молодежных инициатив.
-          </p>
-        </div>
-      </div>
-      <div class="carousel-item">
-        <img
-          class="carousel-img"
-          src="/public/img/result-test-img.png"
-        >
-        <div class="content-description">
-          <p class="text-standart medium">
-            С 2025 года мы открыли новое пространство для молодежных инициатив.
-          </p>
-        </div>
-      </div>
-      <div class="carousel-item">
-        <img
-          class="carousel-img"
-          src="/public/img/result-test-img.png"
-        >
-        <div class="content-description">
-          <p class="text-standart medium">
-            С 2025 года мы открыли новое пространство для молодежных инициатив.
-          </p>
-        </div>
-      </div>
-      <div class="carousel-item">
-        <img
-          class="carousel-img"
-          src="/public/img/result-test-img.png"
-        >
-        <div class="content-description">
-          <p class="text-standart medium">
-            С 2025 года мы открыли новое пространство для молодежных инициатив.
+            {{ info.text }}
           </p>
         </div>
       </div>
@@ -127,16 +94,26 @@
 
 <script setup>
 // import eventsBlock from './events-block.vue';
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { NCarousel, NIcon } from "naive-ui";
+import { baseUrl } from "@/stores/counter";
+
+const props = defineProps({
+  data: Array
+})
+
+const filteredData = computed( () => {
+  if (!props.data) return []
+  return [...props.data].sort((a, b) => a.order_index - b.order_index)
+})
 </script>
 
 <style scoped>
 .result-wrapper{
   background-color: white;
   border-radius: 38px 38px 0px 0px;
-  padding: 80px 50px;
-  padding-bottom: 230px;
+  padding: 80px 50px 20px;
+  /* padding-bottom: 230px; */
 }
 
 h3{
@@ -180,6 +157,7 @@ li{
 }
 
 .carousel-item{
+  width: 80%;
   min-width: 960px;
   max-width: 1280px;
   position: relative;
@@ -188,7 +166,8 @@ li{
 
 .carousel-img {
   width: 100%;
-  /* object-fit: cover; */
+  height: 680px;
+  object-fit: cover;
   border-radius: 31px;
 }
 
@@ -258,5 +237,11 @@ li{
 
 .custom-arrow > button:active{
   background: #F25C03;
+}
+
+@media (max-width: 1500px) {
+  .carousel-item{
+    max-width: 1180px;
+  }
 }
 </style>

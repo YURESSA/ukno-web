@@ -1,60 +1,84 @@
 <template>
   <div class="container">
     <h3>Партнёры</h3>
+
     <div class="partners-block">
-      <img src="/logo/ukno.svg" alt="">
-      <img src="/logo/ПФКИ_Лого.svg" alt="">
-      <img src="/logo/Хлебозавод_логотип.svg" alt="">
-      <img src="/logo/Фудфейс_логотип.svg" alt="">
-    </div>
-    <div class="partners-block">
-      <img src="/logo/5.svg" alt="">
-      <img src="/logo/6.svg" alt="">
-      <img src="/logo/7.svg" alt="">
-      <img src="/logo/8.svg" alt="">
-    </div>
-    <div class="partners-block">
-      <img src="/logo/9.svg" alt="">
-      <img src="/logo/10.svg" alt="">
-      <img src="/logo/11.svg" alt="">
-      <img src="/logo/12.svg" alt="">
+      <a
+        v-for="partner in sortedPartners"
+        :key="partner.id"
+        :href="partner.link"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="partner-link"
+      >
+        <img :src="baseUrl + partner.photo" :alt="partner.name">
+      </a>
     </div>
   </div>
 </template>
 
 <script setup>
+import { baseUrl } from '@/stores/counter';
+import { computed } from 'vue';
 
+const props = defineProps({
+  partners: {
+    type: Array,
+    default: () => []
+  }
+})
+
+const sortedPartners = computed(() => {
+  if (!props.partners.length) return [];
+  return [...props.partners].sort((a, b) => a.order_index - b.order_index);
+})
 </script>
 
 <style scoped>
-.partners-block{
+.partners-block {
   display: flex;
-  justify-content: space-around;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 70px;
   border-radius: 36px;
   padding: 45px 0;
 }
 
-.partners-block > img{
-  width: 241px;
-  height: 88px;
+.partner-link {
+  display: block;
+  transition: opacity 0.3s;
 }
 
-.container{
+.partner-link:hover {
+  opacity: 0.8;
+}
+
+.partners-block img {
+  width: 241px;
+  height: 88px;
+  object-fit: contain;
+}
+
+.container {
   margin: 0 auto;
   max-width: 1800px;
 }
 
-h3{
+h3 {
   margin-bottom: 30px;
 }
 
 @media (max-width: 756px) {
-  h3{
+  h3 {
     margin-bottom: 20px;
   }
-  .partners-block > img{
+  .partners-block img {
     width: 68px;
     height: 57px;
+  }
+  .partners-block {
+    gap: 24px;
+    padding: 20px 0;
   }
 }
 </style>
