@@ -7,6 +7,8 @@ from urllib3.util.retry import Retry
 from yookassa import Payment, Refund, Configuration
 from yookassa.client import ApiClient
 
+from backend.core.config import Config
+
 session = requests.Session()
 retries = Retry(
     total=3,
@@ -40,7 +42,7 @@ def create_yookassa_payment(amount, email, description, quantity=1, metadata=Non
                 },
                 "confirmation": {
                     "type": "redirect",
-                    "return_url": "https://yuressa.uxp.ru/profile"
+                    "return_url": Config.YOOKASSA_REDIRECT_URI
                 },
                 "capture": True,
                 "description": description,
