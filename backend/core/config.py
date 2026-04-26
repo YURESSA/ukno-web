@@ -55,6 +55,7 @@ class Config:
     Configuration.account_id = os.environ.get("ACCOUNT_ID")
     Configuration.secret_key = os.environ.get("YOOKASSA_SECRET_KEY")
     YOOKASSA_REDIRECT_URI = os.environ.get("YOOKASSA_REDIRECT_URI")
+    YANDEX_API_KEY = os.environ.get("YANDEX_API_KEY")
 
     PRODUCTION = str_to_bool(os.getenv("PRODUCTION", "False"))
     S3_ENDPOINT = os.environ.get("S3_ENDPOINT")
