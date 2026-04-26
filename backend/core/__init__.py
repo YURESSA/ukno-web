@@ -94,3 +94,6 @@ def register_apps(app):
 
     from backend.api.frontend_logs import frontend_logs_ns
     api.add_namespace(frontend_logs_ns, path='/api/frontend-logs')
+
+    from backend.api.yandex import yandex_ns
+    api.add_namespace(yandex_ns, path='/api/yandex')
