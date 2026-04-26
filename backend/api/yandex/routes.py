@@ -1,9 +1,9 @@
 from flask import request
-from flask_restx import Namespace, Resource
-from backend.api.admin.decorators import admin_required
-from backend.core.services.yandex_service.yandex_service import get_yandex_suggestions
+from flask_restx import Resource
 
-yandex_ns = Namespace('yandex', description='Операции с Яндекс Картами')
+from backend.api.admin.decorators import admin_required
+from . import yandex_ns
+from backend.core.services.yandex_service.yandex_service import get_yandex_suggestions
 
 
 @yandex_ns.route('/map-helper')
