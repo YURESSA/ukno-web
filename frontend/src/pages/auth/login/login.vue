@@ -157,6 +157,7 @@ input:focus {
 .sumbit--btn{
   width: 100%;
   padding: 20px;
+  font-size: 24px;
   border-radius: 30px;
   border: 2px solid #333333;
   background-color: rgba(255, 255, 255, 0);
