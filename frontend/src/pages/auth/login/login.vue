@@ -26,6 +26,9 @@
           minlength="5"
         >
         <span class="error-message" v-if="showErrors && errors.password">{{ errors.password }}</span>
+        <div class="forgot-password">
+          <RouterLink to="/forgot-password" class="text-orange">Забыли пароль?</RouterLink>
+        </div>
         <DefaultButton type="submit" class="sumbit--btn" text="Войти"/>
         <span class="bold">У ВАС НЕТ АККАУНТА? <RouterLink to="register"><span class="text-orange">ЗАРЕГИСТРИРОВАТЬСЯ</span></RouterLink></span>
       </form>
@@ -157,6 +160,7 @@ input:focus {
 .sumbit--btn{
   width: 100%;
   padding: 20px;
+  font-size: 24px;
   border-radius: 30px;
   border: 2px solid #333333;
   background-color: rgba(255, 255, 255, 0);
@@ -166,6 +170,17 @@ input:focus {
 
 .text-orange{
   color: #F25C03;
+}
+
+.forgot-password {
+  text-align: right;
+  margin-top: -40px;
+}
+
+.forgot-password a {
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
 }
 
 .error-message {

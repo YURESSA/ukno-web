@@ -65,6 +65,24 @@
         <span class="error-message" v-if="showErrors && errors.passwordConfirmation">{{ errors.passwordConfirmation }}</span>
 
         <DefaultButton type="submit" class="sumbit--btn" text="Зарегистрироваться"/>
+        <span>Нажимая кнопку „Зарегистрироваться“, вы соглашаетесь с
+          <span class="text-orange">
+            <a
+              :href="baseUrl+requisites[0].file"
+              class="text-orange"
+              target="blank"
+              v-if="personalDataFile">
+                обработкой персональных данных
+              </a>
+            <a
+              href="https://ukno.ru/wp-content/uploads/2024/10/politika_v_otnoshenii_obrabotki_personalnyh_dannyh_ukno.pdf"
+              class="text-orange"
+              target="blank"
+              v-else>
+                обработкой персональных данных
+            </a>
+          </span>
+        </span>
         <span class="bold">У ВАС УЖЕ ЕСТЬ АККАУНТ? <RouterLink to="login"><span class="text-orange">ВОЙТИ</span></RouterLink></span>
       </form>
     </div>
@@ -72,14 +90,27 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import DefaultButton from '@/components/UI/button/DefaultButton.vue';
-import { useDataStore } from '@/stores/counter';
+import { useDataStore, baseUrl } from '@/stores/counter';
 import router from '@/router';
 import { notification } from '@/utils/notification'
 
 const store = useDataStore();
 const showErrors = ref(false);
+const requisites = computed(() => store.getRequisites);
+
+const personalDataFile = computed(() => {
+  // Проверяем, что данные есть и это массив
+  if (Array.isArray(requisites.value)) {
+    return requisites.value.find(item => item.title === "Обработка персональных данных");
+  }
+  return null;
+});
+
+onMounted(() => {
+  store.FetchRequisites()
+})
 
 const formData = ref({
   phone: '',
@@ -260,6 +291,7 @@ input:focus {
 .sumbit--btn{
   width: 100%;
   padding: 20px;
+  font-size: 24px;
   border-radius: 30px;
   border: 2px solid #333333;
   background-color: rgba(255, 255, 255, 0);

@@ -8,6 +8,8 @@ import LoginLayout from '@/layouts/LoginLayout.vue'
 import EventsFeed from '@/pages/eventFeed/eventsFeed.vue'
 import EventPage from '@/pages/eventPage/eventPage.vue'
 import Login from '@/pages/auth/login/login.vue'
+import ForgotPassword from '@/pages/auth/login/ForgotPassword.vue'
+import ResetPassword from '@/pages/auth/login/ResetPassword.vue'
 import Registration from '@/pages/auth/registration/registration.vue'
 import Payment from '@/pages/payment/payment.vue'
 import UserProfile from '@/pages/personal-accounts/user/user.vue'
@@ -76,6 +78,16 @@ const router = createRouter({
           path: '/login',
           name: 'LoginPage',
           component: Login,
+        },
+        {
+          path: '/forgot-password',
+          name: 'ForgotPasswordPage',
+          component: ForgotPassword,
+        },
+        {
+          path: '/reset-password',
+          name: 'ResetPasswordPage',
+          component: ResetPassword,
         },
         {
           path: '/register',
