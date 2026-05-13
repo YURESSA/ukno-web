@@ -105,6 +105,32 @@ export const useDataStore = defineStore('data', {
         throw error
       }
     },
+    async PostResetPasswordRequest(jsonData) {
+      try {
+        const response = await axios.post(`${baseUrl}/api/user/password-reset-request`, jsonData, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+        return response.data
+      } catch (error) {
+        console.error('Ошибка при запросе сброса пароля:', error.response?.data || error.message)
+        throw error
+      }
+    },
+    async PostResetPassword(jsonData) {
+      try {
+        const response = await axios.post(`${baseUrl}/api/user/password-reset`, jsonData, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+        return response.data
+      } catch (error) {
+        console.error('Ошибка при сбросе пароля:', error.response?.data || error.message)
+        throw error
+      }
+    },
     async FetchExcursions() {
       try {
         const response = await axios.get(`${baseUrl}/api/user/excursions`)
