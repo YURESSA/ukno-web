@@ -18,6 +18,13 @@ def seed_reference_data():
     ensure_data_exists(db, FormatType, 'format_types.json', 'format_type_id', 'format_type_name')
 
 
+def init_database():
+    # Import all model modules before create_all so SQLAlchemy registers every table.
+    from backend.core.models import auth_models, event_models, news_models, ref_models  # noqa: F401
+
+    db.create_all()
+
+
 def register_static_routes(app):
     upload_folder_abs = os.path.join(Config.PROJECT_ROOT, Config.UPLOAD_FOLDER)
 
@@ -68,6 +75,12 @@ def main():
             with app.app_context():
                 seed_reference_data()
             print("Данные успешно посеяны.")
+            sys.exit(0)
+
+        elif cmd == "init_db":
+            with app.app_context():
+                init_database()
+            print("Database schema initialized.")
             sys.exit(0)
 
         elif cmd == "clear_unpaid_reservations":
