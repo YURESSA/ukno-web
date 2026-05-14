@@ -1,3 +1,7 @@
+# Конфигурационные файлы IDE
+.idea/
+.vscode/
+
 # Виртуальное окружение
 .venv/
 venv/
@@ -8,7 +12,7 @@ env/
 .vscode/
 
 # Кеши Python
-__pycache__/
+pycache/
 *.pyc
 *.pyo
 *.pyd
@@ -42,3 +46,6 @@ Thumbs.db
 /backend/migrations/
 /backend/media/
 /media/
+frontend/.env
+frontend/dist
+GEMINI.md
