@@ -3,6 +3,7 @@ import sys
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import send_from_directory, render_template
+from sqlalchemy import inspect, text
 
 from backend.core import create_app, db
 from backend.core.config import Config
@@ -23,6 +24,26 @@ def init_database():
     from backend.core.models import auth_models, event_models, news_models, ref_models  # noqa: F401
 
     db.create_all()
+    ensure_runtime_schema_updates()
+
+
+def ensure_runtime_schema_updates():
+    inspector = inspect(db.engine)
+
+    if "users" not in inspector.get_table_names():
+        return
+
+    phone_column = next((col for col in inspector.get_columns("users") if col["name"] == "phone"), None)
+    if not phone_column:
+        return
+
+    current_length = getattr(phone_column["type"], "length", None)
+    if current_length is not None and current_length >= 32:
+        return
+
+    if db.engine.dialect.name == "postgresql":
+        db.session.execute(text("ALTER TABLE users ALTER COLUMN phone TYPE VARCHAR(32)"))
+        db.session.commit()
 
 
 def register_static_routes(app):

@@ -28,7 +28,7 @@ class User(db.Model):
     user_id = db.Column(db.Integer, primary_key=True)
     full_name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
-    phone = db.Column(db.String(15), nullable=True)
+    phone = db.Column(db.String(32), nullable=True)
     password_hash = db.Column(db.String(256), nullable=False)
 
     role = db.Column(
