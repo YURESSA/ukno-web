@@ -5,7 +5,6 @@ from time import time
 import flask
 from flask import Flask
 from flask_cors import CORS
-from werkzeug.exceptions import RequestEntityTooLarge
 
 from .config import Config
 from .database import db, migrate
@@ -59,14 +58,6 @@ def create_app(testing=False):
             )
 
         return response
-
-    @app.errorhandler(RequestEntityTooLarge)
-    def handle_request_entity_too_large(e):
-        return {
-            "message": "Uploaded form data is too large",
-            "max_content_length": app.config.get("MAX_CONTENT_LENGTH"),
-            "max_form_memory_size": app.config.get("MAX_FORM_MEMORY_SIZE"),
-        }, 413
 
     @app.errorhandler(Exception)
     def handle_exception(e):
