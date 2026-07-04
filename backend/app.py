@@ -20,7 +20,7 @@ def seed_reference_data():
 
 def init_database():
     # Import all model modules before create_all so SQLAlchemy registers every table.
-    from backend.core.models import auth_models, event_models, news_models, ref_models  # noqa: F401
+    from backend.core.models import auth_models, event_models, merch_models, news_models, ref_models  # noqa: F401
 
     db.create_all()
 
