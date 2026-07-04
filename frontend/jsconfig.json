@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"],
+      "@assets/*": ["./src/assets/*"],
+      "@shared/*": ["./src/components/shared/*"],
+      "@UI/*": ["./src/components/UI/*"]
+    }
+  },
+  "exclude": ["node_modules",
+    "dist"
+  ]
+}

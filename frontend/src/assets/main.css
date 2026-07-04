@@ -1,0 +1,156 @@
+@import url('./base.css');
+
+.page-wrapper {
+  padding: 50px 30px;
+}
+
+.page--margin{
+  margin-top: 120px!important;
+}
+
+h1 {
+  font-size: 75px;
+  font-weight: 700;
+}
+
+h2 {
+  font-size: 64px;
+  font-weight: 700;
+  line-height: 110%;
+  color: #333;
+}
+
+h3 {
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 110%;
+}
+
+h4 {
+  font-size: 32px;
+  font-weight: 600;
+}
+
+h5 {
+  font-size: 24px;
+}
+
+a {
+  text-decoration: none;
+  color: #333333;
+}
+
+.editor-link {
+  color: #F25C03;
+  text-decoration: underline;
+}
+
+blockquote {
+  border-left: 4px solid #F25C03;
+  padding-left: 1em;
+  color: #666;
+  margin: 1em 0;
+}
+
+
+.text-standart{
+  font-size: 20px;
+}
+
+.text-l {
+  font-size: 24px;
+}
+
+.larger-text {
+  font-size: 36px;
+}
+
+.medium {
+  font-weight: 500;
+}
+
+.bold{
+  font-weight: 700;
+}
+
+.text-orange{
+  color: #F25C03;
+}
+
+.text-grey{
+  color: #7B7A7A;
+}
+
+.n-collapse {
+  width: max-content !important;
+  font-size: 20px !important;
+}
+
+.n-collapse-item__header-main {
+  display: flex;
+  align-items: center;
+  font-size: 20px;
+  padding: 10px 25px;
+}
+
+.n-collapse-item {
+  position: relative;
+}
+
+.n-carousel__arrow {
+  background-color: #333333 !important;
+}
+
+.n-carousel {
+  /* Стили для точек (dots) */
+  --n-dot-color: #c0c0c0; /* обычное состояние */
+  --n-dot-color-focus: #a0a0a0; /* при фокусе */
+  --n-dot-color-active: #006aff; /* активная точка */
+
+  /* Размеры точек */
+  --n-dot-size: 8px;
+  --n-dot-size-active: 10px;
+
+  /* Стили для стрелок */
+  --n-arrow-color: #3a7bd5;
+  --n-arrow-size: 24px;
+}
+
+@media (max-width: 768px) {
+  .page--margin{
+    margin-top: 0px!important;
+  }
+
+  .page-wrapper {
+    padding: 34px 24px 34px 24px;
+  }
+
+  h1 {
+    font-size: 40px;
+  }
+
+  h2,
+  h3,
+  h4,
+  h5 {
+    font-size: 28px;
+  }
+
+  a {
+    text-decoration: none;
+    color: #333333;
+  }
+
+
+  .text-standart{
+    font-size: 20px;
+  }
+
+  .text-l {
+    font-size: 24px;
+  }
+
+  .larger-text {
+    font-size: 36px;
+  }
+}

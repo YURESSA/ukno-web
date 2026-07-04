@@ -44,9 +44,6 @@ class Config:
 
     UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER", "media/uploads")
     ALLOWED_EXTENSIONS = os.getenv("ALLOWED_EXTENSIONS", "png,jpg,jpeg,gif").split(',')
-    MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", 50 * 1024 * 1024))
-    MAX_FORM_MEMORY_SIZE = int(os.getenv("MAX_FORM_MEMORY_SIZE", 5 * 1024 * 1024))
-    MAX_FORM_PARTS = int(os.getenv("MAX_FORM_PARTS", 200))
     FRONTEND_URL = os.getenv("FRONTEND_URL")
     MAIL_SERVER = os.environ.get("MAIL_SERVER")
     MAIL_PORT = os.environ.get("MAIL_PORT")

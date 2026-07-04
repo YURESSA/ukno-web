@@ -95,7 +95,6 @@ def create_reservation_with_payment(
         description=f"Оплата экскурсии «{session.event.title}» на {session.start_datetime}",
         quantity=participants_count,
         metadata={
-            "type": "reservation",
             "reservation_id": reservation.reservation_id,
             "session_id": session_id,
             "email": user_email
