@@ -16,6 +16,7 @@
     </div>
 
     <div class="developers">
+      <h5>Сайт разработали</h5>
       <ul class="dev-list">
         <li><a href="https://t.me/alllinag" target="_blank">Дизайн</a></li>
         <li><a href="https://github.com/Anton787" target="_blank">Фронтенд</a></li>
@@ -65,7 +66,15 @@ nav {
 
 .developers {
   display: flex;
+  flex-direction: column;
   justify-content: center;
+  align-items: center;
+  color: #c4c4c4;
+  gap: 10px;
+}
+
+.developers > h5 {
+  font-size: 22px;
 }
 
 .dev-list {
@@ -100,6 +109,9 @@ nav {
     gap: 30px;
     align-items: center;
     margin-bottom: 52px;
+  }
+  .developers > h5 {
+    font-size: 20px;
   }
   .nav-list{
     flex-direction: column;

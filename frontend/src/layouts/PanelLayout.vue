@@ -80,12 +80,12 @@ const menuItems = [
   { path: '/panel/history', label: 'История', name: 'AdminHistory' },
   { path: '/panel/partner', label: 'Партнёры', name: 'AdminParther' },
   { path: '/panel/requisites', label: 'Резвизиты', name: 'AdminRequisites' },
+  { path: '/panel/merch', label: '🛍 Магазин', name: 'AdminMerch' },
 ];
 
 const currentSectionTitle = computed(() => route.meta.title || 'Управление');
 
 const showAddButton = computed(() => {
-  // Скрываем кнопку на тех страницах, где создание не предусмотрено (например, Брони)
   const hideOn = ['AdminReservations'];
   return !hideOn.includes(route.name);
 });

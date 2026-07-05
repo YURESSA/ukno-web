@@ -24,6 +24,13 @@ import Ukno from '@/pages/ukno/ukno.vue'
 import NotFoundPage from '@/components/shared/NotFoundPage.vue'
 import Test from '@/pages/test.vue'
 
+// ── Shop ──────────────────────────────────────────────────────────────────────
+import ShopLayout from '@/layouts/ShopLayout.vue'
+import ShopCatalog from '@/pages/shop/catalog/ShopCatalog.vue'
+import ProductDetail from '@/pages/shop/product/ProductDetail.vue'
+import OrdersPage from '@/pages/shop/orders/OrdersPage.vue'
+import FavoritePage from '@/pages/shop/favorite/FavoritePage.vue'
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -207,6 +214,12 @@ const router = createRouter({
           component: () => import('@/pages/adminPanel/sections/RequisitesSection.vue'),
           meta: { title: 'Реквизиты' }
         },
+        {
+          path: 'merch',
+          name: 'AdminMerch',
+          component: () => import('@/pages/adminPanel/sections/MerchSection.vue'),
+          meta: { title: 'Магазин мерча' }
+        },
       ]
     },
     {
@@ -220,6 +233,33 @@ const router = createRouter({
       name: 'changeEvent',
       component: changeEvent,
       meta: { requiresAuth: true, requiredRole: 'resident' },
+    },
+    // ── Shop module ─────────────────────────────────────────────────────────
+    {
+      path: '/shop',
+      component: ShopLayout,
+      children: [
+        {
+          path: '',
+          name: 'ShopCatalog',
+          component: ShopCatalog,
+        },
+        {
+          path: ':id',
+          name: 'ShopProduct',
+          component: ProductDetail,
+        },
+        {
+          path: 'orders',
+          name: 'ShopOrders',
+          component: OrdersPage,
+        },
+        {
+          path: 'favorite',
+          name: 'ShopFavorite',
+          component: FavoritePage,
+        },
+      ],
     },
     {
       path: '/:pathMatch(.*)*',

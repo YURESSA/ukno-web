@@ -1,0 +1,389 @@
+<template>
+  <div class="catalog-page">
+    <!-- Hero Banners -->
+    <section v-if="shopStore.banners.length > 0" class="hero-section">
+      <div class="hero-track" :style="{ transform: `translateX(-${activeBanner * 100}%)` }">
+        <div
+          v-for="banner in shopStore.banners"
+          :key="banner.banner_id"
+          class="hero-slide"
+        >
+          <img :src="`${baseUrl}${banner.image_path}`" class="hero-bg-img" alt="Banner background" />
+          <div class="hero-content">
+            <h2 v-if="banner.title" class="hero-title">{{ banner.title }}</h2>
+            <p v-if="banner.description" class="hero-desc">{{ banner.description }}</p>
+            <a v-if="banner.link_url" :href="banner.link_url" class="hero-cta">Смотреть коллекцию</a>
+            <button v-else class="hero-cta" @click="selectCategory(null)">Смотреть коллекцию</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Стрелки -->
+      <button v-if="shopStore.banners.length > 1" class="hero-arrow hero-arrow--prev" @click="prevBanner" aria-label="Предыдущий">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+      </button>
+      <button v-if="shopStore.banners.length > 1" class="hero-arrow hero-arrow--next" @click="nextBanner" aria-label="Следующий">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </button>
+
+      <!-- Точки -->
+      <div v-if="shopStore.banners.length > 1" class="hero-dots">
+        <button
+          v-for="(_, i) in shopStore.banners"
+          :key="i"
+          class="hero-dot"
+          :class="{ active: i === activeBanner }"
+          @click="activeBanner = i"
+        />
+      </div>
+    </section>
+
+    <!-- Filters -->
+    <section class="filters-section">
+      <button class="filter-btn" :class="{ active: !selectedCategory }" @click="selectCategory(null)">Все</button>
+      <button
+        v-for="cat in shopStore.categories"
+        :key="cat.category_id"
+        class="filter-btn"
+        :class="{ active: selectedCategory === cat.category_id }"
+        @click="selectCategory(cat.category_id)"
+      >{{ cat.name }}</button>
+    </section>
+
+    <!-- Loading -->
+    <div v-if="shopStore.loading" class="loading-grid">
+      <div v-for="i in 8" :key="i" class="product-skeleton" />
+    </div>
+
+    <!-- Products grid -->
+    <section v-else class="products-grid">
+      <ProductCard
+        v-for="product in shopStore.products"
+        :key="product.product_id"
+        :product="product"
+        @favorite="handleFavorite(product)"
+        @click="goToProduct(product.product_id)"
+      />
+    </section>
+
+    <div v-if="!shopStore.loading && shopStore.products.length === 0" class="empty-state">
+      <p>Товары не найдены</p>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useShopStore } from '@/stores/shop'
+import { useDataStore, baseUrl } from '@/stores/counter'
+import ProductCard from '@/components/shop/ProductCard.vue'
+
+const shopStore = useShopStore()
+const dataStore = useDataStore()
+const router = useRouter()
+
+const selectedCategory = ref(null)
+const activeBanner = ref(0)
+let autoplayTimer = null
+
+onMounted(async () => {
+  await shopStore.FetchHome()
+  startAutoplay()
+})
+
+onUnmounted(() => clearInterval(autoplayTimer))
+
+function startAutoplay() {
+  if (shopStore.banners.length > 1) {
+    autoplayTimer = setInterval(() => {
+      activeBanner.value = (activeBanner.value + 1) % shopStore.banners.length
+    }, 5000)
+  }
+}
+
+function prevBanner() {
+  clearInterval(autoplayTimer)
+  const len = shopStore.banners.length
+  activeBanner.value = (activeBanner.value - 1 + len) % len
+  startAutoplay()
+}
+
+function nextBanner() {
+  clearInterval(autoplayTimer)
+  activeBanner.value = (activeBanner.value + 1) % shopStore.banners.length
+  startAutoplay()
+}
+
+async function selectCategory(categoryId) {
+  selectedCategory.value = categoryId
+  await shopStore.FetchProducts(categoryId)
+}
+
+function goToProduct(productId) {
+  router.push(`/shop/${productId}`)
+}
+
+async function handleFavorite(product) {
+  if (!dataStore.auth_key) {
+    router.push('/login')
+    return
+  }
+  await shopStore.ToggleFavorite(dataStore.auth_key, product.product_id)
+}
+</script>
+
+<style scoped>
+.catalog-page {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* ── Hero Banner ── */
+.hero-section {
+  position: relative;
+  overflow: hidden;
+  height: 420px;
+  margin: -32px -24px 0;
+}
+
+.hero-track {
+  display: flex;
+  height: 100%;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hero-slide {
+  flex-shrink: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.hero-bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center right;
+  z-index: 0;
+}
+
+.hero-slide::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    to right,
+    rgba(15, 15, 20, 0.75) 0%,
+    rgba(15, 15, 20, 0.45) 45%,
+    transparent 70%
+  );
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  padding: 0 56px;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.hero-title {
+  font-size: 42px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+
+.hero-desc {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.78);
+  margin: 0;
+  line-height: 1.55;
+  max-width: 300px;
+}
+
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 11px 24px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  background: transparent;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.25s, color 0.25s;
+  margin-top: 4px;
+}
+
+.hero-cta:hover {
+  background: #fff;
+  color: #111;
+}
+
+/* Стрелки */
+.hero-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.hero-arrow:hover {
+  background: rgba(255, 255, 255, 0.28);
+  transform: translateY(-50%) scale(1.08);
+}
+
+.hero-arrow--prev { left: 20px; }
+.hero-arrow--next { right: 20px; }
+
+/* Точки */
+.hero-dots {
+  position: absolute;
+  bottom: 18px;
+  left: 56px;
+  display: flex;
+  gap: 6px;
+  z-index: 10;
+}
+
+.hero-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s, width 0.25s, border-radius 0.25s;
+}
+
+.hero-dot.active {
+  background: #fff;
+  width: 22px;
+  border-radius: 3px;
+}
+
+/* ── Filters ── */
+.filters-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-btn {
+  padding: 8px 20px;
+  border-radius: 100px;
+  border: 1.5px solid #e0ddd8;
+  background: #fff;
+  color: #555;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-btn:hover {
+  border-color: #FF6C36;
+  color: #FF6C36;
+}
+
+.filter-btn.active {
+  background: #FF6C36;
+  border-color: #FF6C36;
+  color: #fff;
+}
+
+/* ── Products grid ── */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.loading-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.product-skeleton {
+  height: 340px;
+  border-radius: 16px;
+  background: linear-gradient(90deg, #f0ede8 25%, #e8e5e0 50%, #f0ede8 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px;
+  color: #999;
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    height: 280px;
+    margin: -20px -16px 0;
+  }
+
+  .hero-content {
+    padding: 0 28px;
+  }
+
+  .hero-title {
+    font-size: 26px;
+  }
+
+  .hero-desc {
+    font-size: 13px;
+  }
+
+  .hero-dots {
+    left: 28px;
+  }
+
+  .products-grid,
+  .loading-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+</style>
