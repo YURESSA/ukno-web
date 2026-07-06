@@ -92,6 +92,7 @@ def create_banner(data, image_file=None):
         title=data.get("title"),
         description=data.get("description"),
         image_text=data.get("image_text"),
+        button_text=data.get("button_text"),
         link_url=data.get("link_url"),
         order_index=_int_value(data.get("order_index")),
         is_active=_bool_value(data.get("is_active"), True),
@@ -110,7 +111,7 @@ def update_banner(banner_id, data, image_file=None):
         remove_file_if_exists(banner.image_path)
         banner.image_path = save_image(image_file, "merch/banners")
 
-    for field in ("title", "description", "image_text", "link_url"):
+    for field in ("title", "description", "image_text", "button_text", "link_url"):
         if field in data:
             setattr(banner, field, data.get(field))
     if "image_path" in data:
@@ -199,7 +200,7 @@ def delete_category(category_id):
     return {"message": "Category deleted"}, HTTPStatus.OK
 
 
-def list_products(category_id=None, active_only=True, user_id=None):
+def list_products(category_id=None, active_only=True, user_id=None, include_images=False):
     query = MerchProduct.query
     if active_only:
         query = query.filter_by(is_active=True)
@@ -212,7 +213,13 @@ def list_products(category_id=None, active_only=True, user_id=None):
             row.product_id
             for row in MerchFavorite.query.filter_by(user_id=user_id).all()
         }
-    return [product.to_list_dict(is_favorite=product.product_id in favorite_ids) for product in products]
+    return [
+        product.to_list_dict(
+            is_favorite=product.product_id in favorite_ids,
+            include_images=include_images,
+        )
+        for product in products
+    ]
 
 
 def get_product_detail(product_id, user_id=None, active_only=True):
@@ -764,5 +771,5 @@ def get_home(user_email=None):
     return {
         "banners": [banner.to_dict() for banner in list_banners(active_only=True)],
         "categories": [category.to_dict() for category in list_categories(active_only=True)],
-        "products": list_products(active_only=True, user_id=user_id),
+        "products": list_products(active_only=True, user_id=user_id, include_images=True),
     }, HTTPStatus.OK

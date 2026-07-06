@@ -34,6 +34,7 @@ BANNER_DATA_EXAMPLE = """{
   "title": "Главный баннер мерча",
   "description": "Новая коллекция уже доступна",
   "image_text": "UKNO MERCH",
+  "button_text": "Купить",
   "link_url": "/merch/products",
   "order_index": 0,
   "is_active": true
