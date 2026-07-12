@@ -2,6 +2,14 @@ import { defineStore } from 'pinia'
 import axios from 'axios'
 import { baseUrl } from '@/stores/counter'
 
+// Проверяет, есть ли у товара хотя бы одно изображение
+function hasProductImage(product) {
+  if (!product) return false
+  if (product.main_image) return true
+  if (product.images && product.images.length > 0) return true
+  return false
+}
+
 export const useShopStore = defineStore('shop', {
   state: () => ({
     // Home
@@ -85,7 +93,13 @@ export const useShopStore = defineStore('shop', {
         const response = await axios.get(`${baseUrl}api/user/merch/cart`, {
           headers: { Authorization: `Bearer ${authKey}` },
         })
-        this.cart = response.data
+        const cartData = response.data
+        // Показываем только товары в корзине, у которых есть изображения
+        // (защита от случаев, когда товар удалили из системы)
+        if (cartData && cartData.items) {
+          cartData.items = cartData.items.filter(item => hasProductImage(item.product))
+        }
+        this.cart = cartData
       } catch (error) {
         console.error('Ошибка при загрузке корзины:', error.response?.data || error.message)
         throw error
@@ -140,7 +154,9 @@ export const useShopStore = defineStore('shop', {
         const response = await axios.get(`${baseUrl}api/user/merch/favorites`, {
           headers: { Authorization: `Bearer ${authKey}` },
         })
-        this.favorites = response.data.favorites || []
+        // Показываем только избранные товары, у которых есть изображения
+        // (защита от случаев, когда товар удалили из системы)
+        this.favorites = (response.data.favorites || []).filter(fav => hasProductImage(fav.product))
       } catch (error) {
         console.error('Ошибка при загрузке избранного:', error.response?.data || error.message)
         throw error

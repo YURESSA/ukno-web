@@ -1,59 +1,44 @@
 <template>
   <div class="product-card" @click="$emit('click')">
-    <!-- Image -->
-    <div class="product-card__img-wrap">
-      <div 
-        v-if="allImages.length > 0" 
-        class="product-card__carousel"
-        ref="carouselRef"
-        @scroll="onScroll"
-      >
+    <!-- Image wrap -->
+    <div
+      class="product-card__img-wrap"
+      ref="wrapRef"
+      @mousemove="onMouseMove"
+      @mouseleave="onMouseLeave"
+      @touchstart.passive="onTouchStart"
+      @touchmove.passive="onTouchMove"
+      @touchend.passive="onTouchEnd"
+    >
+      <!-- Images -->
+      <div v-if="allImages.length > 0" class="product-card__slides">
         <img
           v-for="(img, idx) in allImages"
           :key="idx"
           :src="baseUrl + img"
           :alt="product.name"
           class="product-card__img"
+          :class="{ active: currentIdx === idx }"
           loading="lazy"
         />
       </div>
       <div v-else class="product-card__img-placeholder">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5">
           <rect x="3" y="3" width="18" height="18" rx="2" />
           <circle cx="8.5" cy="8.5" r="1.5" />
           <polyline points="21 15 16 10 5 21" />
         </svg>
       </div>
 
-      <!-- Carousel Dots -->
-      <div v-if="allImages.length > 1" class="carousel-dots">
-        <span 
-          v-for="(_, idx) in allImages" 
-          :key="idx" 
-          class="carousel-dot"
-          :class="{ active: currentImageIndex === idx }"
-        ></span>
+      <!-- Progress segments (thin lines at bottom, like the design) -->
+      <div v-if="allImages.length > 1" class="card-segments">
+        <span
+          v-for="(_, idx) in allImages"
+          :key="idx"
+          class="card-segment"
+          :class="{ active: currentIdx === idx }"
+        />
       </div>
-
-      <!-- Carousel Arrows -->
-      <button 
-        v-if="allImages.length > 1"
-        class="carousel-arrow carousel-arrow--prev"
-        @click.stop="scrollPrev"
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-      </button>
-      <button 
-        v-if="allImages.length > 1"
-        class="carousel-arrow carousel-arrow--next"
-        @click.stop="scrollNext"
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="9 18 15 12 9 6" />
-        </svg>
-      </button>
 
       <!-- Favorite button -->
       <button
@@ -70,198 +55,141 @@
         </svg>
       </button>
 
-      <!-- Out of stock badge -->
+      <!-- Out of stock -->
       <div v-if="product.available === 0" class="product-card__badge out-of-stock">Нет в наличии</div>
     </div>
 
     <!-- Info -->
     <div class="product-card__info">
-      {{ allImages }}
-      <p v-if="product.category" class="product-card__category">{{ product.category.name }}</p>
       <h3 class="product-card__name">{{ product.name }}</h3>
-      <div class="product-card__footer">
-        <span class="product-card__price">{{ formatPrice(product.price) }} ₽</span>
-        <span v-if="product.collection" class="product-card__collection">{{ product.collection }}</span>
-      </div>
+      <span class="product-card__price">{{ formatPrice(product.price) }} ₽</span>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { baseUrl } from '@/stores/counter';
-import { useShopStore } from '@/stores/shop';
+import { ref, computed } from 'vue'
+import { baseUrl } from '@/stores/counter'
+import { useShopStore } from '@/stores/shop'
 
-const shopStore = useShopStore();
+const shopStore = useShopStore()
 
 const props = defineProps({
-  product: {
-    type: Object,
-    required: true,
-  },
-})
-
-const isFavorite = computed(() => {
-  return shopStore.favoriteProductIds.includes(props.product.product_id) || !!props.product.is_favorite;
+  product: { type: Object, required: true },
 })
 
 defineEmits(['click', 'favorite'])
+
+// ── Images ──────────────────────────────────────────────────────
+const allImages = computed(() => {
+  const images = []
+  if (props.product.main_image) images.push(props.product.main_image)
+  if (props.product.images?.length) {
+    props.product.images.forEach(img => {
+      const path = img.image_path || img
+      if (path && path !== props.product.main_image) images.push(path)
+    })
+  }
+  return images
+})
+
+const isFavorite = computed(() =>
+  shopStore.favoriteProductIds.includes(props.product.product_id) || !!props.product.is_favorite,
+)
 
 function formatPrice(price) {
   return Number(price).toLocaleString('ru-RU')
 }
 
-const allImages = computed(() => {
-  const images = [];
-  if (props.product.main_image) {
-    images.push(props.product.main_image);
-  }
-  if (props.product.images && props.product.images.length > 0) {
-    props.product.images.forEach(img => {
-      const path = img.image_path || img;
-      if (path && path !== props.product.main_image) {
-        images.push(path);
-      }
-    });
-  }
-  return images;
-})
+// ── Slide logic ──────────────────────────────────────────────────
+const wrapRef   = ref(null)
+const currentIdx = ref(0)
 
-const carouselRef = ref(null);
-const currentImageIndex = ref(0);
-
-function onScroll() {
-  if (!carouselRef.value) return;
-  const scrollLeft = carouselRef.value.scrollLeft;
-  const width = carouselRef.value.clientWidth;
-  if (width > 0) {
-    currentImageIndex.value = Math.round(scrollLeft / width);
-  }
+/** Mouse: change slide based on horizontal position */
+function onMouseMove(e) {
+  const n = allImages.value.length
+  if (n < 2) return
+  const rect = wrapRef.value.getBoundingClientRect()
+  const x    = e.clientX - rect.left
+  const idx  = Math.min(n - 1, Math.floor((x / rect.width) * n))
+  currentIdx.value = idx
 }
 
-function scrollNext() {
-  if (!carouselRef.value) return;
-  const width = carouselRef.value.clientWidth;
-  carouselRef.value.scrollBy({ left: width, behavior: 'smooth' });
+function onMouseLeave() {
+  currentIdx.value = 0
 }
 
-function scrollPrev() {
-  if (!carouselRef.value) return;
-  const width = carouselRef.value.clientWidth;
-  carouselRef.value.scrollBy({ left: -width, behavior: 'smooth' });
+// ── Touch / Swipe ────────────────────────────────────────────────
+const touchStartX = ref(0)
+const touchStartIdx = ref(0)
+
+function onTouchStart(e) {
+  touchStartX.value   = e.touches[0].clientX
+  touchStartIdx.value = currentIdx.value
+}
+
+function onTouchMove(e) {
+  const n = allImages.value.length
+  if (n < 2) return
+  const rect  = wrapRef.value.getBoundingClientRect()
+  const dx    = e.touches[0].clientX - touchStartX.value
+  const steps = Math.round((dx / rect.width) * n)
+  const idx   = Math.max(0, Math.min(n - 1, touchStartIdx.value - steps))
+  currentIdx.value = idx
+}
+
+function onTouchEnd() {
+  // keep current index — already set by onTouchMove
 }
 </script>
 
 <style scoped>
 .product-card {
   background: #fff;
-  border-radius: 16px;
+  border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.25s, box-shadow 0.25s;
   display: flex;
   flex-direction: column;
+  transition: box-shadow 0.25s;
 }
 
 .product-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.09);
 }
 
-/* Image */
+/* ── Image wrap ── */
 .product-card__img-wrap {
   position: relative;
-  aspect-ratio: 1 / 1.1;
+  aspect-ratio: 3 / 4;
   overflow: hidden;
   background: #f5f3f0;
+  user-select: none;
 }
 
-.product-card__carousel {
-  display: flex;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+/* ── Slides ── */
+.product-card__slides {
+  position: relative;
   width: 100%;
   height: 100%;
-}
-.product-card__carousel::-webkit-scrollbar {
-  display: none;
 }
 
 .product-card__img {
-  flex: 0 0 100%;
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  scroll-snap-align: start;
-}
-
-/* Dots */
-.carousel-dots {
-  position: absolute;
-  bottom: 12px;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.18s ease;
   pointer-events: none;
 }
 
-.carousel-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.5);
-  transition: background 0.2s, transform 0.2s;
+.product-card__img.active {
+  opacity: 1;
 }
 
-.carousel-dot.active {
-  background: rgba(255, 255, 255, 1);
-  transform: scale(1.2);
-}
-
-/* Arrows */
-.carousel-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(4px);
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.2s, background 0.2s;
-  z-index: 2;
-  color: #333;
-}
-
-@media (hover: hover) {
-  .product-card__img-wrap:hover .carousel-arrow {
-    opacity: 1;
-  }
-}
-
-.carousel-arrow:hover {
-  background: rgba(255, 255, 255, 0.95);
-}
-
-.carousel-arrow--prev {
-  left: 8px;
-}
-
-.carousel-arrow--next {
-  right: 8px;
-}
-
+/* ── Placeholder ── */
 .product-card__img-placeholder {
   width: 100%;
   height: 100%;
@@ -270,99 +198,95 @@ function scrollPrev() {
   justify-content: center;
 }
 
-/* Favorite */
+/* ── Segments (progress bar style) ── */
+.card-segments {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 3px;
+  padding: 0 8px 8px;
+  z-index: 2;
+}
+
+.card-segment {
+  flex: 1;
+  height: 2px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.45);
+  transition: background 0.15s;
+}
+
+.card-segment.active {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+/* ── Favorite ── */
 .product-card__fav {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 36px;
-  height: 36px;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   border: none;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(4px);
-  color: #bbb;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(6px);
+  color: #999;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s, background 0.2s, transform 0.2s;
+  transition: color 0.2s, transform 0.2s;
+  z-index: 3;
 }
 
-.product-card__fav:hover {
-  color: #FF6C36;
-  transform: scale(1.1);
-}
+.product-card__fav:hover { color: #FF6C36; transform: scale(1.1); }
+.product-card__fav.active { color: #FF6C36; }
 
-.product-card__fav.active {
-  color: #FF6C36;
-}
-
-/* Badges */
+/* ── Badge ── */
 .product-card__badge {
   position: absolute;
-  bottom: 10px;
+  bottom: 14px;
   left: 10px;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
+  z-index: 3;
 }
 
 .out-of-stock {
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.55);
   color: #fff;
 }
 
-/* Info */
+/* ── Info ── */
 .product-card__info {
-  padding: 14px 16px 16px;
+  padding: 10px 12px 14px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  flex: 1;
-}
-
-.product-card__category {
-  font-size: 11px;
-  font-weight: 600;
-  color: #FF6C36;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin: 0;
 }
 
 .product-card__name {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   color: #1a1a1a;
   margin: 0;
-  line-height: 1.3;
+  line-height: 1.35;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.product-card__footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: auto;
-  padding-top: 8px;
-}
-
 .product-card__price {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
   color: #1a1a1a;
-}
-
-.product-card__collection {
-  font-size: 11px;
-  color: #999;
-  font-style: italic;
 }
 </style>
