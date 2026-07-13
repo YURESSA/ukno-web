@@ -121,16 +121,21 @@ class MerchProducts(Resource):
         description="Получение публичной ленты активных товаров мерча с фильтром по категории",
         params={"category_id": "Необязательный ID категории для фильтрации товаров"},
     )
+    @user_ns.doc(params={
+        "search": "Search by product name, category, or collection",
+    })
     def get(self):
         """
         Получение ленты товаров мерча.
         """
         category_id = request.args.get("category_id", type=int)
+        search = request.args.get("search") or request.args.get("q")
         return {
             "products": list_products(
                 category_id=category_id,
                 active_only=True,
                 user_id=optional_user_id(),
+                search=search,
             )
         }, HTTPStatus.OK
 

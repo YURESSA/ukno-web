@@ -18,7 +18,7 @@ from backend.core.models.merch_models import (
 )
 
 
-REMOVED_FIELDS = {"payment_method", "sku"}
+REMOVED_FIELDS = {"payment_method", "sku", "is_deleted"}
 
 
 def assert_removed_fields_absent(payload):
@@ -48,6 +48,7 @@ def make_product_graph():
         price=Decimal("2500.00"),
         collection="Summer 2026",
         is_active=True,
+        is_deleted=False,
         created_at=datetime(2026, 7, 1, 12, 0, 0),
     )
     image = MerchProductImage(
@@ -147,7 +148,8 @@ def test_merch_catalog_and_cart_responses_do_not_expose_removed_fields():
 
 
 def test_merch_order_responses_use_current_payment_and_variant_fields():
-    _, variant = make_product_graph()
+    product, variant = make_product_graph()
+    product.is_deleted = True
     order = MerchOrder(
         order_id=80,
         user_id=1,

@@ -86,6 +86,7 @@ class MerchProduct(db.Model):
     price = db.Column(db.Numeric(10, 2), nullable=False)
     collection = db.Column(db.String(255), nullable=True)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
+    is_deleted = db.Column(db.Boolean, nullable=False, default=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
     category = db.relationship("MerchCategory", back_populates="products")
