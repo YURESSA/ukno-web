@@ -12,6 +12,7 @@ class MerchBanner(db.Model):
     title = db.Column(db.String(255), nullable=True)
     description = db.Column(db.Text, nullable=True)
     image_text = db.Column(db.String(255), nullable=True)
+    button_text = db.Column(db.String(100), nullable=True)
     link_url = db.Column(db.String(500), nullable=True)
     order_index = db.Column(db.Integer, nullable=False, default=0)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
@@ -24,6 +25,7 @@ class MerchBanner(db.Model):
             "title": self.title,
             "description": self.description,
             "image_text": self.image_text,
+            "button_text": self.button_text,
             "link_url": self.link_url,
             "order_index": self.order_index,
             "is_active": self.is_active,
@@ -84,6 +86,7 @@ class MerchProduct(db.Model):
     price = db.Column(db.Numeric(10, 2), nullable=False)
     collection = db.Column(db.String(255), nullable=True)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
+    is_deleted = db.Column(db.Boolean, nullable=False, default=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
     category = db.relationship("MerchCategory", back_populates="products")
@@ -106,33 +109,33 @@ class MerchProduct(db.Model):
         lazy=True,
     )
 
-    def main_image(self):
-        if not self.images:
-            return None
-        return sorted(self.images, key=lambda image: image.order_index)[0].image_path
-
     def available_quantity(self):
         return sum(variant.stock for variant in self.variants if variant.is_active)
 
-    def to_list_dict(self, is_favorite=False):
-        return {
+    def sorted_images(self):
+        return sorted(self.images, key=lambda image: image.order_index)
+
+    def to_list_dict(self, is_favorite=False, include_images=False):
+        data = {
             "product_id": self.product_id,
             "category": self.category.to_dict() if self.category else None,
             "name": self.name,
             "price": str(self.price),
             "collection": self.collection,
-            "main_image": self.main_image(),
             "is_active": self.is_active,
             "is_favorite": is_favorite,
             "available": self.available_quantity(),
         }
+        if include_images:
+            data["images"] = [image.to_dict() for image in self.sorted_images()]
+        return data
 
     def to_detail_dict(self, is_favorite=False):
         data = self.to_list_dict(is_favorite=is_favorite)
         data.update(
             {
                 "description": self.description,
-                "images": [image.to_dict() for image in sorted(self.images, key=lambda image: image.order_index)],
+                "images": [image.to_dict() for image in self.sorted_images()],
                 "colors": self.color_options(),
                 "created_at": self.created_at.isoformat(),
             }

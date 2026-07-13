@@ -92,6 +92,7 @@ def create_banner(data, image_file=None):
         title=data.get("title"),
         description=data.get("description"),
         image_text=data.get("image_text"),
+        button_text=data.get("button_text"),
         link_url=data.get("link_url"),
         order_index=_int_value(data.get("order_index")),
         is_active=_bool_value(data.get("is_active"), True),
@@ -110,7 +111,7 @@ def update_banner(banner_id, data, image_file=None):
         remove_file_if_exists(banner.image_path)
         banner.image_path = save_image(image_file, "merch/banners")
 
-    for field in ("title", "description", "image_text", "link_url"):
+    for field in ("title", "description", "image_text", "button_text", "link_url"):
         if field in data:
             setattr(banner, field, data.get(field))
     if "image_path" in data:
@@ -199,25 +200,48 @@ def delete_category(category_id):
     return {"message": "Category deleted"}, HTTPStatus.OK
 
 
-def list_products(category_id=None, active_only=True, user_id=None):
-    query = MerchProduct.query
+def list_products(category_id=None, active_only=True, user_id=None, include_images=False, search=None):
+    query = MerchProduct.query.filter_by(is_deleted=False)
     if active_only:
         query = query.filter_by(is_active=True)
     if category_id:
         query = query.filter_by(category_id=category_id)
+    search = (search or "").strip()
     products = query.order_by(MerchProduct.created_at.desc()).all()
+    if search:
+        products = [
+            product
+            for product in products
+            if _product_matches_search(product, search)
+        ]
     favorite_ids = set()
     if user_id:
         favorite_ids = {
             row.product_id
             for row in MerchFavorite.query.filter_by(user_id=user_id).all()
         }
-    return [product.to_list_dict(is_favorite=product.product_id in favorite_ids) for product in products]
+    return [
+        product.to_list_dict(
+            is_favorite=product.product_id in favorite_ids,
+            include_images=include_images,
+        )
+        for product in products
+    ]
+
+
+def _product_matches_search(product, search):
+    needle = search.casefold()
+    values = (
+        product.name,
+        product.collection,
+        product.category.name if product.category else None,
+    )
+    return any(needle in str(value).casefold() for value in values if value)
 
 
 def get_product_detail(product_id, user_id=None, active_only=True):
     product = db.session.get(MerchProduct, product_id)
-    if not product or (active_only and not product.is_active):
+    if not product or product.is_deleted or (active_only and not product.is_active):
         return None
     is_favorite = False
     if user_id:
@@ -271,7 +295,7 @@ def create_product(data, image_files=None):
 
 def update_product(product_id, data, image_files=None):
     product = db.session.get(MerchProduct, product_id)
-    if not product:
+    if not product or product.is_deleted:
         return {"message": "Product not found"}, HTTPStatus.NOT_FOUND
 
     if "category_id" in data:
@@ -311,7 +335,7 @@ def update_product(product_id, data, image_files=None):
 
 def add_product_color(product_id, data):
     product = db.session.get(MerchProduct, product_id)
-    if not product:
+    if not product or product.is_deleted:
         return {"message": "Product not found"}, HTTPStatus.NOT_FOUND
     if not data.get("name"):
         return {"message": "Color name is required"}, HTTPStatus.BAD_REQUEST
@@ -341,7 +365,7 @@ def add_product_color(product_id, data):
 
 def add_product_color_size(product_id, color_id, data):
     product = db.session.get(MerchProduct, product_id)
-    if not product:
+    if not product or product.is_deleted:
         return {"message": "Product not found"}, HTTPStatus.NOT_FOUND
 
     color = _find_product_color(product, color_id=color_id)
@@ -362,18 +386,21 @@ def add_product_color_size(product_id, color_id, data):
 
 def delete_product(product_id):
     product = db.session.get(MerchProduct, product_id)
-    if not product:
+    if not product or product.is_deleted:
         return {"message": "Product not found"}, HTTPStatus.NOT_FOUND
-    for image in product.images:
-        remove_file_if_exists(image.image_path)
-    db.session.delete(product)
+    variant_ids = [variant.variant_id for variant in product.variants]
+    MerchFavorite.query.filter_by(product_id=product.product_id).delete(synchronize_session=False)
+    if variant_ids:
+        MerchCartItem.query.filter(MerchCartItem.variant_id.in_(variant_ids)).delete(synchronize_session=False)
+    product.is_deleted = True
+    product.is_active = False
     db.session.commit()
     return {"message": "Product deleted"}, HTTPStatus.OK
 
 
 def delete_product_image(product_id, image_id):
     image = MerchProductImage.query.filter_by(product_id=product_id, image_id=image_id).first()
-    if not image:
+    if not image or not image.product or image.product.is_deleted:
         return {"message": "Image not found"}, HTTPStatus.NOT_FOUND
     remove_file_if_exists(image.image_path)
     db.session.delete(image)
@@ -383,7 +410,7 @@ def delete_product_image(product_id, image_id):
 
 def list_product_images(product_id):
     product = db.session.get(MerchProduct, product_id)
-    if not product:
+    if not product or product.is_deleted:
         return {"message": "Product not found"}, HTTPStatus.NOT_FOUND
     images = sorted(product.images, key=lambda image: image.order_index)
     return {"images": [image.to_dict() for image in images]}, HTTPStatus.OK
@@ -391,7 +418,7 @@ def list_product_images(product_id):
 
 def add_product_images(product_id, image_files, order_indexes=None):
     product = db.session.get(MerchProduct, product_id)
-    if not product:
+    if not product or product.is_deleted:
         return {"message": "Product not found"}, HTTPStatus.NOT_FOUND
     if not image_files:
         return {"message": "At least one image is required"}, HTTPStatus.BAD_REQUEST
@@ -414,7 +441,7 @@ def add_product_images(product_id, image_files, order_indexes=None):
 
 def update_product_image(product_id, image_id, data, image_file=None):
     image = MerchProductImage.query.filter_by(product_id=product_id, image_id=image_id).first()
-    if not image:
+    if not image or not image.product or image.product.is_deleted:
         return {"message": "Image not found"}, HTTPStatus.NOT_FOUND
 
     if "order_index" in data:
@@ -577,7 +604,7 @@ def toggle_favorite(user_email, product_id):
     if error:
         return error
     product = db.session.get(MerchProduct, product_id)
-    if not product or not product.is_active:
+    if not product or product.is_deleted or not product.is_active:
         return {"message": "Product not found"}, HTTPStatus.NOT_FOUND
 
     favorite = MerchFavorite.query.filter_by(user_id=user.user_id, product_id=product_id).first()
@@ -595,7 +622,14 @@ def list_favorites(user_email):
     user, error = get_current_user(user_email)
     if error:
         return error
-    favorites = MerchFavorite.query.filter_by(user_id=user.user_id).order_by(MerchFavorite.created_at.desc()).all()
+    _delete_unavailable_favorites(user.user_id)
+    favorites = (
+        MerchFavorite.query
+        .join(MerchProduct, MerchFavorite.product_id == MerchProduct.product_id)
+        .filter(MerchFavorite.user_id == user.user_id, MerchProduct.is_deleted.is_(False))
+        .order_by(MerchFavorite.created_at.desc())
+        .all()
+    )
     return {
         "favorites": [favorite.to_dict() for favorite in favorites]
     }, HTTPStatus.OK
@@ -605,9 +639,15 @@ def get_cart(user_email):
     user, error = get_current_user(user_email)
     if error:
         return error
+    _delete_unavailable_cart_items(user.user_id)
     favorite_ids = {
         row.product_id
-        for row in MerchFavorite.query.filter_by(user_id=user.user_id).all()
+        for row in (
+            MerchFavorite.query
+            .join(MerchProduct, MerchFavorite.product_id == MerchProduct.product_id)
+            .filter(MerchFavorite.user_id == user.user_id, MerchProduct.is_deleted.is_(False))
+            .all()
+        )
     }
     items = MerchCartItem.query.filter_by(user_id=user.user_id).all()
     total = sum((item.subtotal() for item in items), Decimal("0"))
@@ -625,7 +665,7 @@ def upsert_cart_item(user_email, variant_id, quantity):
     if error:
         return error
     variant = db.session.get(MerchProductVariant, variant_id)
-    if not variant or not variant.is_active or not variant.product.is_active:
+    if not variant or not variant.product or not variant.is_active or variant.product.is_deleted or not variant.product.is_active:
         return {"message": "Variant not found"}, HTTPStatus.NOT_FOUND
     quantity = _int_value(quantity, 1)
     if quantity < 1:
@@ -673,13 +713,14 @@ def create_order(user_email, data):
         return {"message": "pay_by_card is required"}, HTTPStatus.BAD_REQUEST
     pay_by_card = _bool_value(data.get("pay_by_card"), False)
 
+    _delete_unavailable_cart_items(user.user_id)
     cart_items = MerchCartItem.query.filter_by(user_id=user.user_id).all()
     if not cart_items:
         return {"message": "Cart is empty"}, HTTPStatus.BAD_REQUEST
 
     total = Decimal("0")
     for item in cart_items:
-        if not item.variant or not item.variant.is_active or not item.variant.product.is_active:
+        if not item.variant or not item.variant.product or not item.variant.is_active or item.variant.product.is_deleted or not item.variant.product.is_active:
             return {"message": "Cart contains unavailable products"}, HTTPStatus.BAD_REQUEST
         if item.quantity > item.variant.stock:
             return {
@@ -756,6 +797,32 @@ def list_orders(user_email=None):
     return {"orders": [order.to_dict() for order in orders]}, HTTPStatus.OK
 
 
+def _delete_unavailable_cart_items(user_id):
+    unavailable_items = [
+        item
+        for item in MerchCartItem.query.filter_by(user_id=user_id).all()
+        if not item.variant or not item.variant.product or item.variant.product.is_deleted
+    ]
+    if not unavailable_items:
+        return
+    for item in unavailable_items:
+        db.session.delete(item)
+    db.session.commit()
+
+
+def _delete_unavailable_favorites(user_id):
+    unavailable_favorites = [
+        favorite
+        for favorite in MerchFavorite.query.filter_by(user_id=user_id).all()
+        if not favorite.product or favorite.product.is_deleted
+    ]
+    if not unavailable_favorites:
+        return
+    for favorite in unavailable_favorites:
+        db.session.delete(favorite)
+    db.session.commit()
+
+
 def get_home(user_email=None):
     user_id = None
     if user_email:
@@ -764,5 +831,5 @@ def get_home(user_email=None):
     return {
         "banners": [banner.to_dict() for banner in list_banners(active_only=True)],
         "categories": [category.to_dict() for category in list_categories(active_only=True)],
-        "products": list_products(active_only=True, user_id=user_id),
+        "products": list_products(active_only=True, user_id=user_id, include_images=True),
     }, HTTPStatus.OK

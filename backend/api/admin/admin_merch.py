@@ -34,6 +34,7 @@ BANNER_DATA_EXAMPLE = """{
   "title": "Главный баннер мерча",
   "description": "Новая коллекция уже доступна",
   "image_text": "UKNO MERCH",
+  "button_text": "Купить",
   "link_url": "/merch/products",
   "order_index": 0,
   "is_active": true
@@ -366,12 +367,16 @@ class AdminMerchProducts(Resource):
         description="Получение всех товаров мерча для админки",
         params={"category_id": "Фильтр по ID категории"},
     )
+    @admin_ns.doc(params={
+        "search": "Search by product name, category, or collection",
+    })
     def get(self):
         """Получение всех товаров мерча."""
         category_id = request.args.get("category_id", type=int)
+        search = request.args.get("search") or request.args.get("q")
         from backend.core.services.merch_service import list_products
 
-        return {"products": list_products(category_id=category_id, active_only=False)}, HTTPStatus.OK
+        return {"products": list_products(category_id=category_id, active_only=False, search=search)}, HTTPStatus.OK
 
     @admin_required
     @admin_ns.doc(

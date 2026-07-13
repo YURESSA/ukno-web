@@ -18,7 +18,7 @@ from backend.core.models.merch_models import (
 )
 
 
-REMOVED_FIELDS = {"payment_method", "sku"}
+REMOVED_FIELDS = {"payment_method", "sku", "is_deleted"}
 
 
 def assert_removed_fields_absent(payload):
@@ -48,6 +48,7 @@ def make_product_graph():
         price=Decimal("2500.00"),
         collection="Summer 2026",
         is_active=True,
+        is_deleted=False,
         created_at=datetime(2026, 7, 1, 12, 0, 0),
     )
     image = MerchProductImage(
@@ -55,6 +56,13 @@ def make_product_graph():
         product=product,
         product_id=product.product_id,
         image_path="media/uploads/merch/products/shirt.jpg",
+        order_index=1,
+    )
+    second_image = MerchProductImage(
+        image_id=101,
+        product=product,
+        product_id=product.product_id,
+        image_path="media/uploads/merch/products/shirt-front.jpg",
         order_index=0,
     )
     color = MerchProductColor(
@@ -76,7 +84,7 @@ def make_product_graph():
         stock=7,
         is_active=True,
     )
-    product.images = [image]
+    product.images = [image, second_image]
     product.colors = [color]
     product.variants = [variant]
     return product, variant
@@ -111,6 +119,7 @@ def test_merch_catalog_and_cart_responses_do_not_expose_removed_fields():
         title="Main",
         description="New collection",
         image_text="UKNO MERCH",
+        button_text="Shop now",
         link_url="/merch/products",
         order_index=0,
         is_active=True,
@@ -129,13 +138,18 @@ def test_merch_catalog_and_cart_responses_do_not_expose_removed_fields():
     for payload in payloads:
         assert_json_contract(payload)
 
+    assert banner.to_dict()["button_text"] == "Shop now"
+    list_with_images = product.to_list_dict(include_images=True)
+    assert "main_image" not in list_with_images
+    assert [image["image_id"] for image in list_with_images["images"]] == [101, 100]
     detail = product.to_detail_dict()
     assert detail["colors"][0]["sizes"][0]["variant_id"] == variant.variant_id
     assert "variant_id" in cart_item.to_dict()
 
 
 def test_merch_order_responses_use_current_payment_and_variant_fields():
-    _, variant = make_product_graph()
+    product, variant = make_product_graph()
+    product.is_deleted = True
     order = MerchOrder(
         order_id=80,
         user_id=1,
