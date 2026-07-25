@@ -49,3 +49,4 @@ Thumbs.db
 frontend/.env
 frontend/dist
 GEMINI.md
+.agents

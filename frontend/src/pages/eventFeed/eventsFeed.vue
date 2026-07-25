@@ -134,9 +134,9 @@
 import { ref, onMounted, computed } from 'vue';
 import { NInput, NIcon } from 'naive-ui';
 import { SearchOutline } from "@vicons/ionicons5";
-import IconButton from '@/components/UI/button/IconButton.vue';
-import DropDown from '@/components/UI/dropDown/dropDown.vue';
-import BaseButton from '@/components/UI/button/BaseButton.vue';
+import IconButton from '@/components/ui/button/IconButton.vue';
+import DropDown from '@/components/ui/dropDown/dropDown.vue';
+import BaseButton from '@/components/ui/button/BaseButton.vue';
 import EventCard from './components/event-card.vue';
 import Filter from './components/filter.vue';
 import Sorting from './components/sorting.vue';
@@ -204,6 +204,9 @@ const sendSort = async () => {
   }
   try {
     await store.GetFilterExcursions(params.toString());
+    document.body.classList.remove('body-no-scroll');
+    isFilterOpen.value = false;
+    isSortingOpen.value = false;
   } catch (error) {
     console.error('Ошибка при загрузке экскурсий:', error);
   }

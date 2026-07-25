@@ -91,7 +91,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-import DefaultButton from '@/components/UI/button/DefaultButton.vue';
+import DefaultButton from '@/components/ui/button/DefaultButton.vue';
 import { useDataStore, baseUrl } from '@/stores/counter';
 import router from '@/router';
 import { notification } from '@/utils/notification'

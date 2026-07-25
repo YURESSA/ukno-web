@@ -33,7 +33,11 @@
       </div>
       <div class="filter-component">
         <h5>Даты</h5>
-        <n-date-picker v-model:value="range" type="daterange" clearable />
+        <n-date-picker class="desktop-date-picker" v-model:value="range" type="daterange" clearable />
+        <div class="mobile-date-picker">
+          <n-date-picker v-model:value="range[0]" type="date" clearable placeholder="С" />
+          <n-date-picker v-model:value="range[1]" type="date" clearable placeholder="По" />
+        </div>
       </div>
       <!-- <div class="filter-component participants-filter">
         <h5>Количество участников</h5>
@@ -111,9 +115,9 @@
 <script setup>
 import { ref, defineEmits, watch, onMounted, computed } from 'vue'
 import { NCheckbox, NCheckboxGroup, NSpace, NInputNumber, NSlider, NDatePicker } from 'naive-ui'
-import BaseButton from '@UI/button/BaseButton.vue'
-import DefaultButton from '@UI/button/DefaultButton.vue'
-// import IconButton from '@/components/UI/button/IconButton.vue'
+import BaseButton from '@/components/ui/button/BaseButton.vue'
+import DefaultButton from '@/components/ui/button/DefaultButton.vue'
+// import IconButton from '@/components/ui/button/IconButton.vue'
 import { useDataStore } from '@/stores/counter';
 
 const store = useDataStore();
@@ -144,7 +148,7 @@ const formData = ref({
   category: [],
   start_date: '',
   end_date: '',
-  participants_count: 1,
+  participants_count: null,
   format_type: [],
   min_price: '',
   max_price: '',
@@ -160,21 +164,21 @@ function handleCheckboxChange(ch){
   }
 }
 
-function validateParticipants(){
-  if(formData.value.participants_count < 1){
-    formData.value.participants_count = 1
-  }
-}
+// function validateParticipants(){
+//   if(formData.value.participants_count < 1){
+//     formData.value.participants_count = 1
+//   }
+// }
 
-function minusParticipants(){
-  if (formData.value.participants_count > 1){
-    formData.value.participants_count -= 1;
-  }
-}
+// function minusParticipants(){
+//   if (formData.value.participants_count > 1){
+//     formData.value.participants_count -= 1;
+//   }
+// }
 
-function plusParticipants(){
-  formData.value.participants_count += 1;
-}
+// function plusParticipants(){
+//   formData.value.participants_count += 1;
+// }
 
 const emit = defineEmits(['close']);
 
@@ -183,9 +187,13 @@ function closeFilter(){
 }
 
 function buildQueryString(formData) {
-  const [startDate, endDate] = range.value.map(timestamp => {
-    return new Date(timestamp).toISOString().split('T')[0];
-  });
+  let startDate = '';
+  let endDate = '';
+  if (range.value && Array.isArray(range.value)) {
+    startDate = range.value[0] ? new Date(range.value[0]).toISOString().split('T')[0] : '';
+    endDate = range.value[1] ? new Date(range.value[1]).toISOString().split('T')[0] : '';
+  }
+
   formData.value.start_date = startDate;
   formData.value.end_date = endDate;
   formData.value.min_price = priceRange.value[0];
@@ -211,6 +219,7 @@ const sendFilter = async () => {
   const queryString = buildQueryString(formData);
   try {
     await store.GetFilterExcursions(queryString);
+    emit('close')
   } catch (error) {
     console.error('Ошибка при загрузке экскурсий:', error);
   }
@@ -223,7 +232,7 @@ const resetFilter = async () => {
       category: [],
       start_date: '',
       end_date: '',
-      participants_count: 1,
+      participants_count: null,
       format_type: [],
       min_price: '',
       max_price: '',
@@ -258,6 +267,10 @@ const resetFilter = async () => {
   scrollbar-width: none;
 
   transition: all 0.5s ease;
+}
+
+.mobile-date-picker {
+  display: none;
 }
 
 .filter-wrapper {
@@ -461,6 +474,18 @@ const resetFilter = async () => {
     z-index: 1001;
     height: 100%;
     overflow-x: hidden;
+  }
+  .desktop-date-picker {
+    display: none;
+  }
+  .mobile-date-picker {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    width: 100%;
+  }
+  .mobile-date-picker > * {
+    flex: 1;
   }
   .filter-main[data-v-60029d04] {
     gap: 20px;

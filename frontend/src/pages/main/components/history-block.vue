@@ -17,7 +17,7 @@
 </template>
 
 <script setup>
-import IconButton from '@/components/UI/button/IconButton.vue';
+import IconButton from '@/components/ui/button/IconButton.vue';
 </script>
 
 <style scoped>

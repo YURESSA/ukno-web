@@ -40,8 +40,8 @@
                 <h3>Стоимость</h3>
               </div>
               <div class="event-content">
-                <p v-if="parseInt(excursion.sessions[0].cost) > 0">{{ parseInt(excursion.sessions[0].cost) }} ₽</p>
-                <p v-if="parseInt(excursion.sessions[0].cost) == 0"> Бесплатно! </p>
+                <p v-if="selectedCost > 0">{{ selectedCost }} ₽</p>
+                <p v-else> Бесплатно! </p>
               </div>
             </div>
             <div class="event-type orange-block">
@@ -72,10 +72,35 @@
           </div>
         </div>
       </div>
+      <!-- Выбор сессии -->
+      <div class="sessions-section" v-if="excursion.sessions.length > 0">
+        <h3>Выберите дату и время</h3>
+        <div class="sessions-list">
+          <button
+            v-for="session in excursion.sessions"
+            :key="session.session_id"
+            type="button"
+            class="session-card"
+            :class="{ 'session-card--active': selectedSession?.session_id === session.session_id, 'session-card--full': session.available <= 0 }"
+            :disabled="session.available <= 0"
+            @click="selectedSession = session"
+          >
+            <span class="session-date">{{ formatSessionDate(session) }}</span>
+            <span class="session-time">{{ formatSessionTime(session) }}</span>
+            <span class="session-seats" :class="{ 'session-seats--low': session.available <= 3 && session.available > 0 }">
+              <template v-if="session.available > 0">{{ session.available }} мест{{ session.available === 1 ? 'о' : session.available < 5 ? 'а' : '' }}</template>
+              <template v-else>Мест нет</template>
+            </span>
+            <span class="session-cost" v-if="parseInt(session.cost) > 0">{{ parseInt(session.cost) }} ₽</span>
+            <span class="session-cost" v-else>Бесплатно</span>
+          </button>
+        </div>
+      </div>
+
       <IconButton
         class="event--btn"
         text="Записаться"
-        :id="excursion.id"
+        :disabled="!selectedSession || selectedSession.available <= 0"
         @click="moveToBooked"
       >
         <img src="/icon/arrow.svg" alt="">
@@ -98,15 +123,26 @@
         </div>
       </div>
       <Contact class="map">
-        <iframe
-        v-if="src != ''"
-        :src="src"
-        width="629"
-        height="462"
-        frameborder="0"
-        class="yand-map"
-        ></iframe>
-        <span v-else>Произошла ошибка при загрузке карты</span>
+        <!-- Новые события: интерактивная карта по координатам -->
+        <MapView
+          v-if="hasCoords"
+          :latitude="excursion.latitude"
+          :longitude="excursion.longitude"
+          :balloon-content="excursion.place"
+          map-id="event-page-map-desktop"
+          :height="462"
+        />
+        <!-- Старые события с iframe_url: показываем через iframe -->
+        <template v-else-if="src !== ''">
+          <iframe
+            :src="src"
+            width="629"
+            height="462"
+            frameborder="0"
+            class="yand-map"
+          ></iframe>
+        </template>
+        <span v-else>Местоположение не указано</span>
       </Contact>
     </div>
 
@@ -127,11 +163,36 @@
       <IconButton
         class="event--btn"
         text="Записаться"
-        :id="excursion.id"
+        :disabled="!selectedSession || selectedSession.available <= 0"
         @click="moveToBooked"
       >
         <img src="/icon/arrow.svg" alt="">
       </IconButton>
+
+      <!-- Выбор сессии (мобилка) -->
+      <div class="sessions-section" v-if="excursion.sessions.length > 0">
+        <h3>Выберите дату и время</h3>
+        <div class="sessions-list">
+          <button
+            v-for="session in excursion.sessions"
+            :key="session.session_id"
+            type="button"
+            class="session-card"
+            :class="{ 'session-card--active': selectedSession?.session_id === session.session_id, 'session-card--full': session.available <= 0 }"
+            :disabled="session.available <= 0"
+            @click="selectedSession = session"
+          >
+            <span class="session-date">{{ formatSessionDate(session) }}</span>
+            <span class="session-time">{{ formatSessionTime(session) }}</span>
+            <span class="session-seats" :class="{ 'session-seats--low': session.available <= 3 && session.available > 0 }">
+              <template v-if="session.available > 0">{{ session.available }} мест{{ session.available === 1 ? 'о' : session.available < 5 ? 'а' : '' }}</template>
+              <template v-else>Мест нет</template>
+            </span>
+            <span class="session-cost" v-if="parseInt(session.cost) > 0">{{ parseInt(session.cost) }} ₽</span>
+            <span class="session-cost" v-else>Бесплатно</span>
+          </button>
+        </div>
+      </div>
 
       <div class="mobile-container">
         <div class="events-list-mobile">
@@ -157,8 +218,8 @@
               <img src="/icon/eventPage/wallet.svg" alt="">
             </div>
             <div class="event-content">
-              <p v-if="parseInt(excursion.sessions[0].cost) > 0">{{ parseInt(excursion.sessions[0].cost) }} ₽</p>
-              <p v-if="parseInt(excursion.sessions[0].cost) == 0"> Бесплатно! </p>
+              <p v-if="selectedCost > 0">{{ selectedCost }} ₽</p>
+              <p v-else> Бесплатно! </p>
             </div>
           </div>
           <div class="event-type-mobile">
@@ -202,15 +263,26 @@
         </div>
       </div>
       <Contact class="map">
-        <iframe
-        v-if="src != ''"
-        :src="src"
-        width="100%"
-        height="242"
-        frameborder="0"
-        class="yand-map"
-        ></iframe>
-        <span v-else>Произошла ошибка при загрузке карты</span>
+        <!-- Новые события: интерактивная карта по координатам -->
+        <MapView
+          v-if="hasCoords"
+          :latitude="excursion.latitude"
+          :longitude="excursion.longitude"
+          :balloon-content="excursion.place"
+          map-id="event-page-map-mobile"
+          :height="242"
+        />
+        <!-- Старые события с iframe_url: показываем через iframe -->
+        <template v-else-if="src !== ''">
+          <iframe
+            :src="src"
+            width="100%"
+            height="242"
+            frameborder="0"
+            class="yand-map"
+          ></iframe>
+        </template>
+        <span v-else>Местоположение не указано</span>
       </Contact>
     </div>
   </div>
@@ -226,9 +298,10 @@ import { onMounted, computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useDataStore } from '@/stores/counter';
 import { baseUrl } from '@/stores/counter';
-import IconButton from '@/components/UI/button/IconButton.vue';
+import IconButton from '@/components/ui/button/IconButton.vue';
 import Contact from '../../components/shared/contact-block.vue';
 import Loading from '@/components/shared/loading-animation.vue';
+import MapView from '@/components/shared/MapView.vue';
 import { notification } from '@/utils/notification'
 import DOMPurify from 'dompurify';
 
@@ -240,6 +313,18 @@ const descriptOpen = ref(false);
 
 const excursion = computed(() => store.getExcursionDetail);
 const safeExcursion = computed(() => DOMPurify.sanitize(excursion.value.description));
+
+// Выбранная сессия: по умолчанию первая доступная (с местами)
+const selectedSession = ref(null);
+
+const selectedCost = computed(() => {
+  const session = selectedSession.value ?? excursion.value.sessions[0];
+  return parseInt(session?.cost || 0);
+});
+
+const hasCoords = computed(() =>
+  excursion.value?.latitude != null && excursion.value?.longitude != null
+);
 
 const src = computed(() => {
   const iframeUrl = excursion.value?.iframe_url;
@@ -263,6 +348,9 @@ onMounted(async () => {
     setTimeout(() => {
       load.value = true
       document.body.style.overflow = 'auto'
+      // Выбираем первую доступную сессию автоматически
+      const first = excursion.value.sessions?.find(s => s.available > 0);
+      selectedSession.value = first ?? excursion.value.sessions?.[0] ?? null;
     }, 1000)
   } catch (error) {
     console.error('Ошибка при загрузке экскурсий:', error);
@@ -271,8 +359,9 @@ onMounted(async () => {
 });
 
 const moveToBooked = () => {
+  if (!selectedSession.value) return;
   router.push({
-    path: `/payment/${excursion.value.sessions[0].session_id}`,
+    path: `/payment/${selectedSession.value.session_id}`,
     query: { excursion_id: excursion.value.excursion_id }
   });
 };
@@ -283,38 +372,50 @@ const getMainImage = computed(() => {
 
 
 const getData = computed(() => {
-  const date = new Date(excursion.value.sessions[0].start_datetime);
+  const session = selectedSession.value ?? excursion.value.sessions[0];
+  const date = new Date(session.start_datetime);
   const day = date.getDate().toString().padStart(2, '0');
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
-
   return `${day}.${month}`;
 });
 
 const getTime = computed(() => {
-  const date = new Date(excursion.value.sessions[0].start_datetime);
+  const session = selectedSession.value ?? excursion.value.sessions[0];
+  const date = new Date(session.start_datetime);
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
   return `${hours}:${minutes}`;
 });
 
 const totalTime = computed(() => {
-  const date = new Date(excursion.value.sessions[0].start_datetime);
+  const session = selectedSession.value ?? excursion.value.sessions[0];
+  const date = new Date(session.start_datetime);
   date.setMinutes(date.getMinutes() + excursion.value.duration);
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
-
   return `${hours}:${minutes}`;
 });
 
+function formatSessionDate(session) {
+  const d = new Date(session.start_datetime);
+  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+}
+
+function formatSessionTime(session) {
+  const d = new Date(session.start_datetime);
+  return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+}
+
 const EventFormat = computed(() => {
   const format = excursion.value.format_type.format_type_name;
+  const session = selectedSession.value ?? excursion.value.sessions[0];
   switch(format){
     case "Индивидуальная":
-      return {type: 'Событие проходит в формате индивидуальной экскурсии', remained_places: `Всего мест ${excursion.value.sessions[0].max_participants} человек`}
+      return {type: 'Событие проходит в формате индивидуальной экскурсии', remained_places: `Всего мест ${session.max_participants} человек`}
     case "Групповая":
-      return {type: 'Событие проходит в формате групповой экскурсии', remained_places: `Группа до ${excursion.value.sessions[0].max_participants} человек`}
+      return {type: 'Событие проходит в формате групповой экскурсии', remained_places: `Группа до ${session.max_participants} человек`}
     case "Мини-группа":
-      return {type: 'Событие проходит в формате групповой экскурсии', remained_places: `Группа до ${excursion.value.sessions[0].max_participants} человек`}
+      return {type: 'Событие проходит в формате групповой экскурсии', remained_places: `Группа до ${session.max_participants} человек`}
     default:
       return {
         type: 'Формат экскурсии не указан',
@@ -724,5 +825,88 @@ span > a{
   display: flex;
   flex-direction: row;
   gap: 20px;
+}
+
+.sessions-section {
+  margin: 30px 0;
+  width: 100%;
+}
+
+.sessions-section h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #2d3748;
+}
+
+.sessions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.session-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 15px 20px;
+  border: 2px solid #FFD6BD;
+  border-radius: 12px;
+  background-color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+}
+
+.session-card:hover:not(:disabled) {
+  border-color: #F25C03;
+  box-shadow: 0 4px 12px rgba(242, 92, 3, 0.15);
+}
+
+.session-card--active {
+  border-color: #F25C03;
+  background-color: #FFF5EF;
+  box-shadow: 0 4px 12px rgba(242, 92, 3, 0.2);
+}
+
+.session-card:disabled, .session-card--full {
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-color: #eee;
+  background-color: #fafafa;
+}
+
+.session-date {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+}
+
+.session-time {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.session-seats {
+  font-size: 13px;
+  color: #4CAF50;
+  font-weight: 600;
+}
+
+.session-seats--low {
+  color: #FF9800;
+}
+
+.session-card--full .session-seats {
+  color: #F44336;
+}
+
+.session-cost {
+  margin-top: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #F25C03;
 }
 </style>

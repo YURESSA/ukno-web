@@ -20,7 +20,7 @@
 <script setup>
 import { computed } from 'vue'
 import { NCarousel, NCarouselItem } from 'naive-ui';
-import BaseButton from '@/components/UI/button/BaseButton.vue'
+import BaseButton from '@/components/ui/button/BaseButton.vue'
 import { useDataStore } from '@/stores/counter';
 
 const store = useDataStore();

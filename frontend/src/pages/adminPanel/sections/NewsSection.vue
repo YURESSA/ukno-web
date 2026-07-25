@@ -102,7 +102,7 @@ import {
   NDatePicker, NButton, NSpace, NAvatar, NUpload, NUploadDragger,
   NIcon, useMessage, useDialog
 } from 'naive-ui';
-import BaseButton from '@/components/UI/button/BaseButton.vue';
+import BaseButton from '@/components/ui/button/BaseButton.vue';
 import Editor from '@/components/ui/Editor.vue';
 
 const store = useDataStore();

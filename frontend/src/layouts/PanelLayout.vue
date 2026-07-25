@@ -59,7 +59,7 @@
 import { computed, provide, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { NConfigProvider, ruRU, dateRuRU, NMessageProvider, NDialogProvider } from 'naive-ui';
-import BaseButton from '@/components/UI/button/BaseButton.vue';
+import BaseButton from '@/components/ui/button/BaseButton.vue';
 
 const route = useRoute();
 const addEventCounter = ref(0);

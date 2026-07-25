@@ -48,7 +48,7 @@
 import { ref, computed, inject, watch, onMounted, h } from 'vue';
 import { useDataStore } from '@/stores/counter';
 import { NDataTable, NModal, NForm, NFormItem, NInput, NButton, NSpace, useMessage, useDialog } from 'naive-ui';
-import BaseButton from '@/components/UI/button/BaseButton.vue';
+import BaseButton from '@/components/ui/button/BaseButton.vue';
 
 const store = useDataStore();
 const categories = computed(() => store.getCategories);

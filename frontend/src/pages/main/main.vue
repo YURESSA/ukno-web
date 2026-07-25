@@ -92,8 +92,8 @@ import News from './components/news-block.vue';
 import History from './components/history-block.vue';
 import Partner from './components/partner.vue';
 import Contact from '../../components/shared/contact-block.vue';
-import Alert from '@/components/UI/alert.vue';
-import IconButton from '@/components/UI/button/IconButton.vue';
+import Alert from '@/components/ui/alert.vue';
+import IconButton from '@/components/ui/button/IconButton.vue';
 
 const router = useRouter();
 const route = useRoute();

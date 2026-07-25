@@ -90,7 +90,7 @@ import {
   NDataTable, NModal, NForm, NFormItemGi, NGrid, NInput,
   NSelect, NButton, NSpace, NTag, useMessage, useDialog
 } from 'naive-ui';
-import BaseButton from '@/components/UI/button/BaseButton.vue';
+import BaseButton from '@/components/ui/button/BaseButton.vue';
 
 const store = useDataStore();
 const users = computed(() => store.getUsers);

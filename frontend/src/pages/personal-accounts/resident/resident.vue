@@ -9,6 +9,7 @@
         @open="openChange"
       />
       <DefaultButton @click="openEvents" class="profie__btn" text="Управление событиями"/>
+      <DefaultButton @click="openAnalytics" class="profie__btn" text="Статистика"/>
       <div class="bottom-btn">
         <DefaultButton @click="logOut" class="profie__btn exit--btn" text="Выйти"/>
         <BaseButton @click="pushToCreateEvent" class="exit--btn" text="Создать событие" />
@@ -17,16 +18,18 @@
   </div>
   <ChangePassword @close="closeChange" :role="profileData.role" v-if="openPasswordModal"/>
   <EventsModal @close="closeEvents" v-if="openEventsModal"/>
+  <AnalyticsModal @close="closeAnalytics" v-if="openAnalyticsModal"/>
 </template>
 
 <script setup>
 import Header from '@/components/shared/header.vue';
 import ChangePassword from '../_shared/changePassword.vue';
 import EventsModal from '../_shared/EventsModal.vue';
+import AnalyticsModal from '../_shared/AnalyticsModal.vue';
 import Username from '../_shared/username.vue';
 import Userdata from '../_shared/userdata.vue';
-import DefaultButton from '@/components/UI/button/DefaultButton.vue';
-import BaseButton from '@/components/UI/button/BaseButton.vue';
+import DefaultButton from '@/components/ui/button/DefaultButton.vue';
+import BaseButton from '@/components/ui/button/BaseButton.vue';
 import { onMounted, computed, ref } from 'vue';
 import { useDataStore } from '@/stores/counter';
 import router from '@/router';
@@ -35,6 +38,7 @@ const store = useDataStore();
 const profileData = computed(() => store.profileData);
 const openPasswordModal = ref(false);
 const openEventsModal = ref(false);
+const openAnalyticsModal = ref(false);
 
 function openChange(){
   document.body.style.overflowY = 'hidden'
@@ -54,6 +58,16 @@ function openEvents(){
 function closeEvents(){
   document.body.style.overflowY = 'auto'
   openEventsModal.value = false;
+}
+
+function openAnalytics(){
+  document.body.style.overflowY = 'hidden'
+  openAnalyticsModal.value = true;
+}
+
+function closeAnalytics(){
+  document.body.style.overflowY = 'auto'
+  openAnalyticsModal.value = false;
 }
 
 onMounted(async () => {

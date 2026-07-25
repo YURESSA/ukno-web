@@ -47,9 +47,9 @@
 <script setup>
 import { ref } from 'vue';
 import { useDataStore } from '@/stores/counter';
-import IconButton from '@/components/UI/button/IconButton.vue';
-import BaseButton from '@/components/UI/button/BaseButton.vue';
-import DefaultButton from '@/components/UI/button/DefaultButton.vue';
+import IconButton from '@/components/ui/button/IconButton.vue';
+import BaseButton from '@/components/ui/button/BaseButton.vue';
+import DefaultButton from '@/components/ui/button/DefaultButton.vue';
 import { notification } from '@/utils/notification'
 
 const store = useDataStore();

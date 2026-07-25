@@ -9,7 +9,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useDataStore } from '@/stores/counter';
-import BaseButton from '@/components/UI/button/BaseButton.vue';
+import BaseButton from '@/components/ui/button/BaseButton.vue';
 
 const store = useDataStore();
 

@@ -1,7 +1,17 @@
 <script setup>
 import { RouterView } from 'vue-router'
 import { useNotification } from '@/composables/useNotification'
-import Alert from '@/components/UI/alert.vue'
+import Alert from '@/components/ui/alert.vue'
+import { NConfigProvider, ruRU, dateRuRU } from 'naive-ui'
+
+const themeOverrides = {
+  common: {
+    primaryColor: '#F25C03',
+    primaryColorHover: '#FF7F3F',
+    primaryColorPressed: '#D95202',
+    primaryColorSuppl: '#FF7F3F'
+  }
+}
 
 const {
   showNotification,
@@ -12,13 +22,15 @@ const {
 </script>
 
 <template>
-  <router-view />
-  <alert
-    :show="showNotification"
-    :message="notificationMessage"
-    :type="notificationType"
-    @close="closeNotification"
-  />
+  <n-config-provider :locale="ruRU" :date-locale="dateRuRU" :theme-overrides="themeOverrides">
+    <router-view />
+    <alert
+      :show="showNotification"
+      :message="notificationMessage"
+      :type="notificationType"
+      @close="closeNotification"
+    />
+  </n-config-provider>
 </template>
 
 <style scoped>

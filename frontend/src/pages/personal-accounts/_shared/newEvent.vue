@@ -124,12 +124,11 @@
               placeholder="construct@ekbtour.ru"
               v-model="formData.contact_email"
             >
-            <input
-              type="EventName"
-              name="EventName"
-              placeholder="iframe карты с местоположением"
-              v-model="formData.iframe_url"
-            >
+            <span>Местоположение на карте</span>
+            <MapPicker
+              map-id="new-event-map"
+              @update:coords="onCoordsUpdate"
+            />
             <input
               type="EventName"
               name="EventName"
@@ -180,8 +179,9 @@
 <script setup>
 import { useRouter } from 'vue-router';
 import { ref, onMounted, computed } from 'vue';
-import IconButton from '@/components/UI/button/IconButton.vue';
-import BaseButton from '@/components/UI/button/BaseButton.vue';
+import IconButton from '@/components/ui/button/IconButton.vue';
+import BaseButton from '@/components/ui/button/BaseButton.vue';
+import MapPicker from '@/components/shared/MapPicker.vue';
 import { useDataStore } from '@/stores/counter';
 import { NDatePicker, NConfigProvider, NModal, NUpload } from 'naive-ui';
 import { ruRU, dateRuRU } from 'naive-ui';
@@ -209,7 +209,8 @@ const formData = ref({
   is_active: true,
   working_hours: '',
   contact_email: '',
-  iframe_url: '',
+  latitude: null,
+  longitude: null,
   telegram: '',
   vk: '',
   distance_to_center: '',
@@ -224,6 +225,11 @@ const formData = ref({
   ],
   duration: 60,
 });
+
+function onCoordsUpdate({ latitude, longitude }) {
+  formData.value.latitude = latitude;
+  formData.value.longitude = longitude;
+}
 
 function closePage(){
   router.back();

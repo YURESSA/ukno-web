@@ -201,7 +201,7 @@ import {
   NDataTable, NModal, NForm, NFormItemGi, NGrid, NInput, NDatePicker, NCard,
   NSelect, NButton, NSpace, NTag, NTabs, NTabPane, NUpload, NUploadDragger, useMessage, useDialog, NRadioGroup, NRadio, NInputNumber
 } from 'naive-ui';
-import BaseButton from '@/components/UI/button/BaseButton.vue';
+import BaseButton from '@/components/ui/button/BaseButton.vue';
 import Editor from '@/components/ui/Editor.vue';
 
 const store = useDataStore();
@@ -569,7 +569,7 @@ async function handleDeletePhoto(photoId) {
         selectedItem.value.photos = selectedItem.value.photos.filter(p => p.photo_id !== photoId);
         message.success('Удалено');
       } catch (e) {
-        message.error('Ошибка удаления');
+        message.error('Ошибка удаления', e);
       }
     }
   });

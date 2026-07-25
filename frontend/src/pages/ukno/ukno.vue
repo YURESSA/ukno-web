@@ -212,7 +212,7 @@
 </template>
 
 <script setup>
-import IconButton from '@/components/UI/button/IconButton.vue';
+import IconButton from '@/components/ui/button/IconButton.vue';
 import Card from '@/pages/ukno/components/card.vue';
 import { ref, onMounted, onUnmounted, getCurrentInstance, computed  } from 'vue';
 import { baseUrl, useDataStore } from '@/stores/counter';

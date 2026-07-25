@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
-import router from '@/router'
+// import router from '@/router'
 
 export const baseUrl = import.meta.env.VITE_FRONTEND_URL;
 
@@ -10,6 +10,7 @@ export const useDataStore = defineStore('data', {
     role: '',
     excursions: [],
     residentExcursions: [],
+    residentAnalytics: null,
     excursionDetail: [],
     profileData: [],
     reservationsData: [],
@@ -43,7 +44,7 @@ export const useDataStore = defineStore('data', {
     },
     async PostNewUser(jsonData) {
       try {
-        const response = await axios.post(`${baseUrl}/api/user/register`, jsonData, {
+        await axios.post(`${baseUrl}/api/user/register`, jsonData, {
           headers: {
             'Content-Type': 'application/json',
           },
@@ -81,7 +82,7 @@ export const useDataStore = defineStore('data', {
     },
     async PutPassword(jsonData, url) {
       try {
-        const response = await axios.put(`${baseUrl}${url}`, jsonData, {
+        await axios.put(`${baseUrl}${url}`, jsonData, {
           headers: {
             Authorization: `Bearer ${this.auth_key}`,
             'Content-Type': 'application/json',
@@ -215,6 +216,19 @@ export const useDataStore = defineStore('data', {
         throw error
       }
     },
+    async FetchResidentAnalytics() {
+      try {
+        const response = await axios.get(`${baseUrl}/api/resident/analytics`, {
+          headers: {
+            Authorization: `Bearer ${this.auth_key}`,
+          },
+        })
+        this.residentAnalytics = response.data
+      } catch (error) {
+        console.error('Ошибка при получении аналитики резидента:', error.response?.data || error.message)
+        throw error
+      }
+    },
     async GetUserReservations() {
       try {
         const response = await axios.get(`${baseUrl}/api/user/reservations`, {
@@ -234,7 +248,7 @@ export const useDataStore = defineStore('data', {
     async DeleteReservation(delet_id) {
       try {
         const jsonData = JSON.stringify(delet_id)
-        const response = await axios.delete(`${baseUrl}/api/user/v2/reservations`, {
+        await axios.delete(`${baseUrl}/api/user/v2/reservations`, {
           data: jsonData,
           headers: {
             Authorization: `Bearer ${this.auth_key}`,
@@ -251,7 +265,7 @@ export const useDataStore = defineStore('data', {
     },
     async PostNewEvent(formData) {
       try {
-        const response = await axios.post(`${baseUrl}/api/resident/excursions`, formData, {
+        await axios.post(`${baseUrl}/api/resident/excursions`, formData, {
           headers: {
             Authorization: `Bearer ${this.auth_key}`,
             'Content-Type': 'multipart/form-data',
@@ -275,9 +289,9 @@ export const useDataStore = defineStore('data', {
         throw error
       }
     },
-    async DeletEvent(eventId, sessionId) {
+    async DeletEvent(eventId) {
       try {
-        const response = await axios.delete(
+        await axios.delete(
           `${baseUrl}/api/resident/excursions/${eventId}`,
           {
             headers: {
@@ -292,7 +306,7 @@ export const useDataStore = defineStore('data', {
     },
     async DeleteSession(eventId, sessionId) {
       try {
-        const response = await axios.delete(
+        await axios.delete(
           `${baseUrl}/api/resident/excursions/${eventId}/sessions/${sessionId}`,
           {
             headers: {
@@ -307,7 +321,7 @@ export const useDataStore = defineStore('data', {
     },
     async DeletePhoto(eventId, photoId) {
       try {
-        const response = await axios.delete(
+        await axios.delete(
           `${baseUrl}/api/resident/excursions/${eventId}/photos/${photoId}`,
           {
             headers: {
@@ -322,7 +336,7 @@ export const useDataStore = defineStore('data', {
     },
     async PatchSessionData(excursion_id, jsonData) {
       try {
-        const response = await axios.patch(`${baseUrl}/api/resident/excursions/${excursion_id}`, jsonData, {
+        await axios.patch(`${baseUrl}/api/resident/excursions/${excursion_id}`, jsonData, {
           headers: {
             Authorization: `Bearer ${this.auth_key}`,
             'Content-Type': 'application/json'
@@ -335,7 +349,7 @@ export const useDataStore = defineStore('data', {
     },
     async PostNewPhoto(excursion_id, formData) {
       try {
-        const response = await axios.post(`${baseUrl}/api/resident/excursions/${excursion_id}/photos`, formData, {
+        await axios.post(`${baseUrl}/api/resident/excursions/${excursion_id}/photos`, formData, {
           headers: {
             Authorization: `Bearer ${this.auth_key}`,
           },
@@ -347,7 +361,7 @@ export const useDataStore = defineStore('data', {
     },
     async PostNewSession(excursion_id, jsonData) {
       try {
-        const response = await axios.post(`${baseUrl}/api/resident/excursions/${excursion_id}/sessions`, jsonData, {
+        await axios.post(`${baseUrl}/api/resident/excursions/${excursion_id}/sessions`, jsonData, {
           headers: {
             Authorization: `Bearer ${this.auth_key}`,
             'Content-Type': 'application/json'
@@ -960,7 +974,7 @@ export const useDataStore = defineStore('data', {
     },
     async DeleteProject(id) {
       try {
-        const response = await axios.delete(`${baseUrl}/api/references/projects/${id}`, {
+        await axios.delete(`${baseUrl}/api/references/projects/${id}`, {
           headers: {
             Authorization: `Bearer ${this.auth_key}`,
           },
@@ -994,7 +1008,7 @@ export const useDataStore = defineStore('data', {
     },
     async UpdateHistory(id, payload) {
       try {
-        const response = await axios.put(`${baseUrl}/api/references/history/${id}`, payload, {
+        await axios.put(`${baseUrl}/api/references/history/${id}`, payload, {
           headers: { Authorization: `Bearer ${this.auth_key}` }
         })
         await this.FetchHistory();
@@ -1005,7 +1019,7 @@ export const useDataStore = defineStore('data', {
     },
     async DeleteHistory(id) {
       try {
-        const response = await axios.delete(`${baseUrl}/api/references/history/${id}`, {
+        await axios.delete(`${baseUrl}/api/references/history/${id}`, {
           headers: { Authorization: `Bearer ${this.auth_key}` }
         })
         await this.FetchHistory();
@@ -1016,7 +1030,7 @@ export const useDataStore = defineStore('data', {
     },
     async AddPartner(formData) {
       try {
-        const response = await axios.post(`${baseUrl}/api/references/partners`, formData, {
+        await axios.post(`${baseUrl}/api/references/partners`, formData, {
         headers: { Authorization: `Bearer ${this.auth_key}` }
       })
         await this.FetchPartners();
@@ -1027,7 +1041,7 @@ export const useDataStore = defineStore('data', {
     },
     async UpdatePartner(id, formData) {
       try {
-        const response = await axios.put(`${baseUrl}/api/references/partners/${id}`, formData, {
+        await axios.put(`${baseUrl}/api/references/partners/${id}`, formData, {
         headers: { Authorization: `Bearer ${this.auth_key}` }
       })
         await this.FetchPartners();
@@ -1038,7 +1052,7 @@ export const useDataStore = defineStore('data', {
     },
     async UpdatePartnerPhoto(id, formData) {
       try {
-        const response = await axios.post(`${baseUrl}/api/references/partners/${id}/photo`, formData, {
+        await axios.post(`${baseUrl}/api/references/partners/${id}/photo`, formData, {
         headers: { Authorization: `Bearer ${this.auth_key}` }
       })
         await this.FetchPartners();
@@ -1049,7 +1063,7 @@ export const useDataStore = defineStore('data', {
     },
     async DeletePartnerPhoto(id) {
       try {
-        const response = await axios.delete(`${baseUrl}/api/references/partners/${id}/photo`, {
+        await axios.delete(`${baseUrl}/api/references/partners/${id}/photo`, {
         headers: { Authorization: `Bearer ${this.auth_key}` }
       })
         await this.FetchPartners();
@@ -1060,7 +1074,7 @@ export const useDataStore = defineStore('data', {
     },
     async DeletePartner(id) {
       try {
-        const response = await axios.delete(`${baseUrl}/api/references/partners/${id}`, {
+        await axios.delete(`${baseUrl}/api/references/partners/${id}`, {
         headers: { Authorization: `Bearer ${this.auth_key}` }
       })
         await this.FetchPartners();
@@ -1080,7 +1094,7 @@ export const useDataStore = defineStore('data', {
     },
     async AddRequisite(formData) {
       try {
-        const response = await axios.post(`${baseUrl}/api/references/requisites`, formData, {
+        await axios.post(`${baseUrl}/api/references/requisites`, formData, {
           headers: { Authorization: `Bearer ${this.auth_key}` }
         })
         await this.FetchRequisites();
@@ -1091,7 +1105,7 @@ export const useDataStore = defineStore('data', {
     },
     async UpdateRequisite(id, formData) {
       try {
-        const response = await axios.put(`${baseUrl}/api/references/requisites/${id}`, formData, {
+        await axios.put(`${baseUrl}/api/references/requisites/${id}`, formData, {
           headers: { Authorization: `Bearer ${this.auth_key}` }
         })
         await this.FetchRequisites();
@@ -1102,7 +1116,7 @@ export const useDataStore = defineStore('data', {
     },
     async UpdateRequisiteFile(id, formData) {
       try {
-        const response = await axios.post(`${baseUrl}/api/references/requisites/${id}/file`, formData, {
+        await axios.post(`${baseUrl}/api/references/requisites/${id}/file`, formData, {
           headers: { Authorization: `Bearer ${this.auth_key}` }
         })
         await this.FetchRequisites();
@@ -1113,7 +1127,7 @@ export const useDataStore = defineStore('data', {
     },
     async DeleteRequisiteFile(id) {
       try {
-        const response = await axios.delete(`${baseUrl}/api/references/requisites/${id}/file`, {
+        await axios.delete(`${baseUrl}/api/references/requisites/${id}/file`, {
           headers: { Authorization: `Bearer ${this.auth_key}` }
         })
         await this.FetchPartners();
@@ -1124,7 +1138,7 @@ export const useDataStore = defineStore('data', {
     },
     async DeleteRequisite(id) {
       try {
-        const response = await axios.delete(`${baseUrl}/api/references/requisites/${id}`, {
+        await axios.delete(`${baseUrl}/api/references/requisites/${id}`, {
           headers: { Authorization: `Bearer ${this.auth_key}` }
         })
         await this.FetchPartners();
@@ -1139,6 +1153,7 @@ export const useDataStore = defineStore('data', {
     getExcursions: (state) => state.excursions,
     getExcursionDetail: (state) => state.excursionDetail,
     getResidentEvents: (state) => state.residentExcursions,
+    getResidentAnalytics: (state) => state.residentAnalytics,
     getNews: (state) => state.newsData,
     getPartners: (state) => state.partnersData,
     getExcursionsStats: (state) => state.excursionsStats,

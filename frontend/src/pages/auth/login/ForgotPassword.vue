@@ -23,7 +23,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import DefaultButton from '@/components/UI/button/DefaultButton.vue';
+import DefaultButton from '@/components/ui/button/DefaultButton.vue';
 import { useDataStore } from '@/stores/counter';
 import { notification } from '@/utils/notification';
 

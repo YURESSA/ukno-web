@@ -72,13 +72,13 @@ import Header from '@/components/shared/header.vue';
 import Username from '../_shared/username.vue';
 import Userdata from '../_shared/userdata.vue';
 import NearestEvents from './components/nearestEvents.vue';
-import DefaultButton from '@/components/UI/button/DefaultButton.vue';
+import DefaultButton from '@/components/ui/button/DefaultButton.vue';
 import DropMenu from '@/components/shared/dropMenu.vue';
 import { onMounted, computed, ref } from 'vue';
 import { useDataStore } from '@/stores/counter';
 import router from '@/router';
 import ChangePassword from '../_shared/changePassword.vue';
-import BaseButton from '@/components/UI/button/BaseButton.vue';
+import BaseButton from '@/components/ui/button/BaseButton.vue';
 import AllEventModal from './components/AllEventModal.vue';
 
 const store = useDataStore();

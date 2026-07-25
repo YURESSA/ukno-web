@@ -33,6 +33,30 @@
                 @input="clearError('email')"
               >
               <span class="error-message">{{ errors.email }}</span>
+
+              <!-- Выбор сессии на странице оплаты -->
+              <div class="sessions-section" v-if="excursion?.sessions?.length > 0">
+                <span>Выбранная дата и время</span>
+                <div class="sessions-list">
+                  <button
+                    v-for="session in excursion.sessions"
+                    :key="session.session_id"
+                    type="button"
+                    class="session-card"
+                    :class="{ 'session-card--active': formData.session_id === session.session_id, 'session-card--full': session.available <= 0 }"
+                    :disabled="session.available <= 0"
+                    @click="formData.session_id = session.session_id"
+                  >
+                    <span class="session-date">{{ formatSessionDate(session) }}</span>
+                    <span class="session-time">{{ formatSessionTime(session) }}</span>
+                    <span class="session-seats" :class="{ 'session-seats--low': session.available <= 3 && session.available > 0 }">
+                      <template v-if="session.available > 0">{{ session.available }} мест{{ session.available === 1 ? 'о' : session.available < 5 ? 'а' : '' }}</template>
+                      <template v-else>Мест нет</template>
+                    </span>
+                  </button>
+                </div>
+              </div>
+
               <div class="participants-input">
                 <span>Количество участников</span>
                 <div class="participants">
@@ -41,7 +65,9 @@
                   <IconButton class="participants--btn right--btn" type="button" @click="plusParticipants" text="+"/>
                 </div>
               </div>
-              <h5>Итого к оплате: {{ formData.participants_count * excursion.sessions[0].cost }}</h5>
+              <div v-if="selectedSession">
+                <h5>Итого к оплате: {{ formData.participants_count * selectedSession.cost }} ₽</h5>
+              </div>
               <BaseButton type="submit" class="sumbit--btn" text="Забронировать"/>
               <span class="offer">Нажимая «Забронировать», вы соглашаетесь с условиями приобретения и офертой</span>
             </form>
@@ -53,8 +79,8 @@
 
   <script setup>
   import Header from './components/header.vue';
-  import BaseButton from '@/components/UI/button/BaseButton.vue';
-  import IconButton from '@/components/UI/button/IconButton.vue';
+  import BaseButton from '@/components/ui/button/BaseButton.vue';
+  import IconButton from '@/components/ui/button/IconButton.vue';
   import { useDataStore } from '@/stores/counter';
   import { onMounted, computed, ref } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
@@ -66,6 +92,11 @@
 
   const excursion = computed(() => store.getExcursionDetail);
   const userData = computed(() => store.getProfileData);
+
+  const selectedSession = computed(() => {
+    if (!excursion.value || !excursion.value.sessions) return null;
+    return excursion.value.sessions.find(s => s.session_id === formData.value.session_id) || excursion.value.sessions[0];
+  });
 
   const showErrors = ref(false);
 
@@ -113,6 +144,15 @@
     formData.value.participants_count += 1;
   }
 
+  function formatSessionDate(session) {
+    const d = new Date(session.start_datetime);
+    return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+  }
+
+  function formatSessionTime(session) {
+    const d = new Date(session.start_datetime);
+    return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  }
 
   const clearError = (field) => {
     errors.value[field] = '';
@@ -297,5 +337,82 @@
     .participants--btn:active {
       background-color: #F25C03;
     }
+  }
+
+  /* Стили для выбора сессии */
+  .sessions-section {
+    margin-bottom: 30px;
+    width: 100%;
+  }
+
+  .sessions-section > span {
+    display: block;
+    color: #9E9E9E;
+    margin-bottom: 15px;
+    font-size: 16px;
+  }
+
+  .sessions-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+
+  .session-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 15px;
+    border: 2px solid #FFD6BD;
+    border-radius: 12px;
+    background-color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 120px;
+  }
+
+  .session-card:hover:not(:disabled) {
+    border-color: #F25C03;
+    box-shadow: 0 4px 12px rgba(242, 92, 3, 0.15);
+  }
+
+  .session-card--active {
+    border-color: #F25C03;
+    background-color: #FFF5EF;
+    box-shadow: 0 4px 12px rgba(242, 92, 3, 0.2);
+  }
+
+  .session-card:disabled, .session-card--full {
+    opacity: 0.6;
+    cursor: not-allowed;
+    border-color: #eee;
+    background-color: #fafafa;
+  }
+
+  .session-date {
+    font-size: 14px;
+    font-weight: 700;
+    color: #333;
+  }
+
+  .session-time {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 5px;
+  }
+
+  .session-seats {
+    font-size: 12px;
+    color: #4CAF50;
+    font-weight: 600;
+  }
+
+  .session-seats--low {
+    color: #FF9800;
+  }
+
+  .session-card--full .session-seats {
+    color: #F44336;
   }
   </style>

@@ -45,7 +45,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-import IconButton from '@/components/UI/button/IconButton.vue';
+import IconButton from '@/components/ui/button/IconButton.vue';
 import { baseUrl } from '@/stores/counter';
 
 

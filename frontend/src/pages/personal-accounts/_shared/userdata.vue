@@ -17,8 +17,8 @@
 
 
 <script setup>
-import IconButton from '@/components/UI/button/IconButton.vue';
-import DefaultButton from '@/components/UI/button/DefaultButton.vue';
+import IconButton from '@/components/ui/button/IconButton.vue';
+import DefaultButton from '@/components/ui/button/DefaultButton.vue';
 
 const props = defineProps({
   email: String,

@@ -120,7 +120,7 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import IconButton from '@/components/UI/button/IconButton.vue'
+import IconButton from '@/components/ui/button/IconButton.vue'
 import { useDataStore } from '@/stores/counter'
 import { notification } from '@/utils/notification'
 

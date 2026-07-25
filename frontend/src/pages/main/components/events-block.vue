@@ -72,7 +72,7 @@
 </template>
 
 <script setup>
-import IconButton from '@/components/UI/button/IconButton.vue';
+import IconButton from '@/components/ui/button/IconButton.vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();

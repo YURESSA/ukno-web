@@ -145,12 +145,12 @@
               placeholder="construct@ekbtour.ru"
               v-model="formDataExcursion.contact_email"
             >
-            <input
-              type="EventName"
-              name="EventName"
-              placeholder="iframe карты с местоположением"
-              v-model="formDataExcursion.iframe_url"
-            >
+            <span>Местоположение на карте</span>
+            <MapPicker
+              map-id="change-event-map"
+              :initial-coords="initialMapCoords"
+              @update:coords="onCoordsUpdate"
+            />
             <input
               type="EventName"
               name="EventName"
@@ -231,8 +231,9 @@ import { useRouter } from 'vue-router';
 import { ref, computed, onMounted } from 'vue';
 import { useDataStore } from '@/stores/counter';
 import { useRoute } from 'vue-router';
-import IconButton from '@/components/UI/button/IconButton.vue';
-import BaseButton from '@/components/UI/button/BaseButton.vue';
+import IconButton from '@/components/ui/button/IconButton.vue';
+import BaseButton from '@/components/ui/button/BaseButton.vue';
+import MapPicker from '@/components/shared/MapPicker.vue';
 import { NDatePicker, NConfigProvider, NModal, NUpload } from 'naive-ui';
 import { ruRU, dateRuRU } from 'naive-ui';
 import { baseUrl } from '@/stores/counter';
@@ -247,6 +248,8 @@ const excursionsStats = computed(() => store.getExcursionsStats);
 
 const formDataExcursion = ref(null);
 const formDataSessions = ref(null);
+// Координаты для начальной позиции MapPicker при редактировании
+const initialMapCoords = ref(null);
 
 onMounted(async () => {
   document.body.style.overflowY = 'auto'
@@ -267,12 +270,18 @@ onMounted(async () => {
       is_active: true,
       working_hours: excursion.value.working_hours,
       contact_email: excursion.value.contact_email,
-      iframe_url: excursion.value.iframe_url,
+      latitude: excursion.value.latitude ?? null,
+      longitude: excursion.value.longitude ?? null,
       telegram: excursion.value.telegram,
       vk: excursion.value.vk,
       distance_to_center: excursion.value.distance_to_center,
       time_to_nearest_stop: excursion.value.time_to_nearest_stop,
       duration: excursion.value.duration,
+    }
+
+    // Устанавливаем начальные координаты для MapPicker
+    if (excursion.value.latitude && excursion.value.longitude) {
+      initialMapCoords.value = [excursion.value.latitude, excursion.value.longitude];
     }
 
     formDataSessions.value = {
@@ -300,7 +309,12 @@ const setFormattedDate = (index, value) => {
 };
 
 function closePage(){
-  router.back();
+  router.back()
+}
+
+function onCoordsUpdate({ latitude, longitude }) {
+  formDataExcursion.value.latitude = latitude;
+  formDataExcursion.value.longitude = longitude;
 }
 
 const addInProcess = ref(false)

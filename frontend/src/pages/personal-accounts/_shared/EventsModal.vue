@@ -6,7 +6,10 @@
         <IconButton @click="$emit('close')" class="action--btn"><img src="/icon/maki_cross.svg" alt=""></IconButton>
       </div>
       <div class="cards">
-        <div class="card-wrapper" v-if="events.excursions.length > 0">
+        <div v-if="loading" class="loading-state">
+          <p>Загрузка...</p>
+        </div>
+        <div class="card-wrapper" v-else-if="events?.excursions?.length > 0">
           <div class="card" v-for="(excursions, i) in events.excursions" :key="i">
             <div class="card-header">
               <div class="left">
@@ -18,8 +21,8 @@
               </div>
             </div>
             <div class="content">
-              <p>{{ excursions.description }}</p>
-              <p v-if="excursions.sessions.length != 0 ">{{ formattedDate(excursions.sessions[0]) }} | {{ formattedTime(excursions.sessions[0]) }} | {{ excursions.category.category_name }}</p>
+              <p class="description-text">{{ excursions.description }}</p>
+              <p v-if="excursions.sessions?.length > 0">{{ formattedDate(excursions.sessions[0]) }} | {{ formattedTime(excursions.sessions[0]) }} | {{ excursions.category?.category_name }}</p>
             </div>
           </div>
         </div>
@@ -30,7 +33,7 @@
 </template>
 
 <script setup>
-import IconButton from '@/components/UI/button/IconButton.vue';
+import IconButton from '@/components/ui/button/IconButton.vue';
 import router from '@/router';
 import { useDataStore } from '@/stores/counter';
 import { computed, onMounted, ref } from 'vue';
@@ -39,12 +42,15 @@ import { notification } from '@/utils/notification'
 const store = useDataStore();
 const events = computed(() => store.getResidentEvents);
 const emit = defineEmits(['close']);
+const loading = ref(true);
 
 onMounted(async () => {
   try {
     await store.FetchResidentEvents();
   } catch (error) {
     console.error('Ошибка при загрузке экскурсий:', error);
+  } finally {
+    loading.value = false;
   }
 });
 
@@ -87,7 +93,7 @@ async function deletEvent(EventId){
   top: 0;
   overflow: hidden;
   background-color: rgba(128, 128, 128, 0.459);
-  z-index: 99;
+  z-index: 9999;
 }
 
 h4 {
@@ -130,6 +136,15 @@ h4 {
   margin-top: 20px;
 }
 
+.description-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #555;
+}
+
 .card-header{
   display: flex;
   justify-content: space-between;
@@ -151,7 +166,7 @@ h4 {
   position: absolute;
   width: 660px;
   max-height: 600px;
-  /* overflow-y: hidden; */
+  overflow-y: auto;
   background-color: #FFFFFF;
   box-shadow: 0px 0px 12.7px 0px #0000002E;
   border-radius: 26px;
@@ -167,5 +182,14 @@ h4 {
   border-radius: 5px;
   border: none;
   background-color: #EDEDED8A;
+}
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 0;
+  color: #9E9E9E;
+  font-family: 'Manrope', sans-serif;
 }
 </style>
