@@ -86,6 +86,8 @@ class Event(db.Model):
     working_hours = db.Column(db.String(255), nullable=True)
     contact_email = db.Column(db.String(255), nullable=True)
     iframe_url = db.Column(db.Text, nullable=True)
+    latitude = db.Column(db.Float, nullable=True)
+    longitude = db.Column(db.Float, nullable=True)
     telegram = db.Column(db.String(100), nullable=True)
     vk = db.Column(db.String(100), nullable=True)
 
@@ -122,6 +124,8 @@ class Event(db.Model):
             'working_hours': self.working_hours,
             'contact_email': self.contact_email,
             'iframe_url': self.iframe_url,
+            'latitude': self.latitude,
+            'longitude': self.longitude,
             'telegram': self.telegram,
             'vk': self.vk,
             "distance_to_center": self.distance_to_center,
