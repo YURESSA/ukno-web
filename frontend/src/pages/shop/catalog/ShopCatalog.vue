@@ -1,7 +1,14 @@
 <template>
   <div class="catalog-page">
     <!-- Hero Banners -->
-    <section v-if="shopStore.banners.length > 0" class="hero-section">
+    <section
+      v-if="shopStore.banners.length > 0"
+      class="hero-section"
+      @touchstart="handleTouchStart"
+      @touchend="handleTouchEnd"
+      @mousedown="handleMouseDown"
+      @mouseup="handleMouseUp"
+    >
       <div class="hero-track" :style="{ transform: `translateX(-${activeBanner * 100}%)` }">
         <div
           v-for="banner in shopStore.banners"
@@ -12,8 +19,8 @@
           <div class="hero-content">
             <h2 v-if="banner.title" class="hero-title">{{ banner.title }}</h2>
             <p v-if="banner.description" class="hero-desc">{{ banner.description }}</p>
-            <a v-if="banner.link_url" :href="banner.link_url" class="hero-cta">Смотреть коллекцию</a>
-            <button v-else class="hero-cta" @click="selectCategory(null)">Смотреть коллекцию</button>
+            <a v-if="banner.link_url" :href="banner.link_url" class="hero-cta">{{ banner.button_text || 'Смотреть коллекцию' }}</a>
+            <button v-else class="hero-cta" @click="selectCategory(null)">{{ banner.button_text || 'Смотреть коллекцию' }}</button>
           </div>
         </div>
       </div>
@@ -42,16 +49,41 @@
       </div>
     </section>
 
-    <!-- Filters -->
-    <section class="filters-section">
-      <button class="filter-btn" :class="{ active: !selectedCategory }" @click="selectCategory(null)">Все</button>
-      <button
-        v-for="cat in shopStore.categories"
-        :key="cat.category_id"
-        class="filter-btn"
-        :class="{ active: selectedCategory === cat.category_id }"
-        @click="selectCategory(cat.category_id)"
-      >{{ cat.name }}</button>
+    <!-- Search & Filters -->
+    <section class="catalog-controls">
+      <!-- Search input -->
+      <div class="search-box">
+        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input
+          v-model="searchQuery"
+          type="text"
+          class="search-input"
+          placeholder="Поиск по названию или коллекции"
+          @input="onSearchInput"
+          @keyup.enter="doSearch"
+        />
+        <button
+          v-if="searchQuery"
+          class="search-clear"
+          @click="clearSearch"
+          aria-label="Очистить поиск"
+        >✕</button>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters-section">
+        <button class="filter-btn" :class="{ active: !selectedCategory }" @click="selectCategory(null)">Все</button>
+        <button
+          v-for="cat in shopStore.categories"
+          :key="cat.category_id"
+          class="filter-btn"
+          :class="{ active: selectedCategory === cat.category_id }"
+          @click="selectCategory(cat.category_id)"
+        >{{ cat.name }}</button>
+      </div>
     </section>
 
     <!-- Loading -->
@@ -71,7 +103,15 @@
     </section>
 
     <div v-if="!shopStore.loading && shopStore.products.length === 0" class="empty-state">
-      <p>Товары не найдены</p>
+      <div class="empty-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+      </div>
+      <p class="empty-title">Товары не найдены</p>
+      <p v-if="searchQuery" class="empty-sub">По запросу «{{ searchQuery }}» ничего не найдено</p>
+      <button v-if="searchQuery || selectedCategory" class="empty-reset" @click="resetFilters">Сбросить фильтры и поиск</button>
     </div>
   </div>
 </template>
@@ -89,14 +129,19 @@ const router = useRouter()
 
 const selectedCategory = ref(null)
 const activeBanner = ref(0)
+const searchQuery = ref('')
 let autoplayTimer = null
+let searchDebounceTimer = null
 
 onMounted(async () => {
   await shopStore.FetchHome()
   startAutoplay()
 })
 
-onUnmounted(() => clearInterval(autoplayTimer))
+onUnmounted(() => {
+  clearInterval(autoplayTimer)
+  clearTimeout(searchDebounceTimer)
+})
 
 function startAutoplay() {
   if (shopStore.banners.length > 1) {
@@ -119,9 +164,83 @@ function nextBanner() {
   startAutoplay()
 }
 
+// Swipe handling for mobile & desktop
+const touchStartX = ref(0)
+const touchStartY = ref(0)
+const isDragging = ref(false)
+
+function handleTouchStart(e) {
+  if (e.touches && e.touches.length > 0) {
+    touchStartX.value = e.touches[0].clientX
+    touchStartY.value = e.touches[0].clientY
+    isDragging.value = true
+  }
+}
+
+function handleTouchEnd(e) {
+  if (!isDragging.value) return
+  isDragging.value = false
+  if (e.changedTouches && e.changedTouches.length > 0) {
+    const deltaX = e.changedTouches[0].clientX - touchStartX.value
+    const deltaY = e.changedTouches[0].clientY - touchStartY.value
+    if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY)) {
+      if (deltaX < 0) {
+        nextBanner()
+      } else {
+        prevBanner()
+      }
+    }
+  }
+}
+
+function handleMouseDown(e) {
+  touchStartX.value = e.clientX
+  touchStartY.value = e.clientY
+  isDragging.value = true
+}
+
+function handleMouseUp(e) {
+  if (!isDragging.value) return
+  isDragging.value = false
+  const deltaX = e.clientX - touchStartX.value
+  const deltaY = e.clientY - touchStartY.value
+  if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY)) {
+    if (deltaX < 0) {
+      nextBanner()
+    } else {
+      prevBanner()
+    }
+  }
+}
+
+function onSearchInput() {
+  clearTimeout(searchDebounceTimer)
+  searchDebounceTimer = setTimeout(() => {
+    doSearch()
+  }, 350)
+}
+
+async function doSearch() {
+  clearTimeout(searchDebounceTimer)
+  await shopStore.FetchProducts(selectedCategory.value, searchQuery.value.trim() || null)
+}
+
+async function clearSearch() {
+  searchQuery.value = ''
+  clearTimeout(searchDebounceTimer)
+  await shopStore.FetchProducts(selectedCategory.value, null)
+}
+
+async function resetFilters() {
+  selectedCategory.value = null
+  searchQuery.value = ''
+  clearTimeout(searchDebounceTimer)
+  await shopStore.FetchProducts(null, null)
+}
+
 async function selectCategory(categoryId) {
   selectedCategory.value = categoryId
-  await shopStore.FetchProducts(categoryId)
+  await shopStore.FetchProducts(categoryId, searchQuery.value.trim() || null)
 }
 
 function goToProduct(productId) {
@@ -150,6 +269,8 @@ async function handleFavorite(product) {
   overflow: hidden;
   height: 420px;
   margin: -32px -24px 0;
+  user-select: none;
+  touch-action: pan-y;
 }
 
 .hero-track {
@@ -193,7 +314,7 @@ async function handleFavorite(product) {
 .hero-content {
   position: relative;
   z-index: 2;
-  padding: 0 56px;
+  padding: 0 70px;
   max-width: 480px;
   display: flex;
   flex-direction: column;
@@ -295,6 +416,81 @@ async function handleFavorite(product) {
   border-radius: 3px;
 }
 
+/* ── Search & Controls ── */
+.catalog-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  /* max-width: 520px; */
+  width: calc(100% - 36px);
+  background: #fcfbf9;
+  border: 1.5px solid #e5e2dc;
+  border-radius: 100px;
+  padding: 2px 18px;
+  transition: all 0.25s ease;
+}
+
+.search-box:focus-within,
+.search-box:hover {
+  border-color: #FF6C36;
+  background: #fff;
+  box-shadow: 0 4px 18px rgba(255, 108, 54, 0.08);
+}
+
+.search-icon {
+  color: #888;
+  flex-shrink: 0;
+  margin-right: 12px;
+  transition: color 0.25s ease;
+}
+
+.search-box:focus-within .search-icon {
+  color: #FF6C36;
+}
+
+.search-input {
+  border: none;
+  background: transparent;
+  width: 100%;
+  font-size: 15px;
+  color: #1a1a1a;
+  padding: 10px 0;
+  outline: none;
+  font-family: inherit;
+}
+
+.search-input::placeholder {
+  color: #999;
+}
+
+.search-clear {
+  border: none;
+  background: rgba(0, 0, 0, 0.06);
+  color: #666;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: 8px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.search-clear:hover {
+  background: #FF6C36;
+  color: #fff;
+}
+
 /* ── Filters ── */
 .filters-section {
   display: flex;
@@ -352,13 +548,58 @@ async function handleFavorite(product) {
 }
 
 .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  padding: 60px;
-  color: #999;
-  font-size: 16px;
+  padding: 70px 20px;
+  background: #faf9f6;
+  border-radius: 20px;
+  border: 1px dashed #e0ddd8;
+  gap: 12px;
+}
+
+.empty-icon {
+  margin-bottom: 4px;
+}
+
+.empty-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.empty-sub {
+  font-size: 14px;
+  color: #777;
+  margin: 0;
+}
+
+.empty-reset {
+  margin-top: 8px;
+  padding: 8px 20px;
+  border-radius: 100px;
+  border: 1px solid #FF6C36;
+  background: transparent;
+  color: #FF6C36;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.empty-reset:hover {
+  background: #FF6C36;
+  color: #fff;
 }
 
 @media (max-width: 768px) {
+  .hero-arrow {
+    display: none;
+  }
+
   .hero-section {
     height: 280px;
     margin: -20px -16px 0;

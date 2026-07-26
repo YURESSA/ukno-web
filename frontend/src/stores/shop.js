@@ -58,10 +58,18 @@ export const useShopStore = defineStore('shop', {
     },
 
     // ─── Products ─────────────────────────────────────────────────────────────
-    async FetchProducts(categoryId = null) {
+    async FetchProducts(categoryId = null, search = null) {
       this.loading = true
       try {
-        const params = categoryId ? { category_id: categoryId } : {}
+        let cat = categoryId
+        let q = search
+        if (categoryId && typeof categoryId === 'object') {
+          cat = categoryId.categoryId || categoryId.category_id || null
+          q = categoryId.search || categoryId.q || null
+        }
+        const params = {}
+        if (cat) params.category_id = cat
+        if (q) params.search = q
         const response = await axios.get(`${baseUrl}api/user/merch/products`, { params })
         this.products = response.data.products || []
       } catch (error) {

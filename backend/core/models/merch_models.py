@@ -115,19 +115,22 @@ class MerchProduct(db.Model):
     def sorted_images(self):
         return sorted(self.images, key=lambda image: image.order_index)
 
-    def to_list_dict(self, is_favorite=False, include_images=False):
+    def to_list_dict(self, is_favorite=False, include_images=True):
+        images_sorted = self.sorted_images()
+        main_img = images_sorted[0].image_path if images_sorted else None
         data = {
             "product_id": self.product_id,
             "category": self.category.to_dict() if self.category else None,
             "name": self.name,
             "price": str(self.price),
             "collection": self.collection,
+            "main_image": main_img,
             "is_active": self.is_active,
             "is_favorite": is_favorite,
             "available": self.available_quantity(),
         }
         if include_images:
-            data["images"] = [image.to_dict() for image in self.sorted_images()]
+            data["images"] = [image.to_dict() for image in images_sorted]
         return data
 
     def to_detail_dict(self, is_favorite=False):

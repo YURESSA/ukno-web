@@ -152,6 +152,7 @@ function onTouchEnd() {
   display: flex;
   flex-direction: column;
   transition: box-shadow 0.25s;
+  height: 100%;
 }
 
 .product-card:hover {
@@ -269,7 +270,9 @@ function onTouchEnd() {
   padding: 10px 12px 14px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
+  flex: 1;
+  justify-content: space-between;
 }
 
 .product-card__name {
@@ -278,6 +281,7 @@ function onTouchEnd() {
   color: #1a1a1a;
   margin: 0;
   line-height: 1.35;
+  min-height: 2.7em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -288,5 +292,6 @@ function onTouchEnd() {
   font-size: 16px;
   font-weight: 700;
   color: #1a1a1a;
+  margin-top: auto;
 }
 </style>

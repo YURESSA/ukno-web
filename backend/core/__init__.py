@@ -23,6 +23,25 @@ def create_app(testing=False):
     db.init_app(app)
     migrate.init_app(app, db)
 
+    with app.app_context():
+        try:
+            from sqlalchemy import text
+            with db.engine.connect() as conn:
+                for table, col, col_def in [
+                    ("merch_products", "is_deleted", "BOOLEAN DEFAULT 0 NOT NULL"),
+                    ("merch_banners", "button_text", "VARCHAR(100)"),
+                    ("merch_banners", "image_text", "VARCHAR(255)"),
+                    ("merch_orders", "delivery_method", "VARCHAR(50) DEFAULT 'pickup'"),
+                    ("merch_orders", "pay_by_card", "BOOLEAN DEFAULT 1"),
+                ]:
+                    try:
+                        conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {col_def}"))
+                        conn.commit()
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+
     register_apps(app)
     if testing:
         app.config["TESTING"] = True

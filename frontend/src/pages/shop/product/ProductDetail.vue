@@ -44,6 +44,7 @@
                   :src="baseUrl + img"
                   :alt="shopStore.productDetail.name"
                   class="product-gallery__slide"
+                  @click="openFullscreen(i)"
                 />
               </div>
 
@@ -72,6 +73,21 @@
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                   <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+
+              <!-- Zoom Icon -->
+              <button
+                v-if="allImages.length > 0"
+                class="gallery-zoom-btn"
+                @click="openFullscreen(activeIdx)"
+                title="Открывать во весь экран"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="15 3 21 3 21 9" />
+                  <polyline points="9 21 3 21 3 15" />
+                  <line x1="21" y1="3" x2="10" y2="14" />
+                  <line x1="3" y1="21" x2="14" y2="10" />
                 </svg>
               </button>
             </div>
@@ -204,6 +220,79 @@
             </Transition>
           </Teleport>
 
+          <!-- ── Fullscreen Gallery Modal ── -->
+          <Teleport to="body">
+            <Transition name="fade">
+              <div
+                v-if="showFullscreen"
+                class="fullscreen-gallery-modal"
+                @click.self="closeFullscreen"
+                @touchstart="handleFsTouchStart"
+                @touchend="handleFsTouchEnd"
+                @mousedown="handleFsMouseDown"
+                @mouseup="handleFsMouseUp"
+              >
+                <!-- Close button -->
+                <button class="fullscreen-close" @click="closeFullscreen" aria-label="Закрыть">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+
+                <!-- Counter -->
+                <div class="fullscreen-counter">
+                  {{ fullscreenIdx + 1 }} / {{ allImages.length }}
+                </div>
+
+                <!-- Arrows -->
+                <button
+                  v-if="allImages.length > 1"
+                  class="fullscreen-arrow fullscreen-arrow--prev"
+                  @click.stop="prevFullscreenImage"
+                  aria-label="Предыдущее фото"
+                >
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="15 18 9 12 15 6" />
+                  </svg>
+                </button>
+
+                <button
+                  v-if="allImages.length > 1"
+                  class="fullscreen-arrow fullscreen-arrow--next"
+                  @click.stop="nextFullscreenImage"
+                  aria-label="Следующее фото"
+                >
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </button>
+
+                <!-- Main Fullscreen Slide -->
+                <div class="fullscreen-image-wrap" @click.self="closeFullscreen">
+                  <img
+                    :src="baseUrl + allImages[fullscreenIdx]"
+                    :alt="shopStore.productDetail.name"
+                    class="fullscreen-image"
+                  />
+                </div>
+
+                <!-- Bottom Thumbnails -->
+                <div v-if="allImages.length > 1" class="fullscreen-thumbs" @click.stop>
+                  <button
+                    v-for="(img, i) in allImages"
+                    :key="i"
+                    class="fullscreen-thumb"
+                    :class="{ active: fullscreenIdx === i }"
+                    @click="fullscreenIdx = i"
+                  >
+                    <img :src="baseUrl + img" :alt="shopStore.productDetail.name" />
+                  </button>
+                </div>
+              </div>
+            </Transition>
+          </Teleport>
+
           <!-- Price -->
           <p class="product-info__price">{{ formatPrice(shopStore.productDetail.price) }} ₽</p>
 
@@ -247,6 +336,7 @@
 
           <!-- Description -->
           <p v-if="shopStore.productDetail.description" class="product-info__desc">
+            <h4>Описание</h4>
             {{ shopStore.productDetail.description }}
           </p>
         </div>
@@ -256,7 +346,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useShopStore } from '@/stores/shop'
 import { baseUrl, useDataStore } from '@/stores/counter'
@@ -318,6 +408,7 @@ const isFavorite = computed(() =>
 )
 
 onMounted(async () => {
+  window.addEventListener('keydown', handleKeyDown)
   await shopStore.FetchProductDetail(route.params.id)
   const p = shopStore.productDetail
   if (p) {
@@ -372,6 +463,91 @@ async function toggleFav() {
 function formatPrice(price) {
   return Number(price).toLocaleString('ru-RU')
 }
+
+// ── Fullscreen Gallery Modal ──
+const showFullscreen = ref(false)
+const fullscreenIdx  = ref(0)
+
+function openFullscreen(idx) {
+  fullscreenIdx.value = idx
+  showFullscreen.value = true
+}
+
+function closeFullscreen() {
+  showFullscreen.value = false
+}
+
+function prevFullscreenImage() {
+  const len = allImages.value.length
+  if (len === 0) return
+  fullscreenIdx.value = (fullscreenIdx.value - 1 + len) % len
+}
+
+function nextFullscreenImage() {
+  const len = allImages.value.length
+  if (len === 0) return
+  fullscreenIdx.value = (fullscreenIdx.value + 1) % len
+}
+
+// Swipe support for fullscreen modal
+const fsTouchStartX = ref(0)
+const fsTouchStartY = ref(0)
+const fsDragging    = ref(false)
+
+function handleFsTouchStart(e) {
+  if (e.touches && e.touches.length > 0) {
+    fsTouchStartX.value = e.touches[0].clientX
+    fsTouchStartY.value = e.touches[0].clientY
+    fsDragging.value = true
+  }
+}
+
+function handleFsTouchEnd(e) {
+  if (!fsDragging.value) return
+  fsDragging.value = false
+  if (e.changedTouches && e.changedTouches.length > 0) {
+    const deltaX = e.changedTouches[0].clientX - fsTouchStartX.value
+    const deltaY = e.changedTouches[0].clientY - fsTouchStartY.value
+    if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY)) {
+      if (deltaX < 0) {
+        nextFullscreenImage()
+      } else {
+        prevFullscreenImage()
+      }
+    }
+  }
+}
+
+function handleFsMouseDown(e) {
+  fsTouchStartX.value = e.clientX
+  fsTouchStartY.value = e.clientY
+  fsDragging.value = true
+}
+
+function handleFsMouseUp(e) {
+  if (!fsDragging.value) return
+  fsDragging.value = false
+  const deltaX = e.clientX - fsTouchStartX.value
+  const deltaY = e.clientY - fsTouchStartY.value
+  if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY)) {
+    if (deltaX < 0) {
+      nextFullscreenImage()
+    } else {
+      prevFullscreenImage()
+    }
+  }
+}
+
+function handleKeyDown(e) {
+  if (!showFullscreen.value) return
+  if (e.key === 'Escape') closeFullscreen()
+  else if (e.key === 'ArrowLeft') prevFullscreenImage()
+  else if (e.key === 'ArrowRight') nextFullscreenImage()
+}
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown)
+})
 </script>
 
 <style scoped>
@@ -429,6 +605,31 @@ function formatPrice(price) {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  cursor: zoom-in;
+}
+
+.gallery-zoom-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(6px);
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.15s;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+.gallery-zoom-btn:hover {
+  background: #fff;
+  transform: scale(1.06);
 }
 
 .product-gallery__placeholder {
@@ -540,6 +741,7 @@ function formatPrice(price) {
   margin: 0;
   padding-top: 4px;
   border-top: 1px solid #e8e5e0;
+  white-space: pre-line;
 }
 
 /* ── Options ── */
@@ -903,5 +1105,165 @@ function formatPrice(price) {
 @media (max-width: 480px) {
   .product-info__name { font-size: 16px; }
   .gallery-arrow { width: 30px; height: 30px; }
+}
+
+/* ── Fullscreen Gallery Modal ── */
+.fullscreen-gallery-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(10, 10, 14, 0.94);
+  backdrop-filter: blur(14px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  touch-action: pan-y;
+}
+
+.fullscreen-close {
+  position: absolute;
+  top: 24px;
+  right: 28px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.2s;
+  z-index: 10;
+}
+.fullscreen-close:hover {
+  background: rgba(255, 255, 255, 0.28);
+  transform: scale(1.08);
+}
+
+.fullscreen-counter {
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 6px 16px;
+  border-radius: 20px;
+  z-index: 10;
+  letter-spacing: 0.05em;
+}
+
+.fullscreen-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.2s;
+  z-index: 10;
+}
+.fullscreen-arrow:hover {
+  background: rgba(255, 255, 255, 0.32);
+  transform: translateY(-50%) scale(1.08);
+}
+.fullscreen-arrow--prev { left: 24px; }
+.fullscreen-arrow--next { right: 24px; }
+
+.fullscreen-image-wrap {
+  width: 100%;
+  height: 75vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 80px;
+  box-sizing: border-box;
+}
+
+.fullscreen-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fullscreen-thumbs {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  max-width: 90vw;
+  overflow-x: auto;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  z-index: 10;
+}
+
+.fullscreen-thumb {
+  width: 54px;
+  height: 54px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  background: #222;
+  flex-shrink: 0;
+  opacity: 0.6;
+  transition: all 0.2s;
+}
+.fullscreen-thumb.active {
+  border-color: #FF6C36;
+  opacity: 1;
+  transform: translateY(-2px);
+}
+.fullscreen-thumb:hover {
+  opacity: 0.9;
+}
+.fullscreen-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 768px) {
+  .fullscreen-image-wrap {
+    padding: 0 16px;
+    height: 70vh;
+  }
+  .fullscreen-arrow {
+    width: 44px;
+    height: 44px;
+  }
+  .fullscreen-arrow--prev { left: 10px; }
+  .fullscreen-arrow--next { right: 10px; }
+  .fullscreen-close {
+    top: 16px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+  }
+  .fullscreen-counter {
+    top: 20px;
+  }
 }
 </style>

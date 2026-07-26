@@ -179,7 +179,28 @@
             <!-- Payment -->
             <div class="checkout-section">
               <div class="checkout-section__title">Оплата</div>
-              <div class="payment-info">
+              <div v-if="orderForm.delivery_method === 'pickup'" class="delivery-options">
+                <label class="delivery-option" :class="{ selected: orderForm.pay_by_card === true }">
+                  <input type="radio" :value="true" v-model="orderForm.pay_by_card" />
+                  <span class="delivery-option__radio" />
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6C36" stroke-width="1.8" style="margin-right: 4px;">
+                    <rect x="2" y="5" width="20" height="14" rx="2" />
+                    <line x1="2" y1="10" x2="22" y2="10" />
+                  </svg>
+                  Банковская карта онлайн
+                </label>
+                <label class="delivery-option" :class="{ selected: orderForm.pay_by_card === false }">
+                  <input type="radio" :value="false" v-model="orderForm.pay_by_card" />
+                  <span class="delivery-option__radio" />
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="1.8" style="margin-right: 4px;">
+                    <rect x="2" y="6" width="20" height="12" rx="2" />
+                    <circle cx="12" cy="12" r="2" />
+                    <path d="M6 12h.01M18 12h.01" />
+                  </svg>
+                  Наличными при получении
+                </label>
+              </div>
+              <div v-else class="payment-info">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6C36" stroke-width="1.8">
                   <rect x="2" y="5" width="20" height="14" rx="2" />
                   <line x1="2" y1="10" x2="22" y2="10" />
@@ -203,7 +224,7 @@
               :disabled="submitting || !isFormValid"
               @click="submitOrder"
             >
-              {{ submitting ? 'Оформляем...' : 'Перейти к оплате' }}
+              {{ submitting ? 'Оформляем...' : (orderForm.pay_by_card ? 'Перейти к оплате' : 'Оформить заказ') }}
             </button>
             <p v-if="formError" class="form-error">{{ formError }}</p>
           </div>
@@ -226,7 +247,7 @@
           <div v-for="order in shopStore.orders" :key="order.order_id" class="order-card">
             <div class="order-card__header">
               <span class="order-card__id">Заказ #{{ order.order_id }}</span>
-              <span class="order-card__status" :class="order.status">{{ statusLabel(order.status) }}</span>
+              <span class="order-card__status" :class="order.status">{{ statusLabel(order.status, order) }}</span>
               <span class="order-card__date">{{ formatDate(order.created_at) }}</span>
             </div>
             <div class="order-card__items">
@@ -236,7 +257,10 @@
             </div>
             <div class="order-card__footer">
               <span class="order-card__total">{{ formatPrice(order.total_price) }} ₽</span>
-              <span class="order-card__delivery">{{ order.delivery_method === 'pickup' ? 'Самовывоз' : 'Доставка' }}</span>
+              <span class="order-card__delivery">
+                {{ order.delivery_method === 'pickup' ? 'Самовывоз' : 'Доставка' }}
+                {{ order.pay_by_card ? '· Карта онлайн' : '· Наличными при получении' }}
+              </span>
             </div>
           </div>
         </div>
@@ -265,7 +289,7 @@ const orderForm = ref({
   pay_by_card: true,
 })
 
-// Автозаполнение формы из данных профиля
+// Автозаполнение формы из данных профиля (кроме поля связи)
 function prefillFromProfile() {
   const p = dataStore.profileData
   if (!p) return
@@ -276,12 +300,6 @@ function prefillFromProfile() {
     orderForm.value.last_name  = parts[0] || ''
     orderForm.value.first_name = parts[1] || ''
     orderForm.value.patronymic = parts[2] || ''
-  }
-
-  // Контакт: телефон, или email, или telegram
-  if (!orderForm.value.contact_channel) {
-    orderForm.value.contact_channel =
-      p.phone || p.telegram || p.email || ''
   }
 }
 
@@ -316,6 +334,13 @@ onMounted(async () => {
 
 // Если профиль пришёл позже (напр. после асинхронной загрузки) — подставляем данные
 watch(() => dataStore.profileData, prefillFromProfile, { deep: true })
+
+// При выборе доставки возвращаем оплату картой онлайн
+watch(() => orderForm.value.delivery_method, (method) => {
+  if (method !== 'pickup') {
+    orderForm.value.pay_by_card = true
+  }
+})
 
 async function loadOrders() {
   activeTab.value = 'orders'
@@ -356,13 +381,18 @@ function formatDate(iso) {
   return new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-function statusLabel(status) {
+function statusLabel(status, order) {
+  if (order?.delivery_method === 'pickup' && order?.pay_by_card && status === 'awaiting_payment') {
+    return 'Ждёт оплаты'
+  }
   const labels = {
-    new: 'Новый',
+    new: 'Оплата при получении',
+    payment_on_receipt: 'Оплата при получении',
     awaiting_payment: 'Ожидает оплаты',
+    waiting_shipment: 'Ждёт отправки',
     paid: 'Оплачен',
     cancelled: 'Отменён',
-    completed: 'Выдан',
+    completed: 'Завершён',
   }
   return labels[status] || status
 }

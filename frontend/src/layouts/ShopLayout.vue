@@ -4,8 +4,8 @@
       <div class="shop-header__inner">
         <!-- Logo -->
         <RouterLink to="/shop" class="shop-header__logo">
-          <img src="/logo/mobile-logo.svg" alt="UKNO" />
-          <span class="shop-header__logo-text">Мерч</span>
+          <img src="/logo/logo-with-text.svg" alt="UKNO" class="shop-logo-desktop" />
+          <img src="/logo/mobile-logo.svg" alt="UKNO" class="shop-logo-mobile" />
         </RouterLink>
 
         <!-- Nav -->
@@ -13,13 +13,13 @@
           <RouterLink to="/shop" class="shop-nav-link" :class="{ active: isShopRoot }">
             Каталог
           </RouterLink>
-          <RouterLink to="/shop/favorite" class="shop-nav-link">
+          <RouterLink to="/shop/favorite" class="shop-nav-link" :class="{ active: route.name === 'ShopFavorite' }">
             Избранное
             <span v-if="isAuthed && shopStore.favoritesCount > 0" class="shop-nav-badge">
               {{ shopStore.favoritesCount }}
             </span>
           </RouterLink>
-          <RouterLink to="/shop/orders" class="shop-nav-link">
+          <RouterLink to="/shop/orders" class="shop-nav-link" :class="{ active: route.name === 'ShopOrders' }">
             Заказы
           </RouterLink>
         </nav>
@@ -61,7 +61,7 @@
 
 <script setup>
 import { SFooter } from '@/components/shared'
-import { computed, onMounted, watch } from 'vue'
+import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useDataStore } from '@/stores/counter'
 import { useShopStore } from '@/stores/shop'
@@ -72,7 +72,13 @@ const shopStore = useShopStore()
 
 const isAuthed = computed(() => !!dataStore.auth_key)
 const cartCount = computed(() => (isAuthed.value ? shopStore.cartItemsCount : 0))
-const isShopRoot = computed(() => route.path === '/shop' || route.path === '/shop/')
+const isShopRoot = computed(
+  () =>
+    route.name === 'ShopCatalog' ||
+    route.name === 'ShopProduct' ||
+    route.path === '/shop' ||
+    route.path === '/shop/',
+)
 
 // Ссылка на ЛК в зависимости от роли
 const profileRoute = computed(() => {
@@ -109,12 +115,15 @@ watch(
 
 /* ── Header ── */
 .shop-header {
+  position: -webkit-sticky;
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
   background: #fff;
   border-bottom: 1px solid #e8e5e0;
   box-shadow: 0 1px 12px rgba(0, 0, 0, 0.06);
+  padding: 30px 0;
+  width: 100%;
 }
 
 .shop-header__inner {
@@ -136,19 +145,12 @@ watch(
 }
 
 .shop-header__logo img {
-  height: 32px;
+  height: 45px;
   width: auto;
 }
 
-.shop-header__logo-text {
-  font-size: 13px;
-  font-weight: 600;
-  color: #FF6C36;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 2px 8px;
-  border-radius: 4px;
-  background: rgba(255, 108, 54, 0.1);
+.shop-logo-mobile {
+  display: none;
 }
 
 /* Nav */
@@ -170,6 +172,7 @@ watch(
   font-weight: 500;
   color: #555;
   text-decoration: none;
+  white-space: nowrap;
   transition: color 0.2s, background 0.2s;
 }
 
@@ -178,7 +181,6 @@ watch(
   background: #f0ede8;
 }
 
-.shop-nav-link.router-link-active,
 .shop-nav-link.active {
   color: #FF6C36;
   background: rgba(255, 108, 54, 0.08);
@@ -301,17 +303,67 @@ watch(
 }
 
 @media (max-width: 768px) {
-  .shop-header__inner {
-    gap: 16px;
-    padding: 0 16px;
-  }
-
-  .shop-header__nav {
+  .shop-logo-desktop {
     display: none;
   }
 
+  .shop-logo-mobile {
+    display: block;
+    height: 28px;
+  }
+
+  .shop-header {
+    padding: 8px 0;
+  }
+
+  .shop-header__logo img {
+    height: 28px;
+  }
+
+  .shop-header__inner {
+    gap: 6px;
+    padding: 0 10px;
+    justify-content: space-between;
+  }
+
+  .shop-header__nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    margin: 0 auto;
+  }
+
+  .shop-nav-link {
+    font-size: 13px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    gap: 4px;
+    white-space: nowrap;
+  }
+
+  .shop-nav-badge {
+    min-width: 16px;
+    height: 16px;
+    font-size: 10px;
+  }
+
+  .shop-header__actions {
+    gap: 4px;
+  }
+
+  .shop-icon-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .shop-auth-btn {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
   .shop-main {
-    padding: 20px 16px;
+    padding: 16px 12px;
   }
 }
 </style>

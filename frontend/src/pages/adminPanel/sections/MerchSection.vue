@@ -41,6 +41,7 @@
           :loading="loading"
           :columns="orderColumns"
           :data="orders"
+          :row-props="orderRowProps"
           :pagination="{ pageSize: 15 }"
         />
       </n-tab-pane>
@@ -192,6 +193,9 @@
           <n-form-item-gi span="2" label="Описание">
             <n-input v-model:value="bannerForm.description" type="textarea" :autosize="{ minRows: 2 }" placeholder="Текст под заголовком" />
           </n-form-item-gi>
+          <n-form-item-gi label="Текст на кнопке">
+            <n-input v-model:value="bannerForm.button_text" placeholder="Смотреть коллекцию" />
+          </n-form-item-gi>
           <n-form-item-gi label="Ссылка">
             <n-input v-model:value="bannerForm.link_url" placeholder="/shop/..." />
           </n-form-item-gi>
@@ -223,6 +227,78 @@
         </n-space>
       </template>
     </n-modal>
+
+    <!-- ══════════════ МОДАЛКА: ЗАКАЗ ══════════════ -->
+    <n-modal
+      v-model:show="showOrderModal"
+      preset="card"
+      style="width: 760px"
+      :title="`Заказ #${selectedOrder?.order_id || ''}`"
+    >
+      <div v-if="selectedOrder" class="order-modal-content">
+        <!-- Покупатель -->
+        <div class="order-section-title">Информация о покупателе</div>
+        <n-descriptions bordered :column="2" label-placement="left" size="small" class="order-desc">
+          <n-descriptions-item label="ФИО">
+            {{ [selectedOrder.last_name, selectedOrder.first_name, selectedOrder.patronymic].filter(Boolean).join(' ') || '—' }}
+          </n-descriptions-item>
+          <n-descriptions-item label="Связь">
+            {{ selectedOrder.contact_channel || '—' }}
+          </n-descriptions-item>
+          <n-descriptions-item label="Способ получения">
+            {{ selectedOrder.delivery_method === 'pickup' ? 'Самовывоз из Екатеринбурга' : 'Доставка' }}
+          </n-descriptions-item>
+          <n-descriptions-item label="Способ оплаты">
+            {{ selectedOrder.pay_by_card ? 'Банковская карта онлайн' : 'Наличными при получении' }}
+          </n-descriptions-item>
+          <n-descriptions-item label="Дата создания">
+            {{ selectedOrder.created_at ? new Date(selectedOrder.created_at).toLocaleString('ru-RU') : '—' }}
+          </n-descriptions-item>
+          <n-descriptions-item label="Сумма заказа">
+            <strong style="color: #FF6C36; font-size: 15px;">{{ Number(selectedOrder.total_price).toLocaleString('ru') }} ₽</strong>
+          </n-descriptions-item>
+        </n-descriptions>
+
+        <n-divider style="margin: 20px 0;" />
+
+        <!-- Товары в заказе -->
+        <div class="order-section-title">Состав заказа</div>
+        <div class="order-items-list">
+          <div v-for="item in selectedOrder.items" :key="item.order_item_id" class="order-modal-item">
+            <div class="item-info">
+              <div class="item-name">{{ item.product_name }}</div>
+              <div class="item-meta">
+                Размер: {{ item.size_name }}<span v-if="item.color_name">, цвет: {{ item.color_name }}</span>
+              </div>
+            </div>
+            <div class="item-price-col">
+              <span class="item-qty">{{ item.quantity }} шт. × {{ Number(item.unit_price).toLocaleString('ru') }} ₽</span>
+              <span class="item-total">{{ Number(item.total_price).toLocaleString('ru') }} ₽</span>
+            </div>
+          </div>
+        </div>
+
+        <n-divider style="margin: 20px 0;" />
+
+        <!-- Управление статусом -->
+        <div class="order-section-title">Управление статусом</div>
+        <div class="order-status-row">
+          <n-select
+            v-model:value="selectedOrderStatus"
+            :options="getOrderStatusOptions(selectedOrder)"
+            style="width: 320px"
+          />
+          <n-button
+            type="primary"
+            :loading="orderUpdating"
+            :disabled="selectedOrderStatus === selectedOrder.status"
+            @click="saveOrderStatus"
+          >
+            Сохранить статус
+          </n-button>
+        </div>
+      </div>
+    </n-modal>
   </div>
 </template>
 
@@ -232,7 +308,8 @@ import axios from 'axios';
 import {
   NTabs, NTabPane, NDataTable, NModal, NForm, NFormItemGi, NGrid,
   NInput, NInputNumber, NSelect, NSwitch, NColorPicker,
-  NButton, NSpace, NAvatar, NUpload, NUploadDragger, NIcon,
+  NButton, NSpace, NAvatar, NUpload, NUploadDragger, NIcon, NTag,
+  NDescriptions, NDescriptionsItem, NDivider,
   useMessage, useDialog
 } from 'naive-ui';
 import { useDataStore, baseUrl } from '@/stores/counter';
@@ -283,6 +360,25 @@ const productColumns = [
   { title: 'Цена', key: 'price', render: (row) => `${Number(row.price).toLocaleString('ru')} ₽`, width: 120 },
   { title: 'Коллекция', key: 'collection', render: (row) => row.collection || '—', width: 150 },
   { title: 'Активен', key: 'is_active', render: (row) => row.is_active ? '✓' : '✗', width: 80 },
+  {
+    title: 'Действия',
+    key: 'actions',
+    width: 100,
+    render: (row) =>
+      h(
+        NButton,
+        {
+          size: 'small',
+          type: 'error',
+          ghost: true,
+          onClick: (e) => {
+            e.stopPropagation();
+            confirmDeleteProductRow(row);
+          },
+        },
+        { default: () => 'Удалить' }
+      ),
+  },
 ];
 
 const productRowProps = (row) => ({
@@ -435,6 +531,21 @@ function confirmDeleteProduct() {
   });
 }
 
+function confirmDeleteProductRow(row) {
+  dialog.warning({
+    title: 'Удалить товар?',
+    content: `"${row.name}" будет удалён безвозвратно`,
+    positiveText: 'Удалить', negativeText: 'Отмена',
+    onPositiveClick: async () => {
+      try {
+        await axios.delete(`${baseUrl}api/admin/merch/products/${row.product_id}`, { headers: authHeaders.value });
+        message.success('Товар удалён');
+        await fetchProducts();
+      } catch { message.error('Ошибка удаления'); }
+    }
+  });
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // КАТЕГОРИИ
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -516,19 +627,20 @@ const bannerFileList = ref([]);
 const newBannerFile = ref(null);
 
 function emptyBanner() {
-  return { banner_id: null, title: '', description: '', link_url: '', order_index: 0, is_active: true };
+  return { banner_id: null, title: '', description: '', button_text: '', link_url: '', order_index: 0, is_active: true };
 }
 
 const bannerColumns = [
   { title: 'ID', key: 'banner_id', width: 60 },
   {
-    title: 'Изображение', key: 'image_path', width: 90,
+    title: 'Изображение', key: 'image_path', width: 120,
     render: (row) => row.image_path
       ? h(NAvatar, { size: 56, src:baseUrl + row.image_path, objectFit: 'cover', style: 'border-radius:8px' })
       : '—'
   },
   { title: 'Заголовок', key: 'title', ellipsis: { tooltip: true } },
-  { title: 'Ссылка', key: 'link_url', ellipsis: { tooltip: true }, width: 200 },
+  { title: 'Кнопка', key: 'button_text', width: 150, render: (row) => row.button_text || '—' },
+  { title: 'Ссылка', key: 'link_url', ellipsis: { tooltip: true }, width: 180 },
   { title: 'Порядок', key: 'order_index', width: 90 },
   { title: 'Активен', key: 'is_active', render: (row) => row.is_active ? '✓' : '✗', width: 80 },
 ];
@@ -564,6 +676,7 @@ async function saveBanner() {
     const payload = {
       title: bannerForm.value.title,
       description: bannerForm.value.description,
+      button_text: bannerForm.value.button_text,
       link_url: bannerForm.value.link_url,
       order_index: bannerForm.value.order_index,
       is_active: bannerForm.value.is_active,
@@ -608,30 +721,144 @@ function confirmDeleteBanner() {
 // ЗАКАЗЫ
 // ═══════════════════════════════════════════════════════════════════════════════
 const orders = ref([]);
+const showOrderModal = ref(false);
+const selectedOrder = ref(null);
+const selectedOrderStatus = ref('');
+const orderUpdating = ref(false);
+
+function getStatusLabel(status, row) {
+  if (row?.delivery_method === 'pickup' && row?.pay_by_card && status === 'awaiting_payment') {
+    return 'Ждёт оплаты';
+  }
+  const labels = {
+    new: 'Оплата при получении',
+    payment_on_receipt: 'Оплата при получении',
+    awaiting_payment: 'Ожидает оплаты',
+    waiting_shipment: 'Ждёт отправки',
+    paid: 'Оплачен',
+    cancelled: 'Отменён',
+    completed: 'Завершён',
+  };
+  return labels[status] || status;
+}
+
+function getStatusType(status) {
+  const types = {
+    new: 'info',
+    payment_on_receipt: 'info',
+    awaiting_payment: 'warning',
+    waiting_shipment: 'warning',
+    paid: 'success',
+    completed: 'success',
+    cancelled: 'error',
+  };
+  return types[status] || 'default';
+}
+
+function getOrderStatusOptions(order) {
+  if (!order) return [];
+  if (order.delivery_method === 'delivery') {
+    return [
+      { label: 'Ожидает оплаты', value: 'awaiting_payment' },
+      { label: 'Ждёт отправки', value: 'waiting_shipment' },
+      { label: 'Завершён', value: 'completed' },
+      { label: 'Отменён', value: 'cancelled' },
+    ];
+  } else {
+    if (order.pay_by_card) {
+      return [
+        { label: 'Ждёт оплаты', value: 'awaiting_payment' },
+        { label: 'Оплачен', value: 'paid' },
+        { label: 'Завершён', value: 'completed' },
+        { label: 'Отменён', value: 'cancelled' },
+      ];
+    } else {
+      return [
+        { label: 'Оплата при получении', value: 'new' },
+        { label: 'Завершён', value: 'completed' },
+        { label: 'Отменён', value: 'cancelled' },
+      ];
+    }
+  }
+}
 
 const orderColumns = [
   { title: 'ID', key: 'order_id', width: 70 },
-  { title: 'Покупатель', key: 'contact_channel', ellipsis: { tooltip: true }, width: 200 },
   {
-    title: 'Статус', key: 'status', width: 160,
+    title: 'Покупатель',
+    key: 'buyer_name',
+    ellipsis: { tooltip: true },
+    width: 200,
     render: (row) => {
-      const labels = { new: 'Новый', awaiting_payment: 'Ожидает оплаты', paid: 'Оплачен', cancelled: 'Отменён', completed: 'Выдан' };
-      return labels[row.status] || row.status;
+      const fio = [row.last_name, row.first_name, row.patronymic].filter(Boolean).join(' ');
+      return fio || row.contact_channel || '—';
     }
   },
   {
-    title: 'Сумма', key: 'total_price', width: 120,
+    title: 'Способ',
+    key: 'delivery_method',
+    width: 160,
+    render: (row) => {
+      const type = row.delivery_method === 'pickup' ? 'Самовывоз' : 'Доставка';
+      const pay = row.pay_by_card ? 'Карта' : 'Наличные';
+      return `${type} · ${pay}`;
+    }
+  },
+  {
+    title: 'Статус', key: 'status', width: 170,
+    render: (row) => {
+      return h(NTag, {
+        type: getStatusType(row.status),
+        bordered: false,
+        style: 'font-weight: 600;'
+      }, {
+        default: () => getStatusLabel(row.status, row)
+      });
+    }
+  },
+  {
+    title: 'Сумма', key: 'total_price', width: 110,
     render: (row) => `${Number(row.total_price).toLocaleString('ru')} ₽`
   },
   {
-    title: 'Товары', key: 'items',
+    title: 'Товары', key: 'items', ellipsis: { tooltip: true },
     render: (row) => (row.items || []).map(i => `${i.product_name} × ${i.quantity}`).join(', ')
   },
   {
-    title: 'Дата', key: 'created_at', width: 130,
+    title: 'Дата', key: 'created_at', width: 110,
     render: (row) => row.created_at ? new Date(row.created_at).toLocaleDateString('ru-RU') : '—'
   },
 ];
+
+const orderRowProps = (row) => ({
+  style: 'cursor: pointer;',
+  onClick: () => {
+    openOrderModal(row);
+  }
+});
+
+function openOrderModal(row) {
+  selectedOrder.value = row;
+  selectedOrderStatus.value = row.status;
+  showOrderModal.value = true;
+}
+
+async function saveOrderStatus() {
+  if (!selectedOrder.value) return;
+  orderUpdating.value = true;
+  try {
+    await axios.patch(`${baseUrl}api/admin/merch/orders/${selectedOrder.value.order_id}`, {
+      status: selectedOrderStatus.value
+    }, { headers: authHeaders.value });
+    message.success('Статус заказа обновлён');
+    showOrderModal.value = false;
+    await fetchOrders();
+  } catch (e) {
+    message.error(e.response?.data?.message || 'Ошибка при обновлении статуса');
+  } finally {
+    orderUpdating.value = false;
+  }
+}
 
 async function fetchOrders() {
   loading.value = true;
@@ -683,4 +910,73 @@ onMounted(async () => {
 .sizes-list { display: flex; flex-direction: column; gap: 8px; padding-left: 8px; }
 
 .size-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* Модалка заказа */
+.order-modal-content {
+  display: flex;
+  flex-direction: column;
+}
+.order-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 12px;
+}
+.order-desc {
+  background: #fff;
+}
+.order-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #fafaf8;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #e0ddd8;
+}
+.order-modal-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+.order-modal-item:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+.item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.item-name {
+  font-weight: 600;
+  color: #1a1a1a;
+  font-size: 14px;
+}
+.item-meta {
+  font-size: 13px;
+  color: #777;
+}
+.item-price-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.item-qty {
+  font-size: 13px;
+  color: #777;
+}
+.item-total {
+  font-weight: 700;
+  color: #1a1a1a;
+  font-size: 14px;
+}
+.order-status-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
 </style>

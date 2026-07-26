@@ -31,7 +31,10 @@ def detect_payment_type(metadata: dict) -> str | None:
 def handle_merch_payment_succeeded(metadata: dict) -> None:
     order = MerchOrder.query.get(metadata.get("merch_order_id"))
     if order:
-        order.status = "paid"
+        if order.delivery_method == "delivery":
+            order.status = "waiting_shipment"
+        else:
+            order.status = "paid"
         db.session.commit()
 
 
