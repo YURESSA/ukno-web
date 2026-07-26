@@ -1,16 +1,35 @@
 <template>
   <n-config-provider :theme-overrides="themeOverrides" :locale="ruRU" :date-locale="dateRuRU">
     <div class="admin-layout">
+      <!-- Затемнение фона на мобильных при открытом меню -->
+      <Transition name="fade">
+        <div
+          v-if="isSidebarOpen"
+          class="sidebar-overlay"
+          @click="isSidebarOpen = false"
+        ></div>
+      </Transition>
+
       <header class="main-header">
-        <div class="title-container">
-          <div class="icon">
-            <RouterLink to="/">
-              <img src="/logo/mobile-logo.svg" alt="Logo">
-            </RouterLink>
-          </div>
-          <div class="title">
-            <h5>Админ панель</h5>
-            <p>Управление системой</p>
+        <div class="header-left">
+          <button class="burger-btn" @click="isSidebarOpen = true" aria-label="Открыть меню">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+
+          <div class="title-container">
+            <div class="icon">
+              <RouterLink to="/">
+                <img src="/logo/mobile-logo.svg" alt="Logo">
+              </RouterLink>
+            </div>
+            <div class="title">
+              <h5>Админ панель</h5>
+              <p>Управление системой</p>
+            </div>
           </div>
         </div>
 
@@ -19,13 +38,17 @@
           <BaseButton
             v-if="showAddButton"
             class="add--btn"
-            text="+ Создать запись"
+            text="+ Создать"
             @click="triggerAddAction"
           />
         </div>
       </header>
 
-      <aside class="left-sidebar">
+      <aside class="left-sidebar" :class="{ open: isSidebarOpen }">
+        <div class="sidebar-header-mobile">
+          <span>Разделы админки</span>
+          <button class="close-btn" @click="isSidebarOpen = false" aria-label="Закрыть меню">✕</button>
+        </div>
         <nav class="nav-section">
           <RouterLink
             v-for="item in menuItems"
@@ -37,7 +60,7 @@
             <BaseButton
               class="nav-button"
               :class="{ active: isActive }"
-              @click="navigate"
+              @click="() => { navigate(); isSidebarOpen = false; }"
               :text="item.label"
             />
           </RouterLink>
@@ -63,6 +86,7 @@ import BaseButton from '@/components/ui/button/BaseButton.vue';
 
 const route = useRoute();
 const addEventCounter = ref(0);
+const isSidebarOpen = ref(false);
 provide('admin-add-event', addEventCounter);
 
 // Массив для меню, чтобы не дублировать RouterLink в шаблоне
@@ -189,7 +213,161 @@ function triggerAddAction() {
   color: white;
 }
 
-main{
+.burger-btn {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #333;
+  padding: 6px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-header-mobile {
+  display: none;
+}
+
+.sidebar-overlay {
+  display: none;
+}
+
+main {
   height: 100%;
+}
+
+@media (max-width: 992px) {
+  .admin-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "header"
+      "main";
+    height: 100vh;
+    width: 100vw;
+  }
+
+  .main-header {
+    padding: 12px 16px;
+    height: auto;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .header-left {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .burger-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .title-container {
+    gap: 10px;
+  }
+
+  .title h5 {
+    font-size: 16px;
+  }
+
+  .title p {
+    font-size: 11px;
+  }
+
+  .section-header {
+    margin-left: 0;
+    padding: 10px 0 0 0;
+    height: auto;
+    border-left: none;
+    border-top: 1px solid #e2e8f0;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .section-header h3 {
+    font-size: 18px;
+  }
+
+  :deep(.add--btn) {
+    font-size: 13px;
+    padding: 6px 12px;
+    white-space: nowrap;
+  }
+
+  .left-sidebar {
+    position: fixed;
+    top: 0;
+    left: -320px;
+    width: 280px;
+    height: 100vh;
+    z-index: 2000;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #fff;
+    padding: 0;
+  }
+
+  .left-sidebar.open {
+    left: 0;
+  }
+
+  .sidebar-header-mobile {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e2e8f0;
+    font-weight: 700;
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 10px;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #666;
+  }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1900;
+    backdrop-filter: blur(2px);
+  }
+
+  .main-content {
+    padding: 14px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Автоматический горизонтальный скролл таблиц на мобильных */
+  :deep(.n-data-table-wrapper) {
+    overflow-x: auto !important;
+  }
+
+  :deep(.n-data-table-table) {
+    min-width: 680px;
+  }
+
+  /* Модальные окна на весь экран или по ширине телефона */
+  :deep(.n-card),
+  :deep(.n-modal) {
+    max-width: 96vw !important;
+    margin: 10px auto !important;
+  }
 }
 </style>
