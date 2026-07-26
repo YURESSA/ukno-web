@@ -148,6 +148,8 @@ def create_event(
             working_hours=data.get("working_hours"),
             contact_email=data.get("contact_email"),
             iframe_url=data.get("iframe_url"),
+            latitude=data.get("latitude"),
+            longitude=data.get("longitude"),
             telegram=data.get("telegram"),
             vk=data.get("vk"),
             created_by=user.user_id,
@@ -196,6 +198,7 @@ def update_event(event_id: int, data: dict) -> Tuple[Optional[Event], dict, int]
     allowed_fields = [
         'title', 'short_description', 'description', 'duration', 'place', 'conducted_by',
         'is_active', 'working_hours', 'contact_email', 'iframe_url',
+        'latitude', 'longitude',
         'telegram', 'vk', 'distance_to_center', 'time_to_nearest_stop'
     ]
 

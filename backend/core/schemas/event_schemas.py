@@ -41,6 +41,8 @@ event_model = api.model('Event', {
     'working_hours': fields.String(description='Часы работы'),
     'contact_email': fields.String(description='Контактный email'),
     'iframe_url': fields.String(description='URL iframe карты'),
+    'latitude': fields.Float(description='Широта точки на карте'),
+    'longitude': fields.Float(description='Долгота точки на карте'),
     'telegram': fields.String(description='Telegram'),
     'vk': fields.String(description='VK'),
     'distance_to_center': fields.Float(description='Расстояние до центра (метры)'),
@@ -61,6 +63,8 @@ event_create_model = api.model('EventCreate', {
     'working_hours': fields.String(description='Часы работы'),
     'contact_email': fields.String(description='Контактный email'),
     'iframe_url': fields.String(description='URL iframe карты'),
+    'latitude': fields.Float(description='Широта точки на карте'),
+    'longitude': fields.Float(description='Долгота точки на карте'),
     'telegram': fields.String(description='Telegram'),
     'vk': fields.String(description='VK'),
     'sessions': fields.List(fields.Nested(api.model('SessionInput', {
