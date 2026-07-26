@@ -1,0 +1,46 @@
+{
+  "hash": "0b6b4e47",
+  "configHash": "131986b6",
+  "lockfileHash": "9a6a98a1",
+  "browserHash": "c2d6fcfd",
+  "optimized": {
+    "vue": {
+      "src": "../../node_modules/vue/dist/vue.runtime.esm-bundler.js",
+      "file": "vue.js",
+      "fileHash": "a3cce221",
+      "needsInterop": false
+    },
+    "pinia": {
+      "src": "../../node_modules/pinia/dist/pinia.mjs",
+      "file": "pinia.js",
+      "fileHash": "0bae748d",
+      "needsInterop": false
+    },
+    "pinia-plugin-persistedstate": {
+      "src": "../../node_modules/pinia-plugin-persistedstate/dist/index.js",
+      "file": "pinia-plugin-persistedstate.js",
+      "fileHash": "6f9821f0",
+      "needsInterop": false
+    },
+    "vue-mobile-detection": {
+      "src": "../../node_modules/vue-mobile-detection/dist/vue-mobile-detection.umd.min.js",
+      "file": "vue-mobile-detection.js",
+      "fileHash": "b62b3846",
+      "needsInterop": true
+    },
+    "vue-router": {
+      "src": "../../node_modules/vue-router/dist/vue-router.mjs",
+      "file": "vue-router.js",
+      "fileHash": "eaba2f2d",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-IJV5NOMV": {
+      "file": "chunk-IJV5NOMV.js"
+    },
+    "chunk-BUSYA2B4": {
+      "file": "chunk-BUSYA2B4.js"
+    }
+  }
+}
