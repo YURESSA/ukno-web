@@ -211,7 +211,6 @@ const loading = ref(false);
 const showModal = ref(false);
 const isEdit = ref(false);
 const searchQuery = ref('');
-// В script setup
 const uploadRef = ref(null);
 
 const selectedItem = ref({
@@ -225,7 +224,6 @@ const selectedItem = ref({
   photos: []
 });
 
-// Данные из стора
 const excursions = computed(() => {
   const allExcursions = store.adminExcursions.excursions || [];
 
@@ -241,13 +239,12 @@ const categoryOptions = computed(() => store.getCategories || []);
 const formatOptions = computed(() => store.getFormat);
 const ageOptions = computed(() => store.getAge);
 
-// Таблица
 const columns = [
   {
     title: 'ID',
     key: 'excursion_id',
     width: 60,
-    sorter: (row1, row2) => row1.excursion_id - row2.excursion_id // Сортировка чисел
+    sorter: (row1, row2) => row1.excursion_id - row2.excursion_id
   },
   {
     title: 'Название',
@@ -273,7 +270,6 @@ const columns = [
     },
     render: (row) => {
       if (!row.sessions?.length) return '—';
-      // Убираем секунды для красоты в таблице
       return row.sessions[0].start_datetime.replace(/:\d{2}$/, '');
     }
   },
@@ -283,7 +279,6 @@ const columns = [
     width: 120,
     align: 'center',
     render: (row) => {
-      // Берем данные из первой сессии
       if (!row.sessions?.length) return '—';
       return row.sessions[0].max_participants;
     }
@@ -298,7 +293,6 @@ const columns = [
       const booked = row.sessions[0].booked;
       const max = row.sessions[0].max_participants;
 
-      // Динамический цвет тега в зависимости от заполненности
       const type = booked >= max ? 'error' : booked > 0 ? 'warning' : 'default';
 
       return h(NTag, { type, size: 'medium', round: true }, { default: () => booked });
@@ -322,13 +316,11 @@ const rowProps = (row) => ({
   style: 'cursor: pointer',
   onClick: () => {
     isEdit.value = true;
-    newExcursionPhotos.value = []; // Чистим очередь для создания
+    newExcursionPhotos.value = [];
     uploadRef.value?.clear();
 
-    // Глубокое копирование сессий с исправлением формата дат
     const fixedSessions = row.sessions?.map(s => ({
       ...s,
-      // Заменяем "T" на пробел, чтобы получилось "2026-05-23 19:04:00"
       start_datetime: s.start_datetime
         ? s.start_datetime.replace('T', ' ').replace(/:\d{2}$/, ':00')
         : null,
@@ -340,13 +332,12 @@ const rowProps = (row) => ({
       category_id: row.category?.category_id,
       format_type_id: row.format_type?.format_type_id,
       age_category_id: row.age_category?.age_category_id,
-      sessions: fixedSessions // Используем исправленные сессии
+      sessions: fixedSessions
     };
     showModal.value = true;
   }
 });
 
-// Кнопка добавить в хедере
 const addTrigger = inject('admin-add-event');
 watch(addTrigger, () => {
   isEdit.value = false;
@@ -360,11 +351,9 @@ watch(addTrigger, () => {
   showModal.value = true;
 });
 
-// --- ЛОГИКА СОХРАНЕНИЯ ---
 async function handleSave() {
   try {
     loading.value = true;
-      // 1. Обновляем текстовые данные
       const selectedCategory = categoryOptions.value.find(c => c.category_id === selectedItem.value.category_id);
       const selectedFormat = formatOptions.value.find(f => f.format_type_id === selectedItem.value.format_type_id);
       const selectedAge = ageOptions.value.find(a => a.age_category_id === selectedItem.value.age_category_id);
@@ -384,7 +373,6 @@ async function handleSave() {
         vk: selectedItem.value.vk,
         distance_to_center: selectedItem.value.distance_to_center,
         time_to_nearest_stop: selectedItem.value.time_to_nearest_stop,
-        // Если бэкенд принимает ID категории/формата в этом же запросе:
         category: selectedCategory ? selectedCategory.category_name : '',
         format_type: selectedFormat ? selectedFormat.format_type_name : '',
         age_category: selectedAge ? selectedAge.age_category_name : '',
@@ -398,20 +386,17 @@ async function handleSave() {
       await store.PatchExcursion(selectedItem.value.excursion_id, payload);
       message.success('Обновлено');
     } else {
-      // 2. Создаем новое (через простой JSON или FormData, если нужно сразу с фото)
       const formData = new FormData();
 
-      // Поле 'data' с JSON строкой
       formData.append('data', JSON.stringify(payload));
 
-      // Поле 'photos' со списком файлов
       newExcursionPhotos.value.forEach(file => {
         formData.append('photos', file);
       });
 
       await store.PostNewExcursion(formData);
       message.success('Событие полностью создано');
-      newExcursionPhotos.value = []; // Чистим временные фото
+      newExcursionPhotos.value = [];
     }
 
     showModal.value = false;
@@ -424,7 +409,6 @@ async function handleSave() {
   }
 }
 
-// 1. Добавить пустую форму сессии в список (локально)
 function addEmptySession() {
   if (!selectedItem.value.sessions) selectedItem.value.sessions = [];
   selectedItem.value.sessions.unshift({
@@ -434,7 +418,6 @@ function addEmptySession() {
   });
 }
 
-// 2. Сохранение или обновление сессии
 async function handleSaveSession(session) {
   if (!session.start_datetime) {
     message.error('Выберите дату и время');
@@ -450,15 +433,13 @@ async function handleSaveSession(session) {
   try {
     loading.value = true;
     if (session.session_id) {
-      // Редактирование существующей
       await store.PatchExcursionSession(selectedItem.value.excursion_id, session.session_id, payload);
       message.success('Сессия обновлена');
     } else {
-      // Создание новой
       await store.PostExcursionSession(selectedItem.value.excursion_id, payload);
       message.success('Сессия создана');
     }
-    await store.FetchAdminExcursion(); // Перезагружаем данные
+    await store.FetchAdminExcursion();
   } catch (e) {
     message.error('Ошибка при работе с сессией', e);
   } finally {
@@ -466,15 +447,12 @@ async function handleSaveSession(session) {
   }
 }
 
-// 3. Удаление сессии
 async function handleDeleteSession(session, index) {
-  // Если мы в режиме создания ИЛИ у сессии еще нет ID (она только что добавлена локально)
   if (!isEdit.value || !session.session_id) {
     selectedItem.value.sessions.splice(index, 1);
     return;
   }
 
-  // Если это реальная сессия из базы при редактировании
   dialog.warning({
     title: 'Удаление сессии',
     content: 'Удалить эту дату проведения из базы данных?',
@@ -491,13 +469,11 @@ async function handleDeleteSession(session, index) {
   });
 }
 
-// --- РАБОТА С ФОТО ---
 const newExcursionPhotos = ref([]);
 
 async function handleUploadPhoto({ file, onFinish, onError }) {
   try {
     if (isEdit.value) {
-      // РЕДАКТИРОВАНИЕ
       loading.value = true;
       await store.PostExcursionPhoto(selectedItem.value.excursion_id, file.file);
 
@@ -509,7 +485,6 @@ async function handleUploadPhoto({ file, onFinish, onError }) {
 
       message.success('Фото сохранено в базу');
     } else {
-      // СОЗДАНИЕ
       const isDuplicate = newExcursionPhotos.value.some(
         f => f.name === file.file.name && f.size === file.file.size
       );
@@ -525,11 +500,8 @@ async function handleUploadPhoto({ file, onFinish, onError }) {
       }
     }
 
-    // Сообщаем компоненту, что загрузка конкретно этого файла успешна
     onFinish();
 
-    // ОЧИЩАЕМ внутренний список n-upload, чтобы он не копил файлы
-    // и не пытался отправить их повторно при следующем клике
     uploadRef.value?.clear();
 
   } catch (e) {
@@ -548,17 +520,14 @@ async function handleDeletePhoto(photoId) {
   const photo = selectedItem.value.photos[photoIndex];
 
   if (photo.isLocal) {
-    // 1. Удаляем из массива файлов для FormData (по имени файла)
     newExcursionPhotos.value = newExcursionPhotos.value.filter(
       file => file.name !== photo.fileName
     );
-    // 2. Удаляем из превью
     selectedItem.value.photos.splice(photoIndex, 1);
     message.info('Фото удалено из очереди');
     return;
   }
 
-  // Удаление из базы (остается без изменений)
   dialog.warning({
     title: 'Удаление',
     content: 'Удалить фото из базы данных?',
@@ -575,7 +544,6 @@ async function handleDeletePhoto(photoId) {
   });
 }
 
-// --- УДАЛЕНИЕ СОБЫТИЯ ---
 function handleDeleteExcursion() {
   dialog.warning({
     title: 'Удаление',
@@ -630,7 +598,6 @@ onMounted(() => {
   background: rgba(255, 255, 255, 1);
 }
 
-/* Стили для компактного загрузчика */
 .upload-dragger-compact {
   height: 120px;
   display: flex;
@@ -652,7 +619,7 @@ onMounted(() => {
   position: absolute;
   top: 5px;
   right: 5px;
-  z-index: 10; /* Чтобы кнопка была над картинкой */
+  z-index: 10;
   background: rgba(255, 255, 255, 0.8);
   color: #d03050;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);

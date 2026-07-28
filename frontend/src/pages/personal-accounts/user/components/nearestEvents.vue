@@ -28,7 +28,6 @@ const props = defineProps({
   reservationsData: Object
 })
 
-// Фильтруем бронирования: только будущие и не отмененные
 const filteredReservations = computed(() => {
   if (!props.reservationsData?.reservations) return []
 
@@ -39,14 +38,11 @@ const filteredReservations = computed(() => {
   return filterReservations
 })
 
-
-// Форматируем дату и время
 const formatDateTime = (datetime) => {
   const date = new Date(datetime)
   return `${date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })} | ${date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`
 }
 
-// Форматируем цену
 const formatPrice = (price) => {
   return parseFloat(price).toLocaleString('ru-RU')
 }

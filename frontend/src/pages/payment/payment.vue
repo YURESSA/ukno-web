@@ -193,12 +193,10 @@
   const handleSubmit = async () => {
     showErrors.value = true;
 
-    // Проверяем все поля перед отправкой
     validateName();
     validateEmail();
     validatePhone();
 
-    // Проверяем наличие ошибок
     const hasErrors = Object.values(errors.value).some(error => error !== '');
 
     if (hasErrors) {
@@ -339,7 +337,6 @@
     }
   }
 
-  /* Стили для выбора сессии */
   .sessions-section {
     margin-bottom: 30px;
     width: 100%;

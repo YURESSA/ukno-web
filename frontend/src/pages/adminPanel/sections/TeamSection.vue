@@ -68,7 +68,6 @@ const dialog = useDialog();
 const team = computed(() => store.getTeamData)
 const fileList = ref([])
 
-// Инжектим событие клика из Layout
 const addEvent = inject('admin-add-event')
 
 const showModal = ref(false)
@@ -84,7 +83,6 @@ const memberModel = ref({
   photo_url: ''
 })
 
-// Следим за кликом по кнопке "+ Создать запись" в Layout
 watch(addEvent, () => {
   openCreateModal()
 })
@@ -100,7 +98,6 @@ const columns = [
         height: 90,
         src: baseUrl + row.photo,
         style: 'border-radius: 4px; object-fit: cover;',
-        // Чтобы клик по фото не вызывал открытие модалки (опционально)
         onClick: (e) => e.stopPropagation()
       })
     }
@@ -109,7 +106,6 @@ const columns = [
   { title: 'Описание', key: 'description' }
 ]
 
-// Настройка клика по всей строке
 const rowProps = (row) => {
   return {
     style: 'cursor: pointer',
@@ -129,14 +125,13 @@ const openEditModal = (row) => {
     photo_url: row.photo
   }
 
-  // Если у сотрудника есть фото, создаем объект для n-upload
   if (row.photo) {
     fileList.value = [
       {
         id: 'existing-photo',
         name: 'current_photo.png',
         status: 'finished',
-        url: baseUrl + row.photo // Naive UI подставит это в превью
+        url: baseUrl + row.photo
       }
     ]
   } else {
@@ -149,7 +144,7 @@ const openEditModal = (row) => {
 const openCreateModal = () => {
   isEditMode.value = false
   memberModel.value = { id: null, full_name: '', description: '', photo: null, photo_url: '' }
-  fileList.value = [] // Очищаем превью
+  fileList.value = []
   showModal.value = true
 }
 
@@ -192,13 +187,11 @@ const handleSave = async () => {
 const handleRemove = (options) => {
   const { file } = options;
 
-  // Если это новый файл (только что выбрали), просто удаляем из локальной очереди
   if (file.id !== 'existing-photo') {
     memberModel.value.photo = null;
     return true;
   }
 
-  // Если это файл, который уже на сервере
   return new Promise((resolve) => {
     dialog.warning({
       title: 'Удаление фото',
@@ -208,13 +201,11 @@ const handleRemove = (options) => {
       onPositiveClick: async () => {
         try {
           submitLoading.value = true;
-          // Вызываем правильный метод стора для культурного пространства
           await store.DeletePhotoMember(memberModel.value.id);
 
           message.success('Фото удалено с сервера');
           memberModel.value.photo_url = '';
 
-          // Обновляем данные в таблице
           await store.FetchCulturalSpace();
           resolve(true);
         } catch (e) {
@@ -253,7 +244,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Чтобы строка визуально подсвечивалась при наведении */
 :deep(.n-data-table-tr:hover) {
   background-color: rgba(255, 108, 54, 0.05) !important;
 }

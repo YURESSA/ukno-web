@@ -80,7 +80,6 @@ const isShopRoot = computed(
     route.path === '/shop/',
 )
 
-// Ссылка на ЛК в зависимости от роли
 const profileRoute = computed(() => {
   const role = dataStore.role
   if (role === 'admin') return '/admin-profile'
@@ -88,7 +87,6 @@ const profileRoute = computed(() => {
   return '/profile'
 })
 
-// Загружаем корзину при входе/смене авторизации
 watch(
   () => dataStore.auth_key,
   async (key) => {
@@ -113,7 +111,6 @@ watch(
   font-family: 'Inter', sans-serif;
 }
 
-/* ── Header ── */
 .shop-header {
   position: -webkit-sticky;
   position: sticky;
@@ -153,7 +150,6 @@ watch(
   display: none;
 }
 
-/* Nav */
 .shop-header__nav {
   display: flex;
   align-items: center;
@@ -200,7 +196,6 @@ watch(
   font-weight: 700;
 }
 
-/* Actions */
 .shop-header__actions {
   display: flex;
   align-items: center;
@@ -265,7 +260,6 @@ watch(
   line-height: 1;
 }
 
-/* ── Main ── */
 .shop-main {
   flex: 1;
   max-width: 1280px;
@@ -275,7 +269,6 @@ watch(
   box-sizing: border-box;
 }
 
-/* ── Footer ── */
 .shop-footer {
   border-top: 1px solid #e8e5e0;
   background: #fff;

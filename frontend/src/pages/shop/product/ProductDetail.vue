@@ -335,8 +335,8 @@
           <p v-if="addedMessage" class="added-message">{{ addedMessage }}</p>
 
           <!-- Description -->
+          <h4>Описание</h4>
           <p v-if="shopStore.productDetail.description" class="product-info__desc">
-            <h4>Описание</h4>
             {{ shopStore.productDetail.description }}
           </p>
         </div>
@@ -374,7 +374,6 @@ const sizeChart = [
   { ru: 56, intl: '4XL', chest: '118-126', hips: '126-134', waist: '98-106' },
 ]
 
-// All images for the gallery
 const allImages = computed(() => {
   const p = shopStore.productDetail
   if (!p) return []
@@ -464,7 +463,6 @@ function formatPrice(price) {
   return Number(price).toLocaleString('ru-RU')
 }
 
-// ── Fullscreen Gallery Modal ──
 const showFullscreen = ref(false)
 const fullscreenIdx  = ref(0)
 
@@ -489,7 +487,6 @@ function nextFullscreenImage() {
   fullscreenIdx.value = (fullscreenIdx.value + 1) % len
 }
 
-// Swipe support for fullscreen modal
 const fsTouchStartX = ref(0)
 const fsTouchStartY = ref(0)
 const fsDragging    = ref(false)
@@ -557,7 +554,6 @@ onUnmounted(() => {
   gap: 20px;
 }
 
-/* ── Back ── */
 .back-link {
   display: inline-flex;
   align-items: center;
@@ -573,7 +569,6 @@ onUnmounted(() => {
 }
 .back-link:hover { color: #FF6C36; }
 
-/* ── Layout ── */
 .product-detail {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -581,7 +576,6 @@ onUnmounted(() => {
   align-items: start;
 }
 
-/* ── Gallery ── */
 .product-gallery__stage {
   position: relative;
 }
@@ -640,7 +634,6 @@ onUnmounted(() => {
   justify-content: center;
 }
 
-/* Arrows */
 .gallery-arrow {
   position: absolute;
   top: 50%;
@@ -664,7 +657,6 @@ onUnmounted(() => {
 .gallery-arrow--prev { left: 10px; }
 .gallery-arrow--next { right: 10px; }
 
-/* Dots */
 .gallery-dots {
   display: flex;
   justify-content: center;
@@ -682,7 +674,6 @@ onUnmounted(() => {
 }
 .gallery-dot.active { background: #FF6C36; transform: scale(1.25); }
 
-/* Thumbnails */
 .product-gallery__thumbs {
   display: flex;
   gap: 8px;
@@ -703,7 +694,6 @@ onUnmounted(() => {
 .product-gallery__thumb.active { border-color: #FF6C36; }
 .product-gallery__thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-/* ── Info ── */
 .product-info {
   display: flex;
   flex-direction: column;
@@ -744,7 +734,6 @@ onUnmounted(() => {
   white-space: pre-line;
 }
 
-/* ── Options ── */
 .product-option {
   display: flex;
   flex-direction: column;
@@ -758,7 +747,6 @@ onUnmounted(() => {
   margin: 0;
 }
 
-/* Colors */
 .color-list { display: flex; gap: 8px; flex-wrap: wrap; }
 
 .color-btn {
@@ -778,7 +766,6 @@ onUnmounted(() => {
 .color-btn.active { border-color: #333; }
 .color-check { color: #fff; filter: drop-shadow(0 0 1px rgba(0,0,0,0.4)); }
 
-/* Sizes */
 .size-list { display: flex; gap: 8px; flex-wrap: wrap; }
 
 .size-btn {
@@ -803,7 +790,6 @@ onUnmounted(() => {
 .size-btn.active:hover { color: #fff; }
 .size-btn.disabled { opacity: 0.35; cursor: not-allowed; }
 
-/* ── Actions ── */
 .product-actions {
   display: flex;
   gap: 10px;
@@ -851,7 +837,6 @@ onUnmounted(() => {
 .product-fav-btn:hover,
 .product-fav-btn.active { color: #FF6C36; border-color: #FF6C36; }
 
-/* Quantity selector */
 .quantity-selector {
   display: flex;
   align-items: center;
@@ -879,7 +864,6 @@ onUnmounted(() => {
   font-size: 16px; font-weight: 700; color: #1a1a1a;
 }
 
-/* Messages */
 .added-message {
   font-size: 14px;
   color: #22c55e;
@@ -892,7 +876,6 @@ onUnmounted(() => {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Skeleton ── */
 .product-skeleton-wrap {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -922,7 +905,6 @@ onUnmounted(() => {
   100% { background-position: -200% 0; }
 }
 
-/* ── Size chart link ── */
 .size-chart-link {
   display: inline-flex;
   align-items: center;
@@ -939,7 +921,6 @@ onUnmounted(() => {
 }
 .size-chart-link:hover { opacity: 0.75; }
 
-/* ── Size modal ── */
 .size-modal-overlay {
   position: fixed;
   inset: 0;
@@ -1024,7 +1005,6 @@ onUnmounted(() => {
 .size-table tbody tr:hover td { background: #fafaf8; }
 .size-table tbody tr:last-child td { border-bottom: none; }
 
-/* Modal transition */
 .modal-enter-active,
 .modal-leave-active { transition: opacity 0.2s ease; }
 .modal-enter-active .size-modal,
@@ -1034,12 +1014,10 @@ onUnmounted(() => {
 .modal-enter-from .size-modal { transform: scale(0.94) translateY(12px); }
 .modal-leave-to .size-modal   { transform: scale(0.96) translateY(8px); }
 
-/* ── Not found ── */
 .not-found { text-align: center; padding: 80px; }
 .not-found h2 { font-size: 22px; color: #333; margin-bottom: 16px; }
 .not-found a { color: #FF6C36; text-decoration: none; font-weight: 500; }
 
-/* ── Responsive ── */
 @media (max-width: 768px) {
   .product-detail,
   .product-skeleton-wrap {
@@ -1080,7 +1058,6 @@ onUnmounted(() => {
     padding: 0 12px;
   }
 
-  /* Modal slides up from bottom on mobile */
   .size-modal-overlay {
     align-items: flex-end;
     padding: 0;
@@ -1107,7 +1084,6 @@ onUnmounted(() => {
   .gallery-arrow { width: 30px; height: 30px; }
 }
 
-/* ── Fullscreen Gallery Modal ── */
 .fullscreen-gallery-modal {
   position: fixed;
   inset: 0;

@@ -164,7 +164,6 @@ function nextBanner() {
   startAutoplay()
 }
 
-// Swipe handling for mobile & desktop
 const touchStartX = ref(0)
 const touchStartY = ref(0)
 const isDragging = ref(false)
@@ -263,7 +262,6 @@ async function handleFavorite(product) {
   gap: 32px;
 }
 
-/* ── Hero Banner ── */
 .hero-section {
   position: relative;
   overflow: hidden;
@@ -361,7 +359,6 @@ async function handleFavorite(product) {
   color: #111;
 }
 
-/* Стрелки */
 .hero-arrow {
   position: absolute;
   top: 50%;
@@ -389,7 +386,6 @@ async function handleFavorite(product) {
 .hero-arrow--prev { left: 20px; }
 .hero-arrow--next { right: 20px; }
 
-/* Точки */
 .hero-dots {
   position: absolute;
   bottom: 18px;
@@ -416,7 +412,6 @@ async function handleFavorite(product) {
   border-radius: 3px;
 }
 
-/* ── Search & Controls ── */
 .catalog-controls {
   display: flex;
   flex-direction: column;
@@ -491,7 +486,6 @@ async function handleFavorite(product) {
   color: #fff;
 }
 
-/* ── Filters ── */
 .filters-section {
   display: flex;
   flex-wrap: wrap;
@@ -521,7 +515,6 @@ async function handleFavorite(product) {
   color: #fff;
 }
 
-/* ── Products grid ── */
 .products-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));

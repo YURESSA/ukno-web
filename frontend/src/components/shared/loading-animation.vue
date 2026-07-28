@@ -106,9 +106,9 @@
     text-align: center;
   }
   .top-semicircle{
-    width: 338px; /* Уменьшили в 2 раза */
-    height: 170px; /* Уменьшили в 2 раза */
-    background-size: 100% 100%; /* Для SVG лучше 100% */
+    width: 338px;
+    height: 170px;
+    background-size: 100% 100%;
     top: 0px;
   }
 

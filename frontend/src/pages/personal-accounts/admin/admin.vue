@@ -150,7 +150,7 @@ async function logOut(){
     width: 100%;
   }
   .profie__btn.exit--btn {
-    order: 2; /* Переместить вниз */
+    order: 2;
   }
   .orange {
     background-color: #F25C03;
@@ -161,7 +161,7 @@ ection: column;
     width: 100%;
   }
   .profie__btn.exit--btn {
-    order: 2; /* Переместить вниз */
+    order: 2;
   }
 }
 </style>

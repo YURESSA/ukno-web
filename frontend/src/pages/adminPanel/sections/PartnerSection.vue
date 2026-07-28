@@ -191,7 +191,6 @@ const handleSave = async () => {
     const orderValue = Number(model.value.order_index) || 0
 
     if (isEditMode.value) {
-      // Обновление данных (текст + ссылка + порядок) через PUT
       const formData = new FormData()
       formData.append('name', model.value.name)
       formData.append('link', model.value.link)
@@ -199,7 +198,6 @@ const handleSave = async () => {
 
       await store.UpdatePartner(model.value.id, formData)
 
-      // Если выбрано новое фото
       if (model.value.photo) {
         const photoData = new FormData()
         photoData.append('photo', model.value.photo)
@@ -207,7 +205,6 @@ const handleSave = async () => {
       }
       message.success('Данные партнера обновлены')
     } else {
-      // Создание (POST)
       const formData = new FormData()
       formData.append('name', model.value.name)
       formData.append('link', model.value.link)

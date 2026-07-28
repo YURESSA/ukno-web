@@ -61,7 +61,6 @@ const selectedItem = ref({
   age_category_name: ''
 });
 
-// --- КОЛОНКИ ТАБЛИЦЫ ---
 const columns = [
   { title: 'ID', key: 'age_category_id'},
   { title: 'Название', key: 'age_category_name' },
@@ -77,22 +76,19 @@ const columns = [
           type: 'error',
           size: 'small',
           ghost: true,
-          onClick: () => confirmDelete(row) // Передаем строку целиком в функцию удаления
-        },
+          onClick: () => confirmDelete(row)
         { default: () => 'Удалить' }
       );
     }
   }
 ];
 
-// Обработка кнопки "Добавить" из Header
 const addTrigger = inject('admin-add-event');
 watch(addTrigger, () => {
   selectedItem.value = { age_category_name: '' };
   showModal.value = true;
 });
 
-// --- СОЗДАНИЕ ---
 async function handleSave() {
   if (!selectedItem.value.age_category_name.trim()) {
     message.error('Введите название возрастной категории');
@@ -112,7 +108,6 @@ async function handleSave() {
   }
 }
 
-// --- УДАЛЕНИЕ (теперь принимает объект категории) ---
 function confirmDelete(age) {
   dialog.warning({
     title: 'Удаление категории',

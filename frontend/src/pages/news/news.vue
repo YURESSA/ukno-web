@@ -28,7 +28,6 @@ const load = ref(false);
 const route = useRoute();
 const news = computed(() => store.getNews);
 
-// Новая улучшенная функция скролла
 const scrollToNews = (attempt = 0) => {
   if (!route.hash || attempt > 3) return;
 
@@ -43,7 +42,6 @@ const scrollToNews = (attempt = 0) => {
         behavior: 'smooth'
       });
     } else {
-      // Повторяем попытку через 300мс, если элемент не найден
       setTimeout(() => scrollToNews(attempt + 1), 300);
     }
   });
@@ -54,17 +52,14 @@ onMounted(async () => {
   try {
     await store.FetchNews();
 
-    // Ждем завершения всех обновлений DOM
     nextTick(() => {
       setTimeout(() => {
         load.value = true
         document.body.classList.remove('body-no-scroll');
       }, 1000)
 
-      // Первая попытка скролла
       scrollToNews();
 
-      // Дополнительная проверка через 500мс
       setTimeout(scrollToNews, 500);
     });
   } catch (error) {
@@ -73,7 +68,6 @@ onMounted(async () => {
   }
 });
 
-// Отслеживаем изменения hash
 watch(() => route.hash, () => {
   if (load.value) scrollToNews();
 });

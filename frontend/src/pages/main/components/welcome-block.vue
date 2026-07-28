@@ -88,7 +88,7 @@ p{
     height: 232px;
     border-radius: 12px;
     background-size: cover;
-    background-position: center bottom; /* Фокус на нижней части */
+    background-position: center bottom;
     background-repeat: no-repeat;
   }
   .welcom-wrapper{

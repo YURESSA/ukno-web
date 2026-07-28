@@ -57,7 +57,6 @@ const store = useDataStore()
 const message = useMessage()
 const addEvent = inject('admin-add-event')
 
-// Получаем данные из стора
 const projects = computed(() => store.getProject)
 
 const showModal = ref(false)
@@ -72,7 +71,6 @@ const model = ref({
   order_index: 0
 })
 
-// Следим за кликом по кнопке "+ Создать запись" в Layout
 watch(addEvent, () => {
   openCreateModal()
 })
@@ -117,7 +115,6 @@ const handleSave = async () => {
     return message.error('Заполните название и ссылку')
   }
 
-  // Подготавливаем чистый JSON объект
   const payload = {
     title: model.value.title,
     link: model.value.link,

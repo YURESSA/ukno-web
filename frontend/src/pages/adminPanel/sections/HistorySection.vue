@@ -83,11 +83,10 @@ const model = ref({
   id: null,
   title: '',
   link: '',
-  date: null, // Здесь будет timestamp для n-date-picker
+  date: null,
   description: ''
 })
 
-// Следим за кнопкой из Layout
 watch(addEvent, () => {
   openCreateModal()
 })
@@ -122,7 +121,6 @@ const openEditModal = (row) => {
     id: row.id,
     title: row.title,
     link: row.link,
-    // Преобразуем строку YYYY-MM-DD в timestamp для дейтпикера
     date: row.date ? parseISO(row.date).getTime() : Date.now(),
     description: row.description
   }
@@ -134,7 +132,6 @@ const handleSave = async () => {
     return message.error('Заполните название, дату и описание')
   }
 
-  // Форматируем дату обратно в YYYY-MM-DD для API
   const formattedDate = format(model.value.date, 'yyyy-MM-dd')
 
   const payload = {

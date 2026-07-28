@@ -113,7 +113,6 @@ const loading = ref(false);
 const showModal = ref(false);
 const searchQuery = ref('');
 
-// Объект один в один как в новостях
 const selectedItem = ref({
   reservation_id: null,
   full_name: '',
@@ -141,19 +140,14 @@ async function openDetails(id) {
   try {
     detailLoading.value = true;
 
-    // 1. Делаем запрос. Стор должен возвращать res.data,
-    // где лежит { reservation: {...} }
     const response = await store.FetchAdminReservationDetails(id);
 
-    // ПРОВЕРКА: Если сервер вернул структуру как в твоем примере
     const data = response?.reservation;
 
     if (!data) {
       throw new Error("Данные бронирования не найдены в ответе сервера");
     }
 
-    // 2. Безопасное форматирование дат
-    // Используем опциональную цепочку ?. чтобы не упасть, если поля пустые
     const formattedData = { ...data };
 
     if (formattedData.booked_at) {
@@ -163,7 +157,6 @@ async function openDetails(id) {
       formattedData.session_start_datetime = formattedData.session_start_datetime.replace('T', ' ').substring(0, 16);
     }
 
-    // 3. Сначала записываем данные, потом открываем модалку
     selectedItem.value = formattedData;
     showModal.value = true;
   } catch (e) {
@@ -174,7 +167,6 @@ async function openDetails(id) {
   }
 }
 
-// --- КОЛОНКИ ТАБЛИЦЫ ---
 const columns = [
   { title: 'ID', key: 'reservation_id', width: 60 },
   { title: 'Клиент', key: 'full_name' },
@@ -190,10 +182,7 @@ const columns = [
   }
 ];
 
-// --- ФИЛЬТРАЦИЯ ---
 const filteredReservations = computed(() => {
-  // Достаем массив ИЗ объекта.
-  // Используем опциональную цепочку ?. чтобы не упасть, если данных еще нет
   const data = store.adminReservations?.reservations || [];
 
   if (!searchQuery.value) return data;
@@ -205,7 +194,6 @@ const filteredReservations = computed(() => {
   );
 });
 
-// --- УДАЛЕНИЕ (КОПИЯ НОВОСТЕЙ) ---
 function confirmDelete() {
   dialog.warning({
     title: 'Удаление бронирования',
@@ -232,28 +220,26 @@ onMounted(() => store.FetchAdminReservations());
 </script>
 
 <style scoped>
-/* Стили для текстового вывода данных */
 .text-value {
   font-size: 16px;
   color: #333;
   padding: 8px 0;
-  border-bottom: 1px solid #f0f0f2; /* Легкое подчеркивание для структуры */
+  border-bottom: 1px solid #f0f0f2;
   min-height: 24px;
 }
 
 .header-value {
   font-weight: 600;
   font-size: 18px;
-  color: #18a058; /* Цвет Naive UI Success (зеленый) */
+  color: #18a058;
   border-bottom: none;
 }
 
 .price-value {
   font-weight: bold;
-  color: #d03050; /* Цвет акцента на цене */
+  color: #d03050;
 }
 
-/* Настройка заголовков n-form-item */
 :deep(.n-form-item-label) {
   font-weight: 500;
   color: #888 !important;

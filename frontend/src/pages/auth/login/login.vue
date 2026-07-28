@@ -94,10 +94,10 @@ const handleSubmit = async () => {
     await notification('Вход выполнен успешно!', 'positive');
     const previousRoute = router.options.history.state.back;
 
-    if (previousRoute === '/register') {
-      router.push('/');
-    } else {
+    if (previousRoute && previousRoute !== '/register' && previousRoute !== '/login') {
       router.back();
+    } else {
+      router.push('/');
     }
 
   } catch (error) {

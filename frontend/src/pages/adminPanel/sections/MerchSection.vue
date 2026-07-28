@@ -320,12 +320,8 @@ const dialog = useDialog();
 const loading = ref(false);
 const activeTab = ref('products');
 
-// ── Auth header ──────────────────────────────────────────────────────────────
 const authHeaders = computed(() => ({ Authorization: `Bearer ${store.auth_key}` }));
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// ТОВАРЫ
-// ═══════════════════════════════════════════════════════════════════════════════
 const products = ref([]);
 const showProductModal = ref(false);
 const isEdit = ref(false);
@@ -546,9 +542,6 @@ function confirmDeleteProductRow(row) {
   });
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// КАТЕГОРИИ
-// ═══════════════════════════════════════════════════════════════════════════════
 const categories = ref([]);
 const showCategoryModal = ref(false);
 const categoryForm = ref(emptyCategory());
@@ -617,9 +610,6 @@ function confirmDeleteCategory() {
   });
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// БАННЕРЫ
-// ═══════════════════════════════════════════════════════════════════════════════
 const banners = ref([]);
 const showBannerModal = ref(false);
 const bannerForm = ref(emptyBanner());
@@ -717,9 +707,6 @@ function confirmDeleteBanner() {
   });
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// ЗАКАЗЫ
-// ═══════════════════════════════════════════════════════════════════════════════
 const orders = ref([]);
 const showOrderModal = ref(false);
 const selectedOrder = ref(null);
@@ -868,9 +855,6 @@ async function fetchOrders() {
   } finally { loading.value = false; }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// ADD-EVENT из PanelLayout (кнопка «+ Создать запись»)
-// ═══════════════════════════════════════════════════════════════════════════════
 const addTrigger = inject('admin-add-event');
 watch(addTrigger, () => {
   isEdit.value = false;
@@ -911,7 +895,6 @@ onMounted(async () => {
 
 .size-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
-/* Модалка заказа */
 .order-modal-content {
   display: flex;
   flex-direction: column;

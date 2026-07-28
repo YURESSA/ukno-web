@@ -314,7 +314,6 @@ const descriptOpen = ref(false);
 const excursion = computed(() => store.getExcursionDetail);
 const safeExcursion = computed(() => DOMPurify.sanitize(excursion.value.description));
 
-// Выбранная сессия: по умолчанию первая доступная (с местами)
 const selectedSession = ref(null);
 
 const selectedCost = computed(() => {
@@ -348,7 +347,6 @@ onMounted(async () => {
     setTimeout(() => {
       load.value = true
       document.body.style.overflow = 'auto'
-      // Выбираем первую доступную сессию автоматически
       const first = excursion.value.sessions?.find(s => s.available > 0);
       selectedSession.value = first ?? excursion.value.sessions?.[0] ?? null;
     }, 1000)
@@ -596,12 +594,11 @@ span > a{
 
 .gallery-img {
   height: 310px;
-  overflow: hidden; /* Обрезаем всё, что выходит за границы */
-  position: relative; /* Для корректного позиционирования img */
-  border-radius: 8px; /* Опционально: скругление углов */
+  overflow: hidden;
+  position: relative;
+  border-radius: 8px;
 }
 
-/* Размеры блоков */
 .img0, .img3 {
   width: 38%;
 }
@@ -610,12 +607,11 @@ span > a{
   width: 59%;
 }
 
-/* Стили для самих изображений */
 .gallery-img img {
-  width: 100%; /* Занимает всю ширину родителя */
-  height: 100%; /* Занимает всю высоту родителя */
-  object-fit: cover; /* Сохраняет пропорции, заполняя весь блок */
-  object-position: center; /* Центрирует изображение */
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 }
 
 

@@ -85,7 +85,6 @@ input, label{
   cursor: pointer;
 }
 
-/* Скрываем стандартный радио-инпут */
 .radio-input {
   position: absolute;
   opacity: 0;
@@ -93,7 +92,6 @@ input, label{
   height: 0;
 }
 
-/* Кастомный стиль для радио-кнопки */
 .radio-label {
   position: relative;
   padding-left: 28px;
@@ -102,7 +100,6 @@ input, label{
   font-size: 20px;
 }
 
-/* Создаем кастомный кружок */
 .radio-label::before {
   content: "";
   position: absolute;
@@ -117,11 +114,10 @@ input, label{
   transition: all 0.3s;
 }
 
-/* Стиль при выборе (активном состоянии) */
 .radio-input:checked + .radio-label::before {
   background: #F25C03;
   border-color: #F25C03;
-  box-shadow: inset 0 0 0 3px white; /* Белая точка внутри */
+  box-shadow: inset 0 0 0 3px white;
 }
 
 .collapse-content{

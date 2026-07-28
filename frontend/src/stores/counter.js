@@ -739,7 +739,7 @@ export const useDataStore = defineStore('data', {
 
     async PostAdminNewsPhoto(newsId, file) {
       const formData = new FormData();
-      formData.append('photo', file); // Ключ из Swagger: photo
+      formData.append('photo', file);
 
       return axios.post(`${baseUrl}/api/admin/news/${newsId}/photos`, formData, {
         headers: { Authorization: `Bearer ${this.auth_key}` }
@@ -801,11 +801,11 @@ export const useDataStore = defineStore('data', {
       try {
         const response = await axios.post(`${baseUrl}/api/references/team`, formData, {
           headers: {
-            'Content-Type': 'multipart/form-data', // Важно для фото
+            'Content-Type': 'multipart/form-data',
             'Authorization': `Bearer ${this.auth_key}`,
           },
         });
-        await this.FetchTeam(); // Обновляем список после добавления
+        await this.FetchTeam();
         return response.data;
       } catch (error) {
         console.error('Ошибка при добавлении:', error.response?.data || error.message);
@@ -859,7 +859,7 @@ export const useDataStore = defineStore('data', {
             'Authorization': `Bearer ${this.auth_key}`,
           },
         });
-        await this.FetchTeam(); // Обновляем список после удаления
+        await this.FetchTeam();
       } catch (error) {
         console.error('Ошибка при удалении:', error.response?.data || error.message);
         throw error;
@@ -878,11 +878,11 @@ export const useDataStore = defineStore('data', {
       try {
         const response = await axios.post(`${baseUrl}/api/references/cultural-space`, formData, {
           headers: {
-            'Content-Type': 'multipart/form-data', // Важно для фото
+            'Content-Type': 'multipart/form-data',
             'Authorization': `Bearer ${this.auth_key}`,
           },
         });
-        await this.FetchCulturalSpace(); // Обновляем список после добавления
+        await this.FetchCulturalSpace();
         return response.data;
       } catch (error) {
         console.error('Ошибка при добавлении:', error.response?.data || error.message);

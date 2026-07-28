@@ -289,12 +289,10 @@ const orderForm = ref({
   pay_by_card: true,
 })
 
-// Автозаполнение формы из данных профиля (кроме поля связи)
 function prefillFromProfile() {
   const p = dataStore.profileData
   if (!p) return
 
-  // full_name: "Фамилия Имя Отчество"
   if (p.full_name) {
     const parts = p.full_name.trim().split(/\s+/)
     orderForm.value.last_name  = parts[0] || ''
@@ -324,7 +322,6 @@ async function toggleFav(product) {
 onMounted(async () => {
   if (isAuthed.value) {
     await shopStore.FetchCart(dataStore.auth_key)
-    // Загружаем профиль если ещё не загружен
     if (!dataStore.profileData?.full_name) {
       try { await dataStore.GetProfile() } catch {}
     }
@@ -332,10 +329,8 @@ onMounted(async () => {
   }
 })
 
-// Если профиль пришёл позже (напр. после асинхронной загрузки) — подставляем данные
 watch(() => dataStore.profileData, prefillFromProfile, { deep: true })
 
-// При выборе доставки возвращаем оплату картой онлайн
 watch(() => orderForm.value.delivery_method, (method) => {
   if (method !== 'pickup') {
     orderForm.value.pay_by_card = true
@@ -407,7 +402,6 @@ function statusLabel(status, order) {
   gap: 28px;
 }
 
-/* ── Auth prompt ── */
 .auth-prompt {
   text-align: center;
   padding: 80px 24px;
@@ -431,7 +425,6 @@ function statusLabel(status, order) {
 }
 .auth-prompt__btn:hover { background: #DD5827; }
 
-/* ── Tabs ── */
 .orders-tabs {
   display: flex;
   border-bottom: 2px solid #e8e5e0;
@@ -472,7 +465,6 @@ function statusLabel(status, order) {
   font-weight: 700;
 }
 
-/* ── Page title ── */
 .page-title {
   font-size: 26px;
   font-weight: 900;
@@ -486,7 +478,6 @@ function statusLabel(status, order) {
   margin-bottom: 28px;
 }
 
-/* ── Layout ── */
 .cart-layout {
   display: grid;
   grid-template-columns: 1fr 320px;
@@ -494,7 +485,6 @@ function statusLabel(status, order) {
   align-items: start;
 }
 
-/* ── Cart items ── */
 .cart-items {
   display: flex;
   flex-direction: column;
@@ -583,7 +573,6 @@ function statusLabel(status, order) {
   margin-top: 2px;
 }
 
-/* Qty */
 .cart-item__qty {
   display: flex;
   align-items: center;
@@ -630,7 +619,6 @@ function statusLabel(status, order) {
   margin-top: 10px;
 }
 
-/* ── Summary ── */
 .cart-summary {
   background: #f7f6f3;
   border-radius: 14px;
@@ -681,7 +669,6 @@ function statusLabel(status, order) {
 }
 .summary-continue-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
 
-/* ── Checkout form ── */
 .checkout-form {
   display: flex;
   flex-direction: column;
@@ -713,7 +700,6 @@ function statusLabel(status, order) {
 .checkout-input::placeholder { color: #bbb; }
 .checkout-input:focus { border-color: #FF6C36; }
 
-/* Delivery / Payment options */
 .delivery-options {
   border: 1.5px solid #e0ddd8;
   border-radius: 10px;
@@ -785,7 +771,6 @@ function statusLabel(status, order) {
   line-height: 1.5;
 }
 
-/* ── Empty / Loading ── */
 .cart-loading,
 .empty-cart {
   text-align: center;
@@ -817,7 +802,6 @@ function statusLabel(status, order) {
   text-align: center;
 }
 
-/* ── Orders list ── */
 .orders-list {
   display: flex;
   flex-direction: column;
@@ -865,7 +849,6 @@ function statusLabel(status, order) {
 .order-card__total { font-size: 17px; font-weight: 700; }
 .order-card__delivery { font-size: 13px; color: #888; }
 
-/* ── Responsive ── */
 @media (max-width: 768px) {
   .cart-layout {
     grid-template-columns: 1fr;

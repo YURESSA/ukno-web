@@ -61,7 +61,6 @@ const selectedItem = ref({
   format_type_name: ''
 });
 
-// --- КОЛОНКИ ТАБЛИЦЫ ---
 const columns = [
   { title: 'ID', key: 'format_type_id'},
   { title: 'Название', key: 'format_type_name' },
@@ -77,7 +76,7 @@ const columns = [
           type: 'error',
           size: 'small',
           ghost: true,
-          onClick: () => confirmDelete(row) // Передаем строку целиком в функцию удаления
+          onClick: () => confirmDelete(row)
         },
         { default: () => 'Удалить' }
       );
@@ -85,14 +84,12 @@ const columns = [
   }
 ];
 
-// Обработка кнопки "Добавить" из Header
 const addTrigger = inject('admin-add-event');
 watch(addTrigger, () => {
   selectedItem.value = { format_type_name: '' };
   showModal.value = true;
 });
 
-// --- СОЗДАНИЕ ---
 async function handleSave() {
   if (!selectedItem.value.format_type_name.trim()) {
     message.error('Введите название формата');
@@ -112,7 +109,6 @@ async function handleSave() {
   }
 }
 
-// --- УДАЛЕНИЕ (теперь принимает объект категории) ---
 function confirmDelete(format) {
   dialog.warning({
     title: 'Удаление категории',

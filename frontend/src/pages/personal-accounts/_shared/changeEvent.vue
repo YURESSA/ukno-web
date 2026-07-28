@@ -248,7 +248,6 @@ const excursionsStats = computed(() => store.getExcursionsStats);
 
 const formDataExcursion = ref(null);
 const formDataSessions = ref(null);
-// Координаты для начальной позиции MapPicker при редактировании
 const initialMapCoords = ref(null);
 
 onMounted(async () => {
@@ -279,7 +278,6 @@ onMounted(async () => {
       duration: excursion.value.duration,
     }
 
-    // Устанавливаем начальные координаты для MapPicker
     if (excursion.value.latitude && excursion.value.longitude) {
       initialMapCoords.value = [excursion.value.latitude, excursion.value.longitude];
     }
@@ -372,9 +370,8 @@ function plusParticipants(i){
   formDataSessions.value.sessions[i].max_participants += 1;
 }
 
-// Карусель
 const currentIndex = ref(0)
-const imageWidth = 270 // ширина изображения + отступы
+const imageWidth = 270
 
 function moveLeft(total) {
   if (currentIndex.value < total - visibleCount.value) {
@@ -386,7 +383,7 @@ function moveRight() {
   if (currentIndex.value > 0) currentIndex.value--
 }
 
-const visibleCount = ref(3) // Сколько видно одновременно
+const visibleCount = ref(3)
 
 const offsetStyle = computed(() => ({
   transform: `translateX(-${currentIndex.value * imageWidth}px)`
@@ -451,10 +448,8 @@ async function pushSessionToApi(excursion_id){
 
 const submitEvent = async () => {
   try {
-    // Создаем JSON-данные
     const jsonData = JSON.stringify(formDataExcursion.value)
 
-    // Добавляем фото (если есть)
     if(fileList.value.length > 0){
       for (const file of fileList.value) {
         const formData = new FormData();
@@ -743,7 +738,7 @@ input, textarea, select {
   background-repeat: no-repeat;
   background-position: right 20px center;
   background-size: 16px;
-  padding-right: 45px; /* 20px отступ + 16px стрелка + немного запаса */
+  padding-right: 45px;
   width: 100%;
 }
 
@@ -752,7 +747,7 @@ input, textarea, select {
 }
 
 .custom-select:valid {
-  color: #333; /* Цвет когда выбран нормальный вариант */
+  color: #333;
 }
 
 input:focus, textarea:focus {

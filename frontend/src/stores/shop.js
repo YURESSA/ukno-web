@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import axios from 'axios'
 import { baseUrl } from '@/stores/counter'
 
-// Проверяет, есть ли у товара хотя бы одно изображение
 function hasProductImage(product) {
   if (!product) return false
   if (product.main_image) return true
@@ -12,24 +11,13 @@ function hasProductImage(product) {
 
 export const useShopStore = defineStore('shop', {
   state: () => ({
-    // Home
     banners: [],
     categories: [],
     products: [],
-
-    // Product detail
     productDetail: null,
-
-    // Cart (server-side, requires auth)
     cart: { items: [], total_price: '0' },
-
-    // Favorites (server-side, requires auth)
     favorites: [],
-
-    // Orders
     orders: [],
-
-    // UI
     loading: false,
     cartLoading: false,
   }),
@@ -41,7 +29,6 @@ export const useShopStore = defineStore('shop', {
   },
 
   actions: {
-    // ─── Home ────────────────────────────────────────────────────────────────
     async FetchHome() {
       this.loading = true
       try {
@@ -57,7 +44,6 @@ export const useShopStore = defineStore('shop', {
       }
     },
 
-    // ─── Products ─────────────────────────────────────────────────────────────
     async FetchProducts(categoryId = null, search = null) {
       this.loading = true
       try {
@@ -94,7 +80,6 @@ export const useShopStore = defineStore('shop', {
       }
     },
 
-    // ─── Cart ─────────────────────────────────────────────────────────────────
     async FetchCart(authKey) {
       this.cartLoading = true
       try {
@@ -102,8 +87,6 @@ export const useShopStore = defineStore('shop', {
           headers: { Authorization: `Bearer ${authKey}` },
         })
         const cartData = response.data
-        // Показываем только товары в корзине, у которых есть изображения
-        // (защита от случаев, когда товар удалили из системы)
         if (cartData && cartData.items) {
           cartData.items = cartData.items.filter(item => hasProductImage(item.product))
         }
@@ -156,14 +139,11 @@ export const useShopStore = defineStore('shop', {
       }
     },
 
-    // ─── Favorites ────────────────────────────────────────────────────────────
     async FetchFavorites(authKey) {
       try {
         const response = await axios.get(`${baseUrl}api/user/merch/favorites`, {
           headers: { Authorization: `Bearer ${authKey}` },
         })
-        // Показываем только избранные товары, у которых есть изображения
-        // (защита от случаев, когда товар удалили из системы)
         this.favorites = (response.data.favorites || []).filter(fav => hasProductImage(fav.product))
       } catch (error) {
         console.error('Ошибка при загрузке избранного:', error.response?.data || error.message)
@@ -178,13 +158,11 @@ export const useShopStore = defineStore('shop', {
           {},
           { headers: { Authorization: `Bearer ${authKey}` } },
         )
-        // Обновляем is_favorite в локальном списке продуктов
         const product = this.products.find((p) => p.product_id === productId)
         if (product) product.is_favorite = response.data.is_favorite
         if (this.productDetail?.product_id === productId) {
           this.productDetail.is_favorite = response.data.is_favorite
         }
-        // Обновляем список избранного
         await this.FetchFavorites(authKey)
         return response.data.is_favorite
       } catch (error) {
@@ -193,7 +171,6 @@ export const useShopStore = defineStore('shop', {
       }
     },
 
-    // ─── Orders ───────────────────────────────────────────────────────────────
     async FetchOrders(authKey) {
       this.loading = true
       try {
@@ -215,11 +192,9 @@ export const useShopStore = defineStore('shop', {
           headers: { Authorization: `Bearer ${authKey}`, 'Content-Type': 'application/json' },
         })
         const order = response.data.order
-        // Если оплата картой — редирект на payment_url
         if (order.payment_url) {
           window.location.href = order.payment_url
         }
-        // Очистить корзину локально (сервер её уже очистил)
         this.cart = { items: [], total_price: '0' }
         return order
       } catch (error) {

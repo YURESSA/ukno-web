@@ -242,7 +242,6 @@ h4{
   background-color: #EBEBEB;
 }
 
-/* Анимации для мобильного меню */
 .menu-fade-enter-active,
 .menu-fade-leave-active {
   transition: all 0.3s ease;
@@ -261,7 +260,6 @@ h4{
   transform: translateY(0) scaleY(1);
 }
 
-/* Анимация для подменю проектов */
 .slide-fade-enter-active {
   transition: all 0.3s ease;
 }
@@ -282,7 +280,6 @@ h4{
   transform: translateY(0);
 }
 
-/* Мобильные стили */
 
 @media (max-width: 768px) {
   .header-wrapper{

@@ -80,7 +80,6 @@ const props = defineProps({
 
 defineEmits(['click', 'favorite'])
 
-// ── Images ──────────────────────────────────────────────────────
 const allImages = computed(() => {
   const images = []
   if (props.product.main_image) images.push(props.product.main_image)
@@ -101,11 +100,9 @@ function formatPrice(price) {
   return Number(price).toLocaleString('ru-RU')
 }
 
-// ── Slide logic ──────────────────────────────────────────────────
 const wrapRef   = ref(null)
 const currentIdx = ref(0)
 
-/** Mouse: change slide based on horizontal position */
 function onMouseMove(e) {
   const n = allImages.value.length
   if (n < 2) return
@@ -119,7 +116,6 @@ function onMouseLeave() {
   currentIdx.value = 0
 }
 
-// ── Touch / Swipe ────────────────────────────────────────────────
 const touchStartX = ref(0)
 const touchStartIdx = ref(0)
 
@@ -139,7 +135,8 @@ function onTouchMove(e) {
 }
 
 function onTouchEnd() {
-  // keep current index — already set by onTouchMove
+
+
 }
 </script>
 
@@ -159,7 +156,6 @@ function onTouchEnd() {
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.09);
 }
 
-/* ── Image wrap ── */
 .product-card__img-wrap {
   position: relative;
   aspect-ratio: 3 / 4;
@@ -168,7 +164,6 @@ function onTouchEnd() {
   user-select: none;
 }
 
-/* ── Slides ── */
 .product-card__slides {
   position: relative;
   width: 100%;
@@ -190,7 +185,6 @@ function onTouchEnd() {
   opacity: 1;
 }
 
-/* ── Placeholder ── */
 .product-card__img-placeholder {
   width: 100%;
   height: 100%;
@@ -199,7 +193,6 @@ function onTouchEnd() {
   justify-content: center;
 }
 
-/* ── Segments (progress bar style) ── */
 .card-segments {
   position: absolute;
   bottom: 0;
@@ -223,7 +216,6 @@ function onTouchEnd() {
   background: rgba(255, 255, 255, 0.95);
 }
 
-/* ── Favorite ── */
 .product-card__fav {
   position: absolute;
   top: 10px;
@@ -246,7 +238,6 @@ function onTouchEnd() {
 .product-card__fav:hover { color: #FF6C36; transform: scale(1.1); }
 .product-card__fav.active { color: #FF6C36; }
 
-/* ── Badge ── */
 .product-card__badge {
   position: absolute;
   bottom: 14px;
@@ -265,7 +256,6 @@ function onTouchEnd() {
   color: #fff;
 }
 
-/* ── Info ── */
 .product-card__info {
   padding: 10px 12px 14px;
   display: flex;

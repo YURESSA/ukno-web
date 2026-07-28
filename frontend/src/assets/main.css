@@ -102,16 +102,13 @@ blockquote {
 }
 
 .n-carousel {
-  /* Стили для точек (dots) */
-  --n-dot-color: #c0c0c0; /* обычное состояние */
-  --n-dot-color-focus: #a0a0a0; /* при фокусе */
-  --n-dot-color-active: #006aff; /* активная точка */
+  --n-dot-color: #c0c0c0;
+  --n-dot-color-focus: #a0a0a0;
+  --n-dot-color-active: #006aff;
 
-  /* Размеры точек */
   --n-dot-size: 8px;
   --n-dot-size-active: 10px;
 
-  /* Стили для стрелок */
   --n-arrow-color: #3a7bd5;
   --n-arrow-size: 24px;
 }

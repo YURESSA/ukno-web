@@ -164,9 +164,8 @@
           <div
             class="info"
             :class="{
-              // На мобильных: все элементы справа
+
               'timeline-element-right': $isMobile(),
-              // На десктопе: четные элементы слева, нечетные - справа
               'timeline-element-left': !$isMobile() && index % 2 === 1,
               'timeline-element-right': !$isMobile() && index % 2 === 0
             }"

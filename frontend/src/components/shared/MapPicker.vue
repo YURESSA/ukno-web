@@ -50,17 +50,14 @@
 </template>
 
 <script setup>
-/* global ymaps */
 import { onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 import { useDataStore } from '@/stores/counter';
 
 const props = defineProps({
-  /** Начальные координаты [lat, lon] — для режима редактирования */
   initialCoords: {
     type: Array,
     default: null,
   },
-  /** Уникальный id контейнера карты (нужен если несколько MapPicker на странице) */
   mapId: {
     type: String,
     default: 'map-picker-container',
@@ -89,13 +86,11 @@ onMounted(() => {
   window.initYandexMapCallback = initMap;
 
   if (window.ymaps && window.ymaps.Map) {
-    // ymaps уже загружен другой страницей — просто инициализируем
     initMap();
     return;
   }
 
   if (document.querySelector('script[src*="api-maps.yandex.ru"]')) {
-    // Скрипт уже добавлен, ждём колбэк
     return;
   }
 
@@ -116,14 +111,13 @@ function initMap() {
     myMap.value = new ymaps.Map(
       container,
       {
-        center: props.initialCoords ?? [56.8389, 60.6057], // Екатеринбург по умолчанию
+        center: props.initialCoords ?? [56.8389, 60.6057],
         zoom: props.initialCoords ? 16 : 13,
         controls: ['zoomControl'],
       },
       { yandexMapDisablePoiInteractivity: true }
     );
 
-    // Если переданы начальные координаты — сразу поставить маркер
     if (props.initialCoords) {
       updateMarker(props.initialCoords, false);
       reverseGeocode(props.initialCoords);
@@ -229,7 +223,6 @@ function updateMarker(newCoords, doEmit = true) {
       }
     );
 
-    // Перетаскивание маркера тоже обновляет координаты
     myPlacemark.value.events.add('dragend', () => {
       const draggedCoords = myPlacemark.value.geometry.getCoordinates();
       coords.value = draggedCoords;
@@ -265,7 +258,6 @@ onUnmounted(() => {
   gap: 12px;
 }
 
-/* Строка поиска */
 .map-search-row {
   display: flex;
   gap: 10px;
@@ -318,7 +310,6 @@ onUnmounted(() => {
   cursor: not-allowed;
 }
 
-/* Подсказки */
 .map-suggest {
   position: absolute;
   top: calc(100% + 6px);
@@ -355,7 +346,6 @@ onUnmounted(() => {
 .map-suggest::-webkit-scrollbar-track { background: #FFD6BD; }
 .map-suggest::-webkit-scrollbar-thumb { background: #F25C03; border-radius: 8px; }
 
-/* Подсказка под строкой поиска */
 .map-hint {
   font-size: 12px;
   color: #9E9E9E;
@@ -364,7 +354,6 @@ onUnmounted(() => {
   min-height: 18px;
 }
 
-/* Карта */
 .map-wrapper {
   position: relative;
   border-radius: 14px;
@@ -405,12 +394,10 @@ onUnmounted(() => {
   to { transform: rotate(360deg); }
 }
 
-/* Убираем синий outline фокуса с карты */
 :deep([class*="-map"]) {
   outline: none !important;
 }
 
-/* Анимация списка подсказок */
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>

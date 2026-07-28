@@ -22,9 +22,7 @@ import News from '@/pages/news/news.vue'
 import Requesits from '@/pages/requesits/requesits.vue'
 import Ukno from '@/pages/ukno/ukno.vue'
 import NotFoundPage from '@/components/shared/NotFoundPage.vue'
-import Test from '@/pages/test.vue'
 
-// ── Shop ──────────────────────────────────────────────────────────────────────
 import ShopLayout from '@/layouts/ShopLayout.vue'
 import ShopCatalog from '@/pages/shop/catalog/ShopCatalog.vue'
 import ProductDetail from '@/pages/shop/product/ProductDetail.vue'
@@ -34,11 +32,6 @@ import FavoritePage from '@/pages/shop/favorite/FavoritePage.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    {
-      path: '/test-page',
-      name: 'Test',
-      component: Test,
-    },
     {
       path: '/',
       name: 'Main',
@@ -234,7 +227,6 @@ const router = createRouter({
       component: changeEvent,
       meta: { requiresAuth: true, requiredRole: 'resident' },
     },
-    // ── Shop module ─────────────────────────────────────────────────────────
     {
       path: '/shop',
       component: ShopLayout,

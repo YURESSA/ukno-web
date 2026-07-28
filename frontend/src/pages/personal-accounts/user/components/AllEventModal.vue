@@ -132,24 +132,20 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'cancelReservation'])
 
-// Состояния для скрытия/показа секций
 const showCancelled = ref(false)
 const showPast = ref(false)
 const localReservations = ref([])
 
-// Определяем, прошло ли событие
 const isEventPast = (reservation) => {
   const eventDate = new Date(reservation.session_start_datetime)
   const now = new Date()
   return eventDate < now
 }
 
-// Копируем данные из props при их изменении
 watch(() => props.events.reservations, (newVal) => {
   localReservations.value = newVal ? [...newVal] : []
 }, { immediate: true })
 
-// Замените все computed свойства, чтобы они использовали localReservations вместо props.events.reservations
 const activeReservations = computed(() => {
   if (!localReservations.value || localReservations.value.length === 0) return []
 
@@ -186,7 +182,6 @@ const pastReservations = computed(() => {
     })
 })
 
-// Форматирование даты и времени
 const formatDateTime = (dateTimeString) => {
   const date = new Date(dateTimeString)
   return date.toLocaleString('ru-RU', {
@@ -198,13 +193,11 @@ const formatDateTime = (dateTimeString) => {
   })
 }
 
-// Форматирование стоимости
 const formatCost = (cost) => {
   if (cost === 0 || cost === '0') return 'Бесплатно'
   return `${cost} ₽`
 }
 
-// Текст статуса оплаты
 const getPaymentStatusText = (paymentStatus) => {
   const statusMap = {
     'succeeded': 'Оплачено',
@@ -215,7 +208,6 @@ const getPaymentStatusText = (paymentStatus) => {
   return statusMap[paymentStatus] || paymentStatus
 }
 
-// Обработка отмены брони
 const cancelReservation = async (reservation) => {
   if (!confirm('Вы уверены, что хотите отменить бронирование?')) {
     return
@@ -224,32 +216,24 @@ const cancelReservation = async (reservation) => {
   const delet_id = { reservation_id: reservation.reservation_id }
 
   try {
-    // Отправляем запрос на сервер
     await store.DeleteReservation(delet_id)
 
-    // Вручную обновляем данные на фронте
     const index = localReservations.value.findIndex(
       r => r.reservation_id === reservation.reservation_id
     )
 
     if (index !== -1) {
-      // Создаем копию записи с обновленными данными
       const updatedReservation = {
         ...localReservations.value[index],
         is_cancelled: true,
-        // Добавляем timestamp отмены, если нужно
         cancelled_at: new Date().toISOString()
       }
 
-      // Обновляем запись в массиве
       localReservations.value[index] = updatedReservation
-
-      // Создаем новый массив для реактивности
       localReservations.value = [...localReservations.value]
 
       await notification('Бронь успешно отменена, на почту отправленно сообщение с информацией по возврату', 'positive');
 
-      // Автоматически раскрываем секцию отмененных записей
       if (!showCancelled.value && cancelledReservations.value.length > 0) {
         showCancelled.value = true
       }
@@ -260,7 +244,6 @@ const cancelReservation = async (reservation) => {
   }
 }
 
-// Переключение отображения секций
 const toggleCancelled = () => {
   showCancelled.value = !showCancelled.value
 }
@@ -316,12 +299,10 @@ const togglePast = () => {
   flex-direction: column;
 }
 
-/* Стили для активных записей (всегда открыты) */
 .reservation-group:not(.collapsible) {
   gap: 16px;
 }
 
-/* Стили для скрываемых секций */
 .reservation-group.collapsible {
   border: 1px solid #e0e0e0;
   border-radius: 8px;
@@ -373,7 +354,6 @@ const togglePast = () => {
   gap: 16px;
 }
 
-/* Стили заголовков групп */
 .active-title {
   color: #F25C03;
 }
@@ -382,7 +362,6 @@ const togglePast = () => {
   border-left: 4px solid #f44336;
 }
 
-/* Общие стили для записей */
 .reservation-item {
   border: 1px solid #e0e0e0;
   border-radius: 8px;

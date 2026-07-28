@@ -9,7 +9,7 @@
 import IconButton from '@/components/ui/button/IconButton.vue';
 import { useRouter } from 'vue-router';
 
-const router = useRouter(); // для Composition API
+const router = useRouter();
 
 const props = defineProps({
   title: {

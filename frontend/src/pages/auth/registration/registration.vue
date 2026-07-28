@@ -101,7 +101,6 @@ const showErrors = ref(false);
 const requisites = computed(() => store.getRequisites);
 
 const personalDataFile = computed(() => {
-  // Проверяем, что данные есть и это массив
   if (Array.isArray(requisites.value)) {
     return requisites.value.find(item => item.title === "Обработка персональных данных");
   }
@@ -131,7 +130,6 @@ const clearError = (field) => {
   errors.value[field] = '';
 };
 
-// Валидация ФИО
 const validateName = () =>{
   if(formData.value.full_name < 3){
     errors.value.full_name = 'Введите корректные ФИО';
@@ -140,7 +138,6 @@ const validateName = () =>{
   }
 }
 
-// Валидация email
 const validateEmail = () => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(formData.value.email)) {
@@ -150,7 +147,6 @@ const validateEmail = () => {
   }
 };
 
-// Валидация телефона
 const formatPhoneInput = (event) => {
   let value = event.target.value.replace(/\D/g, '');
 
@@ -160,7 +156,6 @@ const formatPhoneInput = (event) => {
     value = '+7' + value;
   }
 
-  // Форматирование с скобками и дефисами
   let formatted = value;
   if (value.length > 2) {
     formatted = value.substring(0, 2) + ' ' + value.substring(2, 5);
@@ -180,7 +175,6 @@ const formatPhoneInput = (event) => {
 };
 
 const validatePhone = () => {
-  // Убираем все пробелы и дефисы для проверки
   const cleanPhone = formData.value.phone.replace(/[\s\-()]/g, '');
   const phoneRegex = /^(\+7|8)[0-9]{10}$/;
 
@@ -191,7 +185,6 @@ const validatePhone = () => {
   }
 };
 
-// Валидация пароля
 const validatePassword = () => {
   if (formData.value.password.length < 5) {
     errors.value.password = 'Пароль должен быть не менее 5 символов';
@@ -201,7 +194,6 @@ const validatePassword = () => {
   validatePasswordConfirmation();
 };
 
-// Проверка совпадения паролей
 const validatePasswordConfirmation = () => {
   if (formData.value.password !== formData.value.passwordConfirmation) {
     errors.value.passwordConfirmation = 'Пароли не совпадают';
@@ -213,14 +205,12 @@ const validatePasswordConfirmation = () => {
 const handleSubmit = async () => {
   showErrors.value = true;
 
-  // Проверяем все поля перед отправкой
   validateName();
   validateEmail();
   validatePhone();
   validatePassword();
   validatePasswordConfirmation();
 
-  // Проверяем наличие ошибок
   const hasErrors = Object.values(errors.value).some(error => error !== '');
 
   if (hasErrors) {
@@ -315,7 +305,6 @@ span{
   text-align: center;
 }
 
-/* Мобильные стили */
 @media (max-width: 768px) {
   .page-wrapper {
     margin: 0;

@@ -61,7 +61,6 @@ const selectedItem = ref({
   category_name: ''
 });
 
-// --- КОЛОНКИ ТАБЛИЦЫ ---
 const columns = [
   { title: 'ID', key: 'category_id'},
   { title: 'Название', key: 'category_name' },
@@ -77,7 +76,7 @@ const columns = [
           type: 'error',
           size: 'small',
           ghost: true,
-          onClick: () => confirmDelete(row) // Передаем строку целиком в функцию удаления
+          onClick: () => confirmDelete(row)
         },
         { default: () => 'Удалить' }
       );
@@ -85,14 +84,12 @@ const columns = [
   }
 ];
 
-// Обработка кнопки "Добавить" из Header
 const addTrigger = inject('admin-add-event');
 watch(addTrigger, () => {
   selectedItem.value = { category_name: '' };
   showModal.value = true;
 });
 
-// --- СОЗДАНИЕ ---
 async function handleSave() {
   if (!selectedItem.value.category_name.trim()) {
     message.error('Введите название категории');
@@ -112,7 +109,6 @@ async function handleSave() {
   }
 }
 
-// --- УДАЛЕНИЕ (теперь принимает объект категории) ---
 function confirmDelete(category) {
   dialog.warning({
     title: 'Удаление категории',

@@ -160,7 +160,7 @@ async function logOut(){
     width: 100%;
   }
   .profie__btn.exit--btn {
-    order: 2; /* Переместить вниз */
+    order: 2;
   }
 }
 </style>

@@ -85,16 +85,14 @@ const model = ref({
   text: '',
   photo: null,
   photo_url: '',
-  order_index: 0 // Инициализируем нулем по умолчанию
+  order_index: 0
 })
 
-// Базовый URL для картинок
 const getImageUrl = (path) => {
   if (!path) return ''
   return path.startsWith('http') ? path : `${baseUrl}/${path}`
 }
 
-// Следим за кнопкой из Layout
 watch(addEvent, () => {
   openCreateModal()
 })
@@ -130,7 +128,7 @@ const openCreateModal = () => {
     text: '',
     photo: null,
     photo_url: '',
-    order_index: 0 // Сбрасываем в 0
+    order_index: 0
   }
   fileList.value = []
   showModal.value = true
@@ -139,13 +137,11 @@ const openCreateModal = () => {
 const handleRemove = (options) => {
   const { file } = options;
 
-  // Если это новый файл (только что выбрали), просто удаляем из локальной очереди
   if (file.id !== 'server-file') {
     model.value.photo = null;
     return true;
   }
 
-  // Если это файл, который уже на сервере
   return new Promise((resolve) => {
     dialog.warning({
       title: 'Удаление фото',
@@ -155,13 +151,11 @@ const handleRemove = (options) => {
       onPositiveClick: async () => {
         try {
           submitLoading.value = true;
-          // Вызываем правильный метод стора для культурного пространства
           await store.DeleteCulturalSpacePhoto(model.value.id);
 
           message.success('Фото удалено с сервера');
           model.value.photo_url = '';
 
-          // Обновляем данные в таблице
           await store.FetchCulturalSpace();
           resolve(true);
         } catch (e) {
@@ -186,7 +180,6 @@ const openEditModal = (row) => {
     text: row.text,
     photo: null,
     photo_url: fullPhotoUrl,
-    // Важно: приводим к числу на случай, если с бэка пришла строка
     order_index: row.order_index !== undefined ? Number(row.order_index) : 0
   }
 
@@ -214,13 +207,12 @@ const handleSave = async () => {
 
   try {
     submitLoading.value = true
-    // Приводим к числу перед отправкой
     const orderValue = Number(model.value.order_index) || 0
 
     if (isEditMode.value) {
       const textData = new FormData()
       textData.append('text', model.value.text)
-      textData.append('order_index', orderValue) // Отправляем индекс при обновлении текста
+      textData.append('order_index', orderValue)
 
       await store.UpdateCulturalSpaceText(model.value.id, textData)
 
@@ -234,7 +226,7 @@ const handleSave = async () => {
     } else {
       const formData = new FormData()
       formData.append('text', model.value.text)
-      formData.append('order_index', orderValue) // Добавляем индекс при создании
+      formData.append('order_index', orderValue)
 
       if (model.value.photo) {
         formData.append('photo', model.value.photo)

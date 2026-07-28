@@ -117,8 +117,6 @@ const editor = useEditor({
   content: props.modelValue,
   extensions: [
     StarterKit.configure({
-      // Настройка для того, чтобы Enter всегда создавал новый параграф <p>,
-      // а не просто <br> внутри одного блока.
       heading: {
         levels: [4, 5],
       },
@@ -178,7 +176,6 @@ watch(() => props.modelValue, (value) => {
   overflow-y: auto;
 }
 
-/* Стилизация элементов внутри редактора */
 :deep(.tiptap) p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   float: left;

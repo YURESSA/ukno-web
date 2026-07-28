@@ -98,9 +98,6 @@ const message = useMessage();
 const dialog = useDialog();
 const loading = ref(false);
 
-
-
-// Состояние модалки
 const showModal = ref(false);
 const isEdit = ref(false);
 const selectedItem = ref({
@@ -112,14 +109,12 @@ const selectedItem = ref({
   password: ''
 });
 
-// Данные для селекта ролей
 const roleOptions = [
   { label: 'Администратор', value: 'admin' },
   { label: 'Резидент', value: 'resident' },
   { label: 'Пользователь', value: 'user' }
 ];
 
-// --- ЛОГИКА ТАБЛИЦЫ ---
 const searchQuery = ref('');
 const roleFilter = ref(null);
 
@@ -158,17 +153,15 @@ const columns = [
   }
 ];
 
-// Клик по строке (Редактирование)
 const rowProps = (row) => ({
   style: 'cursor: pointer',
   onClick: () => {
     isEdit.value = true;
-    selectedItem.value = { ...row, password: '' }; // Пароль пустой по умолчанию
+    selectedItem.value = { ...row, password: '' };
     showModal.value = true;
   }
 });
 
-// Клик по кнопке в Header (Создание)
 const addTrigger = inject('admin-add-event');
 watch(addTrigger, () => {
   isEdit.value = false;
@@ -183,9 +176,7 @@ watch(addTrigger, () => {
   showModal.value = true;
 });
 
-// --- СОХРАНЕНИЕ / СОЗДАНИЕ ---
 async function handleSave() {
-  // Подготавливаем данные для отправки (jsonData)
   const payload = {
     full_name: selectedItem.value.full_name,
     email: selectedItem.value.email,
@@ -193,7 +184,6 @@ async function handleSave() {
     role: selectedItem.value.role,
   };
 
-  // Если пароль введен, добавляем его в объект
   if (selectedItem.value.password) {
     payload.password = selectedItem.value.password;
   }
@@ -201,16 +191,14 @@ async function handleSave() {
   try {
     loading.value = true;
     if (isEdit.value) {
-      // Редактируем по email (второй аргумент метода)
       await store.PutAdminUser(payload, selectedItem.value.email);
       message.success('Данные пользователя обновлены');
     } else {
-      // Создаем нового
       await store.PostAdminNewUser(payload);
       message.success('Пользователь успешно создан');
     }
     showModal.value = false;
-    await store.FetchUsers(); // Перезагружаем таблицу
+    await store.FetchUsers();
   } catch (e) {
     message.error(e.response?.data?.message || 'Ошибка при сохранении');
   } finally {
@@ -218,7 +206,6 @@ async function handleSave() {
   }
 }
 
-// --- УДАЛЕНИЕ ---
 function confirmDelete() {
   dialog.warning({
     title: 'Подтверждение удаления',

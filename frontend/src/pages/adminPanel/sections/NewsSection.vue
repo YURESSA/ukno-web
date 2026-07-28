@@ -96,7 +96,7 @@
 
 <script setup>
 import { ref, computed, inject, watch, onMounted, h } from 'vue';
-import { useDataStore, baseUrl } from '@/stores/counter'; // baseUrl для картинок
+import { useDataStore, baseUrl } from '@/stores/counter';
 import {
   NDataTable, NModal, NForm, NFormItemGi, NGrid, NInput,
   NDatePicker, NButton, NSpace, NAvatar, NUpload, NUploadDragger,
@@ -123,7 +123,6 @@ const selectedItem = ref({
   created_at: null
 });
 
-// --- КОЛОНКИ ТАБЛИЦЫ ---
 const columns = [
   { title: 'ID', key: 'news_id', width: 60 },
   {
@@ -157,9 +156,8 @@ const columns = [
   }
 ];
 
-// --- ФИЛЬТРАЦИЯ ---
 const filteredNews = computed(() => {
-  const data = store.getNews?.news || []; // Обращаемся к store.getNews.news
+  const data = store.getNews?.news || [];
   if (!searchQuery.value) return data;
 
   const s = searchQuery.value.toLowerCase();
@@ -170,33 +168,24 @@ const filteredNews = computed(() => {
   );
 });
 
-// Список для отображения в компоненте n-upload
 const fileList = ref([]);
-// Массив самих файлов для отправки
 const newFiles = ref([]);
 
-// Следим за изменениями в загрузчике
 const handleUploadChange = (data) => {
   fileList.value = data.fileList;
-  // Фильтруем только те файлы, у которых есть объект file (новые загруженные)
   newFiles.value = data.fileList
     .filter(item => item.file)
     .map(item => item.file);
 };
 
-// При удалении файла
 const handleRemove = (data) => {
   const { file } = data;
 
-  // 1. Если это НОВОЕ фото (которого еще нет на сервере)
-  // Мы помечаем новые файлы отсутствием префикса 'old-' в id
   if (!file.id.startsWith('old-')) {
     newFiles.value = newFiles.value.filter(f => f.name !== file.name);
     message.info('Файл удален из очереди на загрузку');
-    return true; // Разрешаем компоненту убрать карточку
-  }
+    return true;
 
-  // 2. Если это СТАРОЕ фото (нужно удалить на бэкенде по индексу)
   return new Promise((resolve) => {
     dialog.warning({
       title: 'Удаление фото',
@@ -235,22 +224,18 @@ const rowProps = (row) => ({
     isEdit.value = true;
     const item = { ...row };
 
-    // Внутри rowProps
     if (item.images && item.images.length > 0) {
       fileList.value = item.images.map((img, index) => ({
-        // Используем уникальный маркер 'old-', чтобы отличить серверные фото от новых
         id: `old-${index}`,
         name: `Снимок ${index + 1}`,
         status: 'finished',
-        url: `${baseUrl}${img.photo_url || img}`, // поддержка и объекта, и строки
-        // Сохраняем оригинальные данные внутри объекта файла для доступа в handleRemove
+        url: `${baseUrl}${img.photo_url || img}`,
         fullData: img
       }));
     }
 
-    newFiles.value = []; // Сбрасываем новые файлы
+    newFiles.value = [];
     if (item.created_at) {
-      // Приводим к формату "2026-04-01 01:42:18"
       item.created_at = item.created_at.replace('T', ' ').substring(0, 19);
     }
     selectedItem.value = item;
@@ -269,7 +254,7 @@ watch(addTrigger, () => {
     short_description: '',
     content: '',
     photo_author: '',
-    created_at: null // Теперь здесь "2026-04-01 13:00:00"
+    created_at: null
   };
 
   showModal.value = true;
@@ -281,7 +266,6 @@ async function handleSave() {
   try {
     loading.value = true;
 
-    // 1. Подготавливаем только текстовые данные
     const dataToSerialize = {
       title: selectedItem.value.title,
       content: selectedItem.value.content,
@@ -295,21 +279,17 @@ async function handleSave() {
 
     let newsId = selectedItem.value.news_id;
 
-    // 2. Основное сохранение (текст)
     if (isEdit.value) {
       await store.PutAdminNews(newsId, formData);
     } else {
       const res = await store.PostAdminNews(formData);
-      // Если это создание, берем ID из ответа сервера (проверь структуру ответа!)
       newsId = res.data.news_id || res.data.id;
     }
 
-    // 3. ЗАГРУЗКА ФОТО (Отдельно для каждого файла)
     if (newFiles.value && newFiles.value.length > 0) {
       console.log('Файлы к отправке:', newFiles.value);
 
       const uploadPromises = newFiles.value.map(file => {
-        // Если это объект события или обертка, берем сам файл
         const rawFile = file.file || file;
         return store.PostAdminNewsPhoto(newsId, rawFile);
       });
@@ -343,7 +323,7 @@ function confirmDelete() {
         await store.DeleteAdminNews(selectedItem.value.news_id);
         message.success('Новость успешно удалена');
         showModal.value = false;
-        await store.FetchAdminNews(); // Обновляем таблицу
+        await store.FetchAdminNews();
       } catch (e) {
         message.error('Не удалось удалить новость', e);
       } finally {

@@ -71,7 +71,6 @@ const model = ref({
   file_url: ''
 })
 
-// Следим за кнопкой из Layout
 watch(addEvent, () => {
   openCreateModal()
 })
@@ -166,12 +165,10 @@ const handleSave = async () => {
     submitLoading.value = true
 
     if (isEditMode.value) {
-      // 1. Обновляем название (PUT)
       const formData = new FormData()
       formData.append('title', model.value.title)
       await store.UpdateRequisite(model.value.id, formData)
 
-      // 2. Если добавлен новый файл (POST /file)
       if (model.value.file) {
         const fileData = new FormData()
         fileData.append('file', model.value.file)
@@ -179,7 +176,6 @@ const handleSave = async () => {
       }
       message.success('Реквизит обновлен')
     } else {
-      // Создание нового (POST)
       const formData = new FormData()
       formData.append('title', model.value.title)
       if (model.value.file) {

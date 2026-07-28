@@ -50,3 +50,5 @@ frontend/.env
 frontend/dist
 GEMINI.md
 .agents
+playwright-report
+test-results

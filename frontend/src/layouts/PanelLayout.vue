@@ -89,7 +89,6 @@ const addEventCounter = ref(0);
 const isSidebarOpen = ref(false);
 provide('admin-add-event', addEventCounter);
 
-// Массив для меню, чтобы не дублировать RouterLink в шаблоне
 const menuItems = [
   { path: '/panel/users', label: 'Пользователи', name: 'AdminUsers' },
   { path: '/panel/categories', label: 'Категории', name: 'AdminCategories' },
@@ -124,7 +123,7 @@ const themeOverrides = {
 };
 
 function triggerAddAction() {
-  addEventCounter.value++; // Просто увеличиваем счетчик кликов
+  addEventCounter.value++;
 }
 </script>
 
@@ -354,7 +353,6 @@ main {
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Автоматический горизонтальный скролл таблиц на мобильных */
   :deep(.n-data-table-wrapper) {
     overflow-x: auto !important;
   }
@@ -363,7 +361,6 @@ main {
     min-width: 680px;
   }
 
-  /* Модальные окна на весь экран или по ширине телефона */
   :deep(.n-card),
   :deep(.n-modal) {
     max-width: 96vw !important;

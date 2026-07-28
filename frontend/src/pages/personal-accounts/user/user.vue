@@ -291,7 +291,7 @@ function resetForm(){
     width: 100%;
   }
   .profie__btn.exit--btn {
-    order: 2; /* Переместить вниз */
+    order: 2;
   }
 }
 

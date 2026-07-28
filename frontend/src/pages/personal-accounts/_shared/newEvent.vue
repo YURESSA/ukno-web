@@ -285,26 +285,23 @@ const handleFileChange = (data) => {
 
 const submitEvent = async () => {
   try {
-    // 1. Форматируем дату в ISO-формат (если formattedValue содержит "2025-06-06 22:45")
     const isoFormatted = formattedValue.value.replace(" ", "T") + ":00";
     formData.value.sessions[0].start_datetime = isoFormatted;
 
-    // 2. Создаем FormData для файлов и JSON-данных
     const formDataToSend = new FormData();
 
     if (formData.value.tags) {
       formData.value.tags = formData.value.tags
-        .split(',') // Разделяем по запятым
-        .map(tag => tag.trim()) // Убираем пробелы по краям
-        .filter(tag => tag.length > 0); // Удаляем пустые элементы
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(tag => tag.length > 0);
     }
 
-    // 3. Добавляем файлы (если есть)
+
     fileList.value.forEach(file => {
       formDataToSend.append('photos', file.file);
     });
 
-    // 4. Добавляем остальные данные в формате JSON
     formDataToSend.append('data', JSON.stringify(formData.value));
 
     await store.PostNewEvent(formDataToSend);
@@ -389,7 +386,7 @@ input, textarea, select {
 }
 
 .custom-select {
-  color: #777; /* Цвет по умолчанию (для плейсхолдера) */
+  color: #777;
 }
 
 .option{
@@ -397,7 +394,7 @@ input, textarea, select {
 }
 
 .custom-select:valid {
-  color: #333; /* Цвет когда выбран нормальный вариант */
+  color: #333;
 }
 
 input:focus, textarea:focus {
