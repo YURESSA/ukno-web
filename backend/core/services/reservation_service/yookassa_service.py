@@ -2,35 +2,27 @@ import os
 import uuid
 
 import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 from yookassa import Payment as YooKassaPayment, Refund as YooKassaRefund, Configuration
-from yookassa.client import ApiClient
 
 from backend.core.config import Config
 
-session = requests.Session()
-retries = Retry(
-    total=3,
-    backoff_factor=1.0,
-    status_forcelist=[500, 502, 503, 504],
-    allowed_methods=["POST"]
-)
-adapter = HTTPAdapter(max_retries=retries)
-session.mount("https://", adapter)
 
-api_client = ApiClient()
-api_client.session = session
-
-Configuration.configure(
-    account_id=os.environ.get("ACCOUNT_ID"),
-    secret_key=os.environ.get("YOOKASSA_SECRET_KEY"),
-    api_client=api_client
-)
+def _configure_yookassa() -> None:
+    """Configure the SDK lazily so importing the app never requires live secrets."""
+    account_id = os.environ.get("ACCOUNT_ID")
+    secret_key = os.environ.get("YOOKASSA_SECRET_KEY")
+    if not account_id or not secret_key:
+        raise RuntimeError("YooKassa credentials are not configured")
+    Configuration.configure(
+        account_id=account_id,
+        secret_key=secret_key,
+        max_attempts=3,
+    )
 
 
 def create_yookassa_payment(amount, email, description, quantity=1, metadata=None, currency='RUB'):
     try:
+        _configure_yookassa()
         quantity = round(quantity, 2)
         unit_price = round(amount / quantity, 2)
 
@@ -84,15 +76,18 @@ def create_yookassa_payment(amount, email, description, quantity=1, metadata=Non
 
 def get_yookassa_payment(payment_id: str):
     """Fetch the authoritative payment state before trusting a webhook."""
+    _configure_yookassa()
     return YooKassaPayment.find_one(payment_id)
 
 
 def get_yookassa_refund(refund_id: str):
     """Fetch the authoritative refund state before trusting a webhook."""
+    _configure_yookassa()
     return YooKassaRefund.find_one(refund_id)
 
 
 def refund_yookassa_payment(payment_id: str, amount: float, currency: str = "RUB") -> YooKassaRefund:
+    _configure_yookassa()
     refund = YooKassaRefund.create({
         "payment_id": payment_id,
         "amount": {
