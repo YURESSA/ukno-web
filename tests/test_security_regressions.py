@@ -19,6 +19,7 @@ from backend.core.models.event_models import (
     Reservation,
 )
 from backend.core.services.reservation_service import reservation_crud
+from backend.core.services.user_services.user_service import update_user
 
 
 @pytest.fixture()
@@ -266,3 +267,15 @@ def test_demoted_admin_cannot_use_old_admin_token(app):
 
         response = app.test_client().get("/_security/admin-only", headers=old_admin_headers)
         assert response.status_code == 403
+
+
+def test_admin_user_update_accepts_role_name_and_legacy_role(app):
+    with app.app_context():
+        user = add_user("role-change@example.com")
+        db.session.commit()
+
+        updated = update_user(user.email, {"role": "admin"})
+        assert updated.role == RoleEnum.ADMIN
+
+        updated = update_user(user.email, {"role_name": "resident"})
+        assert updated.role == RoleEnum.RESIDENT
