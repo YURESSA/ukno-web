@@ -140,7 +140,7 @@ def test_merch_catalog_and_cart_responses_do_not_expose_removed_fields():
 
     assert banner.to_dict()["button_text"] == "Shop now"
     list_with_images = product.to_list_dict(include_images=True)
-    assert "main_image" not in list_with_images
+    assert list_with_images["main_image"] == "media/uploads/merch/products/shirt-front.jpg"
     assert [image["image_id"] for image in list_with_images["images"]] == [101, 100]
     detail = product.to_detail_dict()
     assert detail["colors"][0]["sizes"][0]["variant_id"] == variant.variant_id
