@@ -61,11 +61,34 @@ POSTGRES_HOST=db
 POSTGRES_PORT=5432
 
 PRODUCTION=True
-USE_POSTGRESS=True
+USE_POSTGRES=True
 
 ACCOUNT_ID= 
 YOOKASSA_SECRET_KEY=
 ```
+
+---
+
+## 🗄️ Хранение файлов
+
+По умолчанию приложение использует локальную папку `media/uploads`, поэтому для локальной разработки ничего менять не нужно.
+
+Чтобы включить Timeweb S3 только в нужном окружении, задайте переменные из `.env.example` и переключите:
+
+```dotenv
+STORAGE_BACKEND=s3
+S3_ENDPOINT=https://s3.twcstorage.ru
+S3_ACCESS_KEY=...
+S3_SECRET_KEY=...
+S3_BUCKET=...
+S3_REGION=ru-1
+S3_ADDRESSING_STYLE=path
+S3_KEY_PREFIX=ukno
+```
+
+Файлы раскладываются по существующим каталогам (`news`, `excursion_photos`, `merch/products`, `merch/banners` и другим). В базе по-прежнему хранится путь `media/uploads/...`; backend перенаправляет запрос на временную подписанную S3-ссылку. Для публичного бакета можно задать `S3_PUBLIC_BASE_URL`.
+
+Секреты следует хранить только в локальном `.env` или в переменных окружения сервера. Файлы `.env.*.local` игнорируются Git.
 
 ---
 

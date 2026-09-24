@@ -1,5 +1,4 @@
 import json
-import os
 from datetime import datetime
 from http import HTTPStatus
 from typing import Tuple, Optional, List, Dict
@@ -159,8 +158,7 @@ def delete_news(news_id: int) -> Tuple[bool, Optional[str]]:
         return False, "Новость не найдена"
 
     for image in news.images:
-        image_path = os.path.join(os.getcwd(), image.image_path)
-        remove_file_if_exists(image_path)
+        remove_file_if_exists(image.image_path)
 
     for image in news.images:
         db.session.delete(image)

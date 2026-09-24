@@ -2,7 +2,7 @@ import os
 import sys
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from flask import send_from_directory, render_template
+from flask import redirect, send_from_directory, render_template
 
 from backend.core import create_app, db
 from backend.core.config import Config
@@ -10,6 +10,7 @@ from backend.core.models.event_models import Category, AgeCategory, FormatType
 from backend.core.scripts.clear_unpaid import cleanup_unpaid_reservations
 from backend.core.scripts.create_superuser import create_superuser
 from backend.core.scripts.ensure_data import ensure_data_exists
+from backend.core.storage import file_url, uses_s3
 
 
 def seed_reference_data():
@@ -30,6 +31,8 @@ def register_static_routes(app):
 
     @app.route('/media/uploads/<path:filename>')
     def uploaded_file(filename):
+        if uses_s3():
+            return redirect(file_url(filename))
         if Config.PRODUCTION:
             return send_from_directory('/app/media/uploads', filename)
         else:
