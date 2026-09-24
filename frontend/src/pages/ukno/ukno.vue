@@ -103,7 +103,7 @@
       </div>
       <div class="person-list">
         <div class="person-card" v-for="(k, index) in teams" :key="k.id">
-          <img :class="{'uneven-person': teams.length % 2 && index === teams.length - 1}" :src="baseUrl + k.photo" alt="">
+          <img :class="{'uneven-person': teams.length % 2 && index === teams.length - 1}" :src="resolveMediaUrl(k.photo)" :alt="k.full_name">
           <p class="name">{{ k.full_name }}</p>
           <div class="profession" v-html="k.description"></div>
         </div>
@@ -170,11 +170,13 @@
               'timeline-element-right': !$isMobile() && index % 2 === 0
             }"
           >
-            <a v-if="event.link" :href="event.link" target="_blank"><p class="date text-l" v-html="formatDate(event.date)"></p></a>
-            <a v-if="event.link" :href="event.link" target="_blank" class="event-info">
+            <component :is="event.link ? 'a' : 'div'" :href="event.link || undefined" :target="event.link ? '_blank' : undefined">
+              <p class="date text-l" v-html="formatDate(event.date)"></p>
+            </component>
+            <component :is="event.link ? 'a' : 'div'" :href="event.link || undefined" :target="event.link ? '_blank' : undefined" class="event-info">
                 <p class="text-l">{{ event.title }}</p>
                 <p>{{ event.description }}</p>
-            </a>
+            </component>
           </div>
         </div>
       </div>
@@ -214,20 +216,21 @@
 import IconButton from '@/components/ui/button/IconButton.vue';
 import Card from '@/pages/ukno/components/card.vue';
 import { ref, onMounted, onUnmounted, getCurrentInstance, computed  } from 'vue';
-import { baseUrl, useDataStore } from '@/stores/counter';
+import { resolveMediaUrl, useDataStore } from '@/stores/counter';
 
 const store = useDataStore();
 
-const teams = computed(() => store.getTeamData);
+const teams = computed(() => Array.isArray(store.getTeamData) ? store.getTeamData : []);
 const history = computed(() => store.getHistory);
 
 const sortHistory = computed(() => {
-  if(!history.value) {return}
-  return [...history.value].sort((a, b) => a.date - b.date )
+  if (!Array.isArray(history.value)) return []
+  return [...history.value].sort((a, b) => Date.parse(a.date) - Date.parse(b.date))
 })
 
 function formatDate(dateString) {
   const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return '';
   const day = date.getDate();
   const months = [
     'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
@@ -254,6 +257,10 @@ const updateTimeline = () => {
   if (!wrapper) return
 
   const rect = wrapper.getBoundingClientRect()
+  if (rect.height <= 0) {
+    fillHeight.value = 0
+    return
+  }
   const windowHeight = window.innerHeight
   var start = null
   if (mobileMode) {
