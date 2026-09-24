@@ -26,7 +26,9 @@ def parse_user_data(
     phone = data.get("phone")
 
     # Получаем роль из данных или ставим default
-    role_name = data.get("role_name")
+    # ``role_name`` is the documented API field. Accept ``role`` as a
+    # compatibility alias for older admin-panel builds that used that key.
+    role_name = data.get("role_name", data.get("role"))
     if role_name:
         try:
             role_enum = RoleEnum(role_name.lower())

@@ -198,12 +198,12 @@ def update_user(email: str, data: dict) -> Optional['User']:
     if "password" in data and data["password"]:
         user.set_password(data["password"])
 
-    if "role_name" in data:
-        role_name = data["role_name"]
+    if "role_name" in data or "role" in data:
+        role_name = data.get("role_name", data.get("role"))
 
         try:
-            new_role = RoleEnum(role_name)
-        except ValueError:
+            new_role = RoleEnum(str(role_name).lower())
+        except (TypeError, ValueError):
             raise ValueError(f"Роль '{role_name}' не найдена. Допустимые значения: admin, resident, user")
 
         user.role = new_role
