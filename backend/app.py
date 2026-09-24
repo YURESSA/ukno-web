@@ -31,17 +31,22 @@ def init_database():
     # tables that already exist.
     inspector = inspect(db.engine)
     compatibility_columns = {
-        "news": ("short_description", "VARCHAR(300)"),
-        "events": ("short_description", "VARCHAR(512)"),
+        "news": (("short_description", "VARCHAR(300)"),),
+        "events": (
+            ("short_description", "VARCHAR(512)"),
+            ("latitude", "FLOAT"),
+            ("longitude", "FLOAT"),
+        ),
     }
-    for table_name, (column_name, column_type) in compatibility_columns.items():
+    for table_name, required_columns in compatibility_columns.items():
         if not inspector.has_table(table_name):
             continue
         existing_columns = {column["name"] for column in inspector.get_columns(table_name)}
-        if column_name not in existing_columns:
-            db.session.execute(text(
-                f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}"
-            ))
+        for column_name, column_type in required_columns:
+            if column_name not in existing_columns:
+                db.session.execute(text(
+                    f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}"
+                ))
     db.session.commit()
 
     # create_all() does not change existing columns. Production historically
