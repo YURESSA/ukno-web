@@ -106,7 +106,7 @@ jobs:
             IMAGE_TAG=${{ github.sha }} docker compose -f infra/docker-compose.prod.yml up -d --no-build --remove-orphans
             IMAGE_TAG=${{ github.sha }} docker compose -f infra/docker-compose.prod.yml ps
             for attempt in $(seq 1 30); do
-              if curl --fail --silent --show-error http://127.0.0.1/ >/dev/null; then
+              if curl --fail --silent --show-error --resolve 5buro.ru:443:127.0.0.1 https://5buro.ru/ >/dev/null; then
                 exit 0
               fi
               sleep 2

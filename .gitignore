@@ -53,3 +53,4 @@ GEMINI.md
 .agents
 playwright-report
 test-results
+infra/certbot/
