@@ -713,22 +713,44 @@ def create_order(user_email, data):
         return {"message": "pay_by_card is required"}, HTTPStatus.BAD_REQUEST
     pay_by_card = _bool_value(data.get("pay_by_card"), False)
 
-    _delete_unavailable_cart_items(user.user_id)
-    cart_items = MerchCartItem.query.filter_by(user_id=user.user_id).all()
+    # Lock the cart and every affected stock row. Concurrent checkout requests
+    # then serialize instead of both validating against the same stock value.
+    cart_items = (
+        MerchCartItem.query
+        .filter_by(user_id=user.user_id)
+        .order_by(MerchCartItem.cart_item_id)
+        .with_for_update()
+        .all()
+    )
     if not cart_items:
+        db.session.rollback()
         return {"message": "Cart is empty"}, HTTPStatus.BAD_REQUEST
+
+    variant_ids = sorted({item.variant_id for item in cart_items})
+    locked_variants = (
+        MerchProductVariant.query
+        .filter(MerchProductVariant.variant_id.in_(variant_ids))
+        .order_by(MerchProductVariant.variant_id)
+        .with_for_update()
+        .all()
+    )
+    variants_by_id = {variant.variant_id: variant for variant in locked_variants}
 
     total = Decimal("0")
     for item in cart_items:
-        if not item.variant or not item.variant.product or not item.variant.is_active or item.variant.product.is_deleted or not item.variant.product.is_active:
+        variant = variants_by_id.get(item.variant_id)
+        if not variant or not variant.product or not variant.is_active or variant.product.is_deleted or not variant.product.is_active:
+            db.session.rollback()
             return {"message": "Cart contains unavailable products"}, HTTPStatus.BAD_REQUEST
-        if item.quantity > item.variant.stock:
+        if item.quantity > variant.stock:
+            available = variant.stock
+            db.session.rollback()
             return {
                 "message": "Not enough stock",
                 "variant_id": item.variant_id,
-                "available": item.variant.stock,
+                "available": available,
             }, HTTPStatus.BAD_REQUEST
-        total += item.subtotal()
+        total += variant.product.price * item.quantity
 
     order = MerchOrder(
         user_id=user.user_id,
@@ -745,7 +767,7 @@ def create_order(user_email, data):
     db.session.flush()
 
     for item in cart_items:
-        variant = item.variant
+        variant = variants_by_id[item.variant_id]
         product = variant.product
         unit_price = product.price
         variant.stock -= item.quantity

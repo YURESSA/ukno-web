@@ -11,6 +11,49 @@ from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
 from backend.core import Config
+from backend.core.storage import delete as delete_from_s3
+from backend.core.storage import upload as upload_to_s3
+from backend.core.storage import uses_s3
+
+
+IMAGE_SIGNATURES = {
+    ".jpg": ("image/jpeg", lambda header: header.startswith(b"\xff\xd8\xff")),
+    ".jpeg": ("image/jpeg", lambda header: header.startswith(b"\xff\xd8\xff")),
+    ".png": ("image/png", lambda header: header.startswith(b"\x89PNG\r\n\x1a\n")),
+    ".gif": ("image/gif", lambda header: header.startswith((b"GIF87a", b"GIF89a"))),
+    ".webp": ("image/webp", lambda header: header.startswith(b"RIFF") and header[8:12] == b"WEBP"),
+}
+MAX_IMAGE_BYTES = 5 * 1024 * 1024
+
+
+def _validate_image(file: FileStorage) -> str:
+    """Validate extension, size and magic bytes instead of trusting Content-Type."""
+    original_filename = secure_filename(file.filename or "")
+    extension = os.path.splitext(original_filename)[1].lower()
+    configured_extensions = {f".{item.strip().lower()}" for item in Config.ALLOWED_EXTENSIONS}
+    if not original_filename or extension not in configured_extensions or extension not in IMAGE_SIGNATURES:
+        raise ValueError("Недопустимый формат изображения")
+
+    file.stream.seek(0, os.SEEK_END)
+    size = file.stream.tell()
+    file.stream.seek(0)
+    if size <= 0 or size > MAX_IMAGE_BYTES:
+        raise ValueError("Размер изображения должен быть от 1 байта до 5 МБ")
+
+    header = file.stream.read(16)
+    file.stream.seek(0)
+    mime_type, matcher = IMAGE_SIGNATURES[extension]
+    if not matcher(header):
+        raise ValueError("Содержимое файла не соответствует формату изображения")
+    return mime_type
+
+
+def _unique_upload_path(file: FileStorage, subfolder: str = "") -> tuple[str, str]:
+    original_filename = secure_filename(file.filename)
+    name, ext = os.path.splitext(original_filename)
+    filename = f"{name}_{uuid.uuid4().hex}{ext}"
+    relative_path = os.path.join('media', 'uploads', subfolder, filename).replace("\\", "/")
+    return filename, relative_path
 
 
 def save_image(file: FileStorage, subfolder: str = "") -> str:
@@ -21,20 +64,16 @@ def save_image(file: FileStorage, subfolder: str = "") -> str:
     :param subfolder: подкаталог внутри папки загрузок
     :return: относительный путь к сохранённому файлу (например, 'media/uploads/news/filename.png')
     """
+    mime_type = _validate_image(file)
+    filename, relative_path = _unique_upload_path(file, subfolder)
+    if uses_s3():
+        upload_to_s3(file.stream, relative_path, mime_type)
+        return relative_path
+
     folder_path = os.path.join(Config.PROJECT_ROOT, Config.UPLOAD_FOLDER, subfolder)
-
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
-
-    original_filename = secure_filename(file.filename)
-    name, ext = os.path.splitext(original_filename)
-    unique_suffix = uuid.uuid4().hex
-    filename = f"{name}_{unique_suffix}{ext}"
-
-    filepath = os.path.join(folder_path, filename)
-    file.save(filepath)
-
-    return os.path.join('media/uploads', subfolder, filename).replace("\\", "/")
+    os.makedirs(folder_path, exist_ok=True)
+    file.save(os.path.join(folder_path, filename))
+    return relative_path
 
 
 def remove_file_if_exists(file_path: str) -> None:
@@ -43,12 +82,18 @@ def remove_file_if_exists(file_path: str) -> None:
 
     :param file_path: путь к файлу
     """
-    file_path = os.path.join(Config.PROJECT_ROOT, file_path)
-    if os.path.exists(file_path):
+    if uses_s3():
+        delete_from_s3(file_path)
+        return
+
+    absolute_path = file_path
+    if not os.path.isabs(absolute_path):
+        absolute_path = os.path.join(Config.PROJECT_ROOT, file_path)
+    if os.path.exists(absolute_path):
         try:
-            os.remove(file_path)
+            os.remove(absolute_path)
         except Exception as e:
-            print(f"Ошибка при удалении файла {file_path}: {e}")
+            print(f"Ошибка при удалении файла {absolute_path}: {e}")
 
 
 def format_datetime(value: datetime) -> str:
@@ -146,23 +191,12 @@ def save_file(file, subfolder: str = "") -> str:
     :param subfolder: подкаталог внутри папки загрузок
     :return: относительный путь к сохранённому файлу (например, 'media/uploads/requisites/filename.pdf')
     """
-    # Основная папка загрузок
+    filename, relative_path = _unique_upload_path(file, subfolder)
+    if uses_s3():
+        upload_to_s3(file.stream, relative_path, file.content_type)
+        return relative_path
+
     folder_path = os.path.join(Config.PROJECT_ROOT, Config.UPLOAD_FOLDER, subfolder)
-
-    # Создаём папку, если не существует
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
-
-    # Генерируем безопасное уникальное имя файла
-    original_filename = secure_filename(file.filename)
-    name, ext = os.path.splitext(original_filename)
-    unique_suffix = uuid.uuid4().hex
-    filename = f"{name}_{unique_suffix}{ext}"
-
-    # Полный путь для сохранения
-    filepath = os.path.join(folder_path, filename)
-    file.save(filepath)
-
-    # Относительный путь для базы и фронтенда
-    relative_path = os.path.join('media', 'uploads', subfolder, filename).replace("\\", "/")
+    os.makedirs(folder_path, exist_ok=True)
+    file.save(os.path.join(folder_path, filename))
     return relative_path

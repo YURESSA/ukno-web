@@ -23,6 +23,7 @@ pycache/
 instance/
 .env
 .env.local
+.env.*.local
 .env.*.bkp
 
 # Миграции Alembic

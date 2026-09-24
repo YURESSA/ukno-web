@@ -47,6 +47,9 @@ def register_user(default_role: RoleEnum, data: Dict, current_user_role: RoleEnu
     is_admin = current_user_role == RoleEnum.ADMIN
     email, password, full_name, phone, role_enum = parse_user_data(data, default_role)
 
+    if phone and len(phone) > 32:
+        return {"message": "Номер телефона не должен превышать 32 символа"}, HTTPStatus.BAD_REQUEST
+
     if not is_admin:
         role_enum = default_role
 
@@ -73,10 +76,10 @@ def login_user(role: RoleEnum, data: dict) -> Tuple[Dict, int]:
 
     user = get_user_by_email(email)
     if not user:
-        return {"message": f"Пользователь с email {email} не найден"}, HTTPStatus.UNAUTHORIZED
+        return {"message": "Неверный email или пароль"}, HTTPStatus.UNAUTHORIZED
 
     if not user.check_password(password):
-        return {"message": "Неверный пароль"}, HTTPStatus.UNAUTHORIZED
+        return {"message": "Неверный email или пароль"}, HTTPStatus.UNAUTHORIZED
 
     if user.role != role:
         return {"message": "Доступ запрещён для этой роли"}, HTTPStatus.FORBIDDEN
