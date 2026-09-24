@@ -15,7 +15,7 @@ UKNO (Ural Knowledge Network Online) — это современная обра�
 ### 🧰 Структура проекта
 - **backend/**: Серверная часть приложения, реализованная с использованием Flask, PostgreSQL и SQLAlchemy.
 
-- **frontend/**: Клиентская часть приложения, разработанная с использованием React.
+- **frontend/**: Клиентская часть приложения, разработанная с использованием Vue 3 и Vite.
 
 - **infra/**: Инфраструктурные скрипты и конфигурации для развертывания приложения.
 
@@ -36,35 +36,36 @@ UKNO (Ural Knowledge Network Online) — это современная обра�
 
 ---
 
-## ⚙️ .env (в корне проекта)
+## 💻 Локальный запуск без PostgreSQL и S3
+
+Ветка `main-dev` по умолчанию использует SQLite и локальную папку `media/uploads`. Скопируйте `.env.example` в `.env`; параметры Timeweb, PostgreSQL и S3 для этого не нужны.
+
+```bash
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+pip install -r backend/requirements.txt
+python -m backend.app init_db
+python -m backend.app
+```
+
+Во втором терминале:
+
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+
+Vite автоматически проксирует API и локальные изображения на backend по адресу `http://127.0.0.1:5000`. Переменная `VITE_FRONTEND_URL` необязательна; она нужна только если backend запущен на другом адресе.
+
+Минимальные локальные настройки уже находятся в `.env.example`:
 
 ```env
-SECRET_KEY=ural_club
-JWT_SECRET_KEY=ural_club_jwt
-
-SQLITE__URL=sqlite:///db.sqlite3
-POSTGRES_URL=postgresql+psycopg2://ukno_user:ukno_pass@db:5432/ukno
-
-MAIL_PASSWORD=
-MAIL_SERVER=
-MAIL_PORT=587
-MAIL_USERNAME=
-MAIL_DEFAULT_SENDER=
-FRONTEND_URL=
-
-POSTGRES_DB=ukno
-POSTGRES_USER=ukno_user
-POSTGRES_PASSWORD=ukno_pass
-POSTGRES_HOST_AUTH_METHOD=md5
-
-POSTGRES_HOST=db
-POSTGRES_PORT=5432
-
-PRODUCTION=True
-USE_POSTGRES=True
-
-ACCOUNT_ID= 
-YOOKASSA_SECRET_KEY=
+PRODUCTION=False
+USE_POSTGRES=False
+SQLITE_URL=sqlite:///db.sqlite3
+STORAGE_BACKEND=local
+UPLOAD_FOLDER=media/uploads
 ```
 
 ---

@@ -77,6 +77,7 @@ const columns = [
           size: 'small',
           ghost: true,
           onClick: () => confirmDelete(row)
+        },
         { default: () => 'Удалить' }
       );
     }
