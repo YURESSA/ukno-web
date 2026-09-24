@@ -3,6 +3,7 @@ import sys
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import redirect, send_from_directory, render_template
+from sqlalchemy import text
 
 from backend.core import create_app, db
 from backend.core.config import Config
@@ -24,6 +25,13 @@ def init_database():
     from backend.core.models import auth_models, event_models, merch_models, news_models, ref_models  # noqa: F401
 
     db.create_all()
+
+    # create_all() does not change existing columns. Production historically
+    # had users.phone as VARCHAR(15), while the UI submits formatted numbers
+    # longer than that. Keep old installations compatible on every startup.
+    if db.engine.dialect.name == 'postgresql':
+        db.session.execute(text('ALTER TABLE users ALTER COLUMN phone TYPE VARCHAR(32)'))
+        db.session.commit()
 
 
 def register_static_routes(app):

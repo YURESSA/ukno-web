@@ -47,6 +47,9 @@ def register_user(default_role: RoleEnum, data: Dict, current_user_role: RoleEnu
     is_admin = current_user_role == RoleEnum.ADMIN
     email, password, full_name, phone, role_enum = parse_user_data(data, default_role)
 
+    if phone and len(phone) > 32:
+        return {"message": "Номер телефона не должен превышать 32 символа"}, HTTPStatus.BAD_REQUEST
+
     if not is_admin:
         role_enum = default_role
 

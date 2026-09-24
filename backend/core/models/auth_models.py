@@ -28,7 +28,10 @@ class User(db.Model):
     user_id = db.Column(db.Integer, primary_key=True)
     full_name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
-    phone = db.Column(db.String(15), nullable=True)
+    # The public registration form sends a human-readable value such as
+    # "+7 951 270-28-58" (17 characters). Keep enough room for formatted
+    # international numbers as well.
+    phone = db.Column(db.String(32), nullable=True)
     password_hash = db.Column(db.String(256), nullable=False)
 
     role = db.Column(
