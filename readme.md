@@ -95,11 +95,12 @@ S3_KEY_PREFIX=ukno
 
 ## 🐳 Docker Compose
 
-Файл `infra/docker-compose.yml` содержит конфигурацию трёх сервисов:
+Файл `infra/docker-compose.yml` предназначен для автономной локальной разработки и содержит два сервиса:
 
 - **backend** — Flask-приложение
-- **db** — PostgreSQL с volume `pgdata`
 - **nginx** — Nginx-прокси
+
+Backend принудительно запускается с `USE_POSTGRES=False` и `STORAGE_BACKEND=local`: данные сохраняются в локальный SQLite volume, файлы — в `media/`. Значения production-переменных из вашего `.env` этот режим не включат.
 
 ### Запуск
 
@@ -111,8 +112,7 @@ docker compose up --build -d
 ### Остановка
 
 ```bash
-docker compose down         # остановка без удаления данных
-docker compose down -v      # остановка с удалением томов (⚠️ все данные будут удалены)
+docker compose down
 ```
 
 ### Логи
@@ -125,7 +125,6 @@ docker logs -f flask-backend
 
 ```bash
 docker exec -it flask-backend sh
-docker exec -it postgres-db psql -U ukno_user -d ukno
 ```
 
 ---
