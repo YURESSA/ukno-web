@@ -3,7 +3,7 @@ import sys
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import redirect, send_from_directory, render_template
-from sqlalchemy import text
+from sqlalchemy import inspect, text
 
 from backend.core import create_app, db
 from backend.core.config import Config
@@ -25,6 +25,24 @@ def init_database():
     from backend.core.models import auth_models, event_models, merch_models, news_models, ref_models  # noqa: F401
 
     db.create_all()
+
+    # Keep existing local SQLite databases usable when optional content fields
+    # are added. create_all() creates missing tables but never adds columns to
+    # tables that already exist.
+    inspector = inspect(db.engine)
+    compatibility_columns = {
+        "news": ("short_description", "VARCHAR(300)"),
+        "events": ("short_description", "VARCHAR(512)"),
+    }
+    for table_name, (column_name, column_type) in compatibility_columns.items():
+        if not inspector.has_table(table_name):
+            continue
+        existing_columns = {column["name"] for column in inspector.get_columns(table_name)}
+        if column_name not in existing_columns:
+            db.session.execute(text(
+                f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}"
+            ))
+    db.session.commit()
 
     # create_all() does not change existing columns. Production historically
     # had users.phone as VARCHAR(15), while the UI submits formatted numbers
