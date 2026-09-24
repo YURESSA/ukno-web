@@ -54,3 +54,19 @@ def test_registration_rejects_phone_longer_than_database_column(monkeypatch):
     assert status == HTTPStatus.BAD_REQUEST
     assert body == {"message": "Номер телефона не должен превышать 32 символа"}
     assert create_user_called is False
+
+
+def test_registration_rejects_missing_required_fields(monkeypatch):
+    create_user_called = False
+
+    def fake_create_user(*args, **kwargs):
+        nonlocal create_user_called
+        create_user_called = True
+
+    monkeypatch.setattr(auth_service, "create_user", fake_create_user)
+
+    body, status = auth_service.register_user(RoleEnum.USER, {})
+
+    assert status == HTTPStatus.BAD_REQUEST
+    assert body == {"message": "Необходимо указать email, пароль и полное имя"}
+    assert create_user_called is False

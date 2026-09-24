@@ -32,6 +32,7 @@ def init_database():
     inspector = inspect(db.engine)
     compatibility_columns = {
         "news": (("short_description", "VARCHAR(300)"),),
+        "users": (("role", "VARCHAR(8)"),),
         "events": (
             ("short_description", "VARCHAR(512)"),
             ("latitude", "FLOAT"),
@@ -47,6 +48,29 @@ def init_database():
                 db.session.execute(text(
                     f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}"
                 ))
+
+    if inspector.has_table("users"):
+        user_columns = {column["name"] for column in inspector.get_columns("users")}
+        if "role_id" in user_columns:
+            if inspector.has_table("roles"):
+                db.session.execute(text("""
+                    UPDATE users
+                    SET role = COALESCE(
+                        (SELECT LOWER(roles.role_name) FROM roles WHERE roles.role_id = users.role_id),
+                        'user'
+                    )
+                    WHERE role IS NULL OR role = ''
+                """))
+            else:
+                db.session.execute(text("""
+                    UPDATE users
+                    SET role = CASE role_id
+                        WHEN 1 THEN 'admin'
+                        WHEN 2 THEN 'resident'
+                        ELSE 'user'
+                    END
+                    WHERE role IS NULL OR role = ''
+                """))
     db.session.commit()
 
     # create_all() does not change existing columns. Production historically
