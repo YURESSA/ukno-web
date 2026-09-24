@@ -4,7 +4,7 @@ import uuid
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from yookassa import Payment, Refund, Configuration
+from yookassa import Payment as YooKassaPayment, Refund as YooKassaRefund, Configuration
 from yookassa.client import ApiClient
 
 from backend.core.config import Config
@@ -34,7 +34,7 @@ def create_yookassa_payment(amount, email, description, quantity=1, metadata=Non
         quantity = round(quantity, 2)
         unit_price = round(amount / quantity, 2)
 
-        payment = Payment.create(
+        payment = YooKassaPayment.create(
             {
                 "amount": {
                     "value": f"{amount:.2f}",
@@ -82,8 +82,18 @@ def create_yookassa_payment(amount, email, description, quantity=1, metadata=Non
         raise
 
 
-def refund_yookassa_payment(payment_id: str, amount: float, currency: str = "RUB") -> Refund:
-    refund = Refund.create({
+def get_yookassa_payment(payment_id: str):
+    """Fetch the authoritative payment state before trusting a webhook."""
+    return YooKassaPayment.find_one(payment_id)
+
+
+def get_yookassa_refund(refund_id: str):
+    """Fetch the authoritative refund state before trusting a webhook."""
+    return YooKassaRefund.find_one(refund_id)
+
+
+def refund_yookassa_payment(payment_id: str, amount: float, currency: str = "RUB") -> YooKassaRefund:
+    refund = YooKassaRefund.create({
         "payment_id": payment_id,
         "amount": {
             "value": f"{amount:.2f}",

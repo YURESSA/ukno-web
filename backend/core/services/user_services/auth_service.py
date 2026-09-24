@@ -76,10 +76,10 @@ def login_user(role: RoleEnum, data: dict) -> Tuple[Dict, int]:
 
     user = get_user_by_email(email)
     if not user:
-        return {"message": f"Пользователь с email {email} не найден"}, HTTPStatus.UNAUTHORIZED
+        return {"message": "Неверный email или пароль"}, HTTPStatus.UNAUTHORIZED
 
     if not user.check_password(password):
-        return {"message": "Неверный пароль"}, HTTPStatus.UNAUTHORIZED
+        return {"message": "Неверный email или пароль"}, HTTPStatus.UNAUTHORIZED
 
     if user.role != role:
         return {"message": "Доступ запрещён для этой роли"}, HTTPStatus.FORBIDDEN

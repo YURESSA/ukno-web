@@ -1,5 +1,6 @@
 from io import BytesIO
 
+import pytest
 from werkzeug.datastructures import FileStorage
 
 from backend.core.config import Config
@@ -40,7 +41,7 @@ def test_s3_image_upload_and_delete(monkeypatch):
     client = FakeS3Client()
     configure_s3(monkeypatch, client)
     image = FileStorage(
-        stream=BytesIO(b"image-bytes"),
+        stream=BytesIO(b"\xff\xd8\xffimage-bytes"),
         filename="photo.jpg",
         content_type="image/jpeg",
     )
@@ -50,13 +51,28 @@ def test_s3_image_upload_and_delete(monkeypatch):
     assert saved_path.startswith("media/uploads/news/photo_")
     key = object_key(saved_path)
     body, kwargs = client.objects[("test-bucket", key)]
-    assert body == b"image-bytes"
+    assert body == b"\xff\xd8\xffimage-bytes"
     assert kwargs == {"ExtraArgs": {"ContentType": "image/jpeg"}}
 
     remove_file_if_exists(saved_path)
 
     assert client.deleted == [("test-bucket", key)]
     assert ("test-bucket", key) not in client.objects
+
+
+def test_image_upload_rejects_spoofed_content_type(monkeypatch):
+    client = FakeS3Client()
+    configure_s3(monkeypatch, client)
+    image = FileStorage(
+        stream=BytesIO(b"<script>alert('xss')</script>"),
+        filename="attack.jpg",
+        content_type="image/jpeg",
+    )
+
+    with pytest.raises(ValueError, match="не соответствует"):
+        save_image(image, "news")
+
+    assert client.objects == {}
 
 
 def test_s3_file_url_is_presigned(monkeypatch):

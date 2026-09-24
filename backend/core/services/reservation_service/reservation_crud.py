@@ -1,7 +1,9 @@
 from http import HTTPStatus
 from typing import Tuple, Dict, Any
 
-from sqlalchemy import func
+from datetime import datetime
+
+from sqlalchemy import func, select
 
 from backend.core import db
 from backend.core.models.event_models import EventSession, Reservation, Payment
@@ -39,20 +41,46 @@ def create_reservation_with_payment(
     if not session_id:
         return {"message": "session_id is required"}, HTTPStatus.BAD_REQUEST
 
-    session = db.session.get(EventSession, session_id)
-    if not session:
-        return {"message": "Сеанс не найден"}, HTTPStatus.NOT_FOUND
+    if isinstance(participants_count, bool) or not isinstance(participants_count, int) or participants_count < 1:
+        return {"message": "Количество участников должно быть положительным целым числом"}, HTTPStatus.BAD_REQUEST
 
-    existing_participants = db.session.query(
-        func.coalesce(func.sum(Reservation.participants_count), 0)
-    ).filter_by(session_id=session_id, is_cancelled=False, is_paid=True).scalar()
+    try:
+        # A row lock serializes every capacity check for this session in PostgreSQL.
+        # Unpaid reservations are counted as short-lived holds and are removed by
+        # cleanup_unpaid_reservations after 15 minutes.
+        session = db.session.execute(
+            select(EventSession)
+            .where(EventSession.session_id == session_id)
+            .with_for_update()
+        ).scalar_one_or_none()
+        if not session:
+            db.session.rollback()
+            return {"message": "Сеанс не найден"}, HTTPStatus.NOT_FOUND
+        if not session.event or not session.event.is_active:
+            db.session.rollback()
+            return {"message": "Событие недоступно для бронирования"}, HTTPStatus.BAD_REQUEST
+        if session.start_datetime <= datetime.now():
+            db.session.rollback()
+            return {"message": "Нельзя забронировать прошедший сеанс"}, HTTPStatus.BAD_REQUEST
 
-    if existing_participants + participants_count > session.max_participants:
-        return {"message": "Недостаточно свободных мест"}, HTTPStatus.BAD_REQUEST
+        duplicate = Reservation.query.filter_by(
+            session_id=session_id,
+            user_id=user.user_id,
+            is_cancelled=False,
+        ).first()
+        if duplicate:
+            db.session.rollback()
+            return {"message": "У вас уже есть активное бронирование на этот сеанс"}, HTTPStatus.CONFLICT
 
-    amount = session.cost * participants_count
+        held_participants = db.session.query(
+            func.coalesce(func.sum(Reservation.participants_count), 0)
+        ).filter_by(session_id=session_id, is_cancelled=False).scalar()
 
-    if amount == 0:
+        if held_participants + participants_count > session.max_participants:
+            db.session.rollback()
+            return {"message": "Недостаточно свободных мест"}, HTTPStatus.CONFLICT
+
+        amount = session.cost * participants_count
         reservation = Reservation(
             session_id=session_id,
             user_id=user.user_id,
@@ -60,12 +88,16 @@ def create_reservation_with_payment(
             phone_number=phone_number,
             email=email,
             participants_count=participants_count,
-            is_paid=True,
+            is_paid=amount == 0,
             is_cancelled=False
         )
         db.session.add(reservation)
         db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
 
+    if amount == 0:
         try:
             send_reservation_confirmation_email(reservation, user)
         except Exception as e:
@@ -76,31 +108,27 @@ def create_reservation_with_payment(
             "reservation_id": reservation.reservation_id,
         }, HTTPStatus.CREATED
 
-    reservation = Reservation(
-        session_id=session_id,
-        user_id=user.user_id,
-        full_name=full_name,
-        phone_number=phone_number,
-        email=email,
-        participants_count=participants_count,
-        is_paid=False,
-        is_cancelled=False
-    )
-    db.session.add(reservation)
-    db.session.commit()
-
-    payment_response = create_yookassa_payment(
-        amount=amount,
-        email=user_email,
-        description=f"Оплата экскурсии «{session.event.title}» на {session.start_datetime}",
-        quantity=participants_count,
-        metadata={
-            "type": "reservation",
-            "reservation_id": reservation.reservation_id,
-            "session_id": session_id,
-            "email": user_email
-        }
-    )
+    try:
+        payment_response = create_yookassa_payment(
+            amount=amount,
+            email=user_email,
+            description=f"Оплата экскурсии «{session.event.title}» на {session.start_datetime}",
+            quantity=participants_count,
+            metadata={
+                "type": "reservation",
+                "reservation_id": reservation.reservation_id,
+                "session_id": session_id,
+                "email": user_email
+            }
+        )
+    except Exception:
+        # Do not leave a capacity hold behind when the payment provider could
+        # not create a payment at all.
+        stale_reservation = db.session.get(Reservation, reservation.reservation_id)
+        if stale_reservation:
+            db.session.delete(stale_reservation)
+            db.session.commit()
+        return {"message": "Не удалось создать платёж"}, HTTPStatus.BAD_GATEWAY
 
     payment = Payment(
         payment_id=payment_response.id,

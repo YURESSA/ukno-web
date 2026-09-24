@@ -15,6 +15,17 @@ from backend.core.services.reservation_service.reservation_queries import get_re
     get_reservations_by_reservation_id
 from backend.core.services.reservation_service.reservation_cancel import cancel_user_reservation
 from backend.core.services.reservation_service.reservation_crud import create_reservation_with_payment
+from backend.core.services.user_services.user_service import get_user_by_email
+
+
+def _get_owned_reservation(reservation_id):
+    user = get_user_by_email(get_jwt_identity())
+    if not user:
+        return None
+    reservation = get_reservations_by_reservation_id(reservation_id)
+    if not reservation or reservation.user_id != user.user_id:
+        return None
+    return reservation
 
 
 @user_ns.route('/reservations')
@@ -89,6 +100,7 @@ class ReservationCreate(Resource):
 
 @user_ns.route('/reservations/<int:reservation_id>/export_ical')
 class ExportReservationICal(Resource):
+    @jwt_required()
     def get(self, reservation_id):
         """
         Генерирует iCal файл для указанного бронирования.
@@ -100,7 +112,7 @@ class ExportReservationICal(Resource):
             Response: iCal файл с заголовком для скачивания.
             Или кортеж (dict, int) с сообщением об ошибке, если бронирование не найдено.
         """
-        reservation = get_reservations_by_reservation_id(reservation_id)
+        reservation = _get_owned_reservation(reservation_id)
         if not reservation:
             return {"message": "Бронирование не найдено"}, 404
 
@@ -117,6 +129,7 @@ class ExportReservationICal(Resource):
 
 @user_ns.route('/reservations/<int:reservation_id>/google_calendar_link')
 class GoogleCalendarLink(Resource):
+    @jwt_required()
     def get(self, reservation_id):
         """
         Генерирует ссылку для добавления бронирования в Google Calendar.
@@ -128,7 +141,7 @@ class GoogleCalendarLink(Resource):
             dict: Словарь с ключом 'google_calendar_link'.
             tuple: (dict, int) с сообщением об ошибке, если бронирование не найдено.
         """
-        reservation = get_reservations_by_reservation_id(reservation_id)
+        reservation = _get_owned_reservation(reservation_id)
         if not reservation:
             return {"message": "Бронирование не найдено"}, 404
 
