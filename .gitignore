@@ -23,6 +23,7 @@ pycache/
 instance/
 .env
 .env.local
+.env.*.local
 .env.*.bkp
 
 # Миграции Alembic
@@ -49,3 +50,6 @@ Thumbs.db
 frontend/.env
 frontend/dist
 GEMINI.md
+.agents
+playwright-report
+test-results
