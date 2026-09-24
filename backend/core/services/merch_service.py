@@ -200,7 +200,7 @@ def delete_category(category_id):
     return {"message": "Category deleted"}, HTTPStatus.OK
 
 
-def list_products(category_id=None, active_only=True, user_id=None, include_images=False, search=None):
+def list_products(category_id=None, active_only=True, user_id=None, include_images=True, search=None):
     query = MerchProduct.query.filter_by(is_deleted=False)
     if active_only:
         query = query.filter_by(is_active=True)
@@ -795,6 +795,16 @@ def list_orders(user_email=None):
         query = query.filter_by(user_id=user.user_id)
     orders = query.order_by(MerchOrder.created_at.desc()).all()
     return {"orders": [order.to_dict() for order in orders]}, HTTPStatus.OK
+
+
+def update_order_status(order_id, status):
+    order = db.session.get(MerchOrder, order_id)
+    if not order:
+        return {"message": "Order not found"}, HTTPStatus.NOT_FOUND
+    if status:
+        order.status = status
+        db.session.commit()
+    return {"order": order.to_dict()}, HTTPStatus.OK
 
 
 def _delete_unavailable_cart_items(user_id):

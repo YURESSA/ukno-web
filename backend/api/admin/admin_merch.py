@@ -27,6 +27,7 @@ from backend.core.services.merch_service import (
     update_category,
     update_product_image,
     update_product,
+    update_order_status,
 )
 
 
@@ -530,3 +531,23 @@ class AdminMerchOrders(Resource):
     def get(self):
         """Получение всех заказов мерча."""
         return list_orders()
+
+
+@admin_ns.route("/merch/orders/<int:order_id>")
+class AdminMerchOrderDetail(Resource):
+    @admin_required
+    @admin_ns.doc(
+        description="Обновление статуса заказа мерча в админке",
+        responses={200: "Статус заказа обновлен", 404: "Заказ не найден"},
+    )
+    def patch(self, order_id):
+        """Обновление статуса заказа мерча."""
+        data = request.get_json() or {}
+        return update_order_status(order_id, data.get("status"))
+
+    @admin_required
+    def put(self, order_id):
+        """Обновление статуса заказа мерча."""
+        data = request.get_json() or {}
+        return update_order_status(order_id, data.get("status"))
+
