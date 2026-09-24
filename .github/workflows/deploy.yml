@@ -1,43 +1,41 @@
-name: Deploy
+name: Deploy main-timeweb
 
 on:
   push:
-    branches: [ dev-host ]
+    branches:
+      - main-timeweb
+  workflow_dispatch:
+
+concurrency:
+  group: production-main-timeweb
+  cancel-in-progress: true
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Pull latest code
+      - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
+          script_stop: true
           script: |
-            cd ${{ secrets.PROJECT_PATH }}
-            git pull origin dev-host
-
-      - name: Stop containers
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          script: |
-            cd ${{ secrets.PROJECT_PATH }}/infra
-            docker compose down
-
-      - name: Build and start containers
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          script: |
-            cd ${{ secrets.PROJECT_PATH }}/infra
-            docker compose up -d --build
+            set -eu
+            cd "${{ secrets.PROJECT_PATH }}"
+            git fetch origin main-timeweb
+            git checkout main-timeweb
+            git reset --hard origin/main-timeweb
+            docker compose -f infra/docker-compose.prod.yml up -d --build --remove-orphans
+            docker compose -f infra/docker-compose.prod.yml ps
+            for attempt in $(seq 1 30); do
+              if curl --fail --silent --show-error http://127.0.0.1/ >/dev/null; then
+                exit 0
+              fi
+              sleep 2
+            done
+            docker compose -f infra/docker-compose.prod.yml logs --tail=100
+            exit 1
