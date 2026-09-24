@@ -185,6 +185,7 @@ const handleRemove = (data) => {
     newFiles.value = newFiles.value.filter(f => f.name !== file.name);
     message.info('Файл удален из очереди на загрузку');
     return true;
+  }
 
   return new Promise((resolve) => {
     dialog.warning({

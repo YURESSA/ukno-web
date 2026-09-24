@@ -13,7 +13,7 @@
 
 <script setup>
 import router from '@/router';
-import BaseButton from '../UI/button/BaseButton.vue';
+import BaseButton from '../ui/button/BaseButton.vue';
 
 </script>
 
