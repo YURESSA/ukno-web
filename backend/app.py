@@ -3,7 +3,7 @@ import sys
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import redirect, send_from_directory, render_template
-from sqlalchemy import text
+from sqlalchemy import inspect, text
 
 from backend.core import create_app, db
 from backend.core.config import Config
@@ -25,6 +25,53 @@ def init_database():
     from backend.core.models import auth_models, event_models, merch_models, news_models, ref_models  # noqa: F401
 
     db.create_all()
+
+    # Keep existing local SQLite databases usable when optional content fields
+    # are added. create_all() creates missing tables but never adds columns to
+    # tables that already exist.
+    inspector = inspect(db.engine)
+    compatibility_columns = {
+        "news": (("short_description", "VARCHAR(300)"),),
+        "users": (("role", "VARCHAR(8)"),),
+        "events": (
+            ("short_description", "VARCHAR(512)"),
+            ("latitude", "FLOAT"),
+            ("longitude", "FLOAT"),
+        ),
+    }
+    for table_name, required_columns in compatibility_columns.items():
+        if not inspector.has_table(table_name):
+            continue
+        existing_columns = {column["name"] for column in inspector.get_columns(table_name)}
+        for column_name, column_type in required_columns:
+            if column_name not in existing_columns:
+                db.session.execute(text(
+                    f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}"
+                ))
+
+    if inspector.has_table("users"):
+        user_columns = {column["name"] for column in inspector.get_columns("users")}
+        if "role_id" in user_columns:
+            if inspector.has_table("roles"):
+                db.session.execute(text("""
+                    UPDATE users
+                    SET role = COALESCE(
+                        (SELECT LOWER(roles.role_name) FROM roles WHERE roles.role_id = users.role_id),
+                        'user'
+                    )
+                    WHERE role IS NULL OR role = ''
+                """))
+            else:
+                db.session.execute(text("""
+                    UPDATE users
+                    SET role = CASE role_id
+                        WHEN 1 THEN 'admin'
+                        WHEN 2 THEN 'resident'
+                        ELSE 'user'
+                    END
+                    WHERE role IS NULL OR role = ''
+                """))
+    db.session.commit()
 
     # create_all() does not change existing columns. Production historically
     # had users.phone as VARCHAR(15), while the UI submits formatted numbers

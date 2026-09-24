@@ -441,7 +441,7 @@ export const useDataStore = defineStore('data', {
     },
     async PutAdminUser(jsonData, email) {
       try {
-        const response = await axios.put(`${baseUrl}api/admin/users/detail/${email}`, jsonData, {
+        const response = await axios.put(`${baseUrl}api/admin/users/detail/${encodeURIComponent(email)}`, jsonData, {
           headers: {
             Authorization: `Bearer ${this.auth_key}`,
             'Content-Type': 'application/json',
@@ -456,7 +456,7 @@ export const useDataStore = defineStore('data', {
     async DeleteAdminUser(email) {
       try {
         const response = await axios.delete(
-          `${baseUrl}api/admin/users/detail/${email}`,
+          `${baseUrl}api/admin/users/detail/${encodeURIComponent(email)}`,
           {
             headers: {
               Authorization: `Bearer ${this.auth_key}`,

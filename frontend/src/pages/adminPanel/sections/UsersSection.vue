@@ -181,7 +181,7 @@ async function handleSave() {
     full_name: selectedItem.value.full_name,
     email: selectedItem.value.email,
     phone: selectedItem.value.phone,
-    role: selectedItem.value.role,
+    role_name: selectedItem.value.role,
   };
 
   if (selectedItem.value.password) {
