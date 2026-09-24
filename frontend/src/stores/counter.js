@@ -2,7 +2,18 @@ import { defineStore } from 'pinia'
 import axios from 'axios'
 // import router from '@/router'
 
-export const baseUrl = import.meta.env.VITE_FRONTEND_URL;
+const configuredBaseUrl = import.meta.env.VITE_FRONTEND_URL || globalThis.location?.origin || 'http://localhost:8000'
+
+// Keep one trailing slash because media paths and part of the API calls are
+// stored as relative paths (for example, "media/uploads/..."). In production
+// VITE_FRONTEND_URL is optional: the frontend talks to the same origin.
+export const baseUrl = `${configuredBaseUrl.replace(/\/+$/, '')}/`
+
+export function resolveMediaUrl(path) {
+  if (!path) return ''
+  if (/^https?:\/\//i.test(path)) return path
+  return `${baseUrl}${String(path).replace(/^\/+/, '')}`
+}
 
 export const useDataStore = defineStore('data', {
   state: () => ({
@@ -791,7 +802,7 @@ export const useDataStore = defineStore('data', {
           },
         })
         console.log('Данные успешно получены:', response.data)
-        this.teamData = response.data
+        this.teamData = Array.isArray(response.data) ? response.data : []
       } catch (error) {
         console.error('Ошибка при получении данных:', error.response?.data || error.message)
         throw error
@@ -988,7 +999,7 @@ export const useDataStore = defineStore('data', {
     async FetchHistory() {
       try {
         const response = await axios.get(`${baseUrl}/api/references/history`)
-        this.history = response.data
+        this.history = Array.isArray(response.data) ? response.data : []
       } catch (error) {
         console.error('Ошибка при получении данных:', error.response?.data || error.message)
         throw error
@@ -1000,7 +1011,7 @@ export const useDataStore = defineStore('data', {
           headers: { Authorization: `Bearer ${this.auth_key}` }
         })
         await this.FetchHistory();
-        this.history = response.data
+        return response.data
       } catch (error) {
         console.error('Ошибка при получении данных:', error.response?.data || error.message)
         throw error
