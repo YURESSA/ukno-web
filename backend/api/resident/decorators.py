@@ -21,7 +21,7 @@ def resident_required(fn):
         except ValueError:
             role_enum = None
 
-        if not user or role_enum != RoleEnum.RESIDENT:
+        if not user or user.role != RoleEnum.RESIDENT or role_enum != RoleEnum.RESIDENT:
             return {"message": "Доступ запрещён"}, HTTPStatus.FORBIDDEN
 
         return fn(*args, **kwargs)
