@@ -13,9 +13,51 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          tags: ukno-backend:${{ github.sha }}
+          outputs: type=docker,dest=${{ runner.temp }}/backend.tar
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: frontend/Dockerfile
+          tags: ukno-frontend:${{ github.sha }}
+          outputs: type=docker,dest=${{ runner.temp }}/frontend.tar
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+
+      - name: Compress deployment images
+        run: |
+          mkdir deployment
+          gzip -c "${RUNNER_TEMP}/backend.tar" > deployment/backend.tar.gz
+          gzip -c "${RUNNER_TEMP}/frontend.tar" > deployment/frontend.tar.gz
+
+      - name: Upload images to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "deployment/backend.tar.gz,deployment/frontend.tar.gz"
+          target: /tmp/ukno-deploy
+          rm: true
+
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -29,8 +71,10 @@ jobs:
             git fetch origin main-timeweb
             git checkout main-timeweb
             git reset --hard origin/main-timeweb
-            docker compose -f infra/docker-compose.prod.yml up -d --build --remove-orphans
-            docker compose -f infra/docker-compose.prod.yml ps
+            gzip -dc /tmp/ukno-deploy/deployment/backend.tar.gz | docker load
+            gzip -dc /tmp/ukno-deploy/deployment/frontend.tar.gz | docker load
+            IMAGE_TAG=${{ github.sha }} docker compose -f infra/docker-compose.prod.yml up -d --no-build --remove-orphans
+            IMAGE_TAG=${{ github.sha }} docker compose -f infra/docker-compose.prod.yml ps
             for attempt in $(seq 1 30); do
               if curl --fail --silent --show-error http://127.0.0.1/ >/dev/null; then
                 exit 0
@@ -39,3 +83,14 @@ jobs:
             done
             docker compose -f infra/docker-compose.prod.yml logs --tail=100
             exit 1
+
+      - name: Remove transferred images
+        if: always()
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            rm -rf /tmp/ukno-deploy
+            docker image prune -f
