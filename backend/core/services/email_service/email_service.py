@@ -1,4 +1,5 @@
 import re
+from html import escape
 
 from backend.core.config import Config
 from backend.core.utilits.token_utils import generate_reset_token
@@ -11,46 +12,141 @@ def send_reservation_confirmation_email(reservation, user):
     event = session.event if session else None
     session_time = session.start_datetime.strftime(
         '%d.%m.%Y %H:%M') if session and session.start_datetime else 'неизвестно'
+    session_date = session.start_datetime.strftime(
+        '%d.%m.%Y') if session and session.start_datetime else 'уточняется'
+    session_clock = session.start_datetime.strftime(
+        '%H:%M') if session and session.start_datetime else 'уточняется'
 
-    subject = "Подтверждение бронирования события"
     recipient = reservation.email or user.email
     display_name = reservation.full_name or recipient
+    title = event.title if event else 'Событие'
+    place = event.place if event and event.place else 'Место уточняется'
+    contact = (event.contact_email if event and event.contact_email
+               else 'Контакт будет указан организатором')
+    booking_id = getattr(reservation, 'reservation_id', None)
+    booking_label = f"№ {booking_id}" if booking_id is not None else 'подтверждено'
+    participants = reservation.participants_count
+    participant_word = (
+        'участник' if participants % 10 == 1 and participants % 100 != 11
+        else 'участника' if participants % 10 in (2, 3, 4) and participants % 100 not in (12, 13, 14)
+        else 'участников'
+    )
+    subject = f"Вы записаны: {title} — {session_date}"
 
     body_text = (
         f"Здравствуйте, {display_name}!\n\n"
-        f"Вы успешно записались на событие:\n"
-        f"Название: {event.title if event else 'Событие'}\n"
+        "Готово — ваше бронирование подтверждено.\n\n"
+        f"{title}\n"
         f"Дата и время: {session_time}\n"
-        f"Количество участников: {reservation.participants_count}\n\n"
-        f"Место проведения: {event.place if event and event.place else 'уточняется'}\n"
-        f"Контактный email: {event.contact_email if event and event.contact_email else 'не указан'}\n\n"
-        "Во вложении вы найдете файл с приглашением в календарь (.ics), "
-        "который можно добавить в ваш календарь.\n\n"
-        "Спасибо за бронирование!"
+        f"Место: {place}\n"
+        f"Гостей: {participants}\n"
+        f"Номер бронирования: {booking_label}\n\n"
+        "Что дальше:\n"
+        "1. Добавьте событие в календарь — файл reservation.ics приложен к письму.\n"
+        "2. Перед поездкой ещё раз проверьте дату, время и адрес.\n"
+        f"3. Если появятся вопросы, напишите организатору: {contact}\n\n"
+        "До встречи в Молодёжном бюро «5 этаж»!"
     )
 
-    title = event.title if event else 'Событие'
-    place = event.place if event and event.place else 'уточняется'
-    contact = (event.contact_email if event and event.contact_email
-               else 'не указан')
+    safe_name = escape(str(display_name))
+    safe_title = escape(str(title))
+    safe_place = escape(str(place))
+    safe_contact = escape(str(contact))
+    safe_booking_label = escape(str(booking_label))
+    contact_html = (
+        f'<a href="mailto:{safe_contact}" style="color:#ff6c36;text-decoration:none;">{safe_contact}</a>'
+        if '@' in str(contact) else safe_contact
+    )
 
     body_html = f"""
-    <html>
-      <body style="font-family: Arial, sans-serif; color: #333;">
-        <p>Здравствуйте, <strong>{display_name}</strong>!</p>
-        <p>Вы успешно записались на событие:</p>
-        <ul>
-          <li><strong>Название:</strong> {title}</li>
-          <li><strong>Дата и время:</strong> {session_time}</li>
-          <li><strong>Количество участников:</strong> {reservation.participants_count}</li>
-          <li><strong>Место проведения:</strong> {place}</li>
-          <li><strong>Контактный email:</strong> {contact}</li>
-        </ul>
-        <p>
-          Во вложении вы найдете файл с приглашением в календарь
-          <code>.ics</code>, который можно добавить в ваш календарь.
-        </p>
-        <p>Спасибо за бронирование!</p>
+    <!doctype html>
+    <html lang="ru">
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>{escape(subject)}</title>
+      </head>
+      <body style="margin:0;padding:0;background:#f3f0eb;color:#201f1d;font-family:Arial,Helvetica,sans-serif;">
+        <div style="display:none;max-height:0;overflow:hidden;opacity:0;">
+          Бронирование подтверждено — {safe_title}, {session_date} в {session_clock}.
+        </div>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f3f0eb;">
+          <tr>
+            <td align="center" style="padding:32px 12px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:640px;background:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 12px 32px rgba(43,37,30,.08);">
+                <tr>
+                  <td style="padding:34px 40px;background:#ff6c36;color:#ffffff;">
+                    <div style="font-size:13px;line-height:18px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;opacity:.9;">Молодёжное бюро · 5 этаж</div>
+                    <div style="margin-top:14px;font-size:30px;line-height:36px;font-weight:800;">Вы записаны!</div>
+                    <div style="margin-top:8px;font-size:16px;line-height:24px;">Бронирование {safe_booking_label} подтверждено</div>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:36px 40px 12px;">
+                    <div style="font-size:18px;line-height:27px;">Здравствуйте, <strong>{safe_name}</strong>!</div>
+                    <div style="margin-top:12px;color:#66615b;font-size:15px;line-height:24px;">Сохраняйте письмо — здесь собрана вся информация о вашем посещении.</div>
+                    <div style="margin-top:28px;font-size:25px;line-height:32px;font-weight:800;color:#201f1d;">{safe_title}</div>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:14px 40px 6px;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                      <tr>
+                        <td width="48%" valign="top" style="padding:18px;background:#fff3ed;border-radius:16px;">
+                          <div style="font-size:12px;line-height:18px;color:#8a5b48;font-weight:700;text-transform:uppercase;letter-spacing:.8px;">Дата</div>
+                          <div style="margin-top:7px;font-size:21px;line-height:28px;font-weight:800;">{session_date}</div>
+                        </td>
+                        <td width="4%"></td>
+                        <td width="48%" valign="top" style="padding:18px;background:#fff3ed;border-radius:16px;">
+                          <div style="font-size:12px;line-height:18px;color:#8a5b48;font-weight:700;text-transform:uppercase;letter-spacing:.8px;">Начало</div>
+                          <div style="margin-top:7px;font-size:21px;line-height:28px;font-weight:800;">{session_clock}</div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 40px 6px;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border:1px solid #ebe7e1;border-radius:16px;">
+                      <tr>
+                        <td style="padding:18px 20px;border-bottom:1px solid #ebe7e1;">
+                          <div style="font-size:12px;line-height:18px;color:#817a72;font-weight:700;text-transform:uppercase;letter-spacing:.7px;">Место проведения</div>
+                          <div style="margin-top:6px;font-size:16px;line-height:24px;font-weight:700;">{safe_place}</div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding:18px 20px;">
+                          <div style="font-size:12px;line-height:18px;color:#817a72;font-weight:700;text-transform:uppercase;letter-spacing:.7px;">Гости</div>
+                          <div style="margin-top:6px;font-size:16px;line-height:24px;font-weight:700;">{participants} {participant_word}</div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:24px 40px 8px;">
+                    <div style="font-size:18px;line-height:26px;font-weight:800;">Что дальше</div>
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-top:14px;">
+                      <tr><td valign="top" width="30" style="padding:5px 0;color:#ff6c36;font-weight:800;">1.</td><td style="padding:5px 0;font-size:15px;line-height:23px;">Добавьте событие в календарь — файл <strong>reservation.ics</strong> приложен к письму.</td></tr>
+                      <tr><td valign="top" width="30" style="padding:5px 0;color:#ff6c36;font-weight:800;">2.</td><td style="padding:5px 0;font-size:15px;line-height:23px;">Перед поездкой ещё раз проверьте дату, время и адрес.</td></tr>
+                      <tr><td valign="top" width="30" style="padding:5px 0;color:#ff6c36;font-weight:800;">3.</td><td style="padding:5px 0;font-size:15px;line-height:23px;">Если появятся вопросы, напишите организатору: {contact_html}</td></tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:26px 40px 36px;">
+                    <div style="padding:20px 22px;background:#282622;color:#ffffff;border-radius:16px;font-size:16px;line-height:24px;">
+                      До встречи в Молодёжном бюро «5 этаж»!
+                    </div>
+                  </td>
+                </tr>
+              </table>
+              <div style="max-width:560px;padding:18px 20px 0;color:#8a847d;font-size:12px;line-height:18px;text-align:center;">
+                Это автоматическое подтверждение бронирования. Контакт организатора: {contact_html}
+              </div>
+            </td>
+          </tr>
+        </table>
       </body>
     </html>
     """
