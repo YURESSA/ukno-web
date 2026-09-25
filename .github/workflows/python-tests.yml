@@ -15,33 +15,17 @@ jobs:
         python-version: [ 3.11 ]
 
     env:
-      SECRET_KEY: ${{ secrets.SECRET_KEY }}
-      JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
-      SQLITE_URL: ${{ secrets.SQLITE_URL }}
-      POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
-      MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
-      MAIL_SERVER: ${{ secrets.MAIL_SERVER }}
-      MAIL_PORT: ${{ secrets.MAIL_PORT }}
-      MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
-      MAIL_DEFAULT_SENDER: ${{ secrets.MAIL_DEFAULT_SENDER }}
-      FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
-      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-      POSTGRES_HOST_AUTH_METHOD: ${{ secrets.POSTGRES_HOST_AUTH_METHOD }}
-      POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
-      POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
-      PRODUCTION: ${{ secrets.PRODUCTION }}
-      USE_POSTGRESS: ${{ secrets.USE_POSTGRESS }}
-      ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
-      YOOKASSA_SECRET_KEY: ${{ secrets.YOOKASSA_SECRET_KEY }}
+      SECRET_KEY: ci-secret-key
+      JWT_SECRET_KEY: ci-jwt-secret-key
+      PRODUCTION: "false"
+      USE_POSTGRESS: "false"
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -52,25 +36,7 @@ jobs:
           pip install flake8
 
       - name: Run flake8 (PEP8 check)
-        run: |
-          export PYTHONPATH=$PYTHONPATH:$(pwd)/backend
-          flake8 backend tests
+        run: flake8 backend tests
 
-      - name: Run DB migrations and tests
-        run: |
-          export PYTHONPATH=$PYTHONPATH:$(pwd)/backend
-          
-          cd backend
-          
-          export FLASK_APP=wsgi.py
-          
-          if [ ! -d "migrations" ]; then
-            flask db init
-          fi
-          flask db migrate -m "GitHub Actions auto migration" || true
-          flask db upgrade
-          cd ..
-          
-          python -m app seed_reference_data || echo "Seed step skipped"
-          
-          pytest --maxfail=1 --disable-warnings -q tests
+      - name: Run tests
+        run: python -m pytest --maxfail=1 --disable-warnings -q tests
