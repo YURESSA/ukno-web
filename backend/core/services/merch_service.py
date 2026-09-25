@@ -665,7 +665,13 @@ def upsert_cart_item(user_email, variant_id, quantity):
     if error:
         return error
     variant = db.session.get(MerchProductVariant, variant_id)
-    if not variant or not variant.product or not variant.is_active or variant.product.is_deleted or not variant.product.is_active:
+    if (
+        not variant
+        or not variant.product
+        or not variant.is_active
+        or variant.product.is_deleted
+        or not variant.product.is_active
+    ):
         return {"message": "Variant not found"}, HTTPStatus.NOT_FOUND
     quantity = _int_value(quantity, 1)
     if quantity < 1:
@@ -739,7 +745,13 @@ def create_order(user_email, data):
     total = Decimal("0")
     for item in cart_items:
         variant = variants_by_id.get(item.variant_id)
-        if not variant or not variant.product or not variant.is_active or variant.product.is_deleted or not variant.product.is_active:
+        if (
+            not variant
+            or not variant.product
+            or not variant.is_active
+            or variant.product.is_deleted
+            or not variant.product.is_active
+        ):
             db.session.rollback()
             return {"message": "Cart contains unavailable products"}, HTTPStatus.BAD_REQUEST
         if item.quantity > variant.stock:

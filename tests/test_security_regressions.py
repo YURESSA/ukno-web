@@ -73,7 +73,11 @@ def add_session(owner, capacity=1, cost=0):
 
 
 def auth_header(user):
-    return {"Authorization": f"Bearer {create_access_token(identity=user.email, additional_claims={'role': user.role.value})}"}
+    token = create_access_token(
+        identity=user.email,
+        additional_claims={"role": user.role.value},
+    )
+    return {"Authorization": f"Bearer {token}"}
 
 
 def test_calendar_exports_require_owner_jwt(app):
@@ -176,12 +180,20 @@ def test_forged_webhook_cannot_mark_reservation_paid(app, monkeypatch):
         monkeypatch.setattr(
             webhook_routes,
             "get_yookassa_payment",
-            lambda payment_id: SimpleNamespace(id=payment_id, status="pending", metadata={"type": "reservation", "reservation_id": reservation_id}),
+            lambda payment_id: SimpleNamespace(
+                id=payment_id,
+                status="pending",
+                metadata={"type": "reservation", "reservation_id": reservation_id},
+            ),
         )
         payload = {
             "type": "notification",
             "event": "payment.succeeded",
-            "object": {"id": "payment-1", "status": "succeeded", "metadata": {"type": "reservation", "reservation_id": reservation_id}},
+            "object": {
+                "id": "payment-1",
+                "status": "succeeded",
+                "metadata": {"type": "reservation", "reservation_id": reservation_id},
+            },
         }
         response = app.test_client().post("/api/webhook/yookassa", json=payload)
 
@@ -223,7 +235,11 @@ def test_verified_webhook_is_idempotent_and_uses_trusted_metadata(app, monkeypat
         monkeypatch.setattr(
             webhook_routes,
             "get_yookassa_payment",
-            lambda payment_id: SimpleNamespace(id=payment_id, status="succeeded", metadata={"type": "reservation", "reservation_id": reservation_id}),
+            lambda payment_id: SimpleNamespace(
+                id=payment_id,
+                status="succeeded",
+                metadata={"type": "reservation", "reservation_id": reservation_id},
+            ),
         )
         monkeypatch.setattr(webhook_routes, "send_reservation_confirmation_email", lambda *args: sent.append(args))
         payload = {
