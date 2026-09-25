@@ -142,7 +142,11 @@ category_model = admin_ns.model(
     "MerchCategoryInput",
     {
         "name": fields.String(required=True, description="Название категории", example="Футболки"),
-        "slug": fields.String(required=False, description="Код категории. Если не передать, создастся из name", example="tshirts"),
+        "slug": fields.String(
+            required=False,
+            description="Код категории. Если не передать, создастся из name",
+            example="tshirts",
+        ),
         "description": fields.String(required=False, description="Описание категории", example="Футболки и лонгсливы"),
         "order_index": fields.Integer(required=False, description="Порядок сортировки", example=0),
         "is_active": fields.Boolean(required=False, description="Показывать категорию публично", example=True),
@@ -550,4 +554,3 @@ class AdminMerchOrderDetail(Resource):
         """Обновление статуса заказа мерча."""
         data = request.get_json() or {}
         return update_order_status(order_id, data.get("status"))
-
