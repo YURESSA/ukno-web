@@ -193,7 +193,12 @@ http://127.0.0.1:5000
 ## 📞 Контакты
 
 Если у вас возникли вопросы, не стесняйтесь обращаться:
+Frontend:
+- Email: antongagelgants@gmail.com
+- GitHub: https://github.com/Anton787
+- Telegram: https://t.me/AVGJFD1
 
+Backend:
 - Email: goshrenko@gmail.com
 - GitHub: https://github.com/yuressa
-- tg:
+- Telegram:
