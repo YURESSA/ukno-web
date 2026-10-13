@@ -5,6 +5,7 @@ import pytest
 from flask_jwt_extended import create_access_token
 
 from backend.api.admin.decorators import admin_required
+from backend.api.resident.decorators import resident_required
 from backend.api.webhook import routes as webhook_routes
 from backend.core import create_app, db
 from backend.core.config import Config
@@ -268,21 +269,56 @@ def test_login_does_not_reveal_whether_email_exists(app):
         assert known.get_json() == unknown.get_json() == {"message": "Неверный email или пароль"}
 
 
-def test_demoted_admin_cannot_use_old_admin_token(app):
+@pytest.mark.parametrize("decorator, role", [
+    (admin_required, RoleEnum.ADMIN),
+    (resident_required, RoleEnum.RESIDENT),
+])
+def test_demoted_user_cannot_use_old_privileged_token(app, decorator, role):
     with app.app_context():
-        user = add_user("demoted@example.com", RoleEnum.ADMIN)
+        user = add_user("demoted@example.com", role)
         db.session.commit()
         old_admin_headers = auth_header(user)
         user.role = RoleEnum.USER
         db.session.commit()
 
         @app.get("/_security/admin-only")
-        @admin_required
+        @decorator
         def admin_only():
             return {"ok": True}
 
         response = app.test_client().get("/_security/admin-only", headers=old_admin_headers)
         assert response.status_code == 403
+
+
+@pytest.mark.parametrize("decorator, role, denied_message", [
+    (admin_required, RoleEnum.ADMIN, "Доступ запрещен"),
+    (resident_required, RoleEnum.RESIDENT, "Доступ запрещён"),
+])
+def test_privileged_routes_check_token_and_database_role(app, decorator, role, denied_message):
+    with app.app_context():
+        user = add_user("privileged@example.com", role)
+        db.session.commit()
+
+        @app.get("/_security/role-only")
+        @decorator
+        def role_only():
+            return {"ok": True}
+
+        client = app.test_client()
+        url = "/_security/role-only"
+        assert client.get(url).status_code == 401
+        assert client.get(url, headers=auth_header(user)).get_json() == {"ok": True}
+
+        for claims in ({}, {"role": "unknown"}, {"role": RoleEnum.USER.value}):
+            token = create_access_token(identity=user.email, additional_claims=claims)
+            response = client.get(url, headers={"Authorization": f"Bearer {token}"})
+            assert response.status_code == 403
+            assert response.get_json() == {"message": denied_message}
+
+        token = create_access_token(identity="missing@example.com", additional_claims={"role": role.value})
+        response = client.get(url, headers={"Authorization": f"Bearer {token}"})
+        assert response.status_code == 403
+        assert response.get_json() == {"message": denied_message}
 
 
 def test_admin_user_update_accepts_role_name_and_legacy_role(app):

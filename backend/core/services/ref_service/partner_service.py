@@ -1,8 +1,6 @@
-import os
-
 from backend.core import db
 from backend.core.models.ref_models import Partner
-from backend.core.utilits.file_utils import save_image, remove_file_if_exists
+from backend.core.utilits.file_utils import save_image, remove_file_if_exists, validate_image_upload
 
 
 def get_all_partners():
@@ -19,15 +17,7 @@ def create_partner(name: str, link: str = None, photo=None, order_index: int = 0
 
     photo_path = None
     if photo:
-        if not photo.content_type.startswith("image/"):
-            raise ValueError('Файл должен быть изображением')
-
-        photo.seek(0, os.SEEK_END)
-        size = photo.tell()
-        photo.seek(0)
-        if size > 5 * 1024 * 1024:
-            raise ValueError('Размер файла не должен превышать 5 MB')
-
+        validate_image_upload(photo)
         photo_path = save_image(photo, "partner_photos")
 
     item = Partner(
@@ -65,14 +55,7 @@ def delete_partner(item: Partner):
 def upload_partner_photo(item: Partner, photo):
     if not photo:
         raise ValueError('Файл не выбран')
-    if not photo.content_type.startswith("image/"):
-        raise ValueError('Файл должен быть изображением')
-
-    photo.seek(0, os.SEEK_END)
-    size = photo.tell()
-    photo.seek(0)
-    if size > 5 * 1024 * 1024:
-        raise ValueError('Размер файла не должен превышать 5 MB')
+    validate_image_upload(photo)
 
     if item.photo:
         remove_file_if_exists(item.photo)

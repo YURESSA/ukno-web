@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional
 
 from backend.core import db
@@ -15,12 +15,16 @@ def get_history_by_id(history_id: int) -> Optional[CompanyHistory]:
     return db.session.get(CompanyHistory, history_id)
 
 
-def create_history(title: str, link: str, date_str: str, description: str) -> CompanyHistory:
-    """Создание нового события истории компании."""
+def _parse_history_date(date_str: str) -> date:
     try:
-        event_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        return datetime.strptime(date_str, '%Y-%m-%d').date()
     except ValueError:
         raise ValueError("Неверный формат даты. Используйте YYYY-MM-DD")
+
+
+def create_history(title: str, link: str, date_str: str, description: str) -> CompanyHistory:
+    """Создание нового события истории компании."""
+    event_date = _parse_history_date(date_str)
 
     item = CompanyHistory(
         title=title,
@@ -35,10 +39,7 @@ def create_history(title: str, link: str, date_str: str, description: str) -> Co
 
 def update_history(item: CompanyHistory, title: str, link: str, date_str: str, description: str) -> CompanyHistory:
     """Обновление существующего события."""
-    try:
-        event_date = datetime.strptime(date_str, '%Y-%m-%d').date()
-    except ValueError:
-        raise ValueError("Неверный формат даты. Используйте YYYY-MM-DD")
+    event_date = _parse_history_date(date_str)
 
     item.title = title
     item.link = link

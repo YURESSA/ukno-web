@@ -26,6 +26,18 @@ IMAGE_SIGNATURES = {
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
 
 
+def validate_image_upload(file: FileStorage) -> None:
+    """Check upload metadata before saving, preserving service error messages."""
+    if not file.content_type.startswith("image/"):
+        raise ValueError('Файл должен быть изображением')
+
+    file.seek(0, os.SEEK_END)
+    size = file.tell()
+    file.seek(0)
+    if size > MAX_IMAGE_BYTES:
+        raise ValueError('Размер файла не должен превышать 5 MB')
+
+
 def _validate_image(file: FileStorage) -> str:
     """Validate extension, size and magic bytes instead of trusting Content-Type."""
     original_filename = secure_filename(file.filename or "")
@@ -65,9 +77,14 @@ def save_image(file: FileStorage, subfolder: str = "") -> str:
     :return: относительный путь к сохранённому файлу (например, 'media/uploads/news/filename.png')
     """
     mime_type = _validate_image(file)
+    return _save_upload(file, subfolder, mime_type)
+
+
+def _save_upload(file: FileStorage, subfolder: str, content_type: str) -> str:
+    """Store an upload locally or in S3 using a unique relative path."""
     filename, relative_path = _unique_upload_path(file, subfolder)
     if uses_s3():
-        upload_to_s3(file.stream, relative_path, mime_type)
+        upload_to_s3(file.stream, relative_path, content_type)
         return relative_path
 
     folder_path = os.path.join(Config.PROJECT_ROOT, Config.UPLOAD_FOLDER, subfolder)
@@ -191,12 +208,4 @@ def save_file(file, subfolder: str = "") -> str:
     :param subfolder: подкаталог внутри папки загрузок
     :return: относительный путь к сохранённому файлу (например, 'media/uploads/requisites/filename.pdf')
     """
-    filename, relative_path = _unique_upload_path(file, subfolder)
-    if uses_s3():
-        upload_to_s3(file.stream, relative_path, file.content_type)
-        return relative_path
-
-    folder_path = os.path.join(Config.PROJECT_ROOT, Config.UPLOAD_FOLDER, subfolder)
-    os.makedirs(folder_path, exist_ok=True)
-    file.save(os.path.join(folder_path, filename))
-    return relative_path
+    return _save_upload(file, subfolder, file.content_type)

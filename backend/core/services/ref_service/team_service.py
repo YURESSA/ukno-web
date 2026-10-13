@@ -1,26 +1,13 @@
-import os
-
 from backend.core import db
 from backend.core.models.ref_models import TeamMember
-from backend.core.utilits.file_utils import save_image, remove_file_if_exists
-
-MAX_IMAGE_SIZE = 5 * 1024 * 1024
+from backend.core.utilits.file_utils import save_image, remove_file_if_exists, validate_image_upload
 
 
 def _validate_and_save_photo(photo, folder: str) -> str:
     if not photo or not photo.filename:
         raise ValueError('Файл не выбран')
 
-    if not photo.content_type.startswith('image/'):
-        raise ValueError('Файл должен быть изображением')
-
-    photo.seek(0, os.SEEK_END)
-    size = photo.tell()
-    photo.seek(0)
-
-    if size > MAX_IMAGE_SIZE:
-        raise ValueError('Размер файла не должен превышать 5 MB')
-
+    validate_image_upload(photo)
     return save_image(photo, folder)
 
 
