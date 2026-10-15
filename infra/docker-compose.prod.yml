@@ -8,6 +8,9 @@ services:
     env_file:
       - ../.env
       - ../.env.timeweb.local
+    environment:
+      # Temporary public Swagger; set false and recreate backend to disable it.
+      PUBLIC_SWAGGER_ENABLED: "true"
     healthcheck:
       test:
         - CMD

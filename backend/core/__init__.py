@@ -15,6 +15,7 @@ from .extensions import jwt, api, mail
 def create_app(testing=False):
     from backend.api.errors import ensure_error_message, error_response, http_error_response
     from backend.api.error_docs import document_error_responses
+    from backend.api.public_swagger import register_public_swagger
     from backend.core.errors import ApiError
 
     app = Flask(__name__, template_folder=Config.TEMPLATE_FOLDER, static_folder=Config.STATIC_FOLDER)
@@ -50,6 +51,7 @@ def create_app(testing=False):
 
     register_apps(app)
     document_error_responses(api)
+    register_public_swagger(app, api)
     app.after_request(ensure_error_message)
     if testing:
         app.config["TESTING"] = True

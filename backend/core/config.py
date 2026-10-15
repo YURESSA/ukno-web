@@ -77,3 +77,4 @@ class Config:
     YANDEX_API_KEY = os.environ.get("YANDEX_API_KEY")
 
     PRODUCTION = str_to_bool(os.getenv("PRODUCTION", "False"))
+    PUBLIC_SWAGGER_ENABLED = str_to_bool(os.getenv("PUBLIC_SWAGGER_ENABLED", "False"))
