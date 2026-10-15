@@ -1,4 +1,3 @@
-import os
 from http import HTTPStatus
 from typing import List, Dict, Tuple, Optional, Any, NoReturn
 
@@ -7,7 +6,7 @@ from werkzeug.datastructures import FileStorage
 
 from backend.core import db
 from backend.core.models.event_models import EventPhoto, Event
-from backend.core.utilits.file_utils import save_image, remove_file_if_exists
+from backend.core.utilits.file_utils import save_image, remove_file_if_exists, validate_image_upload
 
 
 def process_photos(files: list[FileStorage]) -> list[dict[str, str | int]]:
@@ -22,13 +21,7 @@ def process_photos(files: list[FileStorage]) -> list[dict[str, str | int]]:
     for idx, file in enumerate(files):
         if not file or not file.filename or not file.content_type:
             continue
-        if not file.content_type.startswith("image/"):
-            raise ValueError("Файл должен быть изображением")
-        file.seek(0, os.SEEK_END)
-        size = file.tell()
-        file.seek(0)
-        if size > 5 * 1024 * 1024:
-            raise ValueError("Размер файла не должен превышать 5 MB")
+        validate_image_upload(file)
         rel_path = save_image(file, "excursion_photos")
         photos.append({"photo_url": rel_path, "order_index": idx})
     return photos

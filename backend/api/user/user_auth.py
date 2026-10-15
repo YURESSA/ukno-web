@@ -1,6 +1,6 @@
 from flask import request
-from flask_restx import Resource
 
+from backend.api.errors import ApiResource
 from backend.core.schemas.auth_schemas import user_model
 from backend.core.schemas.user_schemas import user_login
 from . import user_ns
@@ -9,7 +9,7 @@ from ...core.services.user_services.auth_service import register_user, login_use
 
 
 @user_ns.route('/register')
-class UserRegister(Resource):
+class UserRegister(ApiResource):
     @user_ns.expect(user_model)
     @user_ns.doc(description="Регистрация обычного пользователя (роль автоматически 'user')")
     def post(self) -> tuple[dict, int]:
@@ -24,7 +24,7 @@ class UserRegister(Resource):
 
 
 @user_ns.route('/login')
-class UserLogin(Resource):
+class UserLogin(ApiResource):
     @user_ns.expect(user_login)
     @user_ns.doc(description="Аутентификация обычного пользователя для получения токена доступа")
     def post(self) -> tuple[dict, int]:

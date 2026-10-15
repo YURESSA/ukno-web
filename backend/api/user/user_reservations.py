@@ -4,9 +4,10 @@ from urllib.parse import urlencode, quote_plus
 
 from flask import Response
 from flask import request
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from flask_restx import Resource
+from flask_jwt_extended import get_jwt_identity
 
+from backend.api.decorators import jwt_required
+from backend.api.errors import ApiResource
 from . import user_ns
 from backend.core.schemas.event_schemas import reservation_model, cancel_model
 from ...core.utilits.file_utils import create_ical_from_reservation
@@ -29,7 +30,7 @@ def _get_owned_reservation(reservation_id):
 
 
 @user_ns.route('/reservations')
-class Reservations(Resource):
+class Reservations(ApiResource):
     @jwt_required()
     @user_ns.doc(description="Получение списка своих бронирований пользователя")
     def get(self) -> tuple[dict, int]:
@@ -51,7 +52,7 @@ class Reservations(Resource):
 
 
 @user_ns.route('/v2/reservations')
-class ReservationCreate(Resource):
+class ReservationCreate(ApiResource):
     @jwt_required()
     @user_ns.expect(reservation_model, validate=True)
     @user_ns.doc(description="Запись на сеанс экскурсии через оплату")
@@ -99,7 +100,7 @@ class ReservationCreate(Resource):
 
 
 @user_ns.route('/reservations/<int:reservation_id>/export_ical')
-class ExportReservationICal(Resource):
+class ExportReservationICal(ApiResource):
     @jwt_required()
     def get(self, reservation_id):
         """
@@ -128,7 +129,7 @@ class ExportReservationICal(Resource):
 
 
 @user_ns.route('/reservations/<int:reservation_id>/google_calendar_link')
-class GoogleCalendarLink(Resource):
+class GoogleCalendarLink(ApiResource):
     @jwt_required()
     def get(self, reservation_id):
         """
@@ -163,7 +164,7 @@ class GoogleCalendarLink(Resource):
 
 
 @user_ns.route('/excursions_detail/<int:excursion_id>')
-class DetailExcursion(Resource):
+class DetailExcursion(ApiResource):
     def get(self, excursion_id):
         """
         Возвращает полную информацию об экскурсии, включая предстоящие сеансы.

@@ -2,8 +2,8 @@ from http import HTTPStatus
 
 from flask import request
 from flask_jwt_extended import get_jwt_identity
-from flask_restx import Resource
 
+from backend.api.errors import ApiResource
 from backend.core.schemas.event_schemas import data_param, photos_param, event_model
 from backend.core.services.event_services.event_api import handle_create_event
 from backend.core.services.event_services.event_crud import get_event, get_events_for_resident, delete_event, \
@@ -15,7 +15,7 @@ from .decorators import resident_required
 
 
 @resident_ns.route('/excursions')
-class ExcursionsResource(Resource):
+class ExcursionsResource(ApiResource):
     @resident_required
     @resident_ns.doc(
         description="Создание экскурсии с JSON-данными (в поле 'data') и фотофайлами",
@@ -51,7 +51,7 @@ class ExcursionsResource(Resource):
 
 
 @resident_ns.route('/excursions/<int:excursion_id>')
-class ExcursionResource(Resource):
+class ExcursionResource(ApiResource):
     @resident_required
     @resident_ns.expect(event_model, validate=True)
     @resident_ns.doc(description="Обновление экскурсии")

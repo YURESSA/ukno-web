@@ -1,10 +1,12 @@
 from http import HTTPStatus
 
-from flask_restx import Resource, reqparse
+from flask_restx import reqparse
 from werkzeug.datastructures import FileStorage
 
 from backend.api.admin.decorators import admin_required
+from backend.api.errors import ApiResource
 from backend.api.references import ref_ns
+from backend.core.errors import NotFoundError
 from backend.core.services.ref_service.partner_service import (
     get_all_partners,
     create_partner,
@@ -24,7 +26,7 @@ photo_parser.add_argument('photo', type=FileStorage, required=True, location='fi
 
 
 @ref_ns.route('/partners')
-class PartnerList(Resource):
+class PartnerList(ApiResource):
 
     def get(self):
         items = get_all_partners()
@@ -34,25 +36,22 @@ class PartnerList(Resource):
     @ref_ns.expect(partner_parser)
     def post(self):
         args = partner_parser.parse_args()
-        try:
-            item = create_partner(
-                name=args.get('name'),
-                link=args.get('link'),
-                photo=args.get('photo'),
-                order_index=args.get('order_index')
-            )
-        except ValueError as e:
-            return {'message': str(e)}, HTTPStatus.BAD_REQUEST
+        item = create_partner(
+            name=args.get('name'),
+            link=args.get('link'),
+            photo=args.get('photo'),
+            order_index=args.get('order_index')
+        )
         return item.to_dict(), HTTPStatus.CREATED
 
 
 @ref_ns.route('/partners/<int:id>')
-class PartnerResource(Resource):
+class PartnerResource(ApiResource):
 
     def get(self, id: int):
         item = get_partner_by_id(id)
         if not item:
-            return {'message': 'Партнёр не найден'}, HTTPStatus.NOT_FOUND
+            raise NotFoundError('Партнёр не найден')
         return item.to_dict(), HTTPStatus.OK
 
     @admin_required
@@ -60,18 +59,14 @@ class PartnerResource(Resource):
     def put(self, id: int):
         item = get_partner_by_id(id)
         if not item:
-            return {'message': 'Партнёр не найден'}, HTTPStatus.NOT_FOUND
-
+            raise NotFoundError('Партнёр не найден')
         args = partner_parser.parse_args()
-        try:
-            item = update_partner(
-                item,
-                name=args.get('name'),
-                link=args.get('link'),
-                order_index=args.get('order_index')
-            )
-        except ValueError as e:
-            return {'message': str(e)}, HTTPStatus.BAD_REQUEST
+        item = update_partner(
+            item,
+            name=args.get('name'),
+            link=args.get('link'),
+            order_index=args.get('order_index')
+        )
 
         return item.to_dict(), HTTPStatus.OK
 
@@ -79,25 +74,17 @@ class PartnerResource(Resource):
     def delete(self, id: int):
         item = get_partner_by_id(id)
         if not item:
-            return {'message': 'Партнёр не найден'}, HTTPStatus.NOT_FOUND
-
+            raise NotFoundError('Партнёр не найден')
         delete_partner(item)
         return {'message': 'Партнёр удалён'}, HTTPStatus.OK
 
 
 @ref_ns.route('/partners/<int:id>/photo')
-class PartnerPhotoResource(Resource):
+class PartnerPhotoResource(ApiResource):
 
     @admin_required
     def delete(self, id: int):
-        try:
-            delete_partner_photo(id)
-        except ValueError as e:
-            status = (
-                HTTPStatus.NOT_FOUND if str(e) == "Партнёр не найден"
-                else HTTPStatus.BAD_REQUEST
-            )
-            return {'message': str(e)}, status
+        delete_partner_photo(id)
 
         return {'message': 'Фото удалено'}, HTTPStatus.OK
 
@@ -106,12 +93,8 @@ class PartnerPhotoResource(Resource):
     def post(self, id: int):
         item = get_partner_by_id(id)
         if not item:
-            return {'message': 'Партнёр не найден'}, HTTPStatus.NOT_FOUND
-
+            raise NotFoundError('Партнёр не найден')
         args = photo_parser.parse_args()
-        try:
-            photo_path = upload_partner_photo(item, args.get('photo'))
-        except ValueError as e:
-            return {'message': str(e)}, HTTPStatus.BAD_REQUEST
+        photo_path = upload_partner_photo(item, args.get('photo'))
 
         return {'message': 'Фото загружено', 'photo_path': photo_path}, HTTPStatus.OK

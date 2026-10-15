@@ -1,8 +1,9 @@
 from http import HTTPStatus
 
 from flask import request, current_app
-from flask_restx import Resource, fields
+from flask_restx import fields
 
+from backend.api.errors import ApiResource
 from backend.api.frontend_logs import frontend_logs_ns
 
 log_model = frontend_logs_ns.model('FrontendLog', {
@@ -16,7 +17,7 @@ log_model = frontend_logs_ns.model('FrontendLog', {
 
 
 @frontend_logs_ns.route('/')
-class FrontendLogResource(Resource):
+class FrontendLogResource(ApiResource):
 
     @frontend_logs_ns.expect(log_model, validate=True)
     def post(self):

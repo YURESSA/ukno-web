@@ -1,13 +1,13 @@
 from http import HTTPStatus
 
-from flask_restx import Resource
 
+from backend.api.errors import ApiResource
 from backend.api.references import ref_ns
 from backend.core.services.ref_service.excursion_stats_service import get_excursion_stats
 
 
 @ref_ns.route('/excursion-stats')
-class ExcursionStats(Resource):
+class ExcursionStats(ApiResource):
     @ref_ns.doc(description="Получить статистику экскурсий: стоимость, время, расстояние, роли, возрастные категории,"
                             " форматы и категории")
     def get(self) -> tuple[dict, int]:

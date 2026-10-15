@@ -1,7 +1,8 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional
 
 from backend.core import db
+from backend.core.errors import ValidationError
 from backend.core.models.ref_models import CompanyHistory
 
 
@@ -15,12 +16,16 @@ def get_history_by_id(history_id: int) -> Optional[CompanyHistory]:
     return db.session.get(CompanyHistory, history_id)
 
 
+def _parse_history_date(date_str: str) -> date:
+    try:
+        return datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        raise ValidationError("Неверный формат даты. Используйте YYYY-MM-DD")
+
+
 def create_history(title: str, link: str, date_str: str, description: str) -> CompanyHistory:
     """Создание нового события истории компании."""
-    try:
-        event_date = datetime.strptime(date_str, '%Y-%m-%d').date()
-    except ValueError:
-        raise ValueError("Неверный формат даты. Используйте YYYY-MM-DD")
+    event_date = _parse_history_date(date_str)
 
     item = CompanyHistory(
         title=title,
@@ -35,10 +40,7 @@ def create_history(title: str, link: str, date_str: str, description: str) -> Co
 
 def update_history(item: CompanyHistory, title: str, link: str, date_str: str, description: str) -> CompanyHistory:
     """Обновление существующего события."""
-    try:
-        event_date = datetime.strptime(date_str, '%Y-%m-%d').date()
-    except ValueError:
-        raise ValueError("Неверный формат даты. Используйте YYYY-MM-DD")
+    event_date = _parse_history_date(date_str)
 
     item.title = title
     item.link = link
@@ -61,16 +63,16 @@ def validate_history_data(data: dict) -> tuple[str, str, str, str] | None:
     """
     title = data.get('title')
     if not title:
-        raise ValueError('Поле title обязательно')
+        raise ValidationError('Поле title обязательно')
 
     link = data.get('link')
 
     date_str = data.get('date')
     if not date_str:
-        raise ValueError('Поле date обязательно')
+        raise ValidationError('Поле date обязательно')
 
     description = data.get('description')
     if not description:
-        raise ValueError('Поле description обязательно')
+        raise ValidationError('Поле description обязательно')
 
     return title, link, date_str, description

@@ -2,8 +2,8 @@ from http import HTTPStatus
 
 from flask import request
 from flask_jwt_extended import get_jwt_identity
-from flask_restx import Resource
 
+from backend.api.errors import ApiResource
 from backend.core.services.event_services.event_crud import verify_resident_owns_event
 from backend.core.services.event_services.event_session_service import create_event_session, \
     update_event_session, \
@@ -16,7 +16,7 @@ from ...core.services.user_services.user_service import get_user_by_email
 
 
 @resident_ns.route('/excursions/<int:excursion_id>/sessions')
-class ExcursionSessionsResource(Resource):
+class ExcursionSessionsResource(ApiResource):
     @resident_required
     def get(self, excursion_id: int) -> tuple[list[dict], int]:
         """
@@ -58,7 +58,7 @@ class ExcursionSessionsResource(Resource):
 
 
 @resident_ns.route('/excursions/<int:excursion_id>/sessions/<int:session_id>')
-class ExcursionSessionResource(Resource):
+class ExcursionSessionResource(ApiResource):
     @resident_required
     @resident_ns.expect(session_patch_model, validate=True)
     @resident_ns.doc(description="Обновление конкретной сессии экскурсии")

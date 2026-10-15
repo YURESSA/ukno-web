@@ -1,7 +1,7 @@
 from http import HTTPStatus
 
-from flask_restx import Resource
 
+from backend.api.errors import ApiResource
 from . import admin_ns
 from .decorators import admin_required
 from backend.core.services.reservation_service.reservation_queries import get_all_reservations, get_reservation_by_id
@@ -9,7 +9,7 @@ from backend.core.services.reservation_service.reservation_crud import delete_re
 
 
 @admin_ns.route('/reservations')
-class AdminReservationsResource(Resource):
+class AdminReservationsResource(ApiResource):
     @admin_required
     def get(self) -> tuple[dict, int]:
         """
@@ -22,7 +22,7 @@ class AdminReservationsResource(Resource):
 
 
 @admin_ns.route('/reservations/<int:reservation_id>')
-class AdminReservationDetailResource(Resource):
+class AdminReservationDetailResource(ApiResource):
     @admin_required
     def get(self, reservation_id: int) -> tuple[dict, int]:
         """

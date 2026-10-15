@@ -1,9 +1,10 @@
 from http import HTTPStatus
 
 from flask import request
-from flask_restx import Resource, fields, reqparse
+from flask_restx import fields, reqparse
 from werkzeug.datastructures import FileStorage
 
+from backend.api.errors import ApiResource
 from . import admin_ns
 from .decorators import admin_required
 from backend.core import db
@@ -265,7 +266,7 @@ def request_order_indexes():
 
 
 @admin_ns.route("/merch/banners")
-class AdminMerchBanners(Resource):
+class AdminMerchBanners(ApiResource):
     @admin_required
     @admin_ns.doc(description="Получение всех рекламных баннеров мерча для админки")
     def get(self):
@@ -292,7 +293,7 @@ class AdminMerchBanners(Resource):
 
 
 @admin_ns.route("/merch/banners/<int:banner_id>")
-class AdminMerchBannerDetail(Resource):
+class AdminMerchBannerDetail(ApiResource):
     @admin_required
     @admin_ns.expect(banner_update_parser)
     @admin_ns.doc(
@@ -317,7 +318,7 @@ class AdminMerchBannerDetail(Resource):
 
 
 @admin_ns.route("/merch/categories")
-class AdminMerchCategories(Resource):
+class AdminMerchCategories(ApiResource):
     @admin_required
     @admin_ns.doc(description="Получение всех категорий товаров мерча для админки")
     def get(self):
@@ -347,7 +348,7 @@ class AdminMerchCategories(Resource):
 
 
 @admin_ns.route("/merch/categories/<int:category_id>")
-class AdminMerchCategoryDetail(Resource):
+class AdminMerchCategoryDetail(ApiResource):
     @admin_required
     @admin_ns.expect(category_model, validate=True)
     @admin_ns.doc(
@@ -366,7 +367,7 @@ class AdminMerchCategoryDetail(Resource):
 
 
 @admin_ns.route("/merch/products")
-class AdminMerchProducts(Resource):
+class AdminMerchProducts(ApiResource):
     @admin_required
     @admin_ns.doc(
         description="Получение всех товаров мерча для админки",
@@ -408,7 +409,7 @@ class AdminMerchProducts(Resource):
 
 
 @admin_ns.route("/merch/products/<int:product_id>")
-class AdminMerchProductDetail(Resource):
+class AdminMerchProductDetail(ApiResource):
     @admin_required
     @admin_ns.doc(description="Получение детальной информации о товаре мерча для админки")
     def get(self, product_id):
@@ -449,7 +450,7 @@ class AdminMerchProductDetail(Resource):
 
 
 @admin_ns.route("/merch/products/<int:product_id>/colors")
-class AdminMerchProductColors(Resource):
+class AdminMerchProductColors(ApiResource):
     @admin_required
     @admin_ns.expect(product_color_model, validate=True)
     @admin_ns.doc(
@@ -467,7 +468,7 @@ class AdminMerchProductColors(Resource):
 
 
 @admin_ns.route("/merch/products/<int:product_id>/colors/<int:color_id>/sizes")
-class AdminMerchProductColorSizes(Resource):
+class AdminMerchProductColorSizes(ApiResource):
     @admin_required
     @admin_ns.expect(product_color_size_model, validate=True)
     @admin_ns.doc(
@@ -484,7 +485,7 @@ class AdminMerchProductColorSizes(Resource):
 
 
 @admin_ns.route("/merch/products/<int:product_id>/images")
-class AdminMerchProductImages(Resource):
+class AdminMerchProductImages(ApiResource):
     @admin_required
     @admin_ns.doc(description="Получение всех фотографий товара мерча")
     def get(self, product_id):
@@ -506,7 +507,7 @@ class AdminMerchProductImages(Resource):
 
 
 @admin_ns.route("/merch/products/<int:product_id>/images/<int:image_id>")
-class AdminMerchProductImage(Resource):
+class AdminMerchProductImage(ApiResource):
     @admin_required
     @admin_ns.doc(
         description="Обновление фотографии товара мерча",
@@ -529,7 +530,7 @@ class AdminMerchProductImage(Resource):
 
 
 @admin_ns.route("/merch/orders")
-class AdminMerchOrders(Resource):
+class AdminMerchOrders(ApiResource):
     @admin_required
     @admin_ns.doc(description="Получение всех заказов мерча для админки")
     def get(self):
@@ -538,7 +539,7 @@ class AdminMerchOrders(Resource):
 
 
 @admin_ns.route("/merch/orders/<int:order_id>")
-class AdminMerchOrderDetail(Resource):
+class AdminMerchOrderDetail(ApiResource):
     @admin_required
     @admin_ns.doc(
         description="Обновление статуса заказа мерча в админке",

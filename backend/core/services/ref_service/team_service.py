@@ -1,26 +1,14 @@
-import os
-
 from backend.core import db
+from backend.core.errors import ValidationError
 from backend.core.models.ref_models import TeamMember
-from backend.core.utilits.file_utils import save_image, remove_file_if_exists
-
-MAX_IMAGE_SIZE = 5 * 1024 * 1024
+from backend.core.utilits.file_utils import save_image, remove_file_if_exists, validate_image_upload
 
 
 def _validate_and_save_photo(photo, folder: str) -> str:
     if not photo or not photo.filename:
-        raise ValueError('Файл не выбран')
+        raise ValidationError('Файл не выбран')
 
-    if not photo.content_type.startswith('image/'):
-        raise ValueError('Файл должен быть изображением')
-
-    photo.seek(0, os.SEEK_END)
-    size = photo.tell()
-    photo.seek(0)
-
-    if size > MAX_IMAGE_SIZE:
-        raise ValueError('Размер файла не должен превышать 5 MB')
-
+    validate_image_upload(photo)
     return save_image(photo, folder)
 
 
@@ -30,7 +18,7 @@ def get_team_members():
 
 def create_team_member(full_name: str, description: str = None, photo=None):
     if not full_name:
-        raise ValueError('Поле full_name обязательно')
+        raise ValidationError('Поле full_name обязательно')
 
     photo_path = None
     if photo:
@@ -49,7 +37,7 @@ def create_team_member(full_name: str, description: str = None, photo=None):
 
 def update_team_member(member: TeamMember, full_name: str, description: str = None):
     if not full_name:
-        raise ValueError('Поле full_name обязательно')
+        raise ValidationError('Поле full_name обязательно')
 
     member.full_name = full_name
     member.description = description
@@ -78,7 +66,7 @@ def upload_team_photo(member: TeamMember, photo):
 
 def delete_team_photo(member: TeamMember):
     if not member.photo:
-        raise ValueError('Фото отсутствует')
+        raise ValidationError('Фото отсутствует')
 
     remove_file_if_exists(member.photo)
     member.photo = None

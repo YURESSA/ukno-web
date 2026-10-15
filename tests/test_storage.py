@@ -5,7 +5,7 @@ from werkzeug.datastructures import FileStorage
 
 from backend.core.config import Config
 from backend.core.storage import file_url, get_s3_client, object_key
-from backend.core.utilits.file_utils import remove_file_if_exists, save_image
+from backend.core.utilits.file_utils import remove_file_if_exists, save_file, save_image
 
 
 class FakeS3Client:
@@ -73,6 +73,37 @@ def test_image_upload_rejects_spoofed_content_type(monkeypatch):
         save_image(image, "news")
 
     assert client.objects == {}
+
+
+def test_s3_document_upload_preserves_bytes_and_content_type(monkeypatch):
+    client = FakeS3Client()
+    configure_s3(monkeypatch, client)
+    document = FileStorage(stream=BytesIO(b"document-bytes"), filename="document.pdf", content_type="application/pdf")
+
+    saved_path = save_file(document, "requisites")
+
+    assert saved_path.startswith("media/uploads/requisites/document_")
+    assert client.objects[("test-bucket", object_key(saved_path))] == (
+        b"document-bytes", {"ExtraArgs": {"ContentType": "application/pdf"}},
+    )
+
+
+@pytest.mark.parametrize("save, filename, body, content_type", [
+    (save_image, "photo.jpg", b"\xff\xd8\xffimage-bytes", "image/jpeg"),
+    (save_file, "document.pdf", b"document-bytes", "application/pdf"),
+])
+def test_local_upload_preserves_bytes_and_unique_paths(tmp_path, monkeypatch, save, filename, body, content_type):
+    monkeypatch.setattr(Config, "STORAGE_BACKEND", "local")
+    monkeypatch.setattr(Config, "PROJECT_ROOT", str(tmp_path))
+    monkeypatch.setattr(Config, "UPLOAD_FOLDER", "media/uploads")
+
+    paths = [save(FileStorage(stream=BytesIO(body), filename=filename, content_type=content_type), "test")
+             for _ in range(2)]
+
+    assert paths[0] != paths[1]
+    for path in paths:
+        assert path.startswith("media/uploads/test/")
+        assert (tmp_path / path).read_bytes() == body
 
 
 def test_s3_file_url_is_presigned(monkeypatch):

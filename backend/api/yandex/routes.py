@@ -1,13 +1,13 @@
 from flask import request
-from flask_restx import Resource
 
+from backend.api.errors import ApiResource
 from backend.api.admin.decorators import admin_required
 from . import yandex_ns
 from backend.core.services.yandex_service.yandex_service import get_yandex_suggestions
 
 
 @yandex_ns.route('/map-helper')
-class MapHelperResource(Resource):
+class MapHelperResource(ApiResource):
 
     @admin_required
     def get(self):

@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from backend.core import db
+from backend.core.errors import ValidationError
 from backend.core.models.ref_models import CompanyProject
 
 
@@ -15,9 +16,9 @@ def get_project_by_id(project_id: int) -> CompanyProject | None:
 
 def create_project(title: str, link: str, order_index: int | None = None) -> CompanyProject:
     if not title:
-        raise ValueError('Поле title обязательно')
+        raise ValidationError('Поле title обязательно')
     if not link:
-        raise ValueError('Поле link обязательно')
+        raise ValidationError('Поле link обязательно')
 
     project = CompanyProject(
         title=title,
@@ -36,9 +37,9 @@ def update_project(
         order_index: int | None = None
 ) -> CompanyProject:
     if not title:
-        raise ValueError('Поле title обязательно')
+        raise ValidationError('Поле title обязательно')
     if not link:
-        raise ValueError('Поле link обязательно')
+        raise ValidationError('Поле link обязательно')
 
     project.title = title
     project.link = link

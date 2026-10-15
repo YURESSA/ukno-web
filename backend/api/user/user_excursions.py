@@ -1,14 +1,14 @@
 from http import HTTPStatus
 
 from flask import request
-from flask_restx import Resource
 
+from backend.api.errors import ApiResource
 from backend.core.services.event_services.event_api import list_events
 from . import user_ns
 
 
 @user_ns.route('/excursions')
-class UserExcursionsList(Resource):
+class UserExcursionsList(ApiResource):
     @user_ns.doc(
         description="Список всех активных экскурсий (без авторизации)",
         params={

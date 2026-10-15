@@ -1,4 +1,5 @@
 from backend.core import db
+from backend.core.errors import ValidationError
 from backend.core.models.ref_models import Requisite
 from backend.core.utilits.file_utils import save_file, remove_file_if_exists
 
@@ -13,9 +14,9 @@ def get_requisite_by_id(requisite_id: int):
 
 def create_requisite(title: str, file):
     if not title:
-        raise ValueError('Название обязательно')
+        raise ValidationError('Название обязательно')
     if not file:
-        raise ValueError('Файл обязателен')
+        raise ValidationError('Файл обязателен')
 
     file_path = save_file(file, 'requisites')
 
@@ -27,7 +28,7 @@ def create_requisite(title: str, file):
 
 def update_requisite(item: Requisite, title: str):
     if not title:
-        raise ValueError('Название обязательно')
+        raise ValidationError('Название обязательно')
     item.title = title
     db.session.commit()
     return item
@@ -35,7 +36,7 @@ def update_requisite(item: Requisite, title: str):
 
 def replace_requisite_file(item: Requisite, file):
     if not file:
-        raise ValueError('Файл не выбран')
+        raise ValidationError('Файл не выбран')
 
     # Удаляем старый файл
     if item.file:

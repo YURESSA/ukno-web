@@ -31,14 +31,8 @@ def delete_profile() -> Tuple[Dict, int]:
     :return: Кортеж (response_dict, http_status)
     """
     current_email = get_jwt_identity()
-    success, message = delete_user(current_email)
-
-    if success:
-        return {"message": AuthMessages.USER_DELETED_SELF}, HTTPStatus.OK
-    else:
-        if message == "Пользователь не найден":
-            return {"message": AuthMessages.USER_NOT_FOUND}, HTTPStatus.NOT_FOUND
-        return {"message": message}, HTTPStatus.BAD_REQUEST
+    delete_user(current_email)
+    return {"message": AuthMessages.USER_DELETED_SELF}, HTTPStatus.OK
 
 
 def get_user_info_response(user: Optional['User']) -> Tuple[Dict, int]:

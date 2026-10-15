@@ -1,8 +1,7 @@
-import os
-
 from backend.core import db
+from backend.core.errors import NotFoundError, ValidationError
 from backend.core.models.ref_models import Partner
-from backend.core.utilits.file_utils import save_image, remove_file_if_exists
+from backend.core.utilits.file_utils import save_image, remove_file_if_exists, validate_image_upload
 
 
 def get_all_partners():
@@ -15,19 +14,11 @@ def get_partner_by_id(partner_id: int):
 
 def create_partner(name: str, link: str = None, photo=None, order_index: int = 0):
     if not name:
-        raise ValueError('Поле name обязательно')
+        raise ValidationError('Поле name обязательно')
 
     photo_path = None
     if photo:
-        if not photo.content_type.startswith("image/"):
-            raise ValueError('Файл должен быть изображением')
-
-        photo.seek(0, os.SEEK_END)
-        size = photo.tell()
-        photo.seek(0)
-        if size > 5 * 1024 * 1024:
-            raise ValueError('Размер файла не должен превышать 5 MB')
-
+        validate_image_upload(photo)
         photo_path = save_image(photo, "partner_photos")
 
     item = Partner(
@@ -43,7 +34,7 @@ def create_partner(name: str, link: str = None, photo=None, order_index: int = 0
 
 def update_partner(item: Partner, name: str, link: str = None, order_index: int = None):
     if not name:
-        raise ValueError('Поле name обязательно')
+        raise ValidationError('Поле name обязательно')
 
     item.name = name
     item.link = link
@@ -64,15 +55,8 @@ def delete_partner(item: Partner):
 
 def upload_partner_photo(item: Partner, photo):
     if not photo:
-        raise ValueError('Файл не выбран')
-    if not photo.content_type.startswith("image/"):
-        raise ValueError('Файл должен быть изображением')
-
-    photo.seek(0, os.SEEK_END)
-    size = photo.tell()
-    photo.seek(0)
-    if size > 5 * 1024 * 1024:
-        raise ValueError('Размер файла не должен превышать 5 MB')
+        raise ValidationError('Файл не выбран')
+    validate_image_upload(photo)
 
     if item.photo:
         remove_file_if_exists(item.photo)
@@ -86,10 +70,10 @@ def delete_partner_photo(partner_id: int) -> None:
     """Удаляет фото партнёра по ID."""
     partner = db.session.get(Partner, partner_id)
     if not partner:
-        raise ValueError("Партнёр не найден")
+        raise NotFoundError("Партнёр не найден")
 
     if not partner.photo:
-        raise ValueError("Фото отсутствует")
+        raise ValidationError("Фото отсутствует")
 
     remove_file_if_exists(partner.photo)
     partner.photo = None
