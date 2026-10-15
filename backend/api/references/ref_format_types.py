@@ -2,10 +2,12 @@ from http import HTTPStatus
 from typing import Any
 
 from flask import request
-from flask_restx import Resource, fields
+from flask_restx import fields
 
 from backend.api.admin.decorators import admin_required
+from backend.api.errors import ApiResource
 from backend.api.references import ref_ns
+from backend.core.errors import NotFoundError
 from backend.core.services.ref_service.format_type_service import get_all_format_types, create_format_type, \
     delete_format_type, get_format_type
 
@@ -15,7 +17,7 @@ format_type_model = ref_ns.model('FormatType', {
 
 
 @ref_ns.route('/format-types')
-class FormatTypeList(Resource):
+class FormatTypeList(ApiResource):
     @ref_ns.doc(description="Список всех типов форматов экскурсий")
     def get(self) -> tuple[list[Any], int]:
         """
@@ -42,16 +44,13 @@ class FormatTypeList(Resource):
             int: HTTP статус код.
         """
         data = request.json or {}
-        try:
-            format_type = create_format_type(data.get('name'))
-        except ValueError as e:
-            return {'message': str(e)}, HTTPStatus.BAD_REQUEST
+        format_type = create_format_type(data.get('name'))
 
         return format_type.to_dict(), HTTPStatus.CREATED
 
 
 @ref_ns.route('/format-types/<int:id>')
-class FormatTypeResource(Resource):
+class FormatTypeResource(ApiResource):
     @admin_required
     @ref_ns.doc(description="Удаление типа формата по ID")
     def delete(self, id: int) -> tuple[dict, int]:
@@ -67,7 +66,6 @@ class FormatTypeResource(Resource):
         """
         format_type = get_format_type(id)
         if not format_type:
-            return {'message': 'Тип формата не найден'}, HTTPStatus.NOT_FOUND
-
+            raise NotFoundError('Тип формата не найден')
         delete_format_type(format_type)
         return {'message': 'Тип формата удалён'}, HTTPStatus.OK

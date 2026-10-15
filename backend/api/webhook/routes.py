@@ -1,8 +1,8 @@
 from http import HTTPStatus
 
 from flask import request
-from flask_restx import Resource
 
+from backend.api.errors import ApiResource
 from . import webhook_ns
 from backend.core import db
 from backend.core.models.auth_models import User
@@ -109,7 +109,7 @@ def handle_refund_succeeded(object_data: dict) -> None:
 
 
 @webhook_ns.route("/yookassa")
-class YooKassaWebhook(Resource):
+class YooKassaWebhook(ApiResource):
     def post(self) -> tuple[dict, int]:
         event_data = request.get_json()
 

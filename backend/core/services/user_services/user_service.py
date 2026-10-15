@@ -4,6 +4,7 @@ from typing import Optional, List, Tuple, Dict
 from flask_jwt_extended import create_access_token, get_jwt_identity
 
 from backend.core import db
+from backend.core.errors import NotFoundError, ValidationError
 from backend.core.models.auth_models import User, RoleEnum
 from backend.core.models.event_models import Event, Reservation
 
@@ -68,20 +69,24 @@ def delete_user(email: str) -> Tuple[bool, str]:
 
     :param email: Email пользователя
     :return: Кортеж (успех, сообщение)
+    :raises NotFoundError: если пользователь не найден
+    :raises ValidationError: если есть экскурсии или активные бронирования
     """
     user = User.query.filter_by(email=email).first()
     if not user:
-        return False, "Пользователь не найден"
+        raise NotFoundError("Пользователь не найден")
 
     # Проверка, есть ли созданные экскурсии
     created_events = Event.query.filter_by(created_by=user.user_id).count()
     if created_events > 0:
-        return False, f"Невозможно удалить пользователя: у него есть {created_events} созданных экскурсий"
+        raise ValidationError(f"Невозможно удалить пользователя: у него есть {created_events} созданных экскурсий")
 
     # Проверка активных бронирований
     active_reservations = Reservation.query.filter_by(user_id=user.user_id, is_cancelled=False).count()
     if active_reservations > 0:
-        return False, f"Невозможно удалить пользователя: у него есть {active_reservations} активных бронирований"
+        raise ValidationError(
+            f"Невозможно удалить пользователя: у него есть {active_reservations} активных бронирований"
+        )
 
     db.session.delete(user)
     db.session.commit()

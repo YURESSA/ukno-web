@@ -3,8 +3,8 @@ from typing import Dict, Any, Tuple
 
 from flask import request
 from flask_jwt_extended import get_jwt_identity
-from flask_restx import Resource
 
+from backend.api.errors import ApiResource
 from backend.core.services.user_services.profile_service import get_user_info_response
 from ...core.models.auth_models import RoleEnum
 from ...core.services.user_services.auth_service import login_user
@@ -17,7 +17,7 @@ from ...core.services.user_services.user_service import get_user_by_email, chang
 
 
 @admin_ns.route('/login')
-class AdminLogin(Resource):
+class AdminLogin(ApiResource):
     @admin_ns.expect(admin_login)
     @admin_ns.doc(description="Аутентификация администратора для получения токена доступа")
     def post(self) -> Tuple[Dict[str, Any], int]:
@@ -30,7 +30,7 @@ class AdminLogin(Resource):
 
 
 @admin_ns.route('/profile')
-class AdminProfile(Resource):
+class AdminProfile(ApiResource):
 
     @admin_required
     def get(self) -> Tuple[Dict[str, Any], int]:

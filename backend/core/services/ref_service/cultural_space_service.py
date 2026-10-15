@@ -1,8 +1,7 @@
-import os
-
 from backend.core import db
+from backend.core.errors import NotFoundError, ValidationError
 from backend.core.models.ref_models import CulturalSpace
-from backend.core.utilits.file_utils import save_image, remove_file_if_exists
+from backend.core.utilits.file_utils import save_image, remove_file_if_exists, validate_image_upload
 
 
 def get_all_cultural_spaces():
@@ -15,19 +14,11 @@ def get_cultural_space_by_id(id):
 
 def create_cultural_space(text: str, photo=None, order_index: int = 0):
     if not text:
-        raise ValueError('Поле text обязательно')
+        raise ValidationError('Поле text обязательно')
 
     photo_path = None
     if photo:
-        if not photo.content_type.startswith("image/"):
-            raise ValueError('Файл должен быть изображением')
-
-        photo.seek(0, os.SEEK_END)
-        size = photo.tell()
-        photo.seek(0)
-        if size > 5 * 1024 * 1024:
-            raise ValueError('Размер файла не должен превышать 5 MB')
-
+        validate_image_upload(photo)
         photo_path = save_image(photo, "cultural_space_photos")
 
     item = CulturalSpace(text=text, photo=photo_path, order_index=order_index)
@@ -38,7 +29,7 @@ def create_cultural_space(text: str, photo=None, order_index: int = 0):
 
 def update_cultural_space(item: CulturalSpace, text: str, order_index: int = None):
     if not text:
-        raise ValueError('Поле text обязательно')
+        raise ValidationError('Поле text обязательно')
     item.text = text
     if order_index is not None:
         item.order_index = order_index
@@ -55,15 +46,8 @@ def delete_cultural_space(item: CulturalSpace):
 
 def upload_cultural_space_photo(item: CulturalSpace, photo):
     if not photo:
-        raise ValueError('Файл не выбран')
-    if not photo.content_type.startswith("image/"):
-        raise ValueError('Файл должен быть изображением')
-
-    photo.seek(0, os.SEEK_END)
-    size = photo.tell()
-    photo.seek(0)
-    if size > 5 * 1024 * 1024:
-        raise ValueError('Размер файла не должен превышать 5 MB')
+        raise ValidationError('Файл не выбран')
+    validate_image_upload(photo)
 
     if item.photo:
         remove_file_if_exists(item.photo)
@@ -76,10 +60,10 @@ def upload_cultural_space_photo(item: CulturalSpace, photo):
 def delete_cultural_space_photo(cultural_space_id: int) -> None:
     item = db.session.get(CulturalSpace, cultural_space_id)
     if not item:
-        raise ValueError('Элемент не найден')
+        raise NotFoundError('Элемент не найден')
 
     if not item.photo:
-        raise ValueError('Фото отсутствует')
+        raise ValidationError('Фото отсутствует')
 
     remove_file_if_exists(item.photo)
     item.photo = None

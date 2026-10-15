@@ -1,6 +1,6 @@
 from flask import request
-from flask_restx import Resource
 
+from backend.api.errors import ApiResource
 from . import resident_ns
 from .decorators import resident_required
 from backend.core.schemas.auth_schemas import login_model, change_password_model
@@ -11,7 +11,7 @@ from ...core.models.auth_models import RoleEnum
 
 
 @resident_ns.route('/login')
-class ResidentLogin(Resource):
+class ResidentLogin(ApiResource):
     @resident_ns.expect(login_model)
     @resident_ns.doc(description="Аутентификация резидента для получения токена доступа")
     def post(self) -> tuple[dict, int]:
@@ -26,7 +26,7 @@ class ResidentLogin(Resource):
 
 
 @resident_ns.route('/profile')
-class ResidentProfile(Resource):
+class ResidentProfile(ApiResource):
     @resident_required
     @resident_ns.doc(description="Получение информации о резиденте")
     def get(self) -> tuple[dict, int]:

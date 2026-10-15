@@ -3,8 +3,8 @@ from typing import Dict, Any, List, Tuple
 
 from flask import request
 from flask_jwt_extended import get_jwt
-from flask_restx import Resource
 
+from backend.api.errors import ApiResource
 from backend.core.messages import AuthMessages
 from backend.core.schemas.admin_schemas import update_user_model
 from backend.core.schemas.auth_schemas import user_model
@@ -17,7 +17,7 @@ from ...core.services.user_services.user_service import get_user_by_email, get_a
 
 
 @admin_ns.route('/users')
-class AdminUserList(Resource):
+class AdminUserList(ApiResource):
 
     @admin_required
     def get(self) -> Tuple[List[Dict[str, Any]], int]:
@@ -48,7 +48,7 @@ class AdminUserList(Resource):
 
 
 @admin_ns.route('/users/detail/<string:email>')
-class AdminUserDetail(Resource):
+class AdminUserDetail(ApiResource):
     @admin_required
     @admin_ns.doc(description="Получение информации о пользователе по email (только для администратора)")
     def get(self, email: str) -> Tuple[dict, int]:
@@ -66,14 +66,8 @@ class AdminUserDetail(Resource):
         """
         Удаление пользователя по email с проверкой на созданные экскурсии и активные бронирования
         """
-        success, message = delete_user(email)
-
-        if success:
-            return {"message": AuthMessages.USER_DELETED}, HTTPStatus.OK
-        else:
-            if message == "Пользователь не найден":
-                return {"message": AuthMessages.USER_NOT_FOUND}, HTTPStatus.NOT_FOUND
-            return {"message": message}, HTTPStatus.BAD_REQUEST
+        delete_user(email)
+        return {"message": AuthMessages.USER_DELETED}, HTTPStatus.OK
 
     @admin_required
     @admin_ns.doc(description="Редактирование пользователя по email (только для администратора)")

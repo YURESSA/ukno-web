@@ -11,6 +11,7 @@ from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
 from backend.core import Config
+from backend.core.errors import ValidationError
 from backend.core.storage import delete as delete_from_s3
 from backend.core.storage import upload as upload_to_s3
 from backend.core.storage import uses_s3
@@ -26,25 +27,37 @@ IMAGE_SIGNATURES = {
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
 
 
+def validate_image_upload(file: FileStorage) -> None:
+    """Check upload metadata before saving, preserving service error messages."""
+    if not file.content_type.startswith("image/"):
+        raise ValidationError('Файл должен быть изображением')
+
+    file.seek(0, os.SEEK_END)
+    size = file.tell()
+    file.seek(0)
+    if size > MAX_IMAGE_BYTES:
+        raise ValidationError('Размер файла не должен превышать 5 MB')
+
+
 def _validate_image(file: FileStorage) -> str:
     """Validate extension, size and magic bytes instead of trusting Content-Type."""
     original_filename = secure_filename(file.filename or "")
     extension = os.path.splitext(original_filename)[1].lower()
     configured_extensions = {f".{item.strip().lower()}" for item in Config.ALLOWED_EXTENSIONS}
     if not original_filename or extension not in configured_extensions or extension not in IMAGE_SIGNATURES:
-        raise ValueError("Недопустимый формат изображения")
+        raise ValidationError("Недопустимый формат изображения")
 
     file.stream.seek(0, os.SEEK_END)
     size = file.stream.tell()
     file.stream.seek(0)
     if size <= 0 or size > MAX_IMAGE_BYTES:
-        raise ValueError("Размер изображения должен быть от 1 байта до 5 МБ")
+        raise ValidationError("Размер изображения должен быть от 1 байта до 5 МБ")
 
     header = file.stream.read(16)
     file.stream.seek(0)
     mime_type, matcher = IMAGE_SIGNATURES[extension]
     if not matcher(header):
-        raise ValueError("Содержимое файла не соответствует формату изображения")
+        raise ValidationError("Содержимое файла не соответствует формату изображения")
     return mime_type
 
 
@@ -65,9 +78,14 @@ def save_image(file: FileStorage, subfolder: str = "") -> str:
     :return: относительный путь к сохранённому файлу (например, 'media/uploads/news/filename.png')
     """
     mime_type = _validate_image(file)
+    return _save_upload(file, subfolder, mime_type)
+
+
+def _save_upload(file: FileStorage, subfolder: str, content_type: str) -> str:
+    """Store an upload locally or in S3 using a unique relative path."""
     filename, relative_path = _unique_upload_path(file, subfolder)
     if uses_s3():
-        upload_to_s3(file.stream, relative_path, mime_type)
+        upload_to_s3(file.stream, relative_path, content_type)
         return relative_path
 
     folder_path = os.path.join(Config.PROJECT_ROOT, Config.UPLOAD_FOLDER, subfolder)
@@ -191,12 +209,4 @@ def save_file(file, subfolder: str = "") -> str:
     :param subfolder: подкаталог внутри папки загрузок
     :return: относительный путь к сохранённому файлу (например, 'media/uploads/requisites/filename.pdf')
     """
-    filename, relative_path = _unique_upload_path(file, subfolder)
-    if uses_s3():
-        upload_to_s3(file.stream, relative_path, file.content_type)
-        return relative_path
-
-    folder_path = os.path.join(Config.PROJECT_ROOT, Config.UPLOAD_FOLDER, subfolder)
-    os.makedirs(folder_path, exist_ok=True)
-    file.save(os.path.join(folder_path, filename))
-    return relative_path
+    return _save_upload(file, subfolder, file.content_type)

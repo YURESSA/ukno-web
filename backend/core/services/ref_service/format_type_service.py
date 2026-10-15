@@ -1,4 +1,5 @@
 from backend.core import db
+from backend.core.errors import ValidationError
 from backend.core.models.event_models import FormatType
 
 
@@ -12,10 +13,10 @@ def get_format_type(id):
 
 def create_format_type(name: str) -> FormatType:
     if not name:
-        raise ValueError('Поле name обязательно')
+        raise ValidationError('Поле name обязательно')
 
     if FormatType.query.filter_by(format_type_name=name).first():
-        raise ValueError('Тип формата с таким именем уже существует')
+        raise ValidationError('Тип формата с таким именем уже существует')
 
     format_type = FormatType(format_type_name=name)
     db.session.add(format_type)

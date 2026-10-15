@@ -5,6 +5,7 @@ import pytest
 from flask_jwt_extended import create_access_token
 
 from backend.api.admin.decorators import admin_required
+from backend.api.resident.decorators import resident_required
 from backend.api.webhook import routes as webhook_routes
 from backend.core import create_app, db
 from backend.core.config import Config
@@ -73,7 +74,11 @@ def add_session(owner, capacity=1, cost=0):
 
 
 def auth_header(user):
-    return {"Authorization": f"Bearer {create_access_token(identity=user.email, additional_claims={'role': user.role.value})}"}
+    token = create_access_token(
+        identity=user.email,
+        additional_claims={"role": user.role.value},
+    )
+    return {"Authorization": f"Bearer {token}"}
 
 
 def test_calendar_exports_require_owner_jwt(app):
@@ -176,12 +181,20 @@ def test_forged_webhook_cannot_mark_reservation_paid(app, monkeypatch):
         monkeypatch.setattr(
             webhook_routes,
             "get_yookassa_payment",
-            lambda payment_id: SimpleNamespace(id=payment_id, status="pending", metadata={"type": "reservation", "reservation_id": reservation_id}),
+            lambda payment_id: SimpleNamespace(
+                id=payment_id,
+                status="pending",
+                metadata={"type": "reservation", "reservation_id": reservation_id},
+            ),
         )
         payload = {
             "type": "notification",
             "event": "payment.succeeded",
-            "object": {"id": "payment-1", "status": "succeeded", "metadata": {"type": "reservation", "reservation_id": reservation_id}},
+            "object": {
+                "id": "payment-1",
+                "status": "succeeded",
+                "metadata": {"type": "reservation", "reservation_id": reservation_id},
+            },
         }
         response = app.test_client().post("/api/webhook/yookassa", json=payload)
 
@@ -223,7 +236,11 @@ def test_verified_webhook_is_idempotent_and_uses_trusted_metadata(app, monkeypat
         monkeypatch.setattr(
             webhook_routes,
             "get_yookassa_payment",
-            lambda payment_id: SimpleNamespace(id=payment_id, status="succeeded", metadata={"type": "reservation", "reservation_id": reservation_id}),
+            lambda payment_id: SimpleNamespace(
+                id=payment_id,
+                status="succeeded",
+                metadata={"type": "reservation", "reservation_id": reservation_id},
+            ),
         )
         monkeypatch.setattr(webhook_routes, "send_reservation_confirmation_email", lambda *args: sent.append(args))
         payload = {
@@ -252,21 +269,56 @@ def test_login_does_not_reveal_whether_email_exists(app):
         assert known.get_json() == unknown.get_json() == {"message": "Неверный email или пароль"}
 
 
-def test_demoted_admin_cannot_use_old_admin_token(app):
+@pytest.mark.parametrize("decorator, role", [
+    (admin_required, RoleEnum.ADMIN),
+    (resident_required, RoleEnum.RESIDENT),
+])
+def test_demoted_user_cannot_use_old_privileged_token(app, decorator, role):
     with app.app_context():
-        user = add_user("demoted@example.com", RoleEnum.ADMIN)
+        user = add_user("demoted@example.com", role)
         db.session.commit()
         old_admin_headers = auth_header(user)
         user.role = RoleEnum.USER
         db.session.commit()
 
         @app.get("/_security/admin-only")
-        @admin_required
+        @decorator
         def admin_only():
             return {"ok": True}
 
         response = app.test_client().get("/_security/admin-only", headers=old_admin_headers)
         assert response.status_code == 403
+
+
+@pytest.mark.parametrize("decorator, role, denied_message", [
+    (admin_required, RoleEnum.ADMIN, "Доступ запрещен"),
+    (resident_required, RoleEnum.RESIDENT, "Доступ запрещён"),
+])
+def test_privileged_routes_check_token_and_database_role(app, decorator, role, denied_message):
+    with app.app_context():
+        user = add_user("privileged@example.com", role)
+        db.session.commit()
+
+        @app.get("/_security/role-only")
+        @decorator
+        def role_only():
+            return {"ok": True}
+
+        client = app.test_client()
+        url = "/_security/role-only"
+        assert client.get(url).status_code == 401
+        assert client.get(url, headers=auth_header(user)).get_json() == {"ok": True}
+
+        for claims in ({}, {"role": "unknown"}, {"role": RoleEnum.USER.value}):
+            token = create_access_token(identity=user.email, additional_claims=claims)
+            response = client.get(url, headers={"Authorization": f"Bearer {token}"})
+            assert response.status_code == 403
+            assert response.get_json() == {"message": denied_message}
+
+        token = create_access_token(identity="missing@example.com", additional_claims={"role": role.value})
+        response = client.get(url, headers={"Authorization": f"Bearer {token}"})
+        assert response.status_code == 403
+        assert response.get_json() == {"message": denied_message}
 
 
 def test_admin_user_update_accepts_role_name_and_legacy_role(app):
@@ -279,3 +331,29 @@ def test_admin_user_update_accepts_role_name_and_legacy_role(app):
 
         updated = update_user(user.email, {"role_name": "resident"})
         assert updated.role == RoleEnum.RESIDENT
+
+
+def test_user_deletion_validation_keeps_status_messages_and_records(app):
+    with app.app_context():
+        admin = add_user("delete-admin@example.com", RoleEnum.ADMIN)
+        owner = add_user("delete-owner@example.com")
+        booker = add_user("delete-booker@example.com")
+        session = add_session(owner)
+        db.session.add(Reservation(
+            session_id=session.session_id, user_id=booker.user_id,
+            full_name="Booker", phone_number="+70000000000", email=booker.email,
+            participants_count=1, is_paid=True, is_cancelled=False,
+        ))
+        db.session.commit()
+        client = app.test_client()
+        for user, message in [
+            (owner, "Невозможно удалить пользователя: у него есть 1 созданных экскурсий"),
+            (booker, "Невозможно удалить пользователя: у него есть 1 активных бронирований"),
+        ]:
+            response = client.delete(f"/api/admin/users/detail/{user.email}", headers=auth_header(admin))
+            assert response.status_code == 400
+            assert response.get_json() == {"message": message}
+            response = client.delete("/api/user/profile", headers=auth_header(user))
+            assert response.status_code == 400
+            assert response.get_json() == {"message": message}
+            assert db.session.get(User, user.user_id) is not None

@@ -2,8 +2,8 @@ from http import HTTPStatus
 
 from flask import request, Response
 from flask_jwt_extended import get_jwt_identity
-from flask_restx import Resource
 
+from backend.api.errors import ApiResource
 from backend.core.services.event_services.event_photo_service import get_photos_for_event, \
     delete_photo_from_event, handle_add_photo
 from backend.core.services.event_services.event_api import handle_create_event
@@ -19,7 +19,7 @@ from ...core.services.user_services.user_service import get_user_by_email
 
 
 @admin_ns.route('/excursions')
-class AdminExcursionsResource(Resource):
+class AdminExcursionsResource(ApiResource):
     @admin_required
     @admin_ns.doc(description="Получение списка всех экскурсий (только для администратора)")
     def get(self) -> tuple[dict, int]:
@@ -52,7 +52,7 @@ class AdminExcursionsResource(Resource):
 
 
 @admin_ns.route('/excursions/<int:excursion_id>')
-class AdminExcursionResource(Resource):
+class AdminExcursionResource(ApiResource):
     @admin_required
     @admin_ns.expect(event_model, validate=True)
     def patch(self, excursion_id: int) -> tuple[dict, int]:
@@ -100,7 +100,7 @@ class AdminExcursionResource(Resource):
 
 
 @admin_ns.route('/excursions/<int:excursion_id>/sessions')
-class AdminExcursionSessionsResource(Resource):
+class AdminExcursionSessionsResource(ApiResource):
     @admin_required
     def get(self, excursion_id: int) -> tuple[list[dict], int]:
         """
@@ -130,7 +130,7 @@ class AdminExcursionSessionsResource(Resource):
 
 
 @admin_ns.route('/excursions/<int:excursion_id>/sessions/<int:session_id>')
-class AdminExcursionSessionResource(Resource):
+class AdminExcursionSessionResource(ApiResource):
     @admin_required
     @admin_ns.expect(session_patch_model)
     def patch(self, excursion_id: int, session_id: int) -> tuple[dict, int]:
@@ -179,7 +179,7 @@ class AdminExcursionSessionResource(Resource):
 
 
 @admin_ns.route('/excursions/<int:excursion_id>/photos')
-class AdminExcursionPhotosResource(Resource):
+class AdminExcursionPhotosResource(ApiResource):
     @admin_required
     def get(self, excursion_id: int) -> tuple[dict, int]:
         photos, error, status = get_photos_for_event(excursion_id)
@@ -214,7 +214,7 @@ class AdminExcursionPhotosResource(Resource):
 
 
 @admin_ns.route('/excursions/<int:excursion_id>/photos/<int:photo_id>')
-class AdminExcursionPhotoResource(Resource):
+class AdminExcursionPhotoResource(ApiResource):
     @admin_required
     def delete(self, excursion_id: int, photo_id: int) -> tuple[dict, int]:
         """

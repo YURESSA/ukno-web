@@ -1,9 +1,10 @@
 from http import HTTPStatus
 
 from flask import request
-from flask_jwt_extended import jwt_required
-from flask_restx import Resource, fields
+from flask_restx import fields
 
+from backend.api.decorators import jwt_required
+from backend.api.errors import ApiResource
 from backend.core.schemas.auth_schemas import change_password_model, edit_profile_model
 from . import user_ns
 from backend.core import db
@@ -17,7 +18,7 @@ from ...core.utilits.token_utils import verify_reset_token
 
 
 @user_ns.route('/profile')
-class UserProfile(Resource):
+class UserProfile(ApiResource):
     @jwt_required()
     @user_ns.doc(description="Получение информации о текущем пользователе")
     def get(self) -> tuple[dict, int]:
@@ -60,7 +61,7 @@ class UserProfile(Resource):
 
 
 @user_ns.route('/profile/password')
-class ChangePassword(Resource):
+class ChangePassword(ApiResource):
     @jwt_required()
     @user_ns.expect(change_password_model)
     @user_ns.doc(description="Смена пароля текущего пользователя")
@@ -77,7 +78,7 @@ class ChangePassword(Resource):
 
 
 @user_ns.route('/password-reset-request')
-class PasswordResetRequest(Resource):
+class PasswordResetRequest(ApiResource):
     password_reset_request_model = user_ns.model(
         "PasswordResetRequest",
         {
@@ -108,7 +109,7 @@ class PasswordResetRequest(Resource):
 
 
 @user_ns.route('/password-reset')
-class PasswordReset(Resource):
+class PasswordReset(ApiResource):
     password_reset_model = user_ns.model(
         "PasswordReset",
         {

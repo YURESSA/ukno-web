@@ -1,10 +1,12 @@
 from http import HTTPStatus
 
-from flask_restx import Resource, reqparse
+from flask_restx import reqparse
 from werkzeug.datastructures import FileStorage
 
 from backend.api.admin.decorators import admin_required
+from backend.api.errors import ApiResource
 from backend.api.references import ref_ns
+from backend.core.errors import NotFoundError, ValidationError
 from backend.core.services.ref_service.requisite_service import (
     get_all_requisites,
     create_requisite,
@@ -22,7 +24,7 @@ file_parser.add_argument('file', type=FileStorage, required=True, location='file
 
 
 @ref_ns.route('/requisites')
-class RequisiteList(Resource):
+class RequisiteList(ApiResource):
 
     def get(self):
         """Список всех реквизитов"""
@@ -34,21 +36,18 @@ class RequisiteList(Resource):
     def post(self):
         """Создание нового реквизита"""
         args = requisite_parser.parse_args()
-        try:
-            item = create_requisite(args['title'], args['file'])
-        except ValueError as e:
-            return {'message': str(e)}, HTTPStatus.BAD_REQUEST
+        item = create_requisite(args['title'], args['file'])
         return item.to_dict(), HTTPStatus.CREATED
 
 
 @ref_ns.route('/requisites/<int:id>')
-class RequisiteResource(Resource):
+class RequisiteResource(ApiResource):
 
     def get(self, id: int):
         """Получение реквизита по ID"""
         item = get_requisite_by_id(id)
         if not item:
-            return {'message': 'Реквизит не найден'}, HTTPStatus.NOT_FOUND
+            raise NotFoundError('Реквизит не найден')
         return item.to_dict(), HTTPStatus.OK
 
     @admin_required
@@ -57,13 +56,9 @@ class RequisiteResource(Resource):
         """Обновление названия реквизита"""
         item = get_requisite_by_id(id)
         if not item:
-            return {'message': 'Реквизит не найден'}, HTTPStatus.NOT_FOUND
-
+            raise NotFoundError('Реквизит не найден')
         args = requisite_parser.parse_args()
-        try:
-            update_requisite(item, args['title'])
-        except ValueError as e:
-            return {'message': str(e)}, HTTPStatus.BAD_REQUEST
+        update_requisite(item, args['title'])
         return item.to_dict(), HTTPStatus.OK
 
     @admin_required
@@ -71,14 +66,13 @@ class RequisiteResource(Resource):
         """Удаление реквизита вместе с файлом"""
         item = get_requisite_by_id(id)
         if not item:
-            return {'message': 'Реквизит не найден'}, HTTPStatus.NOT_FOUND
-
+            raise NotFoundError('Реквизит не найден')
         delete_requisite(item)
         return {'message': 'Реквизит удалён'}, HTTPStatus.OK
 
 
 @ref_ns.route('/requisites/<int:id>/file')
-class RequisiteFileResource(Resource):
+class RequisiteFileResource(ApiResource):
 
     @admin_required
     @ref_ns.expect(file_parser)
@@ -86,13 +80,9 @@ class RequisiteFileResource(Resource):
         """Загрузка или замена файла реквизита"""
         item = get_requisite_by_id(id)
         if not item:
-            return {'message': 'Реквизит не найден'}, HTTPStatus.NOT_FOUND
-
+            raise NotFoundError('Реквизит не найден')
         args = file_parser.parse_args()
-        try:
-            path = replace_requisite_file(item, args['file'])
-        except ValueError as e:
-            return {'message': str(e)}, HTTPStatus.BAD_REQUEST
+        path = replace_requisite_file(item, args['file'])
 
         return {'message': 'Файл обновлён', 'file_path': path}, HTTPStatus.OK
 
@@ -101,11 +91,9 @@ class RequisiteFileResource(Resource):
         """Удаление файла реквизита"""
         item = get_requisite_by_id(id)
         if not item:
-            return {'message': 'Реквизит не найден'}, HTTPStatus.NOT_FOUND
-
+            raise NotFoundError('Реквизит не найден')
         if not item.file:
-            return {'message': 'Файл отсутствует'}, HTTPStatus.BAD_REQUEST
-
+            raise ValidationError('Файл отсутствует')
         delete_requisite_file(item)
 
         return {'message': 'Файл удалён'}, HTTPStatus.OK

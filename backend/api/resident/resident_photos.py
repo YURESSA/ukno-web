@@ -2,8 +2,8 @@ from http import HTTPStatus
 
 from flask import request
 from flask_jwt_extended import get_jwt_identity
-from flask_restx import Resource
 
+from backend.api.errors import ApiResource
 from backend.core.services.event_services.event_photo_service import get_photos_for_event, \
     delete_photo_from_event, handle_add_photo
 from backend.core.services.event_services.event_crud import verify_resident_owns_event
@@ -13,7 +13,7 @@ from ...core.services.user_services.user_service import get_user_by_email
 
 
 @resident_ns.route('/excursions/<int:excursion_id>/photos')
-class ExcursionPhotosResource(Resource):
+class ExcursionPhotosResource(ApiResource):
     @resident_required
     def get(self, excursion_id: int) -> tuple[dict, int]:
         resident_id = get_user_by_email(get_jwt_identity()).user_id
@@ -52,7 +52,7 @@ class ExcursionPhotosResource(Resource):
 
 
 @resident_ns.route('/excursions/<int:excursion_id>/photos/<int:photo_id>')
-class ExcursionPhotoResource(Resource):
+class ExcursionPhotoResource(ApiResource):
     @resident_required
     def delete(self, excursion_id: int, photo_id: int) -> tuple[dict, int]:
         """
