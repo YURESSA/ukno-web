@@ -6,9 +6,11 @@ from typing import Tuple, Optional, List, Dict
 from werkzeug.datastructures import FileStorage
 
 from backend.core import db
+from backend.core.errors import NotFoundError, ValidationError
 from backend.core.models.news_models import NewsImage, News
 from backend.core.services.user_services.user_service import get_user_by_email
 from backend.core.utilits.file_utils import save_image, remove_file_if_exists
+from backend.core.utilits.request_utils import require_json_object
 
 
 def create_news_with_images(user_email: str, data_str: str, image_files: List[FileStorage]) -> Tuple[Dict, HTTPStatus]:
@@ -24,7 +26,7 @@ def create_news_with_images(user_email: str, data_str: str, image_files: List[Fi
         return {"message": "Поле 'data' обязательно"}, HTTPStatus.BAD_REQUEST
 
     try:
-        data = json.loads(data_str)
+        data = require_json_object(json.loads(data_str))
     except json.JSONDecodeError as e:
         return {"message": f"Ошибка в JSON: {str(e)}"}, HTTPStatus.BAD_REQUEST
 
@@ -90,26 +92,28 @@ def get_news_by_id(news_id: int) -> Optional[News]:
     return db.session.get(News, news_id)
 
 
-def update_news(news_id: int, form_data: dict, files: Optional[dict] = None) -> Tuple[Optional[News], Optional[str]]:
+def update_news(news_id: int, form_data: dict, files: Optional[dict] = None) -> Tuple[News, None]:
     """
     Обновляет новость и добавляет новые изображения.
 
     :param news_id: ID новости
     :param form_data: словарь с полем 'data', содержащим JSON с title, content, photo_author
     :param files: словарь с ключом 'image', содержащий список файлов
-    :return: кортеж (объект новости или None, сообщение об ошибке или None)
+    :return: кортеж (объект новости, None)
+    :raises NotFoundError: если новость не найдена
+    :raises ValidationError: при некорректных данных
     """
     news = db.session.get(News, news_id)
     if not news:
-        return None, "Новость не найдена"
+        raise NotFoundError("Новость не найдена")
 
     if 'data' not in form_data:
-        return None, "Поле 'data' обязательно"
+        raise ValidationError("Поле 'data' обязательно")
 
     try:
-        data = json.loads(form_data['data'])
+        data = require_json_object(json.loads(form_data['data']))
     except json.JSONDecodeError as e:
-        return None, f"Ошибка в JSON: {str(e)}"
+        raise ValidationError(f"Ошибка в JSON: {str(e)}")
 
     title = data.get("title")
     content = data.get("content")
@@ -122,7 +126,7 @@ def update_news(news_id: int, form_data: dict, files: Optional[dict] = None) -> 
             created_at = datetime.fromisoformat(created_at)
             news.created_at = created_at
         except ValueError:
-            return {"message": "Неверный формат даты"}, 400
+            raise ValidationError("Неверный формат даты")
     else:
         created_at = datetime.now()
 
@@ -135,7 +139,7 @@ def update_news(news_id: int, form_data: dict, files: Optional[dict] = None) -> 
     if photo_author is not None:
         news.photo_author = photo_author
 
-    images = files.getlist("image") if files else []
+    images = files.get("image", []) if files else []
     for image_file in images:
         if image_file:
             image_path = save_image(image_file, "news")

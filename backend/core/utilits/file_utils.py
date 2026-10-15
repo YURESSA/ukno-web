@@ -11,6 +11,7 @@ from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
 from backend.core import Config
+from backend.core.errors import ValidationError
 from backend.core.storage import delete as delete_from_s3
 from backend.core.storage import upload as upload_to_s3
 from backend.core.storage import uses_s3
@@ -29,13 +30,13 @@ MAX_IMAGE_BYTES = 5 * 1024 * 1024
 def validate_image_upload(file: FileStorage) -> None:
     """Check upload metadata before saving, preserving service error messages."""
     if not file.content_type.startswith("image/"):
-        raise ValueError('Файл должен быть изображением')
+        raise ValidationError('Файл должен быть изображением')
 
     file.seek(0, os.SEEK_END)
     size = file.tell()
     file.seek(0)
     if size > MAX_IMAGE_BYTES:
-        raise ValueError('Размер файла не должен превышать 5 MB')
+        raise ValidationError('Размер файла не должен превышать 5 MB')
 
 
 def _validate_image(file: FileStorage) -> str:
@@ -44,19 +45,19 @@ def _validate_image(file: FileStorage) -> str:
     extension = os.path.splitext(original_filename)[1].lower()
     configured_extensions = {f".{item.strip().lower()}" for item in Config.ALLOWED_EXTENSIONS}
     if not original_filename or extension not in configured_extensions or extension not in IMAGE_SIGNATURES:
-        raise ValueError("Недопустимый формат изображения")
+        raise ValidationError("Недопустимый формат изображения")
 
     file.stream.seek(0, os.SEEK_END)
     size = file.stream.tell()
     file.stream.seek(0)
     if size <= 0 or size > MAX_IMAGE_BYTES:
-        raise ValueError("Размер изображения должен быть от 1 байта до 5 МБ")
+        raise ValidationError("Размер изображения должен быть от 1 байта до 5 МБ")
 
     header = file.stream.read(16)
     file.stream.seek(0)
     mime_type, matcher = IMAGE_SIGNATURES[extension]
     if not matcher(header):
-        raise ValueError("Содержимое файла не соответствует формату изображения")
+        raise ValidationError("Содержимое файла не соответствует формату изображения")
     return mime_type
 
 

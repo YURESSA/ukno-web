@@ -1,10 +1,12 @@
 from http import HTTPStatus
 
-from flask_restx import Resource, reqparse
+from flask_restx import reqparse
 from werkzeug.datastructures import FileStorage
 
 from backend.api.admin.decorators import admin_required
+from backend.api.errors import ApiResource, error_response
 from backend.api.references import ref_ns
+from backend.core.errors import NotFoundError, ValidationError
 from backend.core.services.ref_service.cultural_space_service import get_all_cultural_spaces, create_cultural_space, \
     update_cultural_space, delete_cultural_space, upload_cultural_space_photo, get_cultural_space_by_id, \
     delete_cultural_space_photo
@@ -19,7 +21,7 @@ photo_parser.add_argument('photo', type=FileStorage, required=True, location='fi
 
 
 @ref_ns.route('/cultural-space')
-class CulturalSpaceList(Resource):
+class CulturalSpaceList(ApiResource):
 
     @ref_ns.doc(description="Список элементов культурного пространства")
     def get(self):
@@ -55,15 +57,12 @@ class CulturalSpaceList(Resource):
             int: HTTP статус код (201 при успешном добавлении)
         """
         args = cultural_space_parser.parse_args()
-        try:
-            item = create_cultural_space(args.get('text'), args.get('photo'), args.get('order_index'))
-        except ValueError as e:
-            return {'message': str(e)}, HTTPStatus.BAD_REQUEST
+        item = create_cultural_space(args.get('text'), args.get('photo'), args.get('order_index'))
         return item.to_dict(), HTTPStatus.CREATED
 
 
 @ref_ns.route('/cultural-space/<int:id>')
-class CulturalSpaceResource(Resource):
+class CulturalSpaceResource(ApiResource):
 
     @ref_ns.doc(description="Получение элемента культурного пространства по ID")
     def get(self, id: int):
@@ -76,7 +75,7 @@ class CulturalSpaceResource(Resource):
         """
         item = get_cultural_space_by_id(id)
         if not item:
-            return {'message': 'Элемент не найден'}, 404
+            raise NotFoundError('Элемент не найден')
         return item.to_dict(), HTTPStatus.OK
 
     @admin_required
@@ -97,12 +96,9 @@ class CulturalSpaceResource(Resource):
         """
         item = get_cultural_space_by_id(id)
         if not item:
-            return {'message': 'Элемент не найден'}, HTTPStatus.NOT_FOUND
+            raise NotFoundError('Элемент не найден')
         args = cultural_space_parser.parse_args()
-        try:
-            item = update_cultural_space(item, args.get('text'), args.get('order_index'))
-        except ValueError as e:
-            return {'message': str(e)}, HTTPStatus.BAD_REQUEST
+        item = update_cultural_space(item, args.get('text'), args.get('order_index'))
         return item.to_dict(), HTTPStatus.OK
 
     @admin_required
@@ -120,13 +116,13 @@ class CulturalSpaceResource(Resource):
         """
         item = get_cultural_space_by_id(id)
         if not item:
-            return {'message': 'Элемент не найден'}, HTTPStatus.NOT_FOUND
+            raise NotFoundError('Элемент не найден')
         delete_cultural_space(item)
         return {'message': 'Элемент удалён'}, HTTPStatus.OK
 
 
 @ref_ns.route('/cultural-space/<int:id>/photo')
-class CulturalSpacePhotoResource(Resource):
+class CulturalSpacePhotoResource(ApiResource):
 
     @admin_required
     @ref_ns.doc(description="Удаление фото элемента культурного пространства")
@@ -139,15 +135,7 @@ class CulturalSpacePhotoResource(Resource):
             400 Bad Request: Фото отсутствует
             404 Not Found: Элемент не найден
         """
-        try:
-            delete_cultural_space_photo(id)
-        except ValueError as e:
-            message = str(e)
-            if message == 'Элемент не найден':
-                return {'message': message}, HTTPStatus.NOT_FOUND
-            if message == 'Фото отсутствует':
-                return {'message': message}, HTTPStatus.BAD_REQUEST
-            return {'message': message}, HTTPStatus.BAD_REQUEST
+        delete_cultural_space_photo(id)
 
         return {'message': 'Фото удалено'}, HTTPStatus.OK
 
@@ -168,10 +156,11 @@ class CulturalSpacePhotoResource(Resource):
         """
         item = get_cultural_space_by_id(id)
         if not item:
-            return {'message': 'Элемент не найден'}, HTTPStatus.NOT_FOUND
+            raise NotFoundError('Элемент не найден')
         args = photo_parser.parse_args()
         try:
             photo_path = upload_cultural_space_photo(item, args.get('photo'))
-        except ValueError as e:
-            return {'message': str(e)}, HTTPStatus.NOT_FOUND
+        except ValidationError as error:
+            # Preserve this endpoint's legacy 404 response for invalid uploads.
+            return error_response(error, HTTPStatus.NOT_FOUND)
         return {'message': 'Фото загружено', 'photo_path': photo_path}, HTTPStatus.OK

@@ -1,12 +1,14 @@
 from http import HTTPStatus
 from typing import Any
 
-from flask_restx import Resource, reqparse
+from flask_restx import reqparse
 from flask_restx import fields
 from werkzeug.datastructures import FileStorage
 
 from backend.api.admin.decorators import admin_required
+from backend.api.errors import ApiResource
 from backend.api.references import ref_ns
+from backend.core.errors import NotFoundError
 from backend.core.services.ref_service.team_service import get_team_members, create_team_member, upload_team_photo, \
     delete_team_photo, get_team_member_by_id, update_team_member, delete_team_member
 
@@ -22,7 +24,7 @@ upload_parser.add_argument('photo', type=FileStorage, required=False, location='
 
 
 @ref_ns.route('/team')
-class TeamList(Resource):
+class TeamList(ApiResource):
 
     @ref_ns.doc(description="Список сотрудников команды")
     def get(self) -> tuple[list[Any], int]:
@@ -62,20 +64,17 @@ class TeamList(Resource):
         """
         args = upload_parser.parse_args()
 
-        try:
-            member = create_team_member(
-                full_name=args.get('full_name'),
-                description=args.get('description'),
-                photo=args.get('photo')
-            )
-        except ValueError as e:
-            return {'message': str(e)}, HTTPStatus.BAD_REQUEST
+        member = create_team_member(
+            full_name=args.get('full_name'),
+            description=args.get('description'),
+            photo=args.get('photo')
+        )
 
         return member.to_dict(), HTTPStatus.CREATED
 
 
 @ref_ns.route('/team/<int:id>')
-class TeamResource(Resource):
+class TeamResource(ApiResource):
 
     @ref_ns.doc(description="Получение сотрудника команды по ID")
     def get(self, id: int) -> tuple[dict, int]:
@@ -88,8 +87,7 @@ class TeamResource(Resource):
         """
         member = get_team_member_by_id(id)
         if not member:
-            return {'message': 'Сотрудник не найден'}, HTTPStatus.NOT_FOUND
-
+            raise NotFoundError('Сотрудник не найден')
         return member.to_dict(), HTTPStatus.OK
 
     @admin_required
@@ -104,8 +102,7 @@ class TeamResource(Resource):
         """
         member = get_team_member_by_id(id)
         if not member:
-            return {'message': 'Сотрудник не найден'}, HTTPStatus.NOT_FOUND
-
+            raise NotFoundError('Сотрудник не найден')
         delete_team_member(member)
         return {'message': 'Сотрудник удалён'}, HTTPStatus.OK
 
@@ -127,18 +124,14 @@ class TeamResource(Resource):
         """
         member = get_team_member_by_id(id)
         if not member:
-            return {'message': 'Сотрудник не найден'}, HTTPStatus.NOT_FOUND
-
+            raise NotFoundError('Сотрудник не найден')
         args = upload_parser.parse_args()
 
-        try:
-            member = update_team_member(
-                member,
-                full_name=args.get('full_name'),
-                description=args.get('description')
-            )
-        except ValueError as e:
-            return {'message': str(e)}, HTTPStatus.BAD_REQUEST
+        member = update_team_member(
+            member,
+            full_name=args.get('full_name'),
+            description=args.get('description')
+        )
 
         return member.to_dict(), HTTPStatus.OK
 
@@ -148,7 +141,7 @@ photo_parser.add_argument('photo', type=FileStorage, required=True, location='fi
 
 
 @ref_ns.route('/team/<int:id>/photo')
-class TeamPhotoResource(Resource):
+class TeamPhotoResource(ApiResource):
 
     @admin_required
     @ref_ns.doc(description="Удаление фото сотрудника")
@@ -163,12 +156,8 @@ class TeamPhotoResource(Resource):
         """
         member = get_team_member_by_id(id)
         if not member:
-            return {'message': 'Сотрудник не найден'}, HTTPStatus.NOT_FOUND
-
-        try:
-            delete_team_photo(member)
-        except ValueError as e:
-            return {'message': str(e)}, HTTPStatus.BAD_REQUEST
+            raise NotFoundError('Сотрудник не найден')
+        delete_team_photo(member)
 
         return {'message': 'Фото удалено'}, HTTPStatus.OK
 
@@ -189,13 +178,9 @@ class TeamPhotoResource(Resource):
         """
         member = get_team_member_by_id(id)
         if not member:
-            return {'message': 'Сотрудник не найден'}, HTTPStatus.NOT_FOUND
-
+            raise NotFoundError('Сотрудник не найден')
         args = photo_parser.parse_args()
 
-        try:
-            path = upload_team_photo(member, args.get('photo'))
-        except ValueError as e:
-            return {'message': str(e)}, HTTPStatus.BAD_REQUEST
+        path = upload_team_photo(member, args.get('photo'))
 
         return {'message': 'Фото загружено', 'photo_path': path}, HTTPStatus.OK

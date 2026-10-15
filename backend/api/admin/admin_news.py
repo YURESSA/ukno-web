@@ -3,8 +3,8 @@ from typing import Dict, Any, Optional, List, Tuple
 
 from flask import request
 from flask_jwt_extended import get_jwt_identity
-from flask_restx import Resource
 
+from backend.api.errors import ApiResource
 from backend.core.schemas.admin_schemas import create_parser, update_parser
 from backend.core.services.news_service.news_image_service import (get_photos_for_news,
                                                                    add_photo_to_news, delete_photo_from_news)
@@ -15,7 +15,7 @@ from ...core.services.news_service.news_service import create_news_with_images, 
 
 
 @admin_ns.route('/news')
-class NewsResource(Resource):
+class NewsResource(ApiResource):
     @admin_required
     @admin_ns.expect(create_parser)
     @admin_ns.doc(description="Создание новости")
@@ -41,7 +41,7 @@ class NewsResource(Resource):
 
 
 @admin_ns.route('/news/<int:news_id>')
-class NewsDetailResource(Resource):
+class NewsDetailResource(ApiResource):
     @admin_required
     def get(self, news_id: int) -> tuple[dict, int]:
         """
@@ -68,11 +68,7 @@ class NewsDetailResource(Resource):
         form_data: dict = {'data': args['data']}
         files: Optional[dict] = {'image': args.getlist('image')} if args.get('image') else None
 
-        news, error = update_news(news_id, form_data, files)
-        if error:
-            return ({
-                        "message": error}, HTTPStatus.BAD_REQUEST if "JSON" in error or "обязательно" in error
-                    else HTTPStatus.NOT_FOUND)
+        news, _ = update_news(news_id, form_data, files)
         return {"message": "Новость обновлена", "news": news.to_dict()}, HTTPStatus.OK
 
     @admin_required
@@ -90,7 +86,7 @@ class NewsDetailResource(Resource):
 
 
 @admin_ns.route('/news/<int:news_id>/photos')
-class AdminNewsPhotosResource(Resource):
+class AdminNewsPhotosResource(ApiResource):
     @admin_required
     def get(self, news_id: int) -> tuple[dict, int]:
         """
@@ -136,7 +132,7 @@ class AdminNewsPhotosResource(Resource):
 
 
 @admin_ns.route('/news/<int:news_id>/photos/<int:photo_id>')
-class AdminNewsPhotoResource(Resource):
+class AdminNewsPhotoResource(ApiResource):
     @admin_required
     def delete(self, news_id: int, photo_id: int) -> tuple[dict, int]:
         """
@@ -147,6 +143,8 @@ class AdminNewsPhotoResource(Resource):
         :return: Сообщение об успешном удалении или ошибка
         """
         result, status = delete_photo_from_news(news_id, photo_id)
+        if status >= HTTPStatus.BAD_REQUEST:
+            return result, status
         if not result:
             return {"message": "Фото не найдено или не удалось удалить"}, status
         return {"message": "Фото удалено"}, status

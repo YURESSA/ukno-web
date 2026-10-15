@@ -5,7 +5,7 @@ from time import time
 import flask
 from flask import Flask
 from flask_cors import CORS
-from werkzeug.exceptions import RequestEntityTooLarge
+from werkzeug.exceptions import HTTPException, RequestEntityTooLarge
 
 from .config import Config
 from .database import db, migrate
@@ -13,10 +13,16 @@ from .extensions import jwt, api, mail
 
 
 def create_app(testing=False):
+    from backend.api.errors import ensure_error_message, error_response, http_error_response
+    from backend.api.error_docs import document_error_responses
+    from backend.core.errors import ApiError
+
     app = Flask(__name__, template_folder=Config.TEMPLATE_FOLDER, static_folder=Config.STATIC_FOLDER)
     app.config.from_object(Config)
     CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
     app.config['MEDIA_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'media', 'uploads')
+    # RESTX replaces handle_user_exception; retain Flask's dispatcher for API resources.
+    app.extensions["flask_error_handler"] = app.handle_user_exception
     api.init_app(app)
     jwt.init_app(app)
     mail.init_app(app)
@@ -43,6 +49,8 @@ def create_app(testing=False):
             pass
 
     register_apps(app)
+    document_error_responses(api)
+    app.after_request(ensure_error_message)
     if testing:
         app.config["TESTING"] = True
         app.config["JWT_SECRET_KEY"] = "test-secret"
@@ -86,6 +94,9 @@ def create_app(testing=False):
             "max_content_length": app.config.get("MAX_CONTENT_LENGTH"),
             "max_form_memory_size": app.config.get("MAX_FORM_MEMORY_SIZE"),
         }, 413
+
+    app.register_error_handler(ApiError, error_response)
+    app.register_error_handler(HTTPException, http_error_response)
 
     @app.errorhandler(Exception)
     def handle_exception(e):

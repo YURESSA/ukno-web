@@ -1,9 +1,11 @@
 from http import HTTPStatus
 
 from flask import request
-from flask_jwt_extended import get_jwt_identity, jwt_required, verify_jwt_in_request
-from flask_restx import Resource, fields
+from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
+from flask_restx import fields
 
+from backend.api.decorators import jwt_required
+from backend.api.errors import ApiResource
 from . import user_ns
 from backend.core.services.merch_service import (
     create_order,
@@ -93,7 +95,7 @@ def optional_user_email():
 
 
 @user_ns.route("/merch")
-class MerchHome(Resource):
+class MerchHome(ApiResource):
     @user_ns.doc(description="Главная страница мерча: рекламные баннеры, категории и лента товаров")
     def get(self):
         """
@@ -104,7 +106,7 @@ class MerchHome(Resource):
 
 
 @user_ns.route("/merch/categories")
-class MerchCategories(Resource):
+class MerchCategories(ApiResource):
     @user_ns.doc(description="Получение публичного списка активных категорий товаров мерча")
     def get(self):
         """
@@ -116,7 +118,7 @@ class MerchCategories(Resource):
 
 
 @user_ns.route("/merch/products")
-class MerchProducts(Resource):
+class MerchProducts(ApiResource):
     @user_ns.doc(
         description="Получение публичной ленты активных товаров мерча с фильтром по категории",
         params={"category_id": "Необязательный ID категории для фильтрации товаров"},
@@ -141,7 +143,7 @@ class MerchProducts(Resource):
 
 
 @user_ns.route("/merch/products/<int:product_id>")
-class MerchProductDetail(Resource):
+class MerchProductDetail(ApiResource):
     @user_ns.doc(description="Получение детальной карточки товара мерча: фото, цвета, размеры и остатки")
     def get(self, product_id):
         """
@@ -154,7 +156,7 @@ class MerchProductDetail(Resource):
 
 
 @user_ns.route("/merch/products/<int:product_id>/favorite")
-class MerchFavoriteToggle(Resource):
+class MerchFavoriteToggle(ApiResource):
     @jwt_required()
     @user_ns.doc(description="Добавление товара мерча в избранное или удаление из избранного повторным вызовом")
     def post(self, product_id):
@@ -165,7 +167,7 @@ class MerchFavoriteToggle(Resource):
 
 
 @user_ns.route("/merch/favorites")
-class MerchFavorites(Resource):
+class MerchFavorites(ApiResource):
     @jwt_required()
     @user_ns.doc(description="Получение списка избранных товаров мерча текущего пользователя")
     def get(self):
@@ -176,7 +178,7 @@ class MerchFavorites(Resource):
 
 
 @user_ns.route("/merch/cart")
-class MerchCart(Resource):
+class MerchCart(ApiResource):
     @jwt_required()
     @user_ns.doc(description="Получение корзины мерча текущего пользователя с общей стоимостью")
     def get(self):
@@ -211,7 +213,7 @@ class MerchCart(Resource):
 
 
 @user_ns.route("/merch/cart/<int:cart_item_id>")
-class MerchCartItem(Resource):
+class MerchCartItem(ApiResource):
     @jwt_required()
     @user_ns.expect(cart_quantity_model, validate=True)
     @user_ns.doc(
@@ -254,7 +256,7 @@ class MerchCartItem(Resource):
 
 
 @user_ns.route("/merch/orders")
-class MerchOrders(Resource):
+class MerchOrders(ApiResource):
     @jwt_required()
     @user_ns.doc(description="Получение заказов мерча текущего пользователя")
     def get(self):

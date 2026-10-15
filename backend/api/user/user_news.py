@@ -1,14 +1,14 @@
 from http import HTTPStatus
 
-from flask_restx import Resource
 
+from backend.api.errors import ApiResource
 from . import user_ns
 from backend.core.models.news_models import News
 from ...core import db
 
 
 @user_ns.route('/news')
-class NewsList(Resource):
+class NewsList(ApiResource):
     @user_ns.doc(description="Список всех новостей (без авторизации)")
     def get(self):
         """
@@ -24,7 +24,7 @@ class NewsList(Resource):
 
 
 @user_ns.route('/news/<int:news_id>')
-class NewsDetail(Resource):
+class NewsDetail(ApiResource):
     @user_ns.doc(description="Детальный просмотр новости по ID (без авторизации)")
     def get(self, news_id):
         """

@@ -331,3 +331,29 @@ def test_admin_user_update_accepts_role_name_and_legacy_role(app):
 
         updated = update_user(user.email, {"role_name": "resident"})
         assert updated.role == RoleEnum.RESIDENT
+
+
+def test_user_deletion_validation_keeps_status_messages_and_records(app):
+    with app.app_context():
+        admin = add_user("delete-admin@example.com", RoleEnum.ADMIN)
+        owner = add_user("delete-owner@example.com")
+        booker = add_user("delete-booker@example.com")
+        session = add_session(owner)
+        db.session.add(Reservation(
+            session_id=session.session_id, user_id=booker.user_id,
+            full_name="Booker", phone_number="+70000000000", email=booker.email,
+            participants_count=1, is_paid=True, is_cancelled=False,
+        ))
+        db.session.commit()
+        client = app.test_client()
+        for user, message in [
+            (owner, "Невозможно удалить пользователя: у него есть 1 созданных экскурсий"),
+            (booker, "Невозможно удалить пользователя: у него есть 1 активных бронирований"),
+        ]:
+            response = client.delete(f"/api/admin/users/detail/{user.email}", headers=auth_header(admin))
+            assert response.status_code == 400
+            assert response.get_json() == {"message": message}
+            response = client.delete("/api/user/profile", headers=auth_header(user))
+            assert response.status_code == 400
+            assert response.get_json() == {"message": message}
+            assert db.session.get(User, user.user_id) is not None

@@ -39,11 +39,16 @@ def parse_json_payload(raw_data):
         return raw_data, None
     if not raw_data:
         return {}, None
+    if not isinstance(raw_data, str):
+        return None, "Invalid JSON payload"
     raw_data = raw_data.strip()
     if raw_data.startswith("Пример:"):
         raw_data = raw_data.split(":", 1)[1].strip()
     try:
-        return json.loads(raw_data), None
+        data = json.loads(raw_data)
+        if not isinstance(data, dict):
+            return None, "JSON payload must be an object"
+        return data, None
     except json.JSONDecodeError:
         return None, "Invalid JSON payload"
 

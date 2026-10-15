@@ -7,6 +7,7 @@ from flask import request
 from flask_jwt_extended import get_jwt_identity
 
 from backend.core.models.event_models import Event
+from backend.core.utilits.request_utils import require_json_object
 from backend.core.services.event_services.event_crud import create_event
 from backend.core.services.event_services.event_filters import apply_category_filters, apply_format_filters, \
     apply_age_filters, apply_tag_filters, apply_numeric_filters, apply_date_filters, filter_by_title, filter_sessions, \
@@ -67,7 +68,7 @@ def handle_create_event(
         return {"message": f"Поле '{data_field}' обязательно"}, HTTPStatus.BAD_REQUEST
 
     try:
-        data = json.loads(request.form[data_field])
+        data = require_json_object(json.loads(request.form[data_field]))
     except json.JSONDecodeError as e:
         return {"message": f"Неверный JSON: {str(e)}"}, HTTPStatus.BAD_REQUEST
 

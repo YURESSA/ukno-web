@@ -2,10 +2,12 @@ from http import HTTPStatus
 from typing import Any
 
 from flask import request
-from flask_restx import Resource, fields
+from flask_restx import fields
 
 from backend.api.admin.decorators import admin_required
+from backend.api.errors import ApiResource
 from backend.api.references import ref_ns
+from backend.core.errors import NotFoundError
 from backend.core.services.ref_service.company_project_service import get_all_projects, create_project, \
     get_project_by_id, update_project, delete_project
 
@@ -17,7 +19,7 @@ project_model = ref_ns.model('CompanyProject', {
 
 
 @ref_ns.route('/projects')
-class ProjectList(Resource):
+class ProjectList(ApiResource):
 
     @ref_ns.doc(description="Список всех проектов компании")
     def get(self) -> tuple[list[Any], int]:
@@ -54,20 +56,17 @@ class ProjectList(Resource):
             400 Bad Request: Ошибка валидации полей
         """
         data = request.json or {}
-        try:
-            project = create_project(
-                title=data.get('title'),
-                link=data.get('link'),
-                order_index=data.get('order_index'),
-            )
-        except ValueError as e:
-            return {'message': str(e)}, HTTPStatus.BAD_REQUEST
+        project = create_project(
+            title=data.get('title'),
+            link=data.get('link'),
+            order_index=data.get('order_index'),
+        )
 
         return project.to_dict(), HTTPStatus.CREATED
 
 
 @ref_ns.route('/projects/<int:id>')
-class ProjectResource(Resource):
+class ProjectResource(ApiResource):
 
     @ref_ns.doc(description="Получение проекта компании по ID")
     def get(self, id: int) -> tuple[dict, int]:
@@ -83,7 +82,7 @@ class ProjectResource(Resource):
         """
         project = get_project_by_id(id)
         if not project:
-            return {'message': 'Проект не найден'}, HTTPStatus.NOT_FOUND
+            raise NotFoundError('Проект не найден')
         return project.to_dict(), HTTPStatus.OK
 
     @admin_required
@@ -107,19 +106,14 @@ class ProjectResource(Resource):
         """
         project = get_project_by_id(id)
         if not project:
-            return {'message': 'Проект не найден'}, HTTPStatus.NOT_FOUND
-
+            raise NotFoundError('Проект не найден')
         data = request.json or {}
-        try:
-            project = update_project(
-                project,
-                title=data.get('title'),
-                link=data.get('link'),
-                order_index=data.get('order_index'),
-            )
-
-        except ValueError as e:
-            return {'message': str(e)}, HTTPStatus.BAD_REQUEST
+        project = update_project(
+            project,
+            title=data.get('title'),
+            link=data.get('link'),
+            order_index=data.get('order_index'),
+        )
 
         return project.to_dict(), HTTPStatus.OK
 
@@ -138,7 +132,6 @@ class ProjectResource(Resource):
         """
         project = get_project_by_id(id)
         if not project:
-            return {'message': 'Проект не найден'}, HTTPStatus.NOT_FOUND
-
+            raise NotFoundError('Проект не найден')
         delete_project(project)
         return {'message': 'Проект удалён'}, HTTPStatus.OK

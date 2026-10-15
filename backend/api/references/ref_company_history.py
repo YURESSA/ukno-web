@@ -2,10 +2,12 @@ from http import HTTPStatus
 from typing import Any
 
 from flask import request
-from flask_restx import Resource, fields
+from flask_restx import fields
 
 from backend.api.admin.decorators import admin_required
+from backend.api.errors import ApiResource
 from backend.api.references import ref_ns
+from backend.core.errors import NotFoundError
 from backend.core.services.ref_service.company_history_service import get_all_history, create_history, \
     get_history_by_id, update_history, delete_history, validate_history_data
 
@@ -18,7 +20,7 @@ history_model = ref_ns.model('CompanyHistory', {
 
 
 @ref_ns.route('/history')
-class CompanyHistoryList(Resource):
+class CompanyHistoryList(ApiResource):
 
     @ref_ns.doc(description="Список всех событий в истории компании")
     def get(self) -> tuple[list[Any], int]:
@@ -59,17 +61,14 @@ class CompanyHistoryList(Resource):
         """
 
         data = request.json or {}
-        try:
-            title, link, date_str, description = validate_history_data(data)
-            item = create_history(title, link, date_str, description)
-        except ValueError as e:
-            return {'message': str(e)}, HTTPStatus.BAD_REQUEST
+        title, link, date_str, description = validate_history_data(data)
+        item = create_history(title, link, date_str, description)
 
         return item.to_dict(), HTTPStatus.CREATED
 
 
 @ref_ns.route('/history/<int:id>')
-class CompanyHistoryResource(Resource):
+class CompanyHistoryResource(ApiResource):
 
     @ref_ns.doc(description="Получение события по ID")
     def get(self, id: int) -> tuple[dict, int]:
@@ -85,7 +84,7 @@ class CompanyHistoryResource(Resource):
         """
         item = get_history_by_id(id)
         if not item:
-            return {'message': 'Событие не найдено'}, HTTPStatus.NOT_FOUND
+            raise NotFoundError('Событие не найдено')
         return item.to_dict(), HTTPStatus.OK
 
     @admin_required
@@ -111,14 +110,10 @@ class CompanyHistoryResource(Resource):
         """
         item = get_history_by_id(id)
         if not item:
-            return {'message': 'Событие не найдено'}, HTTPStatus.NOT_FOUND
-
+            raise NotFoundError('Событие не найдено')
         data = request.json or {}
-        try:
-            title, link, date_str, description = validate_history_data(data)
-            update_history(item, title, link, date_str, description)
-        except ValueError as e:
-            return {'message': str(e)}, HTTPStatus.BAD_REQUEST
+        title, link, date_str, description = validate_history_data(data)
+        update_history(item, title, link, date_str, description)
 
         return item.to_dict(), HTTPStatus.OK
 
@@ -137,7 +132,6 @@ class CompanyHistoryResource(Resource):
         """
         item = get_history_by_id(id)
         if not item:
-            return {'message': 'Событие не найдено'}, HTTPStatus.NOT_FOUND
-
+            raise NotFoundError('Событие не найдено')
         delete_history(item)
         return {'message': 'Событие удалено'}, HTTPStatus.OK

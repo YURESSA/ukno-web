@@ -1,4 +1,5 @@
 from backend.core import db
+from backend.core.errors import NotFoundError, ValidationError
 from backend.core.models.ref_models import Partner
 from backend.core.utilits.file_utils import save_image, remove_file_if_exists, validate_image_upload
 
@@ -13,7 +14,7 @@ def get_partner_by_id(partner_id: int):
 
 def create_partner(name: str, link: str = None, photo=None, order_index: int = 0):
     if not name:
-        raise ValueError('Поле name обязательно')
+        raise ValidationError('Поле name обязательно')
 
     photo_path = None
     if photo:
@@ -33,7 +34,7 @@ def create_partner(name: str, link: str = None, photo=None, order_index: int = 0
 
 def update_partner(item: Partner, name: str, link: str = None, order_index: int = None):
     if not name:
-        raise ValueError('Поле name обязательно')
+        raise ValidationError('Поле name обязательно')
 
     item.name = name
     item.link = link
@@ -54,7 +55,7 @@ def delete_partner(item: Partner):
 
 def upload_partner_photo(item: Partner, photo):
     if not photo:
-        raise ValueError('Файл не выбран')
+        raise ValidationError('Файл не выбран')
     validate_image_upload(photo)
 
     if item.photo:
@@ -69,10 +70,10 @@ def delete_partner_photo(partner_id: int) -> None:
     """Удаляет фото партнёра по ID."""
     partner = db.session.get(Partner, partner_id)
     if not partner:
-        raise ValueError("Партнёр не найден")
+        raise NotFoundError("Партнёр не найден")
 
     if not partner.photo:
-        raise ValueError("Фото отсутствует")
+        raise ValidationError("Фото отсутствует")
 
     remove_file_if_exists(partner.photo)
     partner.photo = None

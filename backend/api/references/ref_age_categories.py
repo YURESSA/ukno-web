@@ -2,10 +2,12 @@ from http import HTTPStatus
 from typing import Any
 
 from flask import request
-from flask_restx import Resource, fields
+from flask_restx import fields
 
 from backend.api.admin.decorators import admin_required
+from backend.api.errors import ApiResource
 from backend.api.references import ref_ns
+from backend.core.errors import NotFoundError, ValidationError
 from backend.core.services.ref_service.age_category_service import get_all_age_categories, get_age_category_by_name, \
     create_age_category, get_age_category_by_id, delete_age_category
 
@@ -15,7 +17,7 @@ age_category_model = ref_ns.model('AgeCategory', {
 
 
 @ref_ns.route('/age-categories')
-class AgeCategoryList(Resource):
+class AgeCategoryList(ApiResource):
     @ref_ns.doc(description="Список всех возрастных категорий экскурсий")
     def get(self) -> tuple[list[Any], int]:
         """
@@ -44,17 +46,15 @@ class AgeCategoryList(Resource):
         data = request.json or {}
         name = data.get('name')
         if not name:
-            return {'message': 'Поле name обязательно'}, HTTPStatus.BAD_REQUEST
-
+            raise ValidationError('Поле name обязательно')
         if get_age_category_by_name(name):
-            return {'message': 'Возрастная категория с таким именем уже существует'}, HTTPStatus.BAD_REQUEST
-
+            raise ValidationError('Возрастная категория с таким именем уже существует')
         age_category = create_age_category(name)
         return age_category.to_dict(), HTTPStatus.CREATED
 
 
 @ref_ns.route('/age-categories/<int:id>')
-class AgeCategoryResource(Resource):
+class AgeCategoryResource(ApiResource):
     @admin_required
     @ref_ns.doc(description="Удаление возрастной категории по ID")
     def delete(self, id: int) -> tuple[dict, int]:
@@ -70,7 +70,6 @@ class AgeCategoryResource(Resource):
         """
         age_category = get_age_category_by_id(id)
         if not age_category:
-            return {'message': 'Возрастная категория не найдена'}, HTTPStatus.NOT_FOUND
-
+            raise NotFoundError('Возрастная категория не найдена')
         delete_age_category(age_category)
         return {'message': 'Возрастная категория удалена'}, HTTPStatus.OK

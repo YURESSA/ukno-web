@@ -2,6 +2,7 @@ from datetime import date, datetime
 from typing import Optional
 
 from backend.core import db
+from backend.core.errors import ValidationError
 from backend.core.models.ref_models import CompanyHistory
 
 
@@ -19,7 +20,7 @@ def _parse_history_date(date_str: str) -> date:
     try:
         return datetime.strptime(date_str, '%Y-%m-%d').date()
     except ValueError:
-        raise ValueError("Неверный формат даты. Используйте YYYY-MM-DD")
+        raise ValidationError("Неверный формат даты. Используйте YYYY-MM-DD")
 
 
 def create_history(title: str, link: str, date_str: str, description: str) -> CompanyHistory:
@@ -62,16 +63,16 @@ def validate_history_data(data: dict) -> tuple[str, str, str, str] | None:
     """
     title = data.get('title')
     if not title:
-        raise ValueError('Поле title обязательно')
+        raise ValidationError('Поле title обязательно')
 
     link = data.get('link')
 
     date_str = data.get('date')
     if not date_str:
-        raise ValueError('Поле date обязательно')
+        raise ValidationError('Поле date обязательно')
 
     description = data.get('description')
     if not description:
-        raise ValueError('Поле description обязательно')
+        raise ValidationError('Поле description обязательно')
 
     return title, link, date_str, description

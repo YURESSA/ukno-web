@@ -2,10 +2,12 @@ from http import HTTPStatus
 from typing import Any
 
 from flask import request
-from flask_restx import Resource, fields
+from flask_restx import fields
 
 from backend.api.admin.decorators import admin_required
+from backend.api.errors import ApiResource
 from backend.api.references import ref_ns
+from backend.core.errors import NotFoundError, ValidationError
 from backend.core.services.ref_service.category_service import get_all_categories, get_category_by_name, \
     create_category, delete_category, get_category_by_id
 
@@ -15,7 +17,7 @@ category_model = ref_ns.model('Category', {
 
 
 @ref_ns.route('/categories')
-class CategoryList(Resource):
+class CategoryList(ApiResource):
     @ref_ns.doc(description="Список всех категорий экскурсий")
     def get(self) -> tuple[list[Any], int]:
         """
@@ -44,17 +46,15 @@ class CategoryList(Resource):
         data = request.json or {}
         name = data.get('name')
         if not name:
-            return {'message': 'Поле name обязательно'}, HTTPStatus.BAD_REQUEST
-
+            raise ValidationError('Поле name обязательно')
         if get_category_by_name(name):
-            return {'message': 'Категория с таким именем уже существует'}, HTTPStatus.BAD_REQUEST
-
+            raise ValidationError('Категория с таким именем уже существует')
         category = create_category(name)
         return category.to_dict(), HTTPStatus.CREATED
 
 
 @ref_ns.route('/categories/<int:id>')
-class CategoryResource(Resource):
+class CategoryResource(ApiResource):
     @admin_required
     @ref_ns.doc(description="Удаление категории по ID")
     def delete(self, id: int) -> tuple[dict, int]:
@@ -70,7 +70,6 @@ class CategoryResource(Resource):
         """
         category = get_category_by_id(id)
         if not category:
-            return {'message': 'Категория не найдена'}, HTTPStatus.NOT_FOUND
-
+            raise NotFoundError('Категория не найдена')
         delete_category(category)
         return {'message': 'Категория удалена'}, HTTPStatus.OK
