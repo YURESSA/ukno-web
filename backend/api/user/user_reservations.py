@@ -178,7 +178,7 @@ class DetailExcursion(ApiResource):
         """
         excursion = get_event(excursion_id)
 
-        if not excursion:
+        if not excursion or not excursion.is_active or excursion.moderation_status != 'approved':
             return {"message": "Экскурсия не найдена"}, HTTPStatus.NOT_FOUND
 
         now = datetime.now()

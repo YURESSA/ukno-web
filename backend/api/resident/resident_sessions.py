@@ -10,6 +10,7 @@ from backend.core.services.event_services.event_session_service import create_ev
     delete_event_session, get_sessions_for_event
 from . import resident_ns
 from .decorators import resident_required
+from backend.core.services.event_services.event_moderation import prepare_resident_event_edit
 from backend.core.schemas.event_schemas import session_model, \
     session_patch_model
 from ...core.services.user_services.user_service import get_user_by_email
@@ -50,6 +51,7 @@ class ExcursionSessionsResource(ApiResource):
             return error, status
 
         data: dict = request.get_json()
+        prepare_resident_event_edit(excursion)
         session, error, status = create_event_session(excursion_id, data)
         if error:
             return error, status
@@ -77,6 +79,7 @@ class ExcursionSessionResource(ApiResource):
             return error, status
 
         data: dict = request.get_json()
+        prepare_resident_event_edit(excursion)
         session, error, status = update_event_session(excursion_id, session_id, data)
         if error:
             return error, status
@@ -99,4 +102,5 @@ class ExcursionSessionResource(ApiResource):
         if error:
             return error, status
 
+        prepare_resident_event_edit(excursion)
         return delete_event_session(excursion_id, session_id, notify_resident=True)

@@ -330,6 +330,7 @@ Swagger описывает схемы и статусы; этот файл до�
 
 | Функция | HTTP / источник статуса | Точный текст / шаблон | Условие в коде |
 |---|---|---|---|
+| `get` | `400` | `Неизвестный статус модерации` | `Если status_filter is not None and status_filter not in ('pending', 'approved', 'returned')` |
 | `get` | `404` | `Экскурсия не найдена` | `Если not excursion` |
 | `post` | `400` | `Фото не загружено` | `Если 'photo' not in request.files` |
 
@@ -494,7 +495,7 @@ Swagger описывает схемы и статусы; этот файл до�
 |---|---|---|---|
 | `get` | `401` | `Пользователь не найден` | `Если not user` |
 | `get` | `404` | `Бронирование не найдено` | `Если not reservation` |
-| `get` | `404` | `Экскурсия не найдена` | `Если not excursion` |
+| `get` | `404` | `Экскурсия не найдена` | `Если not excursion or not excursion.is_active or excursion.moderation_status != 'approved'` |
 
 ### [backend/api/webhook/routes.py](../api/webhook/routes.py)
 
@@ -544,9 +545,20 @@ Swagger описывает схемы и статусы; этот файл до�
 | `update_event` | `400` | `Категория '{data['category']}' не найдена` | `Если not category` |
 | `update_event` | `400` | `Формат '{data['format_type']}' не найден` | `Если not format_type` |
 | `update_event` | `404` | `Экскурсия не найдена` | `Если not event` |
+| `update_event` | `409` | `Событие не ожидает модерации` | `Если approve and event.moderation_status != 'pending'` |
 | `update_event` | `500` | `Ошибка при обновлении экскурсии: {str(e)}` | `Перехвачено Exception` |
 | `verify_resident_owns_event` | `403` | `У вас нет доступа к этой экскурсии` | `Если event.created_by != resident_id` |
 | `verify_resident_owns_event` | `404` | `Экскурсия не найдена` | `Если not event` |
+
+### [backend/core/services/event_services/event_moderation.py](../core/services/event_services/event_moderation.py)
+
+| Функция | HTTP / источник статуса | Точный текст / шаблон | Условие в коде |
+|---|---|---|---|
+| `change_moderation_status` | `400` | `Укажите комментарий для возврата` | `Если not isinstance(comment, str) or not comment.strip()` |
+| `change_moderation_status` | `404` | `Экскурсия не найдена` | `Если event is None` |
+| `change_moderation_status` | `409` | `Повторно отправить можно только возвращённое событие` | `Если event.moderation_status != 'returned'` |
+| `change_moderation_status` | `409` | `Событие уже возвращено на доработку` | `Если event.moderation_status not in ('pending', 'approved')` |
+| `change_moderation_status` | `исключение` | `Unsupported moderation status` | `Иначе для target == 'pending'` |
 
 ### [backend/core/services/event_services/event_photo_service.py](../core/services/event_services/event_photo_service.py)
 
@@ -739,7 +751,7 @@ Swagger описывает схемы и статусы; этот файл до�
 | `create_reservation_with_payment` | `400` | `session_id is required` | `Если not session_id` |
 | `create_reservation_with_payment` | `400` | `Количество участников должно быть положительным целым числом` | `Если isinstance(participants_count, bool) or not isinstance(participants_count, int) or participants_count < 1` |
 | `create_reservation_with_payment` | `400` | `Нельзя забронировать прошедший сеанс` | `Если session.start_datetime <= datetime.now()` |
-| `create_reservation_with_payment` | `400` | `Событие недоступно для бронирования` | `Если not session.event or not session.event.is_active` |
+| `create_reservation_with_payment` | `400` | `Событие недоступно для бронирования` | `Если not session.event or not session.event.is_active or session.event.moderation_status != 'approved'` |
 | `create_reservation_with_payment` | `401` | `Пользователь не найден` | `Если not user` |
 | `create_reservation_with_payment` | `404` | `Сеанс не найден` | `Если not session` |
 | `create_reservation_with_payment` | `409` | `Недостаточно свободных мест` | `Если held_participants + participants_count > session.max_participants` |

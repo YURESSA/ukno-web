@@ -44,7 +44,10 @@ yarn-error.log
 # Разное
 .DS_Store
 Thumbs.db
-/backend/migrations/
+/backend/migrations/*
+!/backend/migrations/versions/
+/backend/migrations/versions/*
+!/backend/migrations/versions/a3b5c7d9e1f2_add_event_moderation.py
 /backend/media/
 /media/
 frontend/.env

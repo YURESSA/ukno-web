@@ -80,6 +80,8 @@ class Event(db.Model):
 
     created_by = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
+    moderation_status = db.Column(db.String(20), nullable=False, default='approved', server_default='approved')
+    moderation_comment = db.Column(db.Text, nullable=True)
     place = db.Column(db.String(255), nullable=False)
     conducted_by = db.Column(db.String(255), nullable=True)
 
@@ -119,6 +121,8 @@ class Event(db.Model):
             'age_category': self.age_category.to_dict() if self.age_category else None,
             'created_by': self.creator.email if self.creator else None,
             'is_active': self.is_active,
+            'moderation_status': self.moderation_status,
+            'moderation_comment': self.moderation_comment,
             'place': self.place,
             'conducted_by': self.conducted_by,
             'working_hours': self.working_hours,
