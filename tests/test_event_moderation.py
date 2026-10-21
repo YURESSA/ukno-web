@@ -6,11 +6,15 @@ from pathlib import Path
 
 import pytest
 
-from tests.test_security_regressions import app, add_user, add_session, auth_header
+from tests import test_security_regressions
+from tests.test_security_regressions import add_user, add_session, auth_header
 from backend.core import db
 from backend.core.models.auth_models import RoleEnum
 from backend.core.models.event_models import Event, Reservation
 from backend.core.services.event_services import event_photo_service
+
+
+app = test_security_regressions.app
 
 
 @pytest.fixture()
@@ -159,7 +163,8 @@ def test_migration_preserves_existing_events_and_can_be_reversed():
             )).all()
             assert rows == [(1, 1, 'approved', None), (2, 0, 'approved', None)]
             migration.downgrade()
-            assert [column['name'] for column in sa.inspect(connection).get_columns('events')] == ['event_id', 'is_active']
+            columns = [column['name'] for column in sa.inspect(connection).get_columns('events')]
+            assert columns == ['event_id', 'is_active']
     engine.dispose()
 
 
