@@ -16,20 +16,20 @@ depends_on = None
 
 
 def upgrade():
-    op.alter_column(
-        "users",
-        "phone",
-        existing_type=sa.String(length=15),
-        type_=sa.String(length=32),
-        existing_nullable=True,
-    )
+    with op.batch_alter_table("users") as batch:
+        batch.alter_column(
+            "phone",
+            existing_type=sa.String(length=15),
+            type_=sa.String(length=32),
+            existing_nullable=True,
+        )
 
 
 def downgrade():
-    op.alter_column(
-        "users",
-        "phone",
-        existing_type=sa.String(length=32),
-        type_=sa.String(length=15),
-        existing_nullable=True,
-    )
+    with op.batch_alter_table("users") as batch:
+        batch.alter_column(
+            "phone",
+            existing_type=sa.String(length=32),
+            type_=sa.String(length=15),
+            existing_nullable=True,
+        )
