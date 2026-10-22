@@ -10,9 +10,9 @@
       >
     </div>
     <div class="content">
-      <div class="title" @click="goToEventPage">
+      <RouterLink :to="{ name: 'EventDetailPage', params: { id: excursion.excursion_id } }" class="title">
         <p class="text-l bold">{{ excursion.title }}</p>
-      </div>
+      </RouterLink>
 
       <div class="descript">
         <p class="excursion-descript">{{ excursion.short_description }}</p>
@@ -127,9 +127,12 @@ const handleImageError = (e) => {
   max-width: 400px;
 }
 
-/* .title > p{
-  min-height: 80px;
-} */
+.title {
+  display: flex;
+  cursor: pointer;
+  max-width: 100%;
+  flex-wrap: wrap;
+}
 
 .preview-img > img{
   display: block;

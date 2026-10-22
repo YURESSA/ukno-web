@@ -174,7 +174,7 @@
               <p class="date text-l" v-html="formatDate(event.date)"></p>
             </component>
             <component :is="event.link ? 'a' : 'div'" :href="event.link || undefined" :target="event.link ? '_blank' : undefined" class="event-info">
-                <p class="text-l">{{ event.title }}</p>
+                <p class="text-l bold event-title">{{ event.title }}</p>
                 <p>{{ event.description }}</p>
             </component>
           </div>
@@ -239,7 +239,7 @@ function formatDate(dateString) {
   const month = months[date.getMonth()];
   const year = date.getFullYear();
 
-  return `${day} ${month}<br>${year}`;
+  return `${day} ${month} ${year}`;
 }
 
 const openNewTab = (url) => {
@@ -645,16 +645,17 @@ onUnmounted(() => {
 }
 
 .timeline-element-right {
-  margin-right: -260px;
+  margin-right: -340px;
 }
 
 .timeline-element-left {
-  margin-left: -260px;
+  text-align: end;
+  margin-left: -340px;
 }
 
 .date {
   min-width: max-content;
-  padding: 20px 60px 30px 20px;
+  padding: 20px 30px 20px 30px;
   border-radius: 25px;
   background-color: #F25C03;
   color: white;
@@ -662,31 +663,55 @@ onUnmounted(() => {
 }
 
 .timeline-element-left > .date {
-  text-align: end;
+  text-align: start;
   padding: 20px 20px 30px 60px;
 }
 
 .event-info {
-  display: block;
+  display: flex;
+  flex-direction: column;
   position: absolute;
-  padding: 30px 30px 40px 30px;
+  padding: 30px 25px 30px 25px;
   width: max-content;
-  max-width: 430px;
-  border-radius: 30px;
-  backdrop-filter: blur(20.399999618530273px);
-  box-shadow: 0 5px 22px -6px rgba(172, 66, 3, 0.2);
-  background: linear-gradient(176deg, rgba(255, 255, 255, 0.25) 0%, rgba(242, 92, 3, 0.25) 100%);
+  max-width: 450px;
   z-index: 999;
+  gap: 25px;
+}
+
+.event-title {
+  min-width: max-content;
+  width: 100%;
 }
 
 .timeline-element-right > .event-info {
   top: 60px;
-  left: 82px;
+}
+
+.timeline-element-right > .event-info::after {
+  content: "";
+  position: absolute;
+  top: -10px;
+  bottom: 30px;
+  left: 0px;
+  width: 7px;
+  border-radius: 9px;
+  background-color: #f25c03;
 }
 
 .timeline-element-left > .event-info {
   top: 60px;
-  right: 82px;
+  right: 0px;
+}
+
+.timeline-element-left > .event-info::after {
+  content: "";
+  position: absolute;
+  top: -10px;
+  bottom: 30px;
+  right: 0px;
+  width: 7px;
+  border-radius: 9px;
+  background-color: #f25c03;
 }
 
 .more-info{
