@@ -1,6 +1,7 @@
 <template>
   <Welcome />
   <Alert/>
+  <ShopBanner />
   <about-us :culturalData="culturalSpace"></about-us>
   <Events v-if="!$isMobile()"/>
   <div class="events-mobile page-wrapper" v-if="$isMobile()">
@@ -86,6 +87,7 @@ import { onMounted, watch, computed  } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useDataStore } from '@/stores/counter';
 import Welcome from './components/welcome-block.vue';
+import ShopBanner from './components/shop-banner.vue';
 import AboutUs from './components/about-us.vue';
 import Events from './components/events-block.vue';
 import News from './components/news-block.vue';
