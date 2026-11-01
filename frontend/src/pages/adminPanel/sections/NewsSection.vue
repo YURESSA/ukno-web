@@ -27,11 +27,11 @@
     >
       <n-form ref="formRef" :model="selectedItem" label-placement="top">
         <n-grid :cols="2" :x-gap="20">
-          <n-form-item-gi span="2" label="Заголовок">
+          <n-form-item-gi span="2" label="Заголовок" v-bind="fieldProps(selectedItem, 'news', 'title', 'selectedItem.title', isEdit)">
             <n-input v-model:value="selectedItem.title" placeholder="Введите заголовок" />
           </n-form-item-gi>
 
-          <n-form-item-gi span="2" label="Краткое описание">
+          <n-form-item-gi span="2" label="Краткое описание" v-bind="fieldProps(selectedItem, 'news', 'short_description', 'selectedItem.short_description', isEdit)">
             <n-input
               v-model:value="selectedItem.short_description"
               type="textarea"
@@ -40,7 +40,7 @@
             />
           </n-form-item-gi>
 
-          <n-form-item-gi span="2" label="Содержимое">
+          <n-form-item-gi span="2" label="Содержимое" v-bind="fieldProps(selectedItem, 'news', 'content', 'selectedItem.content', isEdit)">
             <Editor v-model="selectedItem.content" />
           </n-form-item-gi>
           <n-form-item-gi span="2" label="Изображения новости">
@@ -63,11 +63,11 @@
             </n-upload>
           </n-form-item-gi>
 
-          <n-form-item-gi label="Автор фото">
+          <n-form-item-gi label="Автор фото" v-bind="fieldProps(selectedItem, 'news', 'photo_author', 'selectedItem.photo_author', isEdit)">
             <n-input v-model:value="selectedItem.photo_author" placeholder="Кто сделал фото?" />
           </n-form-item-gi>
 
-          <n-form-item-gi label="Дата публикации">
+          <n-form-item-gi label="Дата публикации" v-bind="fieldProps(selectedItem, 'news', 'created_at', 'selectedItem.created_at', isEdit)">
             <n-date-picker
               v-model:formatted-value="selectedItem.created_at"
               value-format="yyyy-MM-dd HH:mm:00"
@@ -95,6 +95,9 @@
 </template>
 
 <script setup>
+import { useAdminValidation } from '@/composables/useAdminValidation'
+import { validateAdmin } from '@/utils/adminValidation'
+import { getApiErrorMessage } from '@/utils/apiError'
 import { ref, computed, inject, watch, onMounted, h } from 'vue';
 import { useDataStore, baseUrl } from '@/stores/counter';
 import {
@@ -104,6 +107,8 @@ import {
 } from 'naive-ui';
 import BaseButton from '@/components/ui/button/BaseButton.vue';
 import Editor from '@/components/ui/Editor.vue';
+
+const { submitted, fieldProps, resetValidation } = useAdminValidation();
 
 const store = useDataStore();
 const message = useMessage();
@@ -208,7 +213,7 @@ const handleRemove = (data) => {
           resolve(true);
         } catch (e) {
           console.error(e);
-          message.error('Ошибка сервера при удалении фото');
+          message.error(getApiErrorMessage(e, 'Ошибка сервера при удалении фото'));
           resolve(false);
         } finally {
           loading.value = false;
@@ -262,6 +267,10 @@ watch(addTrigger, () => {
 });
 
 async function handleSave() {
+  if (loading.value) return;
+  submitted.value = true;
+  const validationError = validateAdmin(selectedItem.value, 'news', isEdit.value);
+  if (validationError) return message.error(validationError);
   if (!selectedItem.value.title.trim()) return message.warning('Заголовок обязателен');
 
   try {
@@ -306,7 +315,7 @@ async function handleSave() {
 
   } catch (e) {
     console.error(e);
-    message.error(e.response?.data?.message || 'Ошибка при сохранении');
+    message.error(getApiErrorMessage(e, 'Ошибка при сохранении'));
   } finally {
     loading.value = false;
   }
@@ -326,7 +335,7 @@ function confirmDelete() {
         showModal.value = false;
         await store.FetchAdminNews();
       } catch (e) {
-        message.error('Не удалось удалить новость', e);
+        message.error(getApiErrorMessage(e, 'Не удалось удалить новость'));
       } finally {
         loading.value = false;
       }
@@ -334,5 +343,7 @@ function confirmDelete() {
   });
 }
 
-onMounted(() => store.FetchAdminNews());
+onMounted(() => store.FetchAdminNews().catch(e => message.error(getApiErrorMessage(e, 'Ошибка загрузки данных'))));
+
+watch(showModal, resetValidation);
 </script>

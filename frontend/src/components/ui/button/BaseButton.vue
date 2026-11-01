@@ -1,14 +1,17 @@
 <template>
-  <button>{{ text }}</button>
+  <button type="button" :disabled="loading || disabled" :aria-busy="loading">{{ loading ? 'Подождите…' : text }}</button>
 </template>
 
 <script setup>
 defineProps({
   text: String,
+  loading: Boolean,
+  disabled: Boolean,
 })
 </script>
 
 <style scoped>
+button:disabled { opacity: 0.6; cursor: wait; }
 button{
   display: flex;
   justify-content: center;

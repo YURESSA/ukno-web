@@ -21,7 +21,7 @@
                 placeholder="Номер телефона"
                 v-model="formData.phone_number"
                 autocomplete="off"
-                @input="clearError('phone_number')"
+                @input="onPhoneInput" inputmode="tel" maxlength="32" @blur="validatePhoneField"
               >
               <span class="error-message">{{ errors.phone_number }}</span>
               <input
@@ -78,6 +78,7 @@
   </template>
 
   <script setup>
+import { sanitizePhoneInput } from '@/utils/adminValidation'
   import Header from './components/header.vue';
   import BaseButton from '@/components/ui/button/BaseButton.vue';
   import IconButton from '@/components/ui/button/IconButton.vue';
@@ -85,6 +86,17 @@
   import { onMounted, computed, ref } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import { notification } from '@/utils/notification'
+
+  const onPhoneInput = event => {
+    const value = sanitizePhoneInput(event.target.value)
+    event.target.value = value
+    formData.value.phone_number = value
+    clearError('phone_number')
+  }
+  const validatePhoneField = () => {
+    const phone = (formData.value.phone_number || '').replace(/[ ()-]/g, '')
+    errors.value.phone_number = /^(\+7|8)[0-9]{10}$/.test(phone) ? '' : 'Введите корректный номер телефона'
+  }
 
   const store = useDataStore();
   const route = useRoute();

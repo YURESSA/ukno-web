@@ -6,7 +6,7 @@
         <IconButton @click="closePage" class="close_btn"><img src="/icon/maki_cross.svg" alt=""></IconButton>
       </div>
       <div class="person-info">
-        <form @submit.prevent="submitEvent">
+        <form @submit.prevent="submitEvent" novalidate>
           <p class="text-standart bold">О событии</p>
             <input
               type="EventName"
@@ -14,12 +14,14 @@
               placeholder="Название события*"
               v-model="formData.title"
             >
+            <span v-if="fieldError('title')" class="field-error" role="alert">{{ fieldError('title') }}</span>
             <textarea
               type="EventName"
               name="EventName"
-              placeholder="Описание события*"
+              placeholder="Описание события*" required
               v-model="formData.description"
             ></textarea>
+            <span v-if="fieldError('description')" class="field-error" role="alert">{{ fieldError('description') }}</span>
 
             <select v-model="formData.format_type" class="custom-select" required>
               <option class="placeholder" value="" disabled>Формат события*</option>
@@ -32,6 +34,7 @@
                 {{ format.format_type_name }}
               </option>
             </select>
+            <span v-if="fieldError('format_type')" class="field-error" role="alert">{{ fieldError('format_type') }}</span>
 
             <select v-model="formData.category" class="custom-select" required>
               <option class="placeholder" value="" disabled>Тип события*</option>
@@ -44,9 +47,10 @@
                 {{ category.category_name }}
               </option>
             </select>
+            <span v-if="fieldError('category')" class="field-error" role="alert">{{ fieldError('category') }}</span>
 
             <select v-model="formData.age_category" class="custom-select" required>
-              <option class="placeholder" value="" disabled>Возрастная категория**</option>
+              <option class="placeholder" value="" disabled>Возрастная категория*</option>
               <option
               class="option"
               :value="age_category.age_category_name"
@@ -56,9 +60,10 @@
                 {{ age_category.age_category_name }}
               </option>
             </select>
+            <span v-if="fieldError('age_category')" class="field-error" role="alert">{{ fieldError('age_category') }}</span>
 
             <p class="text-standart bold">Условие проведения</p>
-            <span>Дата и время события</span>
+            <span>Дата и время события*</span>
             <n-config-provider :locale="ruRU" :date-locale="dateRuRU">
               <n-date-picker
                 v-model:formatted-value="formattedValue"
@@ -73,33 +78,36 @@
                 }"
               />
             </n-config-provider>
+            <span v-if="sessionError('start_datetime')" class="field-error" role="alert">{{ sessionError('start_datetime') }}</span>
             <input
               type="EventName"
               name="EventName"
               placeholder="Место сбора*"
               v-model="formData.place"
             >
+            <span v-if="fieldError('place')" class="field-error" role="alert">{{ fieldError('place') }}</span>
             <div class="participants-input">
-              <span>Продолжительность события (в минутах)</span>
+              <span>Продолжительность события (в минутах)*</span>
               <div class="participants">
                 <IconButton class="participants--btn left--btn" type="button" @click="minusDuration" text="-"/>
-                <input v-model="formData.duration" @input="validateParticipants"/>
+                <input type="number" v-model.number="formData.duration" min="0" step="1" />
+            <span v-if="fieldError('duration')" class="field-error" role="alert">{{ fieldError('duration') }}</span>
                 <IconButton class="participants--btn right--btn" type="button" @click="plusDuration" text="+"/>
               </div>
             </div>
             <div class="participants-input">
-              <span>Количество участников</span>
+              <span>Количество участников*</span>
               <div class="participants">
                 <IconButton class="participants--btn left--btn" type="button" @click="minusParticipants" text="-"/>
-                <input v-model="formData.sessions[0].max_participants" @input="validateParticipants"/>
+                <input type="number" v-model.number="formData.sessions[0].max_participants" min="1" step="1" /><span v-if="sessionError('max_participants')" class="field-error" role="alert">{{ sessionError('max_participants') }}</span>
                 <IconButton class="participants--btn right--btn" type="button" @click="plusParticipants" text="+"/>
               </div>
             </div>
             <div class="participants-input">
-              <span>Стоимость</span>
+              <span>Стоимость*</span>
               <div class="participants">
                 <IconButton class="participants--btn left--btn" type="button" @click="minusPrice" text="-"/>
-                <input v-model="formData.sessions[0].cost" @input="validateParticipants"/>
+                <input type="number" v-model.number="formData.sessions[0].cost" min="0" step="any" /><span v-if="sessionError('cost')" class="field-error" role="alert">{{ sessionError('cost') }}</span>
                 <IconButton class="participants--btn right--btn" type="button" @click="plusPrice" text="+"/>
               </div>
             </div>
@@ -107,9 +115,10 @@
             <input
               type="EventName"
               name="EventName"
-              placeholder="Органиатор*"
+              placeholder="Организатор"
               v-model="formData.conducted_by"
             >
+            <span v-if="fieldError('conducted_by')" class="field-error" role="alert">{{ fieldError('conducted_by') }}</span>
             <span>Время работы организации</span>
             <input
               type="EventName"
@@ -117,6 +126,7 @@
               placeholder="Ежедневно с 10:00 до 21:00"
               v-model="formData.working_hours"
             >
+            <span v-if="fieldError('working_hours')" class="field-error" role="alert">{{ fieldError('working_hours') }}</span>
             <span>Почта для связи</span>
             <input
               type="EventName"
@@ -124,6 +134,7 @@
               placeholder="construct@ekbtour.ru"
               v-model="formData.contact_email"
             >
+            <span v-if="fieldError('contact_email')" class="field-error" role="alert">{{ fieldError('contact_email') }}</span>
             <span>Местоположение на карте</span>
             <MapPicker
               map-id="new-event-map"
@@ -135,24 +146,26 @@
               placeholder="Telegram"
               v-model="formData.telegram"
             >
+            <span v-if="fieldError('telegram')" class="field-error" role="alert">{{ fieldError('telegram') }}</span>
             <input
               type="EventName"
               name="EventName"
               placeholder="Vk"
               v-model="formData.vk"
             >
-            <input
-              type="EventName"
+            <span v-if="fieldError('vk')" class="field-error" role="alert">{{ fieldError('vk') }}</span>
+            <input type="number"
               name="EventName"
               placeholder="Дистанция от центра города (в метрах)"
-              v-model="formData.distance_to_center"
+              v-model.number="formData.distance_to_center" min="0" step="any"
             >
-            <input
-              type="EventName"
+            <span v-if="fieldError('distance_to_center')" class="field-error" role="alert">{{ fieldError('distance_to_center') }}</span>
+            <input type="number"
               name="EventName"
               placeholder="Время от ближайшей остановки (в минутах)"
-              v-model="formData.time_to_nearest_stop"
+              v-model.number="formData.time_to_nearest_stop" min="0" step="any"
             >
+            <span v-if="fieldError('time_to_nearest_stop')" class="field-error" role="alert">{{ fieldError('time_to_nearest_stop') }}</span>
 
             <p class="text-standart bold">Изображения</p>
             <n-upload
@@ -169,7 +182,7 @@
             >
               <img :src="previewImageUrl" style="width: 100%">
             </n-modal>
-            <BaseButton type="submit" class="sumbit--btn" text="Создать событие"/>
+            <BaseButton :loading="saving" type="submit" class="sumbit--btn" text="Создать событие"/>
         </form>
       </div>
     </div>
@@ -177,6 +190,8 @@
 </template>
 
 <script setup>
+import { validateAdmin, getAdminFieldError } from '@/utils/adminValidation'
+import { getApiErrorMessage } from '@/utils/apiError'
 import { useRouter } from 'vue-router';
 import { ref, onMounted, computed } from 'vue';
 import IconButton from '@/components/ui/button/IconButton.vue';
@@ -190,6 +205,15 @@ import { notification } from '@/utils/notification'
 const store = useDataStore();
 const router = useRouter();
 const formattedValue = ref(null);
+const submitted = ref(false);
+const saving = ref(false);
+const fieldError = key => {
+  if (!submitted.value) return '';
+  const value = formData.value[key];
+  const optionalNumber = ['distance_to_center', 'time_to_nearest_stop'].includes(key);
+  return getAdminFieldError({ ...formData.value, [key]: optionalNumber && value === '' ? null : value }, 'residentEvent', key);
+};
+const sessionError = key => submitted.value ? getAdminFieldError({ ...formData.value.sessions[0], start_datetime: formattedValue.value }, 'session', key) : '';
 
 onMounted(async () => {
   await store.FetchExcursionsStats();
@@ -213,8 +237,8 @@ const formData = ref({
   longitude: null,
   telegram: '',
   vk: '',
-  distance_to_center: '',
-  time_to_nearest_stop: '',
+  distance_to_center: null,
+  time_to_nearest_stop: null,
   tags: '',
   sessions: [
     {
@@ -284,37 +308,36 @@ const handleFileChange = (data) => {
 };
 
 const submitEvent = async () => {
+  if (saving.value) return;
+  submitted.value = true;
+  const payload = {
+    ...formData.value,
+    distance_to_center: formData.value.distance_to_center === '' ? null : formData.value.distance_to_center,
+    time_to_nearest_stop: formData.value.time_to_nearest_stop === '' ? null : formData.value.time_to_nearest_stop,
+    sessions: [{ ...formData.value.sessions[0], start_datetime: formattedValue.value ? formattedValue.value.replace(' ', 'T') + ':00' : '' }],
+    tags: String(formData.value.tags || '').split(',').map(tag => tag.trim()).filter(Boolean),
+  };
+  const validationError = validateAdmin(payload, 'residentEvent');
+  if (validationError) return notification(validationError, 'negative');
   try {
-    const isoFormatted = formattedValue.value.replace(" ", "T") + ":00";
-    formData.value.sessions[0].start_datetime = isoFormatted;
-
+    saving.value = true;
     const formDataToSend = new FormData();
-
-    if (formData.value.tags) {
-      formData.value.tags = formData.value.tags
-        .split(',')
-        .map(tag => tag.trim())
-        .filter(tag => tag.length > 0);
-    }
-
-
-    fileList.value.forEach(file => {
-      formDataToSend.append('photos', file.file);
-    });
-
-    formDataToSend.append('data', JSON.stringify(formData.value));
-
+    fileList.value.forEach(file => { if (file.file) formDataToSend.append('photos', file.file); });
+    formDataToSend.append('data', JSON.stringify(payload));
     await store.PostNewEvent(formDataToSend);
     await notification('Событие успешно создано!', 'positive');
     router.back();
   } catch (error) {
-    console.error('Upload failed:', error);
-    throw error;
+    notification(getApiErrorMessage(error, 'Не удалось создать событие'), 'negative');
+  } finally {
+    saving.value = false;
   }
 };
+
 </script>
 
 <style scoped>
+.field-error { color: #d03050; font-size: 13px; }
 .header-wrapper{
   display: flex;
   width: 100%;

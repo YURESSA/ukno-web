@@ -16,7 +16,7 @@
         <span class="error-message" v-if="showErrors && errors.full_name">{{ errors.full_name }}</span>
         <input
           type="tel"
-          name="phone"
+          name="phone" inputmode="tel" maxlength="32"
           placeholder="+7 (___) ___-__-__"
           class="text-l text-medium"
           v-model="formData.phone"
@@ -25,7 +25,7 @@
           @input="formatPhoneInput"
           @blur="validatePhone"
         >
-        <span class="error-message" v-if="showErrors && errors.phone">{{ errors.phone }}</span>
+        <span class="error-message" v-if="errors.phone">{{ errors.phone }}</span>
 
         <input
           type="email"
@@ -90,6 +90,7 @@
 </template>
 
 <script setup>
+import { getApiErrorMessage } from '@/utils/apiError'
 import { ref, onMounted, computed } from 'vue';
 import DefaultButton from '@/components/ui/button/DefaultButton.vue';
 import { useDataStore, baseUrl } from '@/stores/counter';
@@ -131,7 +132,7 @@ const clearError = (field) => {
 };
 
 const validateName = () =>{
-  if(formData.value.full_name < 3){
+  if(formData.value.full_name.trim().length < 3){
     errors.value.full_name = 'Введите корректные ФИО';
   } else{
     errors.value.full_name = ''
@@ -148,7 +149,13 @@ const validateEmail = () => {
 };
 
 const formatPhoneInput = (event) => {
-  let value = event.target.value.replace(/\D/g, '');
+  let value = event.target.value.replace(/\D/g, '').slice(0, 11);
+  if (!value) {
+    event.target.value = '';
+    formData.value.phone = '';
+    clearError('phone');
+    return;
+  }
 
   if (value.startsWith('7') || value.startsWith('8')) {
     value = '+7' + value.substring(1);
@@ -170,6 +177,7 @@ const formatPhoneInput = (event) => {
     formatted += '-' + value.substring(10, 12);
   }
 
+  event.target.value = formatted;
   formData.value.phone = formatted;
   clearError('phone');
 };
@@ -222,11 +230,7 @@ const handleSubmit = async () => {
     await notification('Регистрация прошла успешно!', 'positive');
     router.push('/login');
   } catch (error) {
-    if (error.response?.status === 409) {
-      await notification('Пользователь с таким email уже существует', 'negative');
-    } else {
-      await notification('Произошла ошибка при регистрации', 'negative');
-    }
+    notification(getApiErrorMessage(error), 'negative');
     console.error('Ошибка регистрации', error);
   }
 };

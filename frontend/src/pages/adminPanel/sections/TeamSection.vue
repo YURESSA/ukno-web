@@ -18,11 +18,11 @@
       :title="isEditMode ? 'Редактировать сотрудника' : 'Новый сотрудник'"
     >
       <n-form>
-        <n-form-item label="ФИО">
+        <n-form-item label="ФИО" v-bind="fieldProps(memberModel, 'team', 'full_name', 'memberModel.full_name', false)">
           <n-input v-model:value="memberModel.full_name" placeholder="Константин Константинопольский" />
         </n-form-item>
 
-        <n-form-item label="Описание">
+        <n-form-item label="Описание" v-bind="fieldProps(memberModel, 'team', 'description', 'memberModel.description', false)">
           <Editor v-model="memberModel.description" />
         </n-form-item>
 
@@ -54,6 +54,9 @@
 </template>
 
 <script setup>
+import { useAdminValidation } from '@/composables/useAdminValidation'
+import { validateAdmin } from '@/utils/adminValidation'
+import { getApiErrorMessage } from '@/utils/apiError'
 import { ref, onMounted, h, inject, watch, computed } from 'vue'
 import { baseUrl, useDataStore } from '@/stores/counter'
 import {
@@ -61,6 +64,8 @@ import {
   NModal, NForm, NFormItem, NInput, NUpload, NImage, useDialog
 } from 'naive-ui'
 import Editor from '@/components/ui/Editor.vue'
+
+const { submitted, fieldProps, resetValidation } = useAdminValidation();
 
 const store = useDataStore()
 const message = useMessage()
@@ -153,6 +158,10 @@ const handleUploadChange = (data) => {
 }
 
 const handleSave = async () => {
+  if (loading.value || submitLoading.value) return;
+  submitted.value = true;
+  const validationError = validateAdmin(memberModel.value, 'team', false);
+  if (validationError) return message.error(validationError);
   if (!memberModel.value.full_name) return message.error('Введите ФИО')
 
   const formData = new FormData()
@@ -177,7 +186,7 @@ const handleSave = async () => {
     showModal.value = false
     await store.FetchTeam()
   } catch (e) {
-    message.error('Ошибка при сохранении')
+    message.error(getApiErrorMessage(e, 'Ошибка при сохранении'))
     console.error(e)
   } finally {
     submitLoading.value = false
@@ -210,7 +219,7 @@ const handleRemove = (options) => {
           resolve(true);
         } catch (e) {
           console.error(e);
-          message.error('Ошибка при удалении фото');
+          message.error(getApiErrorMessage(e, 'Ошибка при удалении фото'));
           resolve(false);
         } finally {
           submitLoading.value = false;
@@ -230,7 +239,7 @@ const handleDelete = async () => {
       showModal.value = false
       await store.FetchTeam()
     } catch (e) {
-      message.error('Ошибка при удалении')
+      message.error(getApiErrorMessage(e, 'Ошибка при удалении'))
     } finally {
       submitLoading.value = false
     }
@@ -239,8 +248,10 @@ const handleDelete = async () => {
 
 onMounted(() => {
   loading.value = true
-  store.FetchTeam().finally(() => loading.value = false)
+  store.FetchTeam().catch(e => message.error(getApiErrorMessage(e, 'Ошибка загрузки данных'))).finally(() => loading.value = false)
 })
+
+watch(showModal, resetValidation);
 </script>
 
 <style scoped>

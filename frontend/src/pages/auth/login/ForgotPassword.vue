@@ -22,6 +22,7 @@
 </template>
 
 <script setup>
+import { getApiErrorMessage } from '@/utils/apiError'
 import { ref } from 'vue';
 import DefaultButton from '@/components/ui/button/DefaultButton.vue';
 import { useDataStore } from '@/stores/counter';
@@ -46,7 +47,7 @@ const handleSubmit = async () => {
     await notification('Инструкции по сбросу пароля отправлены на ваш email', 'positive');
     email.value = '';
   } catch (err) {
-    notification('Ошибка при отправке запроса', 'negative');
+    notification(getApiErrorMessage(err), 'negative');
     console.error(err);
   } finally {
     loading.value = false;

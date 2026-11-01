@@ -13,7 +13,7 @@
     <n-modal v-model:show="showModal" preset="card" style="width: 600px"
              :title="isEditMode ? 'Редактировать элемент' : 'Добавить элемент'">
       <n-form>
-        <n-form-item label="Описание (текст)">
+        <n-form-item label="Описание (текст)" v-bind="fieldProps(model, 'culture', 'text', 'model.text', false)">
           <n-input
             v-model:value="model.text"
             type="textarea"
@@ -22,9 +22,9 @@
           />
         </n-form-item>
 
-        <n-form-item label="Порядок вывода. Отсчёт начинается с 0">
+        <n-form-item label="Порядок вывода. Отсчёт начинается с 0" v-bind="fieldProps(model, 'culture', 'order_index', 'model.order_index', false)">
           <n-input
-            v-model:value="model.order_index"
+            v-model:value="model.order_index" :precision="0"
             placeholder="Введите порядок отображения (0 выводится первым)"
             widht="100%"
           />
@@ -59,12 +59,17 @@
 </template>
 
 <script setup>
+import { useAdminValidation } from '@/composables/useAdminValidation'
+import { validateAdmin } from '@/utils/adminValidation'
+import { getApiErrorMessage } from '@/utils/apiError'
 import { ref, onMounted, h, inject, watch, computed } from 'vue'
 import { useDataStore, baseUrl } from '@/stores/counter'
 import {
   NButton, useMessage, NSpace, NH2, NDataTable,
   NModal, NForm, NFormItem, NInput, NUpload, NImage, useDialog
 } from 'naive-ui'
+
+const { submitted, fieldProps, resetValidation } = useAdminValidation();
 
 const store = useDataStore()
 const data = computed(() => store.getCulturalSpace)
@@ -160,7 +165,7 @@ const handleRemove = (options) => {
           resolve(true);
         } catch (e) {
           console.error(e);
-          message.error('Ошибка при удалении фото');
+          message.error(getApiErrorMessage(e, 'Ошибка при удалении фото'));
           resolve(false);
         } finally {
           submitLoading.value = false;
@@ -203,6 +208,10 @@ const handleUploadChange = (data) => {
 }
 
 const handleSave = async () => {
+  if (loading.value || submitLoading.value) return;
+  submitted.value = true;
+  const validationError = validateAdmin(model.value, 'culture', false);
+  if (validationError) return message.error(validationError);
   if (!model.value.text) return message.error('Введите текст')
 
   try {
@@ -240,7 +249,7 @@ const handleSave = async () => {
     await store.FetchCulturalSpace()
   } catch (e) {
     console.error(e)
-    message.error('Ошибка при сохранении')
+    message.error(getApiErrorMessage(e, 'Ошибка при сохранении'))
   } finally {
     submitLoading.value = false
   }
@@ -254,13 +263,15 @@ const handleDelete = async () => {
       showModal.value = false
       store.FetchCulturalSpace()
     } catch (e) {
-      message.error('Ошибка при удалении', e)
+      message.error(getApiErrorMessage(e, 'Ошибка при удалении'))
     }
   }
 }
 
 onMounted(() => {
   loading.value = true
-  store.FetchCulturalSpace().finally(() => loading.value = false)
+  store.FetchCulturalSpace().catch(e => message.error(getApiErrorMessage(e, 'Ошибка загрузки данных'))).finally(() => loading.value = false)
 })
+
+watch(showModal, resetValidation);
 </script>

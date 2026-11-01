@@ -37,6 +37,7 @@
 </template>
 
 <script setup>
+import { getApiErrorMessage } from '@/utils/apiError'
 import { ref } from 'vue';
 import DefaultButton from '@/components/ui/button/DefaultButton.vue';
 import { useDataStore } from '@/stores/counter';
@@ -101,11 +102,7 @@ const handleSubmit = async () => {
     }
 
   } catch (error) {
-    if (error.response?.status === 401) {
-      notification('Неверные учетные данные', 'negative')
-    } else {
-      notification('Произошла ошибка при входе', 'negative')
-    }
+    notification(getApiErrorMessage(error), 'negative');
     console.error('Ошибка входа', error);
   }
 };

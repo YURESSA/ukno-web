@@ -99,6 +99,7 @@
 </template>
 
 <script setup>
+import { getApiErrorMessage } from '@/utils/apiError'
 import { ref, computed, onMounted, h } from 'vue';
 import { useDataStore } from '@/stores/counter';
 import {
@@ -161,7 +162,7 @@ async function openDetails(id) {
     showModal.value = true;
   } catch (e) {
     console.error('Ошибка в openDetails:', e);
-    message.error('Не удалось загрузить детали бронирования');
+    message.error(getApiErrorMessage(e, 'Не удалось загрузить детали бронирования'));
   } finally {
     detailLoading.value = false;
   }
@@ -208,7 +209,7 @@ function confirmDelete() {
         showModal.value = false;
         await store.FetchAdminReservations();
       } catch (e) {
-        message.error('Ошибка при удалении', e);
+        message.error(getApiErrorMessage(e, 'Ошибка при удалении'));
       } finally {
         loading.value = false;
       }
@@ -216,7 +217,7 @@ function confirmDelete() {
   });
 }
 
-onMounted(() => store.FetchAdminReservations());
+onMounted(() => store.FetchAdminReservations().catch(e => message.error(getApiErrorMessage(e, 'Ошибка загрузки данных'))));
 </script>
 
 <style scoped>

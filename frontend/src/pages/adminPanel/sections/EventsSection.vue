@@ -20,29 +20,29 @@
       style="width: 900px"
       :title="isEdit ? 'Редактирование события' : 'Новое событие'"
     >
-      <n-tabs type="line" animated>
+      <n-tabs v-model:value="activeTab" type="line" animated>
         <n-tab-pane name="main" tab="Основная информация">
           <n-form ref="formRef" :model="selectedItem" label-placement="top">
             <n-grid :cols="2" :x-gap="20">
-              <n-form-item-gi span="2" label="Название события">
+              <n-form-item-gi span="2" label="Название события" required v-bind="fieldProps(selectedItem, 'event', 'title', 'selectedItem.title', isEdit)">
                 <n-input v-model:value="selectedItem.title" placeholder="Введите название" />
               </n-form-item-gi>
-              <n-form-item-gi span="2" label="Краткое описание">
+              <n-form-item-gi span="2" label="Краткое описание" v-bind="fieldProps(selectedItem, 'event', 'short_description', 'selectedItem.short_description', isEdit)">
                 <n-input v-model:value="selectedItem.short_description" type="textarea" :autosize="{ minRows: 2 }" />
               </n-form-item-gi>
-              <n-form-item-gi span="2" label="Полное описание (с оформлением)">
+              <n-form-item-gi span="2" label="Полное описание (с оформлением)" required v-bind="fieldProps(selectedItem, 'event', 'description', 'selectedItem.description', isEdit)">
                 <Editor v-model="selectedItem.description" />
               </n-form-item-gi>
-              <n-form-item-gi label="Категория">
+              <n-form-item-gi label="Категория" required v-bind="fieldProps(selectedItem, 'event', 'category_id', 'selectedItem.category_id', isEdit)">
                 <n-select v-model:value="selectedItem.category_id" :options="categoryOptions" label-field="category_name" value-field="category_id" />
               </n-form-item-gi>
-              <n-form-item-gi label="Формат">
+              <n-form-item-gi label="Формат" required v-bind="fieldProps(selectedItem, 'event', 'format_type_id', 'selectedItem.format_type_id', isEdit)">
                 <n-select v-model:value="selectedItem.format_type_id" :options="formatOptions" label-field="format_type_name" value-field="format_type_id" />
               </n-form-item-gi>
-              <n-form-item-gi label="Возраст">
+              <n-form-item-gi label="Возраст" required v-bind="fieldProps(selectedItem, 'event', 'age_category_id', 'selectedItem.age_category_id', isEdit)">
                 <n-select v-model:value="selectedItem.age_category_id" :options="ageOptions" label-field="age_category_name" value-field="age_category_id" />
               </n-form-item-gi>
-              <n-form-item-gi label="Активна">
+              <n-form-item-gi label="Активна" v-bind="fieldProps(selectedItem, 'event', 'is_active', 'selectedItem.is_active', isEdit)">
                 <n-radio-group v-model:value="selectedItem.is_active" name="is_active_group">
                   <n-space>
                     <n-radio :value="true">Да</n-radio>
@@ -55,43 +55,43 @@
         </n-tab-pane>
         <n-tab-pane name="details" tab="Локация и Контакты">
           <n-grid :cols="2" :x-gap="20">
-            <n-form-item-gi label="Продолжительность (мин)">
-              <n-input-number v-model:value="selectedItem.duration" :min="0" style="width: 100%" />
+            <n-form-item-gi label="Продолжительность (мин)" required v-bind="fieldProps(selectedItem, 'event', 'duration', 'selectedItem.duration', isEdit)">
+              <n-input-number v-model:value="selectedItem.duration" :precision="0" :min="0" style="width: 100%" />
             </n-form-item-gi>
 
-            <n-form-item-gi label="Место">
+            <n-form-item-gi label="Место" required v-bind="fieldProps(selectedItem, 'event', 'place', 'selectedItem.place', isEdit)">
               <n-input v-model:value="selectedItem.place" />
             </n-form-item-gi>
 
-            <n-form-item-gi label="Проводит">
+            <n-form-item-gi label="Проводит" v-bind="fieldProps(selectedItem, 'event', 'conducted_by', 'selectedItem.conducted_by', isEdit)">
               <n-input v-model:value="selectedItem.conducted_by" />
             </n-form-item-gi>
 
-            <n-form-item-gi label="Часы работы">
+            <n-form-item-gi label="Часы работы" v-bind="fieldProps(selectedItem, 'event', 'working_hours', 'selectedItem.working_hours', isEdit)">
               <n-input v-model:value="selectedItem.working_hours" placeholder="С 10:00 до 20:00" />
             </n-form-item-gi>
 
-            <n-form-item-gi label="Email">
+            <n-form-item-gi label="Email" v-bind="fieldProps(selectedItem, 'event', 'contact_email', 'selectedItem.contact_email', isEdit)">
               <n-input v-model:value="selectedItem.contact_email" />
             </n-form-item-gi>
 
-            <n-form-item-gi label="Telegram">
+            <n-form-item-gi label="Telegram" v-bind="fieldProps(selectedItem, 'event', 'telegram', 'selectedItem.telegram', isEdit)">
               <n-input v-model:value="selectedItem.telegram" placeholder="@username" />
             </n-form-item-gi>
 
-            <n-form-item-gi label="VK">
+            <n-form-item-gi label="VK" v-bind="fieldProps(selectedItem, 'event', 'vk', 'selectedItem.vk', isEdit)">
               <n-input v-model:value="selectedItem.vk" placeholder="vk.com/..." />
             </n-form-item-gi>
 
-            <n-form-item-gi label="До центра (км)">
-              <n-input-number v-model:value="selectedItem.distance_to_center" :precision="1" style="width: 100%" />
+            <n-form-item-gi label="До центра (км)" v-bind="fieldProps(selectedItem, 'event', 'distance_to_center', 'selectedItem.distance_to_center', isEdit)">
+              <n-input-number v-model:value="selectedItem.distance_to_center" :precision="1" style="width: 100%" :min="0" />
             </n-form-item-gi>
 
-            <n-form-item-gi label="До остановки (мин)">
-              <n-input-number v-model:value="selectedItem.time_to_nearest_stop" style="width: 100%" />
+            <n-form-item-gi label="До остановки (мин)" v-bind="fieldProps(selectedItem, 'event', 'time_to_nearest_stop', 'selectedItem.time_to_nearest_stop', isEdit)">
+              <n-input-number v-model:value="selectedItem.time_to_nearest_stop" style="width: 100%" :min="0" />
             </n-form-item-gi>
 
-            <n-form-item-gi span="2" label="Ссылка на iframe (карта)">
+            <n-form-item-gi span="2" label="Ссылка на iframe (карта)" v-bind="fieldProps(selectedItem, 'event', 'iframe_url', 'selectedItem.iframe_url', isEdit)">
               <n-input v-model:value="selectedItem.iframe_url" type="textarea" />
             </n-form-item-gi>
           </n-grid>
@@ -105,7 +105,7 @@
 
             <n-card v-for="(session, index) in selectedItem.sessions" :key="session.session_id || index" size="small" bordered>
               <n-grid :cols="4" :x-gap="12">
-                <n-form-item-gi span="2" label="Дата и время начала">
+                <n-form-item-gi span="2" label="Дата и время начала" required v-bind="fieldProps(session, 'session', 'start_datetime', 'sessions.' + index + '.start_datetime', false)">
                   <n-date-picker
                     v-model:formatted-value="session.start_datetime"
                     value-format="yyyy-MM-dd HH:mm:00"
@@ -117,11 +117,11 @@
                   />
                 </n-form-item-gi>
 
-                <n-form-item-gi label="Макс. чел.">
-                  <n-input-number v-model:value="session.max_participants" :min="1" />
+                <n-form-item-gi label="Макс. чел." required v-bind="fieldProps(session, 'session', 'max_participants', 'sessions.' + index + '.max_participants', false)">
+                  <n-input-number v-model:value="session.max_participants" :precision="0" :min="1" />
                 </n-form-item-gi>
 
-                <n-form-item-gi label="Стоимость">
+                <n-form-item-gi label="Стоимость" required v-bind="fieldProps(session, 'session', 'cost', 'sessions.' + index + '.cost', false)">
                   <n-input-number v-model:value="session.cost" :min="0" :step="50" placeholder="100">
                     <template #suffix>₽</template>
                   </n-input-number>
@@ -195,6 +195,9 @@
 </template>
 
 <script setup>
+import { useAdminValidation } from '@/composables/useAdminValidation'
+import { validateAdmin, getAdminFieldError } from '@/utils/adminValidation'
+import { getApiErrorMessage } from '@/utils/apiError'
 import { ref, computed, onMounted, inject, watch, h } from 'vue';
 import { useDataStore, baseUrl } from '@/stores/counter';
 import {
@@ -204,6 +207,8 @@ import {
 import BaseButton from '@/components/ui/button/BaseButton.vue';
 import Editor from '@/components/ui/Editor.vue';
 
+const { submitted, fieldProps, resetValidation } = useAdminValidation();
+
 const store = useDataStore();
 const message = useMessage();
 const dialog = useDialog();
@@ -212,17 +217,17 @@ const showModal = ref(false);
 const isEdit = ref(false);
 const searchQuery = ref('');
 const uploadRef = ref(null);
+const activeTab = ref('main');
 
-const selectedItem = ref({
-  title: '',
-  category_id: null,
-  short_description: '',
-  description: '',
-  conducted_by: '',
-  place: '',
-  contact_email: '',
-  photos: []
+const emptyEvent = () => ({
+  title: '', description: '', short_description: '', duration: null,
+  category_id: null, format_type_id: null, age_category_id: null,
+  place: '', conducted_by: '', is_active: true, working_hours: '',
+  contact_email: '', iframe_url: '', telegram: '', vk: '',
+  distance_to_center: null, time_to_nearest_stop: null,
+  photos: [], sessions: [],
 });
+const selectedItem = ref(emptyEvent());
 
 const excursions = computed(() => {
   const allExcursions = store.adminExcursions.excursions || [];
@@ -315,6 +320,7 @@ const columns = [
 const rowProps = (row) => ({
   style: 'cursor: pointer',
   onClick: () => {
+    activeTab.value = 'main';
     isEdit.value = true;
     newExcursionPhotos.value = [];
     uploadRef.value?.clear();
@@ -342,16 +348,22 @@ const addTrigger = inject('admin-add-event');
 watch(addTrigger, () => {
   isEdit.value = false;
   newExcursionPhotos.value = [];
-  selectedItem.value = {
-    title: '',
-    category_id: null,
-    photos: [],
-    sessions: []
-  };
+  selectedItem.value = emptyEvent();
+  activeTab.value = 'main';
   showModal.value = true;
 });
 
 async function handleSave() {
+  if (loading.value) return;
+  submitted.value = true;
+  const validationError = validateAdmin(selectedItem.value, 'event', isEdit.value);
+  if (validationError) {
+    const mainFields = ['title', 'description', 'category_id', 'format_type_id', 'age_category_id', 'is_active'];
+    const detailFields = ['place', 'duration', 'contact_email', 'distance_to_center', 'time_to_nearest_stop'];
+    activeTab.value = mainFields.some(key => getAdminFieldError(selectedItem.value, 'event', key))
+      ? 'main' : detailFields.some(key => getAdminFieldError(selectedItem.value, 'event', key)) ? 'details' : 'sessions';
+    return message.error(validationError);
+  }
   try {
     loading.value = true;
       const selectedCategory = categoryOptions.value.find(c => c.category_id === selectedItem.value.category_id);
@@ -378,8 +390,8 @@ async function handleSave() {
         age_category: selectedAge ? selectedAge.age_category_name : '',
         sessions: (selectedItem.value.sessions || []).map(s => ({
         start_datetime: s.start_datetime,
-        max_participants: s.max_participants || 10,
-        cost: s.cost || 0
+        max_participants: s.max_participants,
+        cost: s.cost
       }))
       };
     if (isEdit.value) {
@@ -403,7 +415,7 @@ async function handleSave() {
     await store.FetchAdminExcursion();
   } catch (e) {
     console.error(e);
-    message.error('Ошибка при сохранении');
+    message.error(getApiErrorMessage(e, 'Ошибка при сохранении'));
   } finally {
     loading.value = false;
   }
@@ -419,6 +431,10 @@ function addEmptySession() {
 }
 
 async function handleSaveSession(session) {
+  if (loading.value) return;
+  submitted.value = true;
+  const validationError = validateAdmin(session, 'session', false);
+  if (validationError) return message.error(validationError);
   if (!session.start_datetime) {
     message.error('Выберите дату и время');
     return;
@@ -441,7 +457,7 @@ async function handleSaveSession(session) {
     }
     await store.FetchAdminExcursion();
   } catch (e) {
-    message.error('Ошибка при работе с сессией', e);
+    message.error(getApiErrorMessage(e, 'Ошибка при работе с сессией'));
   } finally {
     loading.value = false;
   }
@@ -463,7 +479,7 @@ async function handleDeleteSession(session, index) {
         message.success('Сессия удалена из базы');
         selectedItem.value.sessions.splice(index, 1);
       } catch (e) {
-        message.error('Ошибка при удалении', e);
+        message.error(getApiErrorMessage(e, 'Ошибка при удалении'));
       }
     }
   });
@@ -506,7 +522,7 @@ async function handleUploadPhoto({ file, onFinish, onError }) {
 
   } catch (e) {
     console.error(e);
-    message.error('Ошибка при загрузке файла');
+    message.error(getApiErrorMessage(e, 'Ошибка при загрузке файла'));
     onError();
   } finally {
     loading.value = false;
@@ -538,7 +554,7 @@ async function handleDeletePhoto(photoId) {
         selectedItem.value.photos = selectedItem.value.photos.filter(p => p.photo_id !== photoId);
         message.success('Удалено');
       } catch (e) {
-        message.error('Ошибка удаления', e);
+        message.error(getApiErrorMessage(e, 'Ошибка удаления'));
       }
     }
   });
@@ -558,9 +574,11 @@ function handleDeleteExcursion() {
 }
 
 onMounted(() => {
-  store.FetchAdminExcursion();
-  store.FetchCategories();
+  store.FetchAdminExcursion().catch(e => message.error(getApiErrorMessage(e, 'Ошибка загрузки событий')));
+  Promise.all([store.FetchCategories(), store.FetchFormat(), store.FetchAge()]).catch(e => message.error(getApiErrorMessage(e, 'Ошибка загрузки справочников')));
 });
+
+watch(showModal, resetValidation);
 </script>
 
 <style scoped>
