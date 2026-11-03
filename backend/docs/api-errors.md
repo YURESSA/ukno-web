@@ -560,6 +560,14 @@ Swagger описывает схемы и статусы; этот файл до�
 | `change_moderation_status` | `409` | `Событие уже возвращено на доработку` | `Если event.moderation_status not in ('pending', 'approved')` |
 | `change_moderation_status` | `исключение` | `Unsupported moderation status` | `Иначе для target == 'pending'` |
 
+### [backend/core/services/event_services/event_photo_order.py](../core/services/event_services/event_photo_order.py)
+
+| Функция | HTTP / источник статуса | Точный текст / шаблон | Условие в коде |
+|---|---|---|---|
+| `reorder_photos` | `400` | `Передайте список идентификаторов фотографий` | `Если not isinstance(photo_ids, list) or any((type(photo_id) is not int for photo_id in photo_ids))` |
+| `reorder_photos` | `409` | `Список фотографий изменился. Обновите событие и повторите попытку` | `Если len(photo_ids) != len(current) or set(photo_ids) != set(current)` |
+| `reorder_photos` | `500` | `Не удалось сохранить порядок фотографий` | `Перехвачено Exception` |
+
 ### [backend/core/services/event_services/event_photo_service.py](../core/services/event_services/event_photo_service.py)
 
 | Функция | HTTP / источник статуса | Точный текст / шаблон | Условие в коде |
