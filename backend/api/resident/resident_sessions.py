@@ -51,7 +51,7 @@ class ExcursionSessionsResource(ApiResource):
             return error, status
 
         data: dict = request.get_json()
-        prepare_resident_event_edit(excursion)
+        # Adding a date does not change the approved event content.
         session, error, status = create_event_session(excursion_id, data)
         if error:
             return error, status
