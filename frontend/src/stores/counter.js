@@ -212,6 +212,17 @@ export const useDataStore = defineStore('data', {
         throw error
       }
     },
+    async GetAdminProfile() {
+      try {
+        const response = await axios.get(`${baseUrl}api/admin/profile`, {
+          headers: { Authorization: `Bearer ${this.auth_key}` },
+        })
+        this.profileData = response.data
+      } catch (error) {
+        console.error('Ошибка при получении профиля администратора:', error.response?.data || error.message)
+        throw error
+      }
+    },
     async GetResidentProfile() {
       try {
         const response = await axios.get(`${baseUrl}api/resident/profile`, {

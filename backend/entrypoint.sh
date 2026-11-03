@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 python -m backend.app init_db
 

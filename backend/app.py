@@ -37,6 +37,8 @@ def init_database():
             ("short_description", "VARCHAR(512)"),
             ("latitude", "FLOAT"),
             ("longitude", "FLOAT"),
+            ("moderation_status", "VARCHAR(20) NOT NULL DEFAULT 'approved'"),
+            ("moderation_comment", "TEXT"),
         ),
     }
     for table_name, required_columns in compatibility_columns.items():
