@@ -71,6 +71,11 @@ const navigateToShop = () => {
   gap: 22px;
 }
 
+.card-bg {
+  width: 100%;
+  position: absolute;
+}
+
 .shop-banner-header {
   display: flex;
   align-items: center;
