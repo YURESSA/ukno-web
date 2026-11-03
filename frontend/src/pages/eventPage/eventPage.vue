@@ -1,9 +1,9 @@
 <template>
-  <div class="page-wrapper page--margin" v-if="load">
+  <div class="page-wrapper" :class="previewEvent ? 'preview-mode' : 'page--margin'" v-if="load">
     <div class="asterick"></div>
 
     <div class="event-wrapper" v-if="!$isMobile()">
-      <span><RouterLink to="/">Главная</RouterLink> / <RouterLink to="/events">События</RouterLink> / {{ excursion.title }}</span>
+      <span v-if="!previewEvent"><RouterLink to="/">Главная</RouterLink> / <RouterLink to="/events">События</RouterLink> / {{ excursion.title }}</span>
       <div class="title">
         <h2>{{ excursion.title }}</h2>
       </div>
@@ -91,14 +91,14 @@
               <template v-if="session.available > 0">{{ session.available }} мест{{ session.available === 1 ? 'о' : session.available < 5 ? 'а' : '' }}</template>
               <template v-else>Мест нет</template>
             </span>
-            <span class="session-cost" v-if="parseInt(session.cost) > 0">{{ parseInt(session.cost) }} ₽</span>
+            <span class="session-cost" v-if="Number(session.cost) > 0">{{ Number(session.cost) }} ₽</span>
             <span class="session-cost" v-else>Бесплатно</span>
           </button>
         </div>
       </div>
 
       <IconButton
-        class="event--btn"
+        v-if="!previewEvent" class="event--btn"
         text="Записаться"
         :disabled="!selectedSession || selectedSession.available <= 0"
         @click="moveToBooked"
@@ -119,7 +119,7 @@
           :key="i"
           :class="'gallery-img img' + i"
           >
-            <img :src="baseUrl + photo.photo_url" :alt="'Фото ' + i">
+            <img :src="photo.isLocal ? photo.photo_url : resolveMediaUrl(photo.photo_url)" :alt="'Фото ' + i">
         </div>
       </div>
       <Contact class="map">
@@ -148,7 +148,7 @@
 
     <!-- Мобилка -->
     <div class="event-wrapper-mobile" v-else>
-      <span class="route"><RouterLink to="/">Главная</RouterLink> / <RouterLink to="/events">События</RouterLink> / {{ excursion.title }}</span>
+      <span v-if="!previewEvent" class="route"><RouterLink to="/">Главная</RouterLink> / <RouterLink to="/events">События</RouterLink> / {{ excursion.title }}</span>
       <div class="title">
         <h2>{{ excursion.title }}</h2>
       </div>
@@ -161,7 +161,7 @@
         >
       </div>
       <IconButton
-        class="event--btn"
+        v-if="!previewEvent" class="event--btn"
         text="Записаться"
         :disabled="!selectedSession || selectedSession.available <= 0"
         @click="moveToBooked"
@@ -188,7 +188,7 @@
               <template v-if="session.available > 0">{{ session.available }} мест{{ session.available === 1 ? 'о' : session.available < 5 ? 'а' : '' }}</template>
               <template v-else>Мест нет</template>
             </span>
-            <span class="session-cost" v-if="parseInt(session.cost) > 0">{{ parseInt(session.cost) }} ₽</span>
+            <span class="session-cost" v-if="Number(session.cost) > 0">{{ Number(session.cost) }} ₽</span>
             <span class="session-cost" v-else>Бесплатно</span>
           </button>
         </div>
@@ -259,7 +259,7 @@
           :key="i"
           :class="'gallery-img img' + i"
           >
-            <img :src="baseUrl + photo.photo_url" :alt="'Фото ' + i">
+            <img :src="photo.isLocal ? photo.photo_url : resolveMediaUrl(photo.photo_url)" :alt="'Фото ' + i">
         </div>
       </div>
       <Contact class="map">
@@ -297,7 +297,7 @@
 import { onMounted, computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useDataStore } from '@/stores/counter';
-import { baseUrl } from '@/stores/counter';
+import { resolveMediaUrl } from '@/stores/counter';
 import IconButton from '@/components/ui/button/IconButton.vue';
 import Contact from '../../components/shared/contact-block.vue';
 import Loading from '@/components/shared/loading-animation.vue';
@@ -305,20 +305,25 @@ import MapView from '@/components/shared/MapView.vue';
 import { notification } from '@/utils/notification'
 import DOMPurify from 'dompurify';
 
+const props = defineProps({ previewEvent: { type: Object, default: null } });
 const store = useDataStore();
 const route = useRoute();
 const router = useRouter();
-const load = ref(false);
+const load = ref(!!props.previewEvent);
 const descriptOpen = ref(false);
 
-const excursion = computed(() => store.getExcursionDetail);
+const excursion = computed(() => props.previewEvent || store.getExcursionDetail);
 const safeExcursion = computed(() => DOMPurify.sanitize(excursion.value.description));
 
-const selectedSession = ref(null);
+const selectedSessionId = ref(null);
+const selectedSession = computed({
+  get: () => excursion.value?.sessions?.find(s => s.session_id === selectedSessionId.value) || excursion.value?.sessions?.[0] || null,
+  set: value => { selectedSessionId.value = value?.session_id ?? null; },
+});
 
 const selectedCost = computed(() => {
   const session = selectedSession.value ?? excursion.value.sessions[0];
-  return parseInt(session?.cost || 0);
+  return Number(session?.cost || 0);
 });
 
 const hasCoords = computed(() =>
@@ -341,6 +346,7 @@ const src = computed(() => {
 });
 
 onMounted(async () => {
+  if (props.previewEvent) return;
   document.body.style.overflow = 'hidden'
   try {
     await store.FetchExcursionDetail(route.params.id);
@@ -357,7 +363,7 @@ onMounted(async () => {
 });
 
 const moveToBooked = () => {
-  if (!selectedSession.value) return;
+  if (props.previewEvent || !selectedSession.value) return;
   router.push({
     path: `/payment/${selectedSession.value.session_id}`,
     query: { excursion_id: excursion.value.excursion_id }
@@ -365,12 +371,14 @@ const moveToBooked = () => {
 };
 
 const getMainImage = computed(() => {
-  return baseUrl + '/' + excursion.value.photos[0].photo_url;
+  const photo = excursion.value.photos?.[0];
+  return (photo?.isLocal ? photo.photo_url : resolveMediaUrl(photo?.photo_url)) || '/logo/mobile-logo.svg';
 });
 
 
 const getData = computed(() => {
   const session = selectedSession.value ?? excursion.value.sessions[0];
+  if (!session?.start_datetime) return '—';
   const date = new Date(session.start_datetime);
   const day = date.getDate().toString().padStart(2, '0');
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -379,6 +387,7 @@ const getData = computed(() => {
 
 const getTime = computed(() => {
   const session = selectedSession.value ?? excursion.value.sessions[0];
+  if (!session?.start_datetime) return '—';
   const date = new Date(session.start_datetime);
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
@@ -387,6 +396,7 @@ const getTime = computed(() => {
 
 const totalTime = computed(() => {
   const session = selectedSession.value ?? excursion.value.sessions[0];
+  if (!session?.start_datetime) return '—';
   const date = new Date(session.start_datetime);
   date.setMinutes(date.getMinutes() + excursion.value.duration);
   const hours = String(date.getHours()).padStart(2, '0');
@@ -405,8 +415,8 @@ function formatSessionTime(session) {
 }
 
 const EventFormat = computed(() => {
-  const format = excursion.value.format_type.format_type_name;
-  const session = selectedSession.value ?? excursion.value.sessions[0];
+  const format = excursion.value.format_type?.format_type_name;
+  const session = selectedSession.value ?? { max_participants: '—' };
   switch(format){
     case "Индивидуальная":
       return {type: 'Событие проходит в формате индивидуальной экскурсии', remained_places: `Всего мест ${session.max_participants} человек`}
@@ -425,6 +435,9 @@ const EventFormat = computed(() => {
 
 
 <style scoped>
+.page-wrapper.preview-mode { padding-top: 16px; margin-top: 0; }
+.preview-mode :deep(h2) { font-size: clamp(28px, 4vw, 52px); line-height: 1.2; }
+.preview-mode :deep(h3) { font-size: clamp(22px, 3vw, 32px); line-height: 1.3; }
 .page-wrapper {
   display: flex;
   flex-direction: column;

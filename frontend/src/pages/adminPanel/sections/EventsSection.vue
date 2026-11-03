@@ -1,8 +1,13 @@
 <template>
   <div class="section-container">
+    <n-tabs v-model:value="eventListTab" type="line" animated>
+      <n-tab-pane name="events" tab="События" />
+      <n-tab-pane name="pending" :tab="`Ожидают модерации (${pendingCount})`" />
+    </n-tabs>
     <div class="filter-panel">
       <n-space justify="space-between">
         <n-input v-model:value="searchQuery" placeholder="Поиск по названию..." clearable style="width: 300px" />
+        <n-select v-if="eventListTab === 'events'" v-model:value="moderationFilter" :options="moderationOptions.filter(option => option.value !== 'pending')" clearable placeholder="Все статусы" style="width: 260px" />
       </n-space>
     </div>
 
@@ -20,6 +25,16 @@
       style="width: 900px"
       :title="isEdit ? 'Редактирование события' : 'Новое событие'"
     >
+      <n-space vertical style="margin-bottom: 16px">
+        <p v-if="isEdit">Автор: {{ selectedItem.created_by || 'Не указан' }}</p>
+        <n-button @click="showPreview = true">Предпросмотр события</n-button>
+        <n-tag v-if="isEdit" :type="eventModeration(selectedItem.moderation_status).type">{{ eventModeration(selectedItem.moderation_status).label }}</n-tag>
+        <p v-if="selectedItem.moderation_comment">Комментарий: {{ selectedItem.moderation_comment }}</p>
+        <template v-if="['pending', 'approved'].includes(selectedItem.moderation_status)">
+          <n-input v-model:value="returnComment" type="textarea" placeholder="Обязательный комментарий для возврата на доработку" />
+          <n-button :loading="loading" :disabled="loading || !returnComment.trim()" type="warning" @click="handleReturn">Вернуть на доработку</n-button>
+        </template>
+      </n-space>
       <n-tabs v-model:value="activeTab" type="line" animated>
         <n-tab-pane name="main" tab="Основная информация">
           <n-form ref="formRef" :model="selectedItem" label-placement="top">
@@ -83,7 +98,7 @@
               <n-input v-model:value="selectedItem.vk" placeholder="vk.com/..." />
             </n-form-item-gi>
 
-            <n-form-item-gi label="До центра (км)" v-bind="fieldProps(selectedItem, 'event', 'distance_to_center', 'selectedItem.distance_to_center', isEdit)">
+            <n-form-item-gi label="До центра (метры)" v-bind="fieldProps(selectedItem, 'event', 'distance_to_center', 'selectedItem.distance_to_center', isEdit)">
               <n-input-number v-model:value="selectedItem.distance_to_center" :precision="1" style="width: 100%" :min="0" />
             </n-form-item-gi>
 
@@ -91,7 +106,17 @@
               <n-input-number v-model:value="selectedItem.time_to_nearest_stop" style="width: 100%" :min="0" />
             </n-form-item-gi>
 
-            <n-form-item-gi span="2" label="Ссылка на iframe (карта)" v-bind="fieldProps(selectedItem, 'event', 'iframe_url', 'selectedItem.iframe_url', isEdit)">
+            <n-form-item-gi span="2" label="Местоположение на карте">
+              <MapPicker
+                v-if="showModal && activeTab === 'details'"
+                :key="selectedItem.excursion_id || 'new-event'"
+                map-id="admin-event-map"
+                style="width: 100%"
+                :initial-coords="mapCoords"
+                @update:coords="onCoordsUpdate"
+              />
+            </n-form-item-gi>
+            <n-form-item-gi v-if="selectedItem.iframe_url && !mapCoords" span="2" label="Старая ссылка на карту" v-bind="fieldProps(selectedItem, 'event', 'iframe_url', 'selectedItem.iframe_url', isEdit)">
               <n-input v-model:value="selectedItem.iframe_url" type="textarea" />
             </n-form-item-gi>
           </n-grid>
@@ -155,6 +180,8 @@
         </n-tab-pane>
 
         <n-tab-pane name="photos" tab="Фотографии">
+          <p>Добавьте хотя бы одну фотографию события.</p>
+          <p v-if="submitted && !selectedItem.photos?.length" class="photo-error" role="alert">Добавьте хотя бы одну фотографию</p>
           <div class="photo-grid">
             <div v-for="photo in selectedItem.photos" :key="photo.photo_id" class="photo-item">
               <img
@@ -173,6 +200,7 @@
             </div>
             <n-upload
               multiple
+              accept="image/*"
               ref="uploadRef"
               :show-file-list="false"
               :custom-request="handleUploadPhoto"
@@ -188,9 +216,11 @@
           <n-button v-if="isEdit" type="error" ghost @click="handleDeleteExcursion">Удалить событие</n-button>
           <n-button @click="showModal = false">Отмена</n-button>
           <BaseButton :text="isEdit ? 'Сохранить' : 'Создать'" @click="handleSave" :loading="loading" />
+          <BaseButton v-if="isEdit && selectedItem.moderation_status === 'pending'" text="Сохранить и одобрить" :loading="loading" @click="handleSave(true)" />
         </n-space>
       </template>
     </n-modal>
+    <EventPreviewModal v-model:show="showPreview" :event="previewEvent" />
   </div>
 </template>
 
@@ -198,6 +228,10 @@
 import { useAdminValidation } from '@/composables/useAdminValidation'
 import { validateAdmin, getAdminFieldError } from '@/utils/adminValidation'
 import { getApiErrorMessage } from '@/utils/apiError'
+import { normalizeEventPayload, sessionPayload } from '@/utils/eventForm'
+import EventPreviewModal from '@/components/shared/EventPreviewModal.vue'
+import MapPicker from '@/components/shared/MapPicker.vue'
+import { moderationOptions, eventModeration } from '@/utils/eventModeration'
 import { ref, computed, onMounted, inject, watch, h } from 'vue';
 import { useDataStore, baseUrl } from '@/stores/counter';
 import {
@@ -207,15 +241,21 @@ import {
 import BaseButton from '@/components/ui/button/BaseButton.vue';
 import Editor from '@/components/ui/Editor.vue';
 
-const { submitted, fieldProps, resetValidation } = useAdminValidation();
+const { submitted, fieldProps, resetValidation, applyApiErrors } = useAdminValidation();
 
 const store = useDataStore();
 const message = useMessage();
 const dialog = useDialog();
 const loading = ref(false);
 const showModal = ref(false);
+const showPreview = ref(false);
+const savedSessions = new Map();
 const isEdit = ref(false);
 const searchQuery = ref('');
+const moderationFilter = ref(null);
+const eventListTab = ref('events');
+const pendingCount = computed(() => (store.adminExcursions.excursions || []).filter(item => item.moderation_status === 'pending').length);
+const returnComment = ref('');
 const uploadRef = ref(null);
 const activeTab = ref('main');
 
@@ -223,14 +263,27 @@ const emptyEvent = () => ({
   title: '', description: '', short_description: '', duration: null,
   category_id: null, format_type_id: null, age_category_id: null,
   place: '', conducted_by: '', is_active: true, working_hours: '',
-  contact_email: '', iframe_url: '', telegram: '', vk: '',
+  contact_email: '', iframe_url: '', latitude: null, longitude: null, telegram: '', vk: '',
   distance_to_center: null, time_to_nearest_stop: null,
   photos: [], sessions: [],
 });
 const selectedItem = ref(emptyEvent());
+const mapCoords = computed(() =>
+  Number.isFinite(selectedItem.value.latitude) && Number.isFinite(selectedItem.value.longitude)
+    ? [selectedItem.value.latitude, selectedItem.value.longitude]
+    : null
+);
+function onCoordsUpdate({ latitude, longitude }) {
+  selectedItem.value.latitude = latitude;
+  selectedItem.value.longitude = longitude;
+}
 
 const excursions = computed(() => {
-  const allExcursions = store.adminExcursions.excursions || [];
+  const allExcursions = (store.adminExcursions.excursions || []).filter(item =>
+    eventListTab.value === 'pending'
+      ? item.moderation_status === 'pending'
+      : item.moderation_status !== 'pending' && (!moderationFilter.value || item.moderation_status === moderationFilter.value)
+  );
 
   if (!searchQuery.value) return allExcursions;
 
@@ -243,8 +296,19 @@ const excursions = computed(() => {
 const categoryOptions = computed(() => store.getCategories || []);
 const formatOptions = computed(() => store.getFormat);
 const ageOptions = computed(() => store.getAge);
+const previewEvent = computed(() => ({
+  ...selectedItem.value,
+  category: categoryOptions.value.find(item => item.category_id === selectedItem.value.category_id),
+  format_type: (formatOptions.value || []).find(item => item.format_type_id === selectedItem.value.format_type_id),
+  age_category: (ageOptions.value || []).find(item => item.age_category_id === selectedItem.value.age_category_id),
+}));
 
 const columns = [
+  { title: 'Автор', key: 'created_by', width: 220, ellipsis: { tooltip: true } },
+  {
+    title: 'Модерация', key: 'moderation_status', width: 150,
+    render: row => h(NTag, { type: eventModeration(row.moderation_status).type }, { default: () => eventModeration(row.moderation_status).label }),
+  },
   {
     title: 'ID',
     key: 'excursion_id',
@@ -320,6 +384,7 @@ const columns = [
 const rowProps = (row) => ({
   style: 'cursor: pointer',
   onClick: () => {
+    returnComment.value = '';
     activeTab.value = 'main';
     isEdit.value = true;
     newExcursionPhotos.value = [];
@@ -330,7 +395,7 @@ const rowProps = (row) => ({
       start_datetime: s.start_datetime
         ? s.start_datetime.replace('T', ' ').replace(/:\d{2}$/, ':00')
         : null,
-      cost: s.cost ? parseInt(s.cost) : 0
+      cost: Number(s.cost) || 0
     })) || [];
 
     selectedItem.value = {
@@ -340,6 +405,8 @@ const rowProps = (row) => ({
       age_category_id: row.age_category?.age_category_id,
       sessions: fixedSessions
     };
+    savedSessions.clear();
+    fixedSessions.forEach(s => savedSessions.set(s.session_id, JSON.stringify(sessionPayload(s))));
     showModal.value = true;
   }
 });
@@ -353,7 +420,8 @@ watch(addTrigger, () => {
   showModal.value = true;
 });
 
-async function handleSave() {
+async function handleSave(approve = false) {
+  approve = approve === true;
   if (loading.value) return;
   submitted.value = true;
   const validationError = validateAdmin(selectedItem.value, 'event', isEdit.value);
@@ -364,13 +432,17 @@ async function handleSave() {
       ? 'main' : detailFields.some(key => getAdminFieldError(selectedItem.value, 'event', key)) ? 'details' : 'sessions';
     return message.error(validationError);
   }
+  if ((!isEdit.value && !newExcursionPhotos.value.length) || (approve && !selectedItem.value.photos?.length)) {
+    activeTab.value = 'photos';
+    return message.error('Добавьте хотя бы одну фотографию события');
+  }
   try {
     loading.value = true;
       const selectedCategory = categoryOptions.value.find(c => c.category_id === selectedItem.value.category_id);
       const selectedFormat = formatOptions.value.find(f => f.format_type_id === selectedItem.value.format_type_id);
       const selectedAge = ageOptions.value.find(a => a.age_category_id === selectedItem.value.age_category_id);
 
-      const payload = {
+      const payload = normalizeEventPayload({
         title: selectedItem.value.title,
         short_description: selectedItem.value.short_description,
         description: selectedItem.value.description,
@@ -381,6 +453,8 @@ async function handleSave() {
         working_hours: selectedItem.value.working_hours,
         contact_email: selectedItem.value.contact_email,
         iframe_url: selectedItem.value.iframe_url,
+        latitude: selectedItem.value.latitude,
+        longitude: selectedItem.value.longitude,
         telegram: selectedItem.value.telegram,
         vk: selectedItem.value.vk,
         distance_to_center: selectedItem.value.distance_to_center,
@@ -393,10 +467,13 @@ async function handleSave() {
         max_participants: s.max_participants,
         cost: s.cost
       }))
-      };
+      });
     if (isEdit.value) {
-      await store.PatchExcursion(selectedItem.value.excursion_id, payload);
-      message.success('Обновлено');
+      delete payload.sessions;
+      for (const session of selectedItem.value.sessions || []) await persistSession(session);
+      if (approve) await store.ApproveEvent(selectedItem.value.excursion_id, payload);
+      else await store.PatchExcursion(selectedItem.value.excursion_id, payload);
+      message.success(approve ? 'Событие одобрено и опубликовано' : 'Обновлено');
     } else {
       const formData = new FormData();
 
@@ -415,7 +492,26 @@ async function handleSave() {
     await store.FetchAdminExcursion();
   } catch (e) {
     console.error(e);
+    applyApiErrors(e, selectedItem.value);
+    const fields = Object.keys(e.response?.data?.errors || {});
+    if (fields.some(key => ['title', 'short_description', 'description', 'category', 'format_type', 'age_category', 'is_active'].includes(key))) activeTab.value = 'main';
+    else if (fields.length) activeTab.value = 'details';
     message.error(getApiErrorMessage(e, 'Ошибка при сохранении'));
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function handleReturn() {
+  if (loading.value || !returnComment.value.trim()) return;
+  loading.value = true;
+  try {
+    await store.ReturnEvent(selectedItem.value.excursion_id, returnComment.value.trim());
+    showModal.value = false;
+    message.success('Событие возвращено на доработку');
+    await store.FetchAdminExcursion();
+  } catch (error) {
+    message.error(getApiErrorMessage(error, 'Не удалось вернуть событие'));
   } finally {
     loading.value = false;
   }
@@ -430,6 +526,19 @@ function addEmptySession() {
   });
 }
 
+async function persistSession(session) {
+  const payload = sessionPayload(session);
+  const serialized = JSON.stringify(payload);
+  if (session.session_id && savedSessions.get(session.session_id) === serialized) return;
+  if (session.session_id) {
+    await store.PatchExcursionSession(selectedItem.value.excursion_id, session.session_id, payload);
+  } else {
+    const response = await store.PostExcursionSession(selectedItem.value.excursion_id, payload);
+    session.session_id = response.data.session_id;
+  }
+  savedSessions.set(session.session_id, serialized);
+}
+
 async function handleSaveSession(session) {
   if (loading.value) return;
   submitted.value = true;
@@ -440,21 +549,10 @@ async function handleSaveSession(session) {
     return;
   }
 
-  const payload = {
-    start_datetime: session.start_datetime,
-    max_participants: session.max_participants,
-    cost: session.cost
-  };
-
   try {
     loading.value = true;
-    if (session.session_id) {
-      await store.PatchExcursionSession(selectedItem.value.excursion_id, session.session_id, payload);
-      message.success('Сессия обновлена');
-    } else {
-      await store.PostExcursionSession(selectedItem.value.excursion_id, payload);
-      message.success('Сессия создана');
-    }
+    await persistSession(session);
+    message.success('Сессия сохранена');
     await store.FetchAdminExcursion();
   } catch (e) {
     message.error(getApiErrorMessage(e, 'Ошибка при работе с сессией'));
@@ -530,6 +628,7 @@ async function handleUploadPhoto({ file, onFinish, onError }) {
 }
 
 async function handleDeletePhoto(photoId) {
+  if (selectedItem.value.photos.length <= 1) return message.error('У события должна остаться хотя бы одна фотография. Сначала добавьте замену.');
   const photoIndex = selectedItem.value.photos.findIndex(p => p.photo_id === photoId);
   if (photoIndex === -1) return;
 
@@ -582,6 +681,7 @@ watch(showModal, resetValidation);
 </script>
 
 <style scoped>
+.photo-error { color: #d03050; }
 .photo-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));

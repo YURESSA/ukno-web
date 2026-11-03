@@ -46,9 +46,7 @@ export const useDataStore = defineStore('data', {
       this.role = role
     },
     clearTokenRole() {
-      this.auth_key = ''
-      this.role = ''
-      this.profileData = []
+      this.$reset()
     },
     deletEvent() {
       this.residentExcursions = []
@@ -347,7 +345,7 @@ export const useDataStore = defineStore('data', {
     },
     async PatchSessionData(excursion_id, jsonData) {
       try {
-        await axios.patch(`${baseUrl}api/resident/excursions/${excursion_id}`, jsonData, {
+        return await axios.patch(`${baseUrl}api/resident/excursions/${excursion_id}`, jsonData, {
           headers: {
             Authorization: `Bearer ${this.auth_key}`,
             'Content-Type': 'application/json'
@@ -360,7 +358,7 @@ export const useDataStore = defineStore('data', {
     },
     async PostNewPhoto(excursion_id, formData) {
       try {
-        await axios.post(`${baseUrl}api/resident/excursions/${excursion_id}/photos`, formData, {
+        return await axios.post(`${baseUrl}api/resident/excursions/${excursion_id}/photos`, formData, {
           headers: {
             Authorization: `Bearer ${this.auth_key}`,
           },
@@ -370,9 +368,14 @@ export const useDataStore = defineStore('data', {
         throw error
       }
     },
+    async PatchResidentSession(excursionId, sessionId, payload) {
+      return axios.patch(`${baseUrl}api/resident/excursions/${excursionId}/sessions/${sessionId}`, payload, {
+        headers: { Authorization: `Bearer ${this.auth_key}` },
+      })
+    },
     async PostNewSession(excursion_id, jsonData) {
       try {
-        await axios.post(`${baseUrl}api/resident/excursions/${excursion_id}/sessions`, jsonData, {
+        return await axios.post(`${baseUrl}api/resident/excursions/${excursion_id}/sessions`, jsonData, {
           headers: {
             Authorization: `Bearer ${this.auth_key}`,
             'Content-Type': 'application/json'
@@ -382,6 +385,11 @@ export const useDataStore = defineStore('data', {
         console.error('Ошибка при создании:', error.response?.data || error.message)
         throw error
       }
+    },
+    async ReorderResidentPhotos(excursionId, photoIds) {
+      return axios.put(`${baseUrl}api/resident/excursions/${excursionId}/photos/order`, { photo_ids: photoIds }, {
+        headers: { Authorization: `Bearer ${this.auth_key}` },
+      })
     },
     async FetchNews() {
       try {
@@ -600,6 +608,21 @@ export const useDataStore = defineStore('data', {
         console.error('Ошибка при удалении возраста:', error.response?.data || error.message)
         throw error
       }
+    },
+    async ApproveEvent(id, payload = {}) {
+      return axios.post(`${baseUrl}api/admin/excursions/${id}/approve`, payload, {
+        headers: { Authorization: `Bearer ${this.auth_key}` },
+      })
+    },
+    async ReturnEvent(id, comment) {
+      return axios.post(`${baseUrl}api/admin/excursions/${id}/return`, { comment }, {
+        headers: { Authorization: `Bearer ${this.auth_key}` },
+      })
+    },
+    async SubmitEvent(id) {
+      return axios.post(`${baseUrl}api/resident/excursions/${id}/submit`, undefined, {
+        headers: { Authorization: `Bearer ${this.auth_key}` },
+      })
     },
     async FetchAdminExcursion(){
       try {

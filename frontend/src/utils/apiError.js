@@ -9,11 +9,24 @@ const statusMessages = {
   429: 'Слишком много запросов. Повторите попытку позже.',
 }
 
+const fieldLabels = {
+  title: 'Название', short_description: 'Краткое описание', description: 'Описание',
+  distance_to_center: 'Расстояние до центра', time_to_nearest_stop: 'Время до остановки',
+  iframe_url: 'Карта', latitude: 'Широта', longitude: 'Долгота', duration: 'Продолжительность',
+  contact_email: 'Контактная почта', working_hours: 'Часы работы', conducted_by: 'Организатор',
+  category: 'Категория', format_type: 'Формат', age_category: 'Возраст',
+  sessions: 'Сеансы', start_datetime: 'Дата и время', max_participants: 'Количество мест', cost: 'Стоимость',
+  photos: 'Фотографии', email: 'Электронная почта', full_name: 'Имя', phone: 'Телефон',
+}
+
 function details(value) {
-  if (typeof value === 'string') return value.trim()
+  if (typeof value === 'string') {
+    if (/is not of type|is a required property|does not match|is too (short|long)|is less than|is greater than|not valid under/i.test(value)) return 'Проверьте значение поля'
+    return value.trim()
+  }
   if (Array.isArray(value)) return value.map(details).filter(Boolean).join('; ')
   if (value && typeof value === 'object') {
-    return Object.entries(value).map(([key, item]) => `${key}: ${details(item)}`).join('; ')
+    return Object.entries(value).map(([key, item]) => `${fieldLabels[key] || 'Поле формы'}: ${details(item)}`).join('; ')
   }
   return ''
 }

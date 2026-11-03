@@ -306,7 +306,7 @@
 import { useAdminValidation } from '@/composables/useAdminValidation'
 import { validateAdmin } from '@/utils/adminValidation'
 import { getApiErrorMessage } from '@/utils/apiError'
-import { ref, computed, inject, watch, onMounted, h } from 'vue';
+import { ref, computed, inject, watch, onMounted, onUnmounted, h } from 'vue';
 import axios from 'axios';
 import {
   NTabs, NTabPane, NDataTable, NModal, NForm, NFormItem, NFormItemGi, NGrid,
@@ -324,6 +324,9 @@ const message = useMessage();
 const dialog = useDialog();
 const loading = ref(false);
 const activeTab = ref('products');
+const sectionCanCreate = inject('admin-can-create', ref(true));
+watch(activeTab, value => { sectionCanCreate.value = value !== 'orders'; }, { immediate: true });
+onUnmounted(() => { sectionCanCreate.value = true; });
 
 const authHeaders = computed(() => ({ Authorization: `Bearer ${store.auth_key}` }));
 

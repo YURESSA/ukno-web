@@ -25,17 +25,17 @@
         </RouterLink>
         <RouterLink to="/profile" v-else-if="!hasToken && role === 'user'">
           <button>
-            <h4>{{ profileData.full_name[0].toUpperCase() }}</h4>
+            <h4>{{ (profileData?.full_name?.trim()?.[0] || '…').toUpperCase() }}</h4>
           </button>
         </RouterLink>
         <RouterLink to="/resident-profile" v-else-if="!hasToken && role === 'resident'">
           <button>
-            <h4>{{ profileData.full_name[0].toUpperCase() }}</h4>
+            <h4>{{ (profileData?.full_name?.trim()?.[0] || '…').toUpperCase() }}</h4>
           </button>
         </RouterLink>
         <RouterLink to="/admin-profile" v-else-if="!hasToken && role === 'admin'">
           <button>
-            <h4>{{ profileData.full_name[0].toUpperCase() }}</h4>
+            <h4>{{ (profileData?.full_name?.trim()?.[0] || '…').toUpperCase() }}</h4>
           </button>
         </RouterLink>
       </div>
@@ -62,17 +62,17 @@
           </RouterLink>
           <RouterLink to="/profile" v-else-if="!hasToken && role === 'user'">
             <button>
-              <span>{{ profileData.full_name[0].toUpperCase() }}</span>
+              <span>{{ (profileData?.full_name?.trim()?.[0] || '…').toUpperCase() }}</span>
             </button>
           </RouterLink>
           <RouterLink to="/resident-profile" v-else-if="!hasToken && role === 'resident'">
             <button>
-              <span>{{ profileData.full_name[0].toUpperCase() }}</span>
+              <span>{{ (profileData?.full_name?.trim()?.[0] || '…').toUpperCase() }}</span>
             </button>
           </RouterLink>
           <RouterLink to="/admin-profile" v-else-if="!hasToken && role === 'admin'">
             <button>
-              <h4>{{ profileData.full_name[0].toUpperCase() }}</h4>
+              <h4>{{ (profileData?.full_name?.trim()?.[0] || '…').toUpperCase() }}</h4>
             </button>
           </RouterLink>
         </div>

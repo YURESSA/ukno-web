@@ -3,7 +3,7 @@
     <div class="payment-wrapper">
       <div class="header-wrapper">
         <h4>Новое событие</h4>
-        <IconButton @click="closePage" class="close_btn"><img src="/icon/maki_cross.svg" alt=""></IconButton>
+        <IconButton @click="closePage" aria-label="Закрыть форму события" class="close_btn"><img src="/icon/maki_cross.svg" alt=""></IconButton>
       </div>
       <div class="person-info">
         <form @submit.prevent="submitEvent" novalidate>
@@ -167,8 +167,11 @@
             >
             <span v-if="fieldError('time_to_nearest_stop')" class="field-error" role="alert">{{ fieldError('time_to_nearest_stop') }}</span>
 
-            <p class="text-standart bold">Изображения</p>
+            <p class="text-standart bold">Изображения*</p>
+            <span v-if="submitted && !fileList.some(file => file.file)" class="field-error" role="alert">Добавьте хотя бы одну фотографию события</span>
             <n-upload
+              accept="image/*"
+              :default-upload="false"
               :default-file-list="previewFileList"
               list-type="image-card"
               @preview="handlePreview"
@@ -178,11 +181,12 @@
               v-model:show="showModal"
               preset="card"
               style="width: 600px"
-              title="A Cool Picture"
+              title="Просмотр фотографии"
             >
               <img :src="previewImageUrl" style="width: 100%">
             </n-modal>
-            <BaseButton :loading="saving" type="submit" class="sumbit--btn" text="Создать событие"/>
+            <p>После создания событие будет отправлено на проверку администратору и появится на сайте после одобрения.</p>
+            <BaseButton :loading="saving" type="submit" class="sumbit--btn" text="Отправить на проверку"/>
         </form>
       </div>
     </div>
@@ -319,13 +323,14 @@ const submitEvent = async () => {
   };
   const validationError = validateAdmin(payload, 'residentEvent');
   if (validationError) return notification(validationError, 'negative');
+  if (!fileList.value.some(file => file.file)) return notification('Добавьте хотя бы одну фотографию события', 'negative');
   try {
     saving.value = true;
     const formDataToSend = new FormData();
     fileList.value.forEach(file => { if (file.file) formDataToSend.append('photos', file.file); });
     formDataToSend.append('data', JSON.stringify(payload));
     await store.PostNewEvent(formDataToSend);
-    await notification('Событие успешно создано!', 'positive');
+    await notification('Событие создано и отправлено на проверку', 'positive');
     router.back();
   } catch (error) {
     notification(getApiErrorMessage(error, 'Не удалось создать событие'), 'negative');

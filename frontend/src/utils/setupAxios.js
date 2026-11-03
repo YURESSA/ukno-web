@@ -8,7 +8,14 @@ let isHandling401 = false
 
 export function setupAxiosInterceptors() {
   axios.interceptors.response.use(
-    (response) => response,
+    (response) => {
+      const authorization = response.config?.headers?.Authorization
+      // A request from the previous session must not refill cleared stores.
+      if (authorization && authorization !== `Bearer ${useDataStore().auth_key}`) {
+        return Promise.reject(new axios.CanceledError('Session changed'))
+      }
+      return response
+    },
     (error) => {
       if (axios.isCancel(error)) return Promise.reject(error)
       const originalMessage = error.response?.data?.message || error.response?.data?.msg
@@ -16,14 +23,15 @@ export function setupAxiosInterceptors() {
       if (error.response && error.response.data && typeof error.response.data === 'object') {
         error.response.data.message = errorMessage
       }
-      if (error.response && error.response.status === 401) {
+      const status = error.response?.status
+      const authenticated = Boolean(error.config?.headers?.Authorization)
+      const invalidJwt = status === 422 && /token|signature|segments|jwt|header|padding|subject|claim|\balg\b|алгоритм|токен/i.test(originalMessage || '')
+      if ((status === 401 && authenticated) || (invalidJwt && authenticated)) {
         const isLoginRequest = error.config?.url?.includes('/login')
-        const isSessionError = !originalMessage || /token|authorization|bearer|сессия/i.test(originalMessage)
-
-        if (!isLoginRequest && isSessionError) {
+        if (!isLoginRequest) {
           const store = useDataStore()
-
-          if (store.auth_key) {
+          // Ignore failures from a token replaced by a subsequent login.
+          if (error.config.headers.Authorization === `Bearer ${store.auth_key}`) {
             store.clearTokenRole()
 
             if (!isHandling401) {
@@ -31,7 +39,7 @@ export function setupAxiosInterceptors() {
               notification('Сессия истекла. Пожалуйста, войдите снова.', 'negative')
 
               if (router.currentRoute.value.path !== '/login') {
-                router.push('/login')
+                router.replace('/login')
               }
 
               setTimeout(() => {

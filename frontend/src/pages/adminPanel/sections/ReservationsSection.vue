@@ -103,7 +103,7 @@ import { getApiErrorMessage } from '@/utils/apiError'
 import { ref, computed, onMounted, h } from 'vue';
 import { useDataStore } from '@/stores/counter';
 import {
-  NDataTable, NModal, NFormItemGi, NGrid, NInput, NButton, NSpace, NTag, useMessage, useDialog
+  NDataTable, NModal, NFormItemGi, NGrid, NInput, NButton, NSpace, NTag, NSpin, useMessage, useDialog
 } from 'naive-ui';
 
 const store = useDataStore();
