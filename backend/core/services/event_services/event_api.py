@@ -33,6 +33,7 @@ def list_events(filters: Dict[str, Any], sort_key: Optional[str] = None) -> List
     now = datetime.now()
     subquery = build_event_session_subquery(now)
     query = Event.query.join(subquery, Event.event_id == subquery.c.event_id)
+    query = query.filter(Event.is_active.is_(True), Event.moderation_status == 'approved')
 
     query = apply_category_filters(query, filters)
     query = apply_format_filters(query, filters)
@@ -76,7 +77,8 @@ def handle_create_event(
     creator = creator_email or get_jwt_identity()
 
     event, error, status = create_event(data, creator, files)
-    if error:
+    if status is not None:
         return error, status
 
-    return {"message": "Событие создано", "event_id": event.event_id}, HTTPStatus.CREATED
+    return {"message": "Событие создано", "event_id": event.event_id,
+            "moderation_status": event.moderation_status}, HTTPStatus.CREATED

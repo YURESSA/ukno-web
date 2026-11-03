@@ -6,6 +6,7 @@ from flask import Response, make_response
 from werkzeug.datastructures import FileStorage
 
 from backend.core import db
+from backend.core.models.auth_models import RoleEnum
 from backend.core.models.event_models import Event, Category, FormatType, AgeCategory, Tag
 from backend.core.services.email_service.email_service import send_event_deletion_email
 from backend.core.services.event_services.event_photo_service import process_photos, add_photos
@@ -145,6 +146,7 @@ def create_event(
             place=data["place"],
             conducted_by=data.get("conducted_by"),
             is_active=data.get("is_active", True),
+            moderation_status='approved' if user.role == RoleEnum.ADMIN else 'pending',
             working_hours=data.get("working_hours"),
             contact_email=data.get("contact_email"),
             iframe_url=data.get("iframe_url"),
@@ -179,7 +181,8 @@ def create_event(
         return None, {"message": f"Ошибка при создании экскурсии: {str(e)}"}, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-def update_event(event_id: int, data: dict) -> Tuple[Optional[Event], dict, int]:
+def update_event(event_id: int, data: dict, *, resident_edit: bool = False,
+                 approve: bool = False) -> Tuple[Optional[Event], dict, int]:
     """
     Обновляет поля существующей экскурсии.
 
@@ -194,6 +197,9 @@ def update_event(event_id: int, data: dict) -> Tuple[Optional[Event], dict, int]
 
     if not event:
         return None, {"message": "Экскурсия не найдена"}, HTTPStatus.NOT_FOUND
+
+    if approve and event.moderation_status != 'pending':
+        return None, {"message": "Событие не ожидает модерации"}, HTTPStatus.CONFLICT
 
     allowed_fields = [
         'title', 'short_description', 'description', 'duration', 'place', 'conducted_by',
@@ -224,6 +230,14 @@ def update_event(event_id: int, data: dict) -> Tuple[Optional[Event], dict, int]
             return None, {
                 "message": f"Возрастная категория '{data['age_category']}' не найдена"}, HTTPStatus.BAD_REQUEST
         event.age_category = age_category
+
+    if resident_edit and event.moderation_status == 'approved':
+        event.moderation_status = 'pending'
+        event.moderation_comment = None
+    if approve:
+        event.moderation_status = 'approved'
+        event.moderation_comment = None
+        event.is_active = True
 
     try:
         db.session.commit()

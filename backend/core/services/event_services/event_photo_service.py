@@ -94,7 +94,7 @@ def get_photos_for_event(event_id: int) -> Tuple[Optional[List[Dict[str, Any]]],
 
     if not event:
         return None, {"message": "Экскурсия не найдена"}, HTTPStatus.NOT_FOUND
-    photos = [photo.to_dict() for photo in event.photos]
+    photos = [photo.to_dict() for photo in sorted(event.photos, key=lambda p: (p.order_index or 0, p.photo_id))]
     return photos, None, HTTPStatus.OK
 
 

@@ -80,6 +80,8 @@ class Event(db.Model):
 
     created_by = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
+    moderation_status = db.Column(db.String(20), nullable=False, default='approved', server_default='approved')
+    moderation_comment = db.Column(db.Text, nullable=True)
     place = db.Column(db.String(255), nullable=False)
     conducted_by = db.Column(db.String(255), nullable=True)
 
@@ -119,6 +121,8 @@ class Event(db.Model):
             'age_category': self.age_category.to_dict() if self.age_category else None,
             'created_by': self.creator.email if self.creator else None,
             'is_active': self.is_active,
+            'moderation_status': self.moderation_status,
+            'moderation_comment': self.moderation_comment,
             'place': self.place,
             'conducted_by': self.conducted_by,
             'working_hours': self.working_hours,
@@ -130,7 +134,7 @@ class Event(db.Model):
             'vk': self.vk,
             "distance_to_center": self.distance_to_center,
             "time_to_nearest_stop": self.time_to_nearest_stop,
-            'photos': [photo.to_dict() for photo in self.photos],
+            'photos': [photo.to_dict() for photo in sorted(self.photos, key=lambda p: (p.order_index or 0, p.photo_id))],
             'sessions': [
                 session.to_dict()
                 for session in sorted(self.sessions, key=lambda s: s.start_datetime)

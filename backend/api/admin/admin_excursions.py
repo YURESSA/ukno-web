@@ -14,21 +14,29 @@ from backend.core.services.event_services.event_session_service import get_sessi
 from . import admin_ns
 from .decorators import admin_required
 from backend.core.models.event_models import Reservation
-from backend.core.schemas.event_schemas import event_model, session_model, session_patch_model
+from backend.core.schemas.event_schemas import session_model, session_patch_model
+from backend.core.schemas.event_schemas import event_patch_model, event_return_model
+from backend.core.services.event_services.event_moderation import change_moderation_status
 from ...core.services.user_services.user_service import get_user_by_email
 
 
 @admin_ns.route('/excursions')
 class AdminExcursionsResource(ApiResource):
     @admin_required
-    @admin_ns.doc(description="Получение списка всех экскурсий (только для администратора)")
+    @admin_ns.doc(description="Получение списка всех экскурсий (только для администратора)",
+                  params={'moderation_status': 'Фильтр: pending, approved, returned'})
     def get(self) -> tuple[dict, int]:
         """
         Получение всех экскурсий с полями для отображения в админ-панели.
 
         :return: JSON с массивом экскурсий и HTTP-статус 200
         """
+        status_filter = request.args.get('moderation_status')
+        if status_filter is not None and status_filter not in ('pending', 'approved', 'returned'):
+            return {"message": "Неизвестный статус модерации"}, HTTPStatus.BAD_REQUEST
         excursions = get_all_events()
+        if status_filter is not None:
+            excursions = [e for e in excursions if e.moderation_status == status_filter]
         return {"excursions": [e.to_dict() for e in excursions]}, HTTPStatus.OK
 
     @admin_required
@@ -54,7 +62,7 @@ class AdminExcursionsResource(ApiResource):
 @admin_ns.route('/excursions/<int:excursion_id>')
 class AdminExcursionResource(ApiResource):
     @admin_required
-    @admin_ns.expect(event_model, validate=True)
+    @admin_ns.expect(event_patch_model, validate=True)
     def patch(self, excursion_id: int) -> tuple[dict, int]:
         """
         Обновление данных конкретной экскурсии (только для администратора).
@@ -97,6 +105,29 @@ class AdminExcursionResource(ApiResource):
 
         result, status = response
         return result, status
+
+
+@admin_ns.route('/excursions/<int:excursion_id>/approve')
+class AdminExcursionApproveResource(ApiResource):
+    @admin_required
+    @admin_ns.expect(event_patch_model, validate=False)
+    @admin_ns.doc(description="Одобрить и опубликовать событие; JSON с правками необязателен")
+    def post(self, excursion_id: int):
+        data = request.get_json() if request.is_json else {}
+        event_patch_model.validate(data)
+        excursion, error, status = update_event(excursion_id, data, approve=True)
+        if error:
+            return error, status
+        return {"message": "Событие опубликовано", "excursion": excursion.to_dict()}, status
+
+
+@admin_ns.route('/excursions/<int:excursion_id>/return')
+class AdminExcursionReturnResource(ApiResource):
+    @admin_required
+    @admin_ns.expect(event_return_model, validate=True)
+    @admin_ns.doc(description="Вернуть событие резиденту с обязательным комментарием и скрыть с сайта")
+    def post(self, excursion_id: int):
+        return change_moderation_status(excursion_id, 'returned', request.get_json().get('comment'))
 
 
 @admin_ns.route('/excursions/<int:excursion_id>/sessions')
