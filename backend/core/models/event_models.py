@@ -134,7 +134,9 @@ class Event(db.Model):
             'vk': self.vk,
             "distance_to_center": self.distance_to_center,
             "time_to_nearest_stop": self.time_to_nearest_stop,
-            'photos': [photo.to_dict() for photo in sorted(self.photos, key=lambda p: (p.order_index or 0, p.photo_id))],
+            'photos': [
+                photo.to_dict()
+                for photo in sorted(self.photos, key=lambda p: (p.order_index or 0, p.photo_id))],
             'sessions': [
                 session.to_dict()
                 for session in sorted(self.sessions, key=lambda s: s.start_datetime)
