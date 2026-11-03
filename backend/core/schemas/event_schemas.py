@@ -97,3 +97,17 @@ photo_model = api.model('Photo', {
 role_model = api.model('Role', {
     'name': fields.String(required=True, description='Название роли')
 })
+
+event_patch_model = api.model('EventPatch', {
+    name: field for name, field in event_model.items() if name != 'title'
+})
+event_patch_model['title'] = fields.String(description='Название экскурсии')
+event_patch_model.update({
+    'category': fields.String(description='Категория'),
+    'format_type': fields.String(description='Формат мероприятия'),
+    'age_category': fields.String(description='Возрастная категория'),
+})
+
+event_return_model = api.model('EventReturn', {
+    'comment': fields.String(required=True, description='Причина возврата резиденту'),
+})

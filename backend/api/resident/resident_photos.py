@@ -9,6 +9,7 @@ from backend.core.services.event_services.event_photo_service import get_photos_
 from backend.core.services.event_services.event_crud import verify_resident_owns_event
 from . import resident_ns
 from .decorators import resident_required
+from backend.core.services.event_services.event_moderation import prepare_resident_event_edit
 from ...core.services.user_services.user_service import get_user_by_email
 
 
@@ -47,6 +48,11 @@ class ExcursionPhotosResource(ApiResource):
             """
         if 'photo' not in request.files:
             return {"message": "Фото не загружено"}, HTTPStatus.BAD_REQUEST
+        resident = get_user_by_email(get_jwt_identity())
+        excursion, error, status = verify_resident_owns_event(resident.user_id, excursion_id)
+        if error:
+            return error, status
+        prepare_resident_event_edit(excursion)
         photo_file = request.files['photo']
         return handle_add_photo(excursion_id, photo_file)
 
@@ -68,5 +74,22 @@ class ExcursionPhotoResource(ApiResource):
         if error:
             return error, status
 
+        prepare_resident_event_edit(excursion)
         result, status = delete_photo_from_event(excursion_id, photo_id)
         return result, status
+
+
+@resident_ns.route('/excursions/<int:excursion_id>/photos/order')
+class ExcursionPhotoOrderResource(ApiResource):
+    @resident_required
+    @resident_ns.doc(description="Изменить обложку и порядок фотографий события")
+    def put(self, excursion_id: int) -> tuple[dict, int]:
+        from backend.core.services.event_services.event_photo_order import reorder_photos
+        from backend.core.utilits.request_utils import require_json_object
+
+        resident_id = get_user_by_email(get_jwt_identity()).user_id
+        excursion, error, status = verify_resident_owns_event(resident_id, excursion_id)
+        if error:
+            return error, status
+        data = require_json_object(request.get_json())
+        return reorder_photos(excursion, data.get('photo_ids'))

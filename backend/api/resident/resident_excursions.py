@@ -4,7 +4,7 @@ from flask import request
 from flask_jwt_extended import get_jwt_identity
 
 from backend.api.errors import ApiResource
-from backend.core.schemas.event_schemas import data_param, photos_param, event_model
+from backend.core.schemas.event_schemas import data_param, photos_param
 from backend.core.services.event_services.event_api import handle_create_event
 from backend.core.services.event_services.event_crud import get_event, get_events_for_resident, delete_event, \
     update_event, \
@@ -12,6 +12,8 @@ from backend.core.services.event_services.event_crud import get_event, get_event
 from ...core.services.user_services.user_service import get_user_by_email
 from . import resident_ns
 from .decorators import resident_required
+from backend.core.schemas.event_schemas import event_patch_model
+from backend.core.services.event_services.event_moderation import change_moderation_status
 
 
 @resident_ns.route('/excursions')
@@ -53,7 +55,7 @@ class ExcursionsResource(ApiResource):
 @resident_ns.route('/excursions/<int:excursion_id>')
 class ExcursionResource(ApiResource):
     @resident_required
-    @resident_ns.expect(event_model, validate=True)
+    @resident_ns.expect(event_patch_model, validate=True)
     @resident_ns.doc(description="Обновление экскурсии")
     def patch(self, excursion_id: int) -> tuple[dict, int]:
         """
@@ -70,7 +72,7 @@ class ExcursionResource(ApiResource):
         if error:
             return error, status
 
-        excursion, error, status = update_event(excursion_id, data)
+        excursion, error, status = update_event(excursion_id, data, resident_edit=True)
         if error:
             return error, status
 
@@ -115,3 +117,15 @@ class ExcursionResource(ApiResource):
             return error, status
 
         return delete_event(excursion_id, resident, return_csv=True)
+
+
+@resident_ns.route('/excursions/<int:excursion_id>/submit')
+class ExcursionSubmitResource(ApiResource):
+    @resident_required
+    @resident_ns.doc(description="Повторно отправить возвращённое событие на модерацию после исправлений")
+    def post(self, excursion_id: int):
+        resident = get_user_by_email(get_jwt_identity())
+        excursion, error, status = verify_resident_owns_event(resident.user_id, excursion_id)
+        if error:
+            return error, status
+        return change_moderation_status(excursion_id, 'pending')

@@ -22,7 +22,7 @@
       :segmented="{ content: 'soft', footer: 'soft' }"
     >
       <n-form ref="formRef" :model="selectedItem" label-placement="top">
-        <n-form-item label="Название формата">
+        <n-form-item label="Название формата" v-bind="fieldProps(selectedItem, 'format', 'format_type_name', 'selectedItem.format_type_name', false)">
           <n-input v-model:value="selectedItem.format_type_name" placeholder="Например: Индивидуальная" />
         </n-form-item>
       </n-form>
@@ -45,10 +45,15 @@
 </template>
 
 <script setup>
+import { useAdminValidation } from '@/composables/useAdminValidation'
+import { validateAdmin } from '@/utils/adminValidation'
+import { getApiErrorMessage } from '@/utils/apiError'
 import { ref, computed, inject, watch, onMounted, h } from 'vue';
 import { useDataStore } from '@/stores/counter';
 import { NDataTable, NModal, NForm, NFormItem, NInput, NButton, NSpace, useMessage, useDialog } from 'naive-ui';
 import BaseButton from '@/components/ui/button/BaseButton.vue';
+
+const { submitted, fieldProps, resetValidation } = useAdminValidation();
 
 const store = useDataStore();
 const format = computed(() => store.getFormat);
@@ -91,6 +96,10 @@ watch(addTrigger, () => {
 });
 
 async function handleSave() {
+  if (loading.value) return;
+  submitted.value = true;
+  const validationError = validateAdmin(selectedItem.value, 'format', false);
+  if (validationError) return message.error(validationError);
   if (!selectedItem.value.format_type_name.trim()) {
     message.error('Введите название формата');
     return;
@@ -103,7 +112,7 @@ async function handleSave() {
     showModal.value = false;
     await store.FetchFormat();
   } catch (e) {
-    message.error('Ошибка при создании', e);
+    message.error(getApiErrorMessage(e, 'Ошибка при создании'));
   } finally {
     loading.value = false;
   }
@@ -121,13 +130,15 @@ function confirmDelete(format) {
         message.success('Категория удалена');
         await store.FetchFormat();
       } catch (e) {
-        message.error('Не удалось удалить категорию', e);
+        message.error(getApiErrorMessage(e, 'Не удалось удалить категорию'));
       }
     }
   });
 }
 
-onMounted(() => store.FetchFormat());
+onMounted(() => store.FetchFormat().catch(e => message.error(getApiErrorMessage(e, 'Ошибка загрузки данных'))));
+
+watch(showModal, resetValidation);
 </script>
 
 <style scoped>

@@ -13,16 +13,16 @@
     <n-modal v-model:show="showModal" preset="card" style="width: 550px"
              :title="isEditMode ? 'Редактировать партнёра' : 'Добавить партнёра'">
       <n-form>
-        <n-form-item label="Название организации">
+        <n-form-item label="Название организации" v-bind="fieldProps(model, 'partner', 'name', 'model.name', false)">
           <n-input v-model:value="model.name" placeholder="Введите название..." />
         </n-form-item>
 
-        <n-form-item label="Ссылка на сайт">
+        <n-form-item label="Ссылка на сайт" v-bind="fieldProps(model, 'partner', 'link', 'model.link', false)">
           <n-input v-model:value="model.link" placeholder="https://partner-site.com" />
         </n-form-item>
 
-        <n-form-item label="Порядок отображения">
-          <n-input-number v-model:value="model.order_index" :min="0" style="width: 100%" />
+        <n-form-item label="Порядок отображения" v-bind="fieldProps(model, 'partner', 'order_index', 'model.order_index', false)">
+          <n-input-number v-model:value="model.order_index" :precision="0" :min="0" style="width: 100%" />
         </n-form-item>
 
         <n-form-item label="Логотип">
@@ -54,12 +54,17 @@
 </template>
 
 <script setup>
+import { useAdminValidation } from '@/composables/useAdminValidation'
+import { validateAdmin } from '@/utils/adminValidation'
+import { getApiErrorMessage } from '@/utils/apiError'
 import { ref, onMounted, h, inject, watch, computed } from 'vue'
 import { useDataStore, baseUrl } from '@/stores/counter'
 import {
   NButton, useMessage, NSpace, NH2, NDataTable,
   NModal, NForm, NFormItem, NInput, NUpload, NImage, useDialog, NInputNumber
 } from 'naive-ui'
+
+const { submitted, fieldProps, resetValidation } = useAdminValidation();
 
 const store = useDataStore()
 const message = useMessage()
@@ -174,7 +179,7 @@ const handleRemove = (options) => {
           await store.FetchPartners()
           resolve(true)
         } catch (e) {
-          message.error('Ошибка при удалении')
+          message.error(getApiErrorMessage(e, 'Ошибка при удалении'))
           resolve(false)
         }
       },
@@ -184,6 +189,10 @@ const handleRemove = (options) => {
 }
 
 const handleSave = async () => {
+  if (loading.value || submitLoading.value) return;
+  submitted.value = true;
+  const validationError = validateAdmin(model.value, 'partner', false);
+  if (validationError) return message.error(validationError);
   if (!model.value.name) return message.error('Введите название партнера')
 
   try {
@@ -218,7 +227,7 @@ const handleSave = async () => {
     showModal.value = false
     await store.FetchPartners()
   } catch (e) {
-    message.error('Ошибка при сохранении')
+    message.error(getApiErrorMessage(e, 'Ошибка при сохранении'))
   } finally {
     submitLoading.value = false
   }
@@ -232,13 +241,15 @@ const handleDelete = async () => {
       showModal.value = false
       await store.FetchPartners()
     } catch (e) {
-      message.error('Ошибка при удалении')
+      message.error(getApiErrorMessage(e, 'Ошибка при удалении'))
     }
   }
 }
 
 onMounted(() => {
   loading.value = true
-  store.FetchPartners().finally(() => loading.value = false)
+  store.FetchPartners().catch(e => message.error(getApiErrorMessage(e, 'Ошибка загрузки данных'))).finally(() => loading.value = false)
 })
+
+watch(showModal, resetValidation);
 </script>

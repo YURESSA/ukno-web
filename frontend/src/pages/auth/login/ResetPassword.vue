@@ -32,6 +32,7 @@
 </template>
 
 <script setup>
+import { getApiErrorMessage } from '@/utils/apiError'
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import DefaultButton from '@/components/ui/button/DefaultButton.vue';
@@ -78,7 +79,7 @@ const handleSubmit = async () => {
     await notification('Пароль успешно изменен', 'positive');
     router.push('/login');
   } catch (err) {
-    notification(err.response?.data?.message || 'Ошибка при смене пароля', 'negative');
+    notification(getApiErrorMessage(err, 'Ошибка при смене пароля'), 'negative');
     console.error(err);
   } finally {
     loading.value = false;

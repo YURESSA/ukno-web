@@ -87,6 +87,8 @@ import BaseButton from '@/components/ui/button/BaseButton.vue';
 const route = useRoute();
 const addEventCounter = ref(0);
 const isSidebarOpen = ref(false);
+const sectionCanCreate = ref(true);
+provide('admin-can-create', sectionCanCreate);
 provide('admin-add-event', addEventCounter);
 
 const menuItems = [
@@ -110,7 +112,7 @@ const currentSectionTitle = computed(() => route.meta.title || 'Управлен
 
 const showAddButton = computed(() => {
   const hideOn = ['AdminReservations'];
-  return !hideOn.includes(route.name);
+  return !hideOn.includes(route.name) && sectionCanCreate.value;
 });
 
 const themeOverrides = {

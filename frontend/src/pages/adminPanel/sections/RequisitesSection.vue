@@ -13,7 +13,7 @@
     <n-modal v-model:show="showModal" preset="card" style="width: 500px"
              :title="isEditMode ? 'Редактировать реквизит' : 'Добавить реквизит'">
       <n-form>
-        <n-form-item label="Название реквизита">
+        <n-form-item label="Название реквизита" v-bind="fieldProps(model, 'requisites', 'title', 'model.title', false)">
           <n-input v-model:value="model.title" placeholder="Например: Свидетельство о регистрации" />
         </n-form-item>
 
@@ -44,12 +44,17 @@
 </template>
 
 <script setup>
+import { useAdminValidation } from '@/composables/useAdminValidation'
+import { validateAdmin } from '@/utils/adminValidation'
+import { getApiErrorMessage } from '@/utils/apiError'
 import { ref, onMounted, h, inject, watch, computed } from 'vue'
 import { useDataStore, baseUrl } from '@/stores/counter'
 import {
   NButton, useMessage, NSpace, NH2, NDataTable,
   NModal, NForm, NFormItem, NInput, NUpload, useDialog, NText
 } from 'naive-ui'
+
+const { submitted, fieldProps, resetValidation } = useAdminValidation();
 
 const store = useDataStore()
 const message = useMessage()
@@ -149,7 +154,7 @@ const handleRemove = (options) => {
           await store.FetchRequisites()
           resolve(true)
         } catch (e) {
-          message.error('Ошибка при удалении', e)
+          message.error(getApiErrorMessage(e, 'Ошибка при удалении'))
           resolve(false)
         }
       },
@@ -159,6 +164,10 @@ const handleRemove = (options) => {
 }
 
 const handleSave = async () => {
+  if (loading.value || submitLoading.value) return;
+  submitted.value = true;
+  const validationError = validateAdmin(model.value, 'requisites', false);
+  if (validationError) return message.error(validationError);
   if (!model.value.title) return message.error('Введите название')
 
   try {
@@ -189,7 +198,7 @@ const handleSave = async () => {
     showModal.value = false
     await store.FetchRequisites()
   } catch (e) {
-    message.error('Ошибка при сохранении', e)
+    message.error(getApiErrorMessage(e, 'Ошибка при сохранении'))
   } finally {
     submitLoading.value = false
   }
@@ -203,13 +212,15 @@ const handleDelete = async () => {
       showModal.value = false
       await store.FetchRequisites()
     } catch (e) {
-      message.error('Ошибка при удалении', e)
+      message.error(getApiErrorMessage(e, 'Ошибка при удалении'))
     }
   }
 }
 
 onMounted(() => {
   loading.value = true
-  store.FetchRequisites().finally(() => loading.value = false)
+  store.FetchRequisites().catch(e => message.error(getApiErrorMessage(e, 'Ошибка загрузки данных'))).finally(() => loading.value = false)
 })
+
+watch(showModal, resetValidation);
 </script>

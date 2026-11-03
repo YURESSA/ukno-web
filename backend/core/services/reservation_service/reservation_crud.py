@@ -56,7 +56,8 @@ def create_reservation_with_payment(
         if not session:
             db.session.rollback()
             return {"message": "Сеанс не найден"}, HTTPStatus.NOT_FOUND
-        if not session.event or not session.event.is_active:
+        if (not session.event or not session.event.is_active
+                or session.event.moderation_status != 'approved'):
             db.session.rollback()
             return {"message": "Событие недоступно для бронирования"}, HTTPStatus.BAD_REQUEST
         if session.start_datetime <= datetime.now():

@@ -18,11 +18,11 @@
       :title="isEditMode ? 'Редактировать событие' : 'Добавить событие'"
     >
       <n-form>
-        <n-form-item label="Заголовок события">
+        <n-form-item label="Заголовок события" v-bind="fieldProps(model, 'history', 'title', 'model.title', false)">
           <n-input v-model:value="model.title" placeholder="Например: Основание компании" />
         </n-form-item>
 
-        <n-form-item label="Дата события">
+        <n-form-item label="Дата события" v-bind="fieldProps(model, 'history', 'date', 'model.date', false)">
           <n-date-picker
             v-model:value="model.date"
             type="date"
@@ -31,7 +31,7 @@
           />
         </n-form-item>
 
-        <n-form-item label="Описание">
+        <n-form-item label="Описание" v-bind="fieldProps(model, 'history', 'description', 'model.description', false)">
           <n-input
             v-model:value="model.description"
             type="textarea"
@@ -40,7 +40,7 @@
           />
         </n-form-item>
 
-        <n-form-item label="Ссылка (опционально)">
+        <n-form-item label="Ссылка (опционально)" v-bind="fieldProps(model, 'history', 'link', 'model.link', false)">
           <n-input v-model:value="model.link" placeholder="https://..." />
         </n-form-item>
       </n-form>
@@ -60,6 +60,9 @@
 </template>
 
 <script setup>
+import { useAdminValidation } from '@/composables/useAdminValidation'
+import { validateAdmin } from '@/utils/adminValidation'
+import { getApiErrorMessage } from '@/utils/apiError'
 import { ref, onMounted, h, inject, watch, computed } from 'vue'
 import { useDataStore } from '@/stores/counter'
 import {
@@ -67,6 +70,8 @@ import {
   NModal, NForm, NFormItem, NInput, NDatePicker
 } from 'naive-ui'
 import { format, parseISO } from 'date-fns'
+
+const { submitted, fieldProps, resetValidation } = useAdminValidation();
 
 const store = useDataStore()
 const message = useMessage()
@@ -128,6 +133,10 @@ const openEditModal = (row) => {
 }
 
 const handleSave = async () => {
+  if (loading.value || submitLoading.value) return;
+  submitted.value = true;
+  const validationError = validateAdmin(model.value, 'history', false);
+  if (validationError) return message.error(validationError);
   if (!model.value.title || !model.value.date || !model.value.description) {
     return message.error('Заполните название, дату и описание')
   }
@@ -153,7 +162,7 @@ const handleSave = async () => {
     showModal.value = false
     await store.FetchHistory()
   } catch (e) {
-    message.error('Ошибка при сохранении')
+    message.error(getApiErrorMessage(e, 'Ошибка при сохранении'))
   } finally {
     submitLoading.value = false
   }
@@ -168,7 +177,7 @@ const handleDelete = async () => {
       showModal.value = false
       await store.FetchHistory()
     } catch (e) {
-      message.error('Ошибка при удалении')
+      message.error(getApiErrorMessage(e, 'Ошибка при удалении'))
     } finally {
       submitLoading.value = false
     }
@@ -177,6 +186,8 @@ const handleDelete = async () => {
 
 onMounted(() => {
   loading.value = true
-  store.FetchHistory().finally(() => loading.value = false)
+  store.FetchHistory().catch(e => message.error(getApiErrorMessage(e, 'Ошибка загрузки данных'))).finally(() => loading.value = false)
 })
+
+watch(showModal, resetValidation);
 </script>

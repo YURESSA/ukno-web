@@ -56,11 +56,11 @@
     >
       <n-form :model="productForm" label-placement="top">
         <n-grid :cols="2" :x-gap="20">
-          <n-form-item-gi span="2" label="Название *">
+          <n-form-item-gi span="2" label="Название *" v-bind="fieldProps(productForm, 'product', 'name', 'productForm.name', isEdit)">
             <n-input v-model:value="productForm.name" placeholder="Название товара" />
           </n-form-item-gi>
 
-          <n-form-item-gi label="Категория">
+          <n-form-item-gi label="Категория" v-bind="fieldProps(productForm, 'product', 'category_id', 'productForm.category_id', isEdit)">
             <n-select
               v-model:value="productForm.category_id"
               :options="categoryOptions"
@@ -69,19 +69,19 @@
             />
           </n-form-item-gi>
 
-          <n-form-item-gi label="Цена, ₽ *">
+          <n-form-item-gi label="Цена, ₽ *" v-bind="fieldProps(productForm, 'product', 'price', 'productForm.price', isEdit)">
             <n-input-number v-model:value="productForm.price" :min="0" style="width:100%" />
           </n-form-item-gi>
 
-          <n-form-item-gi label="Коллекция">
+          <n-form-item-gi label="Коллекция" v-bind="fieldProps(productForm, 'product', 'collection', 'productForm.collection', isEdit)">
             <n-input v-model:value="productForm.collection" placeholder="Например: Summer 2026" />
           </n-form-item-gi>
 
-          <n-form-item-gi label="Активен">
+          <n-form-item-gi label="Активен" v-bind="fieldProps(productForm, 'product', 'is_active', 'productForm.is_active', isEdit)">
             <n-switch v-model:value="productForm.is_active" />
           </n-form-item-gi>
 
-          <n-form-item-gi span="2" label="Описание">
+          <n-form-item-gi span="2" label="Описание" v-bind="fieldProps(productForm, 'product', 'description', 'productForm.description', isEdit)">
             <n-input
               v-model:value="productForm.description"
               type="textarea"
@@ -95,14 +95,14 @@
             <div class="colors-list">
               <div v-for="(color, ci) in productForm.colors" :key="ci" class="color-block">
                 <div class="color-block__header">
-                  <n-input v-model:value="color.name" placeholder="Название цвета" style="width:180px" />
+                  <n-form-item :show-label="false" v-bind="fieldProps(color, 'color', 'name', 'colors.' + ci + '.name')"><n-input v-model:value="color.name" placeholder="Название цвета" style="width:180px" /></n-form-item>
                   <n-color-picker v-model:value="color.hex_code" :show-alpha="false" style="width:120px" />
                   <n-button size="small" type="error" ghost @click="removeColor(ci)">✕</n-button>
                 </div>
                 <div class="sizes-list">
                   <div v-for="(size, si) in color.sizes" :key="si" class="size-row">
-                    <n-input v-model:value="size.size_name" placeholder="Размер" style="width:100px" />
-                    <n-input-number v-model:value="size.stock" :min="0" placeholder="Остаток" style="width:110px" />
+                    <n-form-item :show-label="false" v-bind="fieldProps(size, 'size', 'size_name', 'colors.' + ci + '.sizes.' + si + '.size_name')"><n-input v-model:value="size.size_name" placeholder="Размер" style="width:100px" /></n-form-item>
+                    <n-form-item :show-label="false" v-bind="fieldProps(size, 'size', 'stock', 'colors.' + ci + '.sizes.' + si + '.stock')"><n-input-number v-model:value="size.stock" :precision="0" :min="0" placeholder="Остаток" style="width:110px" /></n-form-item>
                     <n-switch v-model:value="size.is_active" size="small" />
                     <n-button size="tiny" ghost @click="removeSize(ci, si)">✕</n-button>
                   </div>
@@ -150,19 +150,19 @@
     >
       <n-form :model="categoryForm" label-placement="top">
         <n-grid :cols="2" :x-gap="20">
-          <n-form-item-gi span="2" label="Название *">
+          <n-form-item-gi span="2" label="Название *" v-bind="fieldProps(categoryForm, 'merchCategory', 'name', 'categoryForm.name', isEdit)">
             <n-input v-model:value="categoryForm.name" placeholder="Например: Футболки" />
           </n-form-item-gi>
-          <n-form-item-gi label="Slug">
+          <n-form-item-gi label="Slug" v-bind="fieldProps(categoryForm, 'merchCategory', 'slug', 'categoryForm.slug', isEdit)">
             <n-input v-model:value="categoryForm.slug" placeholder="tshirts" />
           </n-form-item-gi>
-          <n-form-item-gi label="Порядок">
-            <n-input-number v-model:value="categoryForm.order_index" :min="0" style="width:100%" />
+          <n-form-item-gi label="Порядок" v-bind="fieldProps(categoryForm, 'merchCategory', 'order_index', 'categoryForm.order_index', isEdit)">
+            <n-input-number v-model:value="categoryForm.order_index" :precision="0" :min="0" style="width:100%" />
           </n-form-item-gi>
-          <n-form-item-gi span="2" label="Описание">
+          <n-form-item-gi span="2" label="Описание" v-bind="fieldProps(categoryForm, 'merchCategory', 'description', 'categoryForm.description', isEdit)">
             <n-input v-model:value="categoryForm.description" type="textarea" :autosize="{ minRows: 2 }" />
           </n-form-item-gi>
-          <n-form-item-gi label="Активна">
+          <n-form-item-gi label="Активна" v-bind="fieldProps(categoryForm, 'merchCategory', 'is_active', 'categoryForm.is_active', isEdit)">
             <n-switch v-model:value="categoryForm.is_active" />
           </n-form-item-gi>
         </n-grid>
@@ -187,22 +187,22 @@
     >
       <n-form :model="bannerForm" label-placement="top">
         <n-grid :cols="2" :x-gap="20">
-          <n-form-item-gi span="2" label="Заголовок">
+          <n-form-item-gi span="2" label="Заголовок" v-bind="fieldProps(bannerForm, 'banner', 'title', 'bannerForm.title', isEdit)">
             <n-input v-model:value="bannerForm.title" placeholder="НОВЫЙ СТИЛЬ" />
           </n-form-item-gi>
-          <n-form-item-gi span="2" label="Описание">
+          <n-form-item-gi span="2" label="Описание" v-bind="fieldProps(bannerForm, 'banner', 'description', 'bannerForm.description', isEdit)">
             <n-input v-model:value="bannerForm.description" type="textarea" :autosize="{ minRows: 2 }" placeholder="Текст под заголовком" />
           </n-form-item-gi>
-          <n-form-item-gi label="Текст на кнопке">
+          <n-form-item-gi label="Текст на кнопке" v-bind="fieldProps(bannerForm, 'banner', 'button_text', 'bannerForm.button_text', isEdit)">
             <n-input v-model:value="bannerForm.button_text" placeholder="Смотреть коллекцию" />
           </n-form-item-gi>
-          <n-form-item-gi label="Ссылка">
+          <n-form-item-gi label="Ссылка" v-bind="fieldProps(bannerForm, 'banner', 'link_url', 'bannerForm.link_url', isEdit)">
             <n-input v-model:value="bannerForm.link_url" placeholder="/shop/..." />
           </n-form-item-gi>
-          <n-form-item-gi label="Порядок">
-            <n-input-number v-model:value="bannerForm.order_index" :min="0" style="width:100%" />
+          <n-form-item-gi label="Порядок" v-bind="fieldProps(bannerForm, 'banner', 'order_index', 'bannerForm.order_index', isEdit)">
+            <n-input-number v-model:value="bannerForm.order_index" :precision="0" :min="0" style="width:100%" />
           </n-form-item-gi>
-          <n-form-item-gi label="Активен">
+          <n-form-item-gi label="Активен" v-bind="fieldProps(bannerForm, 'banner', 'is_active', 'bannerForm.is_active', isEdit)">
             <n-switch v-model:value="bannerForm.is_active" />
           </n-form-item-gi>
           <n-form-item-gi span="2" label="Изображение баннера">
@@ -303,10 +303,13 @@
 </template>
 
 <script setup>
-import { ref, computed, inject, watch, onMounted, h } from 'vue';
+import { useAdminValidation } from '@/composables/useAdminValidation'
+import { validateAdmin } from '@/utils/adminValidation'
+import { getApiErrorMessage } from '@/utils/apiError'
+import { ref, computed, inject, watch, onMounted, onUnmounted, h } from 'vue';
 import axios from 'axios';
 import {
-  NTabs, NTabPane, NDataTable, NModal, NForm, NFormItemGi, NGrid,
+  NTabs, NTabPane, NDataTable, NModal, NForm, NFormItem, NFormItemGi, NGrid,
   NInput, NInputNumber, NSelect, NSwitch, NColorPicker,
   NButton, NSpace, NAvatar, NUpload, NUploadDragger, NIcon, NTag,
   NDescriptions, NDescriptionsItem, NDivider,
@@ -314,11 +317,16 @@ import {
 } from 'naive-ui';
 import { useDataStore, baseUrl } from '@/stores/counter';
 
+const { submitted, fieldProps, resetValidation } = useAdminValidation();
+
 const store = useDataStore();
 const message = useMessage();
 const dialog = useDialog();
 const loading = ref(false);
 const activeTab = ref('products');
+const sectionCanCreate = inject('admin-can-create', ref(true));
+watch(activeTab, value => { sectionCanCreate.value = value !== 'orders'; }, { immediate: true });
+onUnmounted(() => { sectionCanCreate.value = true; });
 
 const authHeaders = computed(() => ({ Authorization: `Bearer ${store.auth_key}` }));
 
@@ -424,7 +432,7 @@ async function openEditProduct(row) {
     newProductFiles.value = [];
     showProductModal.value = true;
   } catch (e) {
-    message.error(e.response?.data?.message || 'Ошибка загрузки данных товара');
+    message.error(getApiErrorMessage(e, 'Ошибка загрузки данных товара'));
     console.error(e);
   } finally {
     loading.value = false;
@@ -468,7 +476,7 @@ async function handleProductRemove({ file }) {
           );
           message.success('Фото удалено');
           resolve(true);
-        } catch { message.error('Ошибка удаления фото'); resolve(false); }
+        } catch (e) { message.error(getApiErrorMessage(e, 'Ошибка удаления фото')); resolve(false); }
       },
       onNegativeClick: () => resolve(false),
     });
@@ -476,6 +484,10 @@ async function handleProductRemove({ file }) {
 }
 
 async function saveProduct() {
+  if (loading.value) return;
+  submitted.value = true;
+  const validationError = validateAdmin(productForm.value, 'product', isEdit.value);
+  if (validationError) return message.error(validationError);
   if (!productForm.value.name.trim()) return message.warning('Название обязательно');
   loading.value = true;
   try {
@@ -507,7 +519,7 @@ async function saveProduct() {
     showProductModal.value = false;
     await fetchProducts();
   } catch (e) {
-    message.error(e.response?.data?.message || 'Ошибка сохранения');
+    message.error(getApiErrorMessage(e, 'Ошибка сохранения'));
   } finally { loading.value = false; }
 }
 
@@ -522,7 +534,7 @@ function confirmDeleteProduct() {
         message.success('Товар удалён');
         showProductModal.value = false;
         await fetchProducts();
-      } catch { message.error('Ошибка удаления'); }
+      } catch (e) { message.error(getApiErrorMessage(e, 'Ошибка удаления')); }
     }
   });
 }
@@ -537,7 +549,7 @@ function confirmDeleteProductRow(row) {
         await axios.delete(`${baseUrl}api/admin/merch/products/${row.product_id}`, { headers: authHeaders.value });
         message.success('Товар удалён');
         await fetchProducts();
-      } catch { message.error('Ошибка удаления'); }
+      } catch (e) { message.error(getApiErrorMessage(e, 'Ошибка удаления')); }
     }
   });
 }
@@ -577,6 +589,10 @@ async function fetchCategories() {
 }
 
 async function saveCategory() {
+  if (loading.value) return;
+  submitted.value = true;
+  const validationError = validateAdmin(categoryForm.value, 'merchCategory', isEdit.value);
+  if (validationError) return message.error(validationError);
   if (!categoryForm.value.name.trim()) return message.warning('Название обязательно');
   loading.value = true;
   try {
@@ -591,7 +607,7 @@ async function saveCategory() {
     showCategoryModal.value = false;
     await fetchCategories();
   } catch (e) {
-    message.error(e.response?.data?.message || 'Ошибка');
+    message.error(getApiErrorMessage(e, 'Ошибка'));
   } finally { loading.value = false; }
 }
 
@@ -605,7 +621,7 @@ function confirmDeleteCategory() {
         message.success('Удалено');
         showCategoryModal.value = false;
         await fetchCategories();
-      } catch { message.error('Ошибка'); }
+      } catch (e) { message.error(getApiErrorMessage(e, 'Ошибка')); }
     }
   });
 }
@@ -660,6 +676,11 @@ function handleBannerUploadChange({ fileList }) {
 }
 
 async function saveBanner() {
+  if (!isEdit.value && !newBannerFile.value) return message.error('Выберите изображение баннера');
+  if (loading.value) return;
+  submitted.value = true;
+  const validationError = validateAdmin(bannerForm.value, 'banner', isEdit.value);
+  if (validationError) return message.error(validationError);
   loading.value = true;
   try {
     const fd = new FormData();
@@ -688,7 +709,7 @@ async function saveBanner() {
     showBannerModal.value = false;
     await fetchBanners();
   } catch (e) {
-    message.error(e.response?.data?.message || 'Ошибка');
+    message.error(getApiErrorMessage(e, 'Ошибка'));
   } finally { loading.value = false; }
 }
 
@@ -702,7 +723,7 @@ function confirmDeleteBanner() {
         message.success('Удалено');
         showBannerModal.value = false;
         await fetchBanners();
-      } catch { message.error('Ошибка'); }
+      } catch (e) { message.error(getApiErrorMessage(e, 'Ошибка')); }
     }
   });
 }
@@ -831,7 +852,7 @@ function openOrderModal(row) {
 }
 
 async function saveOrderStatus() {
-  if (!selectedOrder.value) return;
+  if (!selectedOrder.value || orderUpdating.value) return;
   orderUpdating.value = true;
   try {
     await axios.patch(`${baseUrl}api/admin/merch/orders/${selectedOrder.value.order_id}`, {
@@ -841,7 +862,7 @@ async function saveOrderStatus() {
     showOrderModal.value = false;
     await fetchOrders();
   } catch (e) {
-    message.error(e.response?.data?.message || 'Ошибка при обновлении статуса');
+    message.error(getApiErrorMessage(e, 'Ошибка при обновлении статуса'));
   } finally {
     orderUpdating.value = false;
   }
@@ -871,8 +892,13 @@ watch(addTrigger, () => {
 });
 
 onMounted(async () => {
-  await Promise.all([fetchProducts(), fetchCategories(), fetchBanners(), fetchOrders()]);
+  await Promise.all([fetchProducts(), fetchCategories(), fetchBanners(), fetchOrders()].map(request => request.catch(e => message.error(getApiErrorMessage(e, 'Ошибка загрузки данных')))));
 });
+
+watch(showProductModal, resetValidation);
+watch(showCategoryModal, resetValidation);
+watch(showBannerModal, resetValidation);
+watch(showOrderModal, resetValidation);
 </script>
 
 <style scoped>

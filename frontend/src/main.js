@@ -7,9 +7,12 @@ import VueMobileDetection from "vue-mobile-detection";
 
 import App from './App.vue'
 import router from './router/index.js'
+import { setupAxiosInterceptors } from './utils/setupAxios.js'
 
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
+
+setupAxiosInterceptors()
 
 const app = createApp(App)
 app.use(pinia)

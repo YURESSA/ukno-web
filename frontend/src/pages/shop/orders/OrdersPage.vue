@@ -270,6 +270,7 @@
 </template>
 
 <script setup>
+import { getApiErrorMessage } from '@/utils/apiError'
 import { ref, computed, onMounted, watch } from 'vue'
 import { baseUrl, useDataStore } from '@/stores/counter'
 import { useShopStore } from '@/stores/shop'
@@ -362,7 +363,7 @@ async function submitOrder() {
     activeTab.value = 'orders'
     await shopStore.FetchOrders(dataStore.auth_key)
   } catch (err) {
-    formError.value = err.response?.data?.message || 'Ошибка при оформлении'
+    formError.value = getApiErrorMessage(err, 'Ошибка при оформлении')
   } finally {
     submitting.value = false
   }

@@ -45,6 +45,7 @@
 </template>
 
 <script setup>
+import { getApiErrorMessage } from '@/utils/apiError'
 import { ref } from 'vue';
 import { useDataStore } from '@/stores/counter';
 import IconButton from '@/components/ui/button/IconButton.vue';
@@ -132,11 +133,7 @@ const handleSubmit = async () => {
     await notification('Пароль успешно изменён!', 'positive');
     emit('close')
   } catch (error) {
-    if (error.response?.status === 400) {
-      await notification('Неверный старый пароль', 'negative');
-    } else {
-      await notification('Произошла ошибка при смене пароля', 'negative');
-    }
+    notification(getApiErrorMessage(error), 'negative');
     console.error('Ошибка при смене пароля', error);
   }
 };

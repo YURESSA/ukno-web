@@ -1,18 +1,20 @@
 <template>
-  <div class="card-wrapper" v-if="excursion?.photos?.[0]?.photo_url">
+  <div class="card-wrapper" v-if="excursion">
     <div class="preview-img">
       <img
+        v-if="getMainImage"
         :src="getMainImage"
         :alt="excursion.title"
         @error="handleImageError"
         class="event-image"
         loading="lazy"
       >
+      <div v-else class="photo-placeholder">Фотография пока не добавлена</div>
     </div>
     <div class="content">
-      <div class="title" @click="goToEventPage">
+      <RouterLink :to="{ name: 'EventDetailPage', params: { id: excursion.excursion_id } }" class="title">
         <p class="text-l bold">{{ excursion.title }}</p>
-      </div>
+      </RouterLink>
 
       <div class="descript">
         <p class="excursion-descript">{{ excursion.short_description }}</p>
@@ -95,7 +97,7 @@ const formattedTime = computed(() => {
 });
 
 const displayPrice = computed(() => {
-  const price = parseInt(nearestSession.value.cost);
+  const price = Number(nearestSession.value?.cost);
   if (price === 0 || price === '0' || !price) {
     return 'Бесплатно';
   }
@@ -105,7 +107,8 @@ const displayPrice = computed(() => {
 });
 
 const getMainImage = computed(() => {
-  return baseUrl + props.excursion.photos[0].photo_url;
+  const url = props.excursion.photos?.[0]?.photo_url;
+  return url ? (/^https?:\/\//i.test(url) ? url : baseUrl + url.replace(/^\//, '')) : '';
 });
 
 const handleImageError = (e) => {
@@ -114,6 +117,7 @@ const handleImageError = (e) => {
 </script>
 
 <style scoped>
+.photo-placeholder { display: grid; place-items: center; height: 266px; border-radius: 15px; background: #f5f5f5; color: #777; }
 .card-wrapper{
   display: flex;
   flex-direction: column;
@@ -127,9 +131,12 @@ const handleImageError = (e) => {
   max-width: 400px;
 }
 
-/* .title > p{
-  min-height: 80px;
-} */
+.title {
+  display: flex;
+  cursor: pointer;
+  max-width: 100%;
+  flex-wrap: wrap;
+}
 
 .preview-img > img{
   display: block;

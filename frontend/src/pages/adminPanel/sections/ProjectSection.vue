@@ -18,16 +18,16 @@
       :title="isEditMode ? 'Редактировать проект' : 'Новый проект'"
     >
       <n-form>
-        <n-form-item label="Название проекта">
+        <n-form-item label="Название проекта" v-bind="fieldProps(model, 'project', 'title', 'model.title', false)">
           <n-input v-model:value="model.title" placeholder="Например: Молодёжное бюро" />
         </n-form-item>
 
-        <n-form-item label="Ссылка">
+        <n-form-item label="Ссылка" v-bind="fieldProps(model, 'project', 'link', 'model.link', false)">
           <n-input v-model:value="model.link" placeholder="https://example.com" />
         </n-form-item>
 
-        <n-form-item label="Порядок вывода">
-          <n-input-number v-model:value="model.order_index" :min="0" style="width: 100%" />
+        <n-form-item label="Порядок вывода" v-bind="fieldProps(model, 'project', 'order_index', 'model.order_index', false)">
+          <n-input-number v-model:value="model.order_index" :precision="0" :min="0" style="width: 100%" />
         </n-form-item>
       </n-form>
 
@@ -46,12 +46,17 @@
 </template>
 
 <script setup>
+import { useAdminValidation } from '@/composables/useAdminValidation'
+import { validateAdmin } from '@/utils/adminValidation'
+import { getApiErrorMessage } from '@/utils/apiError'
 import { ref, onMounted, h, inject, watch, computed } from 'vue'
 import { useDataStore } from '@/stores/counter'
 import {
   NButton, useMessage, NSpace, NH2, NDataTable,
   NModal, NForm, NFormItem, NInput, NInputNumber
 } from 'naive-ui'
+
+const { submitted, fieldProps, resetValidation } = useAdminValidation();
 
 const store = useDataStore()
 const message = useMessage()
@@ -111,6 +116,10 @@ const openEditModal = (row) => {
 }
 
 const handleSave = async () => {
+  if (loading.value || submitLoading.value) return;
+  submitted.value = true;
+  const validationError = validateAdmin(model.value, 'project', false);
+  if (validationError) return message.error(validationError);
   if (!model.value.title || !model.value.link) {
     return message.error('Заполните название и ссылку')
   }
@@ -134,7 +143,7 @@ const handleSave = async () => {
     await store.FetchProject()
   } catch (e) {
     console.error(e)
-    message.error('Ошибка при сохранении')
+    message.error(getApiErrorMessage(e, 'Ошибка при сохранении'))
   } finally {
     submitLoading.value = false
   }
@@ -149,7 +158,7 @@ const handleDelete = async () => {
       showModal.value = false
       await store.FetchProject()
     } catch (e) {
-      message.error('Ошибка при удалении')
+      message.error(getApiErrorMessage(e, 'Ошибка при удалении'))
     } finally {
       submitLoading.value = false
     }
@@ -158,6 +167,8 @@ const handleDelete = async () => {
 
 onMounted(() => {
   loading.value = true
-  store.FetchProject().finally(() => loading.value = false)
+  store.FetchProject().catch(e => message.error(getApiErrorMessage(e, 'Ошибка загрузки данных'))).finally(() => loading.value = false)
 })
+
+watch(showModal, resetValidation);
 </script>
