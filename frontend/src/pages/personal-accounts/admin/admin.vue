@@ -61,7 +61,7 @@ function closeEvents(){
 
 onMounted(async () => {
   try {
-    await store.GetResidentProfile();
+    await store.GetAdminProfile();
   } catch (error) {
     console.error('Ошибка при загрузке:', error);
   }
