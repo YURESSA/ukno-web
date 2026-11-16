@@ -12,6 +12,7 @@
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/reservations.css') }}">
     <style>
         .spinner-overlay {
             position: fixed;
@@ -1591,6 +1592,8 @@
 <script src="{{ url_for('static', filename='js/news.js') }}"></script>
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 <script src="{{ url_for('static', filename='js/reservations.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/jsQR-1.4.0.js') }}"></script>
+<script src="{{ url_for('static', filename='js/reservation_tickets.js') }}"></script>
 <script src="{{ url_for('static', filename='js/team.js') }}"></script>
 <script src="{{ url_for('static', filename='js/cultural_space.js') }}"></script>
 <script src="{{ url_for('static', filename='js/projects.js') }}"></script>
