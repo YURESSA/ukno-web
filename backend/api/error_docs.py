@@ -53,6 +53,8 @@ BUSINESS_ERRORS = {
     "/api/admin/reservations/tickets/check": {"post": (400, 404)},
     "/api/admin/reservations/tickets/check-in": {"post": (400, 404, 409)},
     "/api/admin/reservations/{reservation_id}/admissions": {"get": (404,)},
+    "/api/admin/reservations/{reservation_id}/ticket": {"get": (404, 409)},
+    "/api/admin/reservations/{reservation_id}/ticket/qr": {"get": (404, 409)},
     "/api/admin/merch/banners": {"post": (400,)},
     "/api/admin/merch/banners/{banner_id}": {"put": (400, 404), "delete": (404,)},
     "/api/admin/merch/categories": {"post": (400,)},

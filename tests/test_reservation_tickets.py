@@ -266,3 +266,20 @@ def test_very_large_count_cannot_overflow_database_counter(context):
     db.session.refresh(reservation)
     assert reservation.checked_in_count == 1
     assert ReservationAdmission.query.count() == 1
+
+
+@pytest.mark.parametrize('suffix', ['', '/qr'])
+def test_admin_can_view_booking_ticket_but_other_roles_cannot(context, suffix):
+    client, reservation, headers, _ = context
+    path = f'{ADMIN}/{reservation.reservation_id}/ticket{suffix}'
+    assert client.get(path).status_code == 401
+    assert client.get(path, headers=headers['owner']).status_code == 403
+    assert client.get(path, headers=headers['other']).status_code == 403
+    response = client.get(path, headers=headers['admin'])
+    assert response.status_code == 200
+    assert 'no-store' in response.headers['Cache-Control']
+    if suffix:
+        assert response.mimetype == 'image/svg+xml'
+    else:
+        assert response.json['ticket']['qr_svg_url'] == path + '/qr'
+    assert client.get(f'{ADMIN}/99999/ticket{suffix}', headers=headers['admin']).status_code == 404

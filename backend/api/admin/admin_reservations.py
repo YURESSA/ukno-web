@@ -1,6 +1,6 @@
 from http import HTTPStatus
 
-from flask import jsonify, request, send_file
+from flask import Response, jsonify, request, send_file
 from flask_jwt_extended import get_jwt_identity
 from flask_restx import fields
 
@@ -17,7 +17,7 @@ from backend.core.errors import NotFoundError
 from backend.core.models.event_models import Reservation
 from backend.core.services.user_services.user_service import get_user_by_email
 from backend.core.services.reservation_service.reservation_tickets import (
-    admission_data, admit_ticket, check_ticket, ticket_summary,
+    admission_data, admit_ticket, check_ticket, issue_ticket, ticket_summary, ticket_svg,
 )
 
 
@@ -70,6 +70,32 @@ class AdminTicketHistory(ApiResource):
         return ticket_response({'ticket': ticket_summary(reservation), 'admissions': [
             admission_data(item) for item in sorted(reservation.admissions, key=lambda item: item.admission_id)
         ]})
+
+
+@admin_ns.route('/reservations/<int:reservation_id>/ticket')
+class AdminReservationTicket(ApiResource):
+    @admin_required
+    def get(self, reservation_id):
+        """Билет выбранной брони для просмотра администратором."""
+        reservation = db.session.get(Reservation, reservation_id)
+        if not reservation:
+            raise NotFoundError('Бронирование не найдено')
+        ticket = issue_ticket(reservation)
+        ticket['qr_svg_url'] = f'/api/admin/reservations/{reservation_id}/ticket/qr'
+        return ticket_response({'ticket': ticket})
+
+
+@admin_ns.route('/reservations/<int:reservation_id>/ticket/qr')
+class AdminReservationTicketQR(ApiResource):
+    @admin_required
+    def get(self, reservation_id):
+        """SVG билета выбранной брони; доступен только администратору."""
+        reservation = db.session.get(Reservation, reservation_id)
+        if not reservation:
+            raise NotFoundError('Бронирование не найдено')
+        return Response(ticket_svg(reservation), mimetype='image/svg+xml', headers={
+            'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff',
+        })
 
 
 RESERVATION_PARAMS = {
