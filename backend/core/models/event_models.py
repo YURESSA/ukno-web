@@ -1,4 +1,5 @@
 from datetime import datetime
+from secrets import token_urlsafe
 
 from sqlalchemy import func
 
@@ -229,6 +230,11 @@ class EventSession(db.Model):
 
 class Reservation(db.Model):
     __tablename__ = 'reservations'
+    __table_args__ = (
+        db.CheckConstraint('checked_in_count >= 0 AND checked_in_count <= participants_count',
+                           name='ck_reservation_admitted_capacity'),
+        db.UniqueConstraint('ticket_token', name='uq_reservations_ticket_token'),
+    )
 
     reservation_id = db.Column(db.Integer, primary_key=True)
     session_id = db.Column(db.Integer, db.ForeignKey('event_sessions.session_id'), nullable=False)
@@ -242,10 +248,14 @@ class Reservation(db.Model):
     participants_count = db.Column(db.Integer, nullable=False, default=1)
     is_cancelled = db.Column(db.Boolean, default=False)
     is_paid = db.Column(db.Boolean, default=False)
+    ticket_token = db.Column(db.String(64), nullable=True, default=lambda: token_urlsafe(32))
+    checked_in_count = db.Column(db.Integer, nullable=False, default=0, server_default='0')
 
     session = db.relationship("EventSession", back_populates="reservations")
     user = db.relationship("User", back_populates="reservations")
     payment = db.relationship("Payment", back_populates="reservation", uselist=False)
+    admissions = db.relationship('ReservationAdmission', back_populates='reservation',
+                                 cascade='all, delete-orphan')
 
     def __str__(self):
         return (f"Reservation(id={self.reservation_id}, session_id={self.session_id}, "
@@ -318,6 +328,24 @@ class Reservation(db.Model):
                 if self.payment else 'unpaid'
             )
         }
+
+
+class ReservationAdmission(db.Model):
+    __tablename__ = 'reservation_admissions'
+    __table_args__ = (
+        db.UniqueConstraint('reservation_id', 'request_id', name='uq_admission_request'),
+        db.CheckConstraint('participants_count > 0', name='ck_admission_positive_count'),
+    )
+
+    admission_id = db.Column(db.Integer, primary_key=True)
+    reservation_id = db.Column(db.Integer, db.ForeignKey('reservations.reservation_id', ondelete='CASCADE'),
+                               nullable=False, index=True)
+    admin_user_id = db.Column(db.Integer, db.ForeignKey('users.user_id', ondelete='SET NULL'), nullable=True)
+    request_id = db.Column(db.String(36), nullable=False)
+    participants_count = db.Column(db.Integer, nullable=False)
+    admitted_at = db.Column(db.DateTime(timezone=True), nullable=False)
+
+    reservation = db.relationship('Reservation', back_populates='admissions')
 
 
 class Payment(db.Model):

@@ -1,0 +1,28 @@
+{% extends 'base.htm' %}
+
+{% block subject %}Возврат оформлен: {{ event_title }}{% endblock %}
+
+{% block text %}
+Здравствуйте, {{ display_name }}!
+
+Ваше бронирование на событие «{{ event_title }}» на {{ session_start.strftime('%d.%m.%Y %H:%M') if session_start else 'Уточняется' }} отменено.
+Возврат оформлен на тот же способ оплаты, который использовался при покупке.
+Сумма возврата: {{ amount if amount is not none else 'Уточняется' }} {{ currency }}
+
+Срок зачисления зависит от вашего банка.
+Если деньги не поступят в указанный банком срок, свяжитесь с поддержкой и сообщите номер бронирования{% if reservation_id is not none %} № {{ reservation_id }}{% endif %}.
+
+Молодёжное бюро «5 этаж»
+{% endblock %}
+
+{% from 'components.htm' import details, notice, datetime_label %}
+{% set accent = '#327a4b' %}
+{% block preheader %}Возврат {{ amount if amount is not none else 'сумма уточняется' }} {{ currency }} оформлен.{% endblock %}
+{% block eyebrow %}Статус оплаты{% endblock %}
+{% block heading %}Возврат оформлен{% endblock %}
+{% block introduction %}Здравствуйте, <strong>{{ display_name }}</strong>!<p style="margin:10px 0;color:#66615b;">Бронирование отменено. Возврат оформлен на тот же способ оплаты, который использовался при покупке.</p>{% endblock %}
+{% block content %}
+{{ details([('Событие', event_title), ('Дата и время', datetime_label(session_start)), ('Сумма возврата', (amount ~ ' ' ~ currency) if amount is not none else 'Уточняется')]) }}
+{% call notice('green') %}<strong>Что важно:</strong> фактический срок зачисления зависит от банка, выпустившего карту.{% endcall %}
+<p style="margin:20px 0 0;color:#66615b;">Если деньги не поступят в срок, указанный вашим банком, обратитесь в поддержку и сообщите номер бронирования{% if reservation_id is not none %} № {{ reservation_id }}{% endif %}.</p>
+{% endblock %}

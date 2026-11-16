@@ -2,7 +2,7 @@ from datetime import timedelta, datetime
 from http import HTTPStatus
 from urllib.parse import urlencode, quote_plus
 
-from flask import Response
+from flask import Response, jsonify
 from flask import request
 from flask_jwt_extended import get_jwt_identity
 
@@ -17,6 +17,8 @@ from backend.core.services.reservation_service.reservation_queries import get_re
 from backend.core.services.reservation_service.reservation_cancel import cancel_user_reservation
 from backend.core.services.reservation_service.reservation_crud import create_reservation_with_payment
 from backend.core.services.user_services.user_service import get_user_by_email
+from backend.core.errors import NotFoundError
+from backend.core.services.reservation_service.reservation_tickets import issue_ticket, ticket_svg
 
 
 def _get_owned_reservation(reservation_id):
@@ -161,6 +163,33 @@ class GoogleCalendarLink(ApiResource):
 
         link = f"https://calendar.google.com/calendar/render?{urlencode(query, quote_via=quote_plus)}"
         return {"google_calendar_link": link}
+
+
+@user_ns.route('/reservations/<int:reservation_id>/ticket')
+class ReservationTicket(ApiResource):
+    @jwt_required()
+    def get(self, reservation_id):
+        """Получение своего QR-билета и количества оставшихся входов."""
+        reservation = _get_owned_reservation(reservation_id)
+        if not reservation:
+            raise NotFoundError('Бронирование не найдено')
+        response = jsonify({'ticket': issue_ticket(reservation)})
+        response.headers['Cache-Control'] = 'private, no-store'
+        return response
+
+
+@user_ns.route('/reservations/<int:reservation_id>/ticket/qr')
+class ReservationTicketQR(ApiResource):
+    @jwt_required()
+    def get(self, reservation_id):
+        """SVG QR-код своего билета; требуется JWT владельца брони."""
+        reservation = _get_owned_reservation(reservation_id)
+        if not reservation:
+            raise NotFoundError('Бронирование не найдено')
+        return Response(ticket_svg(reservation), mimetype='image/svg+xml', headers={
+            'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff',
+            'Content-Disposition': f'inline; filename="ticket-{reservation_id}.svg"',
+        })
 
 
 @user_ns.route('/excursions_detail/<int:excursion_id>')

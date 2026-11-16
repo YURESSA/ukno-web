@@ -1,0 +1,31 @@
+{% extends 'base.htm' %}
+
+{% block subject %}Сессия отменена: {{ event_title }}{% endblock %}
+
+{% block text %}
+Здравствуйте, {{ display_name }}!
+
+Сессия события «{{ event_title }}» (ID {{ session_id }}) на {{ session_start.strftime('%d.%m.%Y %H:%M') if session_start else 'Уточняется' }} отменена.
+Ваше бронирование автоматически аннулировано.
+{% if has_refund %}Средства будут возвращены на исходный способ оплаты. Срок зачисления зависит от вашего банка.
+{% else %}Подтверждённой оплаты нет. Если вы видите списание, свяжитесь с организатором.
+{% endif %}
+
+Приносим извинения за возможные неудобства.
+{% endblock %}
+
+{% from 'components.htm' import details, notice, datetime_label %}
+{% set accent = '#b4473b' %}
+{% block preheader %}Сессия события {{ event_title }} на {{ datetime_label(session_start) }} отменена.{% endblock %}
+{% block eyebrow %}Изменение расписания{% endblock %}
+{% block heading %}Сессия отменена{% endblock %}
+{% block introduction %}Здравствуйте, <strong>{{ display_name }}</strong>!<p style="margin:10px 0;color:#66615b;">Организатор отменил эту дату. Ваше бронирование аннулировано автоматически.</p>{% endblock %}
+{% block content %}
+{{ details([('Событие', event_title), ('Дата и время', datetime_label(session_start)), ('Сессия', '№ ' ~ session_id)]) }}
+{% if has_refund %}
+{% call notice('green') %}<strong>Возврат уже оформляется.</strong> Срок зачисления зависит от вашего банка.{% endcall %}
+{% else %}
+{% call notice() %}Подтверждённой оплаты нет. Если вы видите списание, свяжитесь с организатором для уточнения статуса.{% endcall %}
+{% endif %}
+<p style="margin:20px 0 0;color:#66615b;">Приносим извинения за изменение планов.</p>
+{% endblock %}

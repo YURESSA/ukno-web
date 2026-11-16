@@ -39,12 +39,18 @@ def validate_image_upload(file: FileStorage) -> None:
         raise ValidationError('Размер файла не должен превышать 5 MB')
 
 
+def _upload_name_parts(filename: str) -> tuple[str, str]:
+    # Preserve the extension before secure_filename removes Cyrillic characters.
+    name, extension = os.path.splitext(filename.replace("\\", "/").rsplit("/", 1)[-1])
+    safe_extension = f".{secure_filename(extension[1:]).lower()}" if extension else ""
+    return secure_filename(name) or "file", safe_extension
+
+
 def _validate_image(file: FileStorage) -> str:
     """Validate extension, size and magic bytes instead of trusting Content-Type."""
-    original_filename = secure_filename(file.filename or "")
-    extension = os.path.splitext(original_filename)[1].lower()
+    _, extension = _upload_name_parts(file.filename or "")
     configured_extensions = {f".{item.strip().lower()}" for item in Config.ALLOWED_EXTENSIONS}
-    if not original_filename or extension not in configured_extensions or extension not in IMAGE_SIGNATURES:
+    if extension not in configured_extensions or extension not in IMAGE_SIGNATURES:
         raise ValidationError("Недопустимый формат изображения")
 
     file.stream.seek(0, os.SEEK_END)
@@ -62,8 +68,7 @@ def _validate_image(file: FileStorage) -> str:
 
 
 def _unique_upload_path(file: FileStorage, subfolder: str = "") -> tuple[str, str]:
-    original_filename = secure_filename(file.filename)
-    name, ext = os.path.splitext(original_filename)
+    name, ext = _upload_name_parts(file.filename or "")
     filename = f"{name}_{uuid.uuid4().hex}{ext}"
     relative_path = os.path.join('media', 'uploads', subfolder, filename).replace("\\", "/")
     return filename, relative_path

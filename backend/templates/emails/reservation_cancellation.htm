@@ -1,0 +1,31 @@
+{% extends 'base.htm' %}
+
+{% block subject %}Бронирование отменено: {{ event_title or 'Событие' }}{% endblock %}
+
+{% block text %}
+Здравствуйте, {{ display_name }}!
+
+Ваше бронирование на событие «{{ event_title or 'Событие' }}» отменено администратором.
+Дата и время: {{ session_start.strftime('%d.%m.%Y %H:%M') if session_start else 'Уточняется' }}
+{% if has_refund %}Средства за бронирование будут возвращены на исходный способ оплаты. Срок зачисления зависит от вашего банка.
+{% else %}Подтверждённой оплаты нет. Если вы видите списание, свяжитесь с организатором.
+{% endif %}
+
+Приносим извинения за неудобства. Контакты организатора указаны на сайте.
+{% endblock %}
+
+{% from 'components.htm' import details, notice, datetime_label, booking_label %}
+{% set accent = '#b4473b' %}
+{% block preheader %}Бронирование на {{ event_title or 'Событие' }} отменено.{% endblock %}
+{% block eyebrow %}Изменение бронирования{% endblock %}
+{% block heading %}Бронирование отменено{% endblock %}
+{% block introduction %}Здравствуйте, <strong>{{ display_name }}</strong>!<p style="margin:10px 0;color:#66615b;">Администратор отменил ваше бронирование. Ниже — детали и информация об оплате.</p>{% endblock %}
+{% block content %}
+{{ details([('Событие', event_title or 'Событие'), ('Дата и время', datetime_label(session_start)), ('Бронирование', booking_label(reservation_id))]) }}
+{% if has_refund %}
+{% call notice('green') %}<strong>Возврат уже оформляется.</strong> Срок зачисления на исходный способ оплаты зависит от вашего банка.{% endcall %}
+{% else %}
+{% call notice() %}Подтверждённой оплаты по этой брони нет. Если вы видите списание, свяжитесь с организатором для уточнения статуса.{% endcall %}
+{% endif %}
+<p style="margin:22px 0 0;color:#66615b;">Приносим извинения за неудобства. Если остались вопросы, свяжитесь с организатором по контактам на сайте.</p>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'base.htm' %}
+
+{% block subject %}Вы записаны: {{ event_title or 'Событие' }} — {{ session_start.strftime('%d.%m.%Y') if session_start else 'Дата уточняется' }}{% endblock %}
+
+{% block text %}
+Здравствуйте, {{ display_name }}!
+
+Готово — ваше бронирование подтверждено.
+
+{{ event_title or 'Событие' }}
+Дата и время: {{ session_start.strftime('%d.%m.%Y %H:%M') if session_start else 'Уточняется' }}
+Место: {{ place or 'Место уточняется' }}
+Гостей: {{ participants_count }}
+Номер бронирования: {% if reservation_id is not none %}№ {{ reservation_id }}{% else %}подтверждено{% endif %}
+
+Что дальше:
+1. Добавьте событие в календарь — файл reservation.ics приложен к письму.
+2. Перед поездкой ещё раз проверьте дату, время и адрес.
+3. Если появятся вопросы, напишите организатору: {{ contact_email or 'Контакт будет указан организатором' }}.
+
+До встречи в Молодёжном бюро «5 этаж»!
+{% endblock %}
+
+{% from 'components.htm' import details, notice, datetime_label, booking_label, guests, contact %}
+{% block preheader %}Бронирование подтверждено — {{ event_title or 'Событие' }}, {{ datetime_label(session_start) }}.{% endblock %}
+{% block heading %}Вы записаны!{% endblock %}
+{% block introduction %}
+Здравствуйте, <strong>{{ display_name }}</strong>!
+<p style="margin:10px 0 20px;color:#66615b;">Сохраняйте письмо — здесь собрана вся информация о вашем посещении.</p>
+<h2 style="margin:0;font-size:24px;line-height:32px;">{{ event_title or 'Событие' }}</h2>
+{% endblock %}
+{% block content %}
+{{ details([('Дата и время', datetime_label(session_start)), ('Место проведения', place or 'Место уточняется'), ('Гости', guests(participants_count)), ('Бронирование', booking_label(reservation_id))]) }}
+<h2 style="margin:24px 0 10px;font-size:18px;">Что дальше</h2>
+<ol style="margin:0;padding-left:22px;line-height:26px;">
+  <li>Добавьте событие в календарь — файл <strong>reservation.ics</strong> приложен к письму.</li>
+  <li>Перед поездкой ещё раз проверьте дату, время и адрес.</li>
+  <li>Если появятся вопросы, напишите организатору: {{ contact(contact_email) }}.</li>
+</ol>
+{% call notice('dark') %}До встречи в Молодёжном бюро «5 этаж»!{% endcall %}
+{% endblock %}
+{% block footer %}Это автоматическое подтверждение бронирования. Контакт организатора: {{ contact(contact_email) }}.{% endblock %}

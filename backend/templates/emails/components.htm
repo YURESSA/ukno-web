@@ -1,0 +1,19 @@
+{% macro details(rows) -%}
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border:1px solid #e6e1d9;border-radius:12px;">
+  {% for label, value in rows %}
+  <tr><td style="padding:15px 20px;{% if not loop.last %}border-bottom:1px solid #eee9e2;{% endif %}">
+    <div style="font-size:11px;line-height:18px;letter-spacing:.8px;text-transform:uppercase;color:#77746c;">{{ label }}</div>
+    <div style="margin-top:4px;font-size:16px;line-height:24px;font-weight:700;overflow-wrap:anywhere;">{{ value }}</div>
+  </td></tr>
+  {% endfor %}
+</table>
+{%- endmacro %}
+
+{% macro notice(tone='warm') -%}
+<div style="margin-top:20px;padding:18px 20px;border-radius:12px;background:{% if tone == 'green' %}#eef8f0{% elif tone == 'dark' %}#282622{% else %}#fff3ed{% endif %};color:{% if tone == 'green' %}#245b30{% elif tone == 'dark' %}#ffffff{% else %}#5d3b2d{% endif %};font-size:15px;line-height:24px;">{{ caller() }}</div>
+{%- endmacro %}
+
+{% macro datetime_label(value) -%}{{ value.strftime('%d.%m.%Y %H:%M') if value else 'Уточняется' }}{%- endmacro %}
+{% macro booking_label(value) -%}{% if value is not none %}№ {{ value }}{% else %}Подтверждено{% endif %}{%- endmacro %}
+{% macro guests(count) -%}{{ count }} {% if count % 10 == 1 and count % 100 != 11 %}участник{% elif count % 10 in (2, 3, 4) and count % 100 not in (12, 13, 14) %}участника{% else %}участников{% endif %}{%- endmacro %}
+{% macro contact(email) -%}{% if email %}<a href="mailto:{{ email }}" style="color:#ce491e;text-decoration:underline;">{{ email }}</a>{% else %}Контакт будет указан организатором{% endif %}{%- endmacro %}
