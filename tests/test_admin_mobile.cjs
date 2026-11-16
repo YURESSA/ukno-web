@@ -1,0 +1,55 @@
+// Run from the repository root: node tests/test_admin_mobile.cjs
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const {JSDOM} = require('../frontend/node_modules/jsdom');
+
+const dom = new JSDOM(`<body><button id="adminNavBackdrop" hidden></button>
+<nav id="sidebar"><button id="adminNavClose">Close</button><a href="#" class="nav-link active">Users</a><a href="#" class="nav-link">Bookings</a></nav>
+<div id="mainContent"><button id="adminMenuToggle">Menu</button><h1 id="pageTitle" tabindex="-1"></h1><div id="contentArea"></div></div></body>`, {runScripts: 'outside-only'});
+const w = dom.window;
+const media = {matches: true, addEventListener: (_, callback) => { media.changed = callback; }};
+w.matchMedia = () => media;
+w.eval(fs.readFileSync('backend/static/js/admin_mobile.js', 'utf8'));
+w.initAdminMobileNavigation();
+const sidebar = w.document.getElementById('sidebar');
+const toggle = w.document.getElementById('adminMenuToggle');
+const close = w.document.getElementById('adminNavClose');
+const backdrop = w.document.getElementById('adminNavBackdrop');
+const content = w.document.getElementById('mainContent');
+assert.equal(sidebar.inert, true);
+toggle.click();
+assert.equal(sidebar.classList.contains('show'), true);
+assert.equal(toggle.getAttribute('aria-expanded'), 'true');
+assert.equal(content.inert, true);
+assert.equal(backdrop.hidden, false);
+assert.equal(w.document.body.style.overflow, 'hidden');
+const last = sidebar.querySelectorAll('a')[1];
+last.focus();
+w.document.dispatchEvent(new w.KeyboardEvent('keydown', {key: 'Tab', cancelable: true}));
+assert.equal(w.document.activeElement, close);
+w.document.dispatchEvent(new w.KeyboardEvent('keydown', {key: 'Tab', shiftKey: true, cancelable: true}));
+assert.equal(w.document.activeElement, last);
+w.document.dispatchEvent(new w.KeyboardEvent('keydown', {key: 'Escape'}));
+assert.equal(content.inert, false);
+assert.equal(w.document.activeElement, toggle);
+assert.equal(w.document.body.style.overflow, '');
+toggle.click(); last.click();
+assert.equal(sidebar.classList.contains('show'), false);
+assert.equal(w.document.activeElement.id, 'pageTitle');
+toggle.click(); backdrop.click();
+assert.equal(backdrop.hidden, true);
+toggle.click(); media.matches = false; media.changed();
+assert.equal(sidebar.inert, false);
+assert.equal(content.inert, false);
+assert.equal(backdrop.hidden, true);
+w.eval(fs.readFileSync('backend/static/js/ui.js', 'utf8'));
+w.renderTable('Брони', ['ID', 'Участник', 'Email'], [{id: 42, cells: [42, 'Анна', 'anna@example.com'], actions: '<button>QR</button>'}]);
+let cells = w.document.querySelectorAll('tbody td');
+assert.deepEqual([...cells].map(cell => cell.dataset.label), ['ID', 'Участник', 'Email', 'Действия']);
+w.document.getElementById('resetSortBtn').click();
+cells = w.document.querySelectorAll('tbody td');
+assert.equal(cells[1].dataset.label, 'Участник');
+const filter = w.document.getElementById('tableFilterInput');
+filter.value = 'missing'; filter.dispatchEvent(new w.Event('input'));
+assert.equal(w.document.querySelector('tbody tr').style.display, 'none');
+console.log('PASS: mobile drawer, focus, Escape, navigation, resize and labelled table cards');
