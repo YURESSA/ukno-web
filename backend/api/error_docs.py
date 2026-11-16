@@ -22,6 +22,8 @@ BUSINESS_ERRORS = {
     "/api/admin/users": {"post": (400, 409)},
     "/api/admin/users/detail/{email}": {"get": (404,), "put": (400, 404), "delete": (400, 404)},
     "/api/admin/excursions": {"get": (400,), "post": (400,)},
+    "/api/admin/reservations": {"get": (400,)},
+    "/api/admin/reservations/export": {"get": (400,)},
     "/api/admin/excursions/{excursion_id}/approve": {"post": (400, 404, 409)},
     "/api/admin/excursions/{excursion_id}/return": {"post": (400, 404, 409)},
     "/api/resident/excursions/{excursion_id}/submit": {"post": (404, 409)},

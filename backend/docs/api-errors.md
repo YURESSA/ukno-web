@@ -351,6 +351,7 @@ Swagger описывает схемы и статусы; этот файл до�
 
 | Функция | HTTP / источник статуса | Точный текст / шаблон | Условие в коде |
 |---|---|---|---|
+| `get` | `400*` | `format: допустимы json или xlsx` | `Если output_format != 'json'` |
 | `get` | `404` | `Бронь не найдена` | `Если not reservation_data` |
 
 ### [backend/api/admin/admin_users.py](../api/admin/admin_users.py)
@@ -770,6 +771,23 @@ Swagger описывает схемы и статусы; этот файл до�
 | `delete_reservation_with_refund` | `500` | `Ошибка при попытке возврата средств: {str(e)}` | `Перехвачено Exception` |
 | `delete_reservation_with_refund` | `500` | `Ошибка при удалении брони: {str(e)}` | `Перехвачено Exception` |
 
+### [backend/core/services/reservation_service/reservation_export.py](../core/services/reservation_service/reservation_export.py)
+
+| Функция | HTTP / источник статуса | Точный текст / шаблон | Условие в коде |
+|---|---|---|---|
+| `export_reservations` | `400*` | `Слишком много броней для Excel. Уточните фильтры` | `Если query.count() > 1048575` |
+
+### [backend/core/services/reservation_service/reservation_queries.py](../core/services/reservation_service/reservation_queries.py)
+
+| Функция | HTTP / источник статуса | Точный текст / шаблон | Условие в коде |
+|---|---|---|---|
+| `filtered_reservations` | `400*` | `q: не более 255 символов` | `Если len(search) > 255` |
+| `filtered_reservations` | `400*` | `{name}: допустимы true, false, 1, 0` | `Если str(value).lower() not in ('true', 'false', '1', '0')` |
+| `filtered_reservations` | `400*` | `{name}: укажите дату в формате YYYY-MM-DD` | `Перехвачено (TypeError, ValueError, OverflowError)` |
+| `filtered_reservations` | `400*` | `{name}: укажите положительный целочисленный ID` | `Если len(text) > 10 or not text.isascii() or (not text.isdigit()) or (not 0 < int(text) <= 2147483647)` |
+| `filtered_reservations` | `400*` | `{prefix}_from не может быть позже {prefix}_to` | `Если 'from' in bounds and 'to' in bounds and (bounds['from'] > bounds['to'])` |
+| `filtered_reservations` | `400*` | `Неизвестный payment_status` | `Если status not in ('unpaid', 'pending', 'waiting_for_capture', 'succeeded', 'canceled')` |
+
 ### [backend/core/services/user_services/auth_service.py](../core/services/user_services/auth_service.py)
 
 | Функция | HTTP / источник статуса | Точный текст / шаблон | Условие в коде |
@@ -809,7 +827,7 @@ Swagger описывает схемы и статусы; этот файл до�
 
 | Функция | HTTP / источник статуса | Точный текст / шаблон | Условие в коде |
 |---|---|---|---|
-| `_validate_image` | `400*` | `Недопустимый формат изображения` | `Если not original_filename or extension not in configured_extensions or extension not in IMAGE_SIGNATURES` |
+| `_validate_image` | `400*` | `Недопустимый формат изображения` | `Если extension not in configured_extensions or extension not in IMAGE_SIGNATURES` |
 | `_validate_image` | `400*` | `Размер изображения должен быть от 1 байта до 5 МБ` | `Если size <= 0 or size > MAX_IMAGE_BYTES` |
 | `_validate_image` | `400*` | `Содержимое файла не соответствует формату изображения` | `Если not matcher(header)` |
 | `validate_image_upload` | `400*` | `Размер файла не должен превышать 5 MB` | `Если size > MAX_IMAGE_BYTES` |
