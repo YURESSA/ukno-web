@@ -3,34 +3,42 @@ let reservationEvents = null;
 
 function renderReservationFilters() {
     const form = document.createElement('form');
-    form.className = 'row g-2 mb-3';
+    form.className = 'reservation-filters';
     form.innerHTML = `
-      <div class="col-md-4"><label class="form-label">Событие</label>
-        <select name="event_id" class="form-select"><option value="">Все события</option></select></div>
-      <div class="col-md-4"><label class="form-label">ФИО, телефон или email</label>
-        <input name="q" class="form-control" maxlength="255"></div>
-      <div class="col-md-2"><label class="form-label">ID сеанса</label>
-        <input name="session_id" type="number" min="1" step="1" class="form-control"></div>
-      <div class="col-md-2"><label class="form-label">ID пользователя</label>
-        <input name="user_id" type="number" min="1" step="1" class="form-control"></div>
-      ${[['date_from', 'Событие с'], ['date_to', 'Событие по'],
-          ['booked_from', 'Бронь создана с'], ['booked_to', 'Бронь создана по']].map(([name, label]) =>
-          `<div class="col-md-3"><label class="form-label">${label}</label>
-            <input name="${name}" type="date" class="form-control"></div>`).join('')}
-      ${[['is_paid', 'Оплачена'], ['is_cancelled', 'Отменена']].map(([name, label]) =>
-          `<div class="col-md-3"><label class="form-label">${label}</label>
-            <select name="${name}" class="form-select"><option value="">Все</option>
-              <option value="true">Да</option><option value="false">Нет</option></select></div>`).join('')}
-      <div class="col-md-3"><label class="form-label">Статус оплаты</label>
-        <select name="payment_status" class="form-select"><option value="">Все</option>
-          <option value="unpaid">Без платежа</option><option value="pending">Ожидает оплаты</option>
-          <option value="waiting_for_capture">Ожидает подтверждения</option>
-          <option value="succeeded">Оплачен</option><option value="canceled">Отменён</option></select></div>
-      <div class="col-12 d-flex gap-2 align-items-end">
-        <button class="btn btn-primary" type="submit">Применить</button>
+      <div class="reservation-section-heading">
+        <div><h2>Фильтры бронирований</h2><p>Найдите нужные брони или выгрузите выбранные записи в Excel.</p></div>
+        <button type="button" class="btn btn-outline-primary" data-scan><i class="fas fa-qrcode me-2" aria-hidden="true"></i>Проверить QR-билет</button>
+      </div>
+      <div class="reservation-filter-grid">
+        <div class="reservation-field wide"><label for="reservation-event">Событие</label>
+          <select id="reservation-event" name="event_id"><option value="">Все события</option></select></div>
+        <div class="reservation-field wide"><label for="reservation-search">Поиск по участнику</label>
+          <input id="reservation-search" name="q" placeholder="ФИО, телефон или email" maxlength="255"></div>
+        <div class="reservation-field narrow"><label for="reservation-session">ID сеанса</label>
+          <input id="reservation-session" name="session_id" type="number" min="1" step="1" placeholder="Любой"></div>
+        <div class="reservation-field narrow"><label for="reservation-user">ID пользователя</label>
+          <input id="reservation-user" name="user_id" type="number" min="1" step="1" placeholder="Любой"></div>
+        ${[['date_from', 'Дата события · с'], ['date_to', 'Дата события · по'],
+            ['booked_from', 'Дата бронирования · с'], ['booked_to', 'Дата бронирования · по']].map(([name, label]) =>
+            `<div class="reservation-field"><label for="reservation-${name}">${label}</label>
+              <input id="reservation-${name}" name="${name}" type="date"></div>`).join('')}
+        ${[['is_paid', 'Оплата'], ['is_cancelled', 'Отмена']].map(([name, label]) =>
+            `<div class="reservation-field"><label for="reservation-${name}">${label}</label>
+              <select id="reservation-${name}" name="${name}"><option value="">Любой статус</option>
+                <option value="true">${name === 'is_paid' ? 'Оплачена' : 'Отменена'}</option>
+                <option value="false">${name === 'is_paid' ? 'Не оплачена' : 'Не отменена'}</option></select></div>`).join('')}
+        <div class="reservation-field"><label for="reservation-payment">Статус платежа</label>
+          <select id="reservation-payment" name="payment_status"><option value="">Все платежи</option>
+            <option value="unpaid">Без платежа</option><option value="pending">Ожидает оплаты</option>
+            <option value="waiting_for_capture">Ожидает подтверждения</option>
+            <option value="succeeded">Оплачен</option><option value="canceled">Отменён</option></select></div>
+      </div>
+      <div class="reservation-filter-actions">
+        <button class="btn btn-primary" type="submit">Применить фильтры</button>
         <button class="btn btn-outline-secondary" type="button" data-reset>Сбросить</button>
-        <button class="btn btn-success" type="button" data-export>Выгрузить в Excel</button>
+        <button class="btn btn-success" type="button" data-export><i class="fas fa-file-excel me-2" aria-hidden="true"></i>Выгрузить в Excel</button>
       </div>`;
+    form.querySelector('[data-scan]').onclick = () => openTicketScanner();
     for (const event of reservationEvents || []) {
         form.elements.event_id.add(new Option(event.title, event.excursion_id));
     }
@@ -72,7 +80,20 @@ function renderReservationFilters() {
             button.disabled = false;
         }
     };
-    document.getElementById('contentArea').prepend(form);
+    const content = document.getElementById('contentArea');
+    const table = content.querySelector('.container');
+    if (table) {
+        table.classList.add('reservations-table');
+        const heading = document.createElement('div');
+        heading.className = 'reservation-table-heading';
+        const count = document.createElement('span');
+        count.textContent = `Найдено бронирований: ${document.querySelectorAll('#excursionsTable tbody tr').length}`;
+        heading.append(count);
+        const resetSort = document.getElementById('resetSortBtn');
+        if (resetSort) heading.append(resetSort);
+        table.prepend(heading);
+    }
+    content.prepend(form);
     // Search is server-side so the same selection can be exported.
     document.getElementById('tableFilterInput').style.display = 'none';
 }
@@ -126,7 +147,7 @@ async function loadReservations() {
             r.total_cost != null ? r.total_cost + ' ₽' : '—'  // сумма оплаты
         ],
         actions:
-            `<button class="btn btn-outline-danger btn-sm btn-delete-ref" data-ref="reservation" data-id="${r.reservation_id}">
+            `<button class="btn btn-outline-primary btn-sm reservation-ticket-button" data-ticket-id="${r.reservation_id}">QR-билет</button><button class="btn btn-outline-danger btn-sm btn-delete-ref" data-ref="reservation" data-id="${r.reservation_id}">
         <i class="fas fa-trash me-1"></i> Удалить
      </button>`
     }));
@@ -149,34 +170,26 @@ async function loadReservations() {
     renderReservationFilters();
 
 
-    document.querySelectorAll('#excursionsTable tbody tr').forEach(row => {
-        row.onclick = async (e) => {
-            if (e.target.closest('button')) return;
-
-            const id = row.getAttribute('data-id');
-            if (!id) return;
-
-            const res = await fetchWithAuth(`${API_BASE}/reservations/${id}`);
-            if (!res) {
-                showNotification('Ошибка загрузки бронирования', 'danger');
-                return;
-            }
-
-            const data = await res.json();
-            showReservationModal(data);
-        };
-    });
-
-    // Обработчики кнопок удаления в таблице
-    document.querySelectorAll('.btn-delete-ref').forEach(btn => {
-        btn.onclick = async (e) => {
-            e.stopPropagation();
-            const id = btn.getAttribute('data-id');
-            if (!id) return;
-
-            await deleteReservationById(id, loadReservations);
-        };
-    });
+    // Delegate actions so resetting table sorting does not discard their handlers.
+    document.getElementById('excursionsTable').onclick = async event => {
+        const ticketButton = event.target.closest('[data-ticket-id]');
+        if (ticketButton) {
+            await openReservationTicket(Number(ticketButton.dataset.ticketId));
+            return;
+        }
+        const deleteButton = event.target.closest('.btn-delete-ref');
+        if (deleteButton) {
+            await deleteReservationById(deleteButton.dataset.id, loadReservations);
+            return;
+        }
+        const row = event.target.closest('tbody tr');
+        if (!row || event.target.closest('button')) return;
+        const id = row.dataset.id;
+        if (!id) return;
+        const response = await fetchWithAuth(`${API_BASE}/reservations/${id}`);
+        if (!response) return;
+        showReservationModal(await response.json());
+    };
 }
 
 
