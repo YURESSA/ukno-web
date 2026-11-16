@@ -7,15 +7,16 @@ from backend.core.services.email_service.templates import render_email
 from backend.core.utilits.token_utils import generate_reset_token
 from backend.core.utilits.email_utils import send_email
 from backend.core.utilits.file_utils import create_ical_from_reservation
+from backend.core.services.reservation_service.reservation_tickets import ticket_png
 
 
 logger = logging.getLogger(__name__)
 
 
-def _send(name, recipient, context, attachments=None, suppress_errors=True):
+def _send(name, recipient, context, attachments=None, suppress_errors=True, inline_images=None):
     message = render_email(name, context)
     try:
-        send_email(recipient=recipient, attachments=attachments, **message)
+        send_email(recipient=recipient, attachments=attachments, inline_images=inline_images, **message)
     except Exception:
         if not suppress_errors:
             raise
@@ -42,8 +43,14 @@ def send_reservation_confirmation_email(reservation, user):
     recipient = reservation.email or user.email
     context = _reservation_context(reservation)
     context.update(display_name=reservation.full_name or recipient, participants_count=reservation.participants_count)
+    image = ticket_png(reservation)
+    filename = f'ticket-{reservation.reservation_id}.png'
+    content_id = f'reservation-ticket-{reservation.reservation_id}@5buro.ru'
+    context.update(ticket_image_src=f'cid:{content_id}', ticket_filename=filename)
     _send('reservation_confirmation', recipient, context,
-          attachments=[('reservation.ics', create_ical_from_reservation(reservation), 'text/calendar')])
+          attachments=[('reservation.ics', create_ical_from_reservation(reservation), 'text/calendar'),
+                       (filename, image, 'image/png')],
+          inline_images={content_id: (filename, image, 'image/png')})
 
 
 def send_reservation_cancellation_email(user, reservation):

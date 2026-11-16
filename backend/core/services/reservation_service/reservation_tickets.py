@@ -105,6 +105,20 @@ def ticket_svg(reservation):
     return output.getvalue()
 
 
+def qr_png(payload):
+    """PNG works in mail clients; encode exactly the same payload as the SVG/API ticket."""
+    import qrcode
+    from qrcode.image.pure import PyPNGImage
+
+    output = BytesIO()
+    qrcode.make(payload, image_factory=PyPNGImage, box_size=8, border=4).save(output)
+    return output.getvalue()
+
+
+def ticket_png(reservation):
+    return qr_png(issue_ticket(reservation)['qr_payload'])
+
+
 def check_ticket(payload, session_id):
     positive_integer(session_id, 'session_id')
     return ticket_summary(_find_ticket(payload), session_id)

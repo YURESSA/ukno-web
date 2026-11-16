@@ -39,6 +39,21 @@ function renderReservationFilters() {
         <button class="btn btn-success" type="button" data-export><i class="fas fa-file-excel me-2" aria-hidden="true"></i>Выгрузить в Excel</button>
       </div>`;
     form.querySelector('[data-scan]').onclick = () => openTicketScanner();
+    const grid = form.querySelector('.reservation-filter-grid');
+    const advanced = document.createElement('details');
+    advanced.className = 'reservation-advanced';
+    advanced.dataset.mobileDetails = 'true';
+    const extraFilters = [...reservationFilters.keys()].filter(key => !['event_id', 'q'].includes(key)).length;
+    advanced.dataset.active = String(extraFilters > 0);
+    advanced.open = window.innerWidth > 768 || extraFilters > 0;
+    const summary = document.createElement('summary');
+    summary.textContent = `Дополнительные фильтры${extraFilters ? ` · ${extraFilters}` : ''}`;
+    const advancedGrid = document.createElement('div');
+    advancedGrid.className = 'reservation-advanced-grid';
+    [...grid.children].slice(2).forEach(field => advancedGrid.append(field));
+    advanced.dataset.active = String([...reservationFilters.keys()].some(key => !['event_id', 'q'].includes(key)));
+    advanced.open = window.innerWidth > 768 || advanced.dataset.active === 'true';
+    advanced.append(summary, advancedGrid); grid.append(advanced);
     for (const event of reservationEvents || []) {
         form.elements.event_id.add(new Option(event.title, event.excursion_id));
     }

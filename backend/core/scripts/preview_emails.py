@@ -1,10 +1,12 @@
 """Render all email templates with demo data; never connects to SMTP or the database."""
 import argparse
+import base64
 import json
 from datetime import datetime
 from pathlib import Path
 
 from backend.core.services.email_service.templates import TEMPLATE_NAMES, email_environment, render_email
+from backend.core.services.reservation_service.reservation_tickets import QR_PREFIX, qr_png
 
 
 SAMPLE_CONTEXT = {
@@ -20,11 +22,16 @@ SAMPLE_CONTEXT = {
     'amount': '1500.00',
     'currency': 'RUB',
     'reset_url': 'https://example.com/reset-password?token=demo-not-a-real-token',
+    'ticket_image_src': None,
+    'ticket_filename': 'ticket-1042.png',
 }
 
 
 def build_previews(output, names=TEMPLATE_NAMES, overrides=None):
     context = {**SAMPLE_CONTEXT, **(overrides or {})}
+    if not context['ticket_image_src']:
+        demo_png = qr_png(QR_PREFIX + 'A' * 43)
+        context['ticket_image_src'] = 'data:image/png;base64,' + base64.b64encode(demo_png).decode('ascii')
     if isinstance(context['session_start'], str):
         context['session_start'] = datetime.fromisoformat(context['session_start'])
     output = Path(output)

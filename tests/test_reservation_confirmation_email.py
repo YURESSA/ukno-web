@@ -8,6 +8,7 @@ def test_reservation_confirmation_email_contains_useful_details_and_escapes_html
     captured = {}
     monkeypatch.setattr(email_service, "send_email", lambda **kwargs: captured.update(kwargs))
     monkeypatch.setattr(email_service, "create_ical_from_reservation", lambda reservation: b"calendar")
+    monkeypatch.setattr(email_service, "ticket_png", lambda reservation: b"ticket-png")
 
     event = SimpleNamespace(
         title='Лаборатория <script>alert("x")</script>',
@@ -41,7 +42,15 @@ def test_reservation_confirmation_email_contains_useful_details_and_escapes_html
     assert "2 участника" in captured["body_html"]
     assert "Юрий &lt;b&gt;Гошуренко&lt;/b&gt;" in captured["body_html"]
     assert "<script>" not in captured["body_html"]
-    assert captured["attachments"] == [("reservation.ics", b"calendar", "text/calendar")]
+    assert captured["attachments"] == [
+        ("reservation.ics", b"calendar", "text/calendar"),
+        ("ticket-42.png", b"ticket-png", "image/png"),
+    ]
+    assert 'cid:reservation-ticket-42@5buro.ru' in captured['body_html']
+    assert 'ticket-42.png' in captured['body']
+    assert captured['inline_images'] == {
+        'reservation-ticket-42@5buro.ru': ('ticket-42.png', b'ticket-png', 'image/png'),
+    }
 
 
 def test_all_transactional_emails_use_branded_layout(monkeypatch):

@@ -3,11 +3,13 @@ function renderTable(title, headers, rows) {
     if (pageTitle) pageTitle.textContent = title;
 
     const originalRows = [...rows];
+    const labelAttribute = value => String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     const renderBody = (dataRows) => {
         return dataRows.map(row => {
-            const cellsHtml = row.cells.map(cell => `<td>${cell}</td>`).join('');
-            return `<tr data-id="${row.id || ''}" style="cursor:pointer;">${cellsHtml}<td>${row.actions}</td></tr>`;
+            const cellsHtml = row.cells.map((cell, index) => `<td data-label="${labelAttribute(headers[index] || '')}">${cell}</td>`).join('');
+            return `<tr data-id="${row.id || ''}" style="cursor:pointer;">${cellsHtml}<td data-label="Действия">${row.actions || ''}</td></tr>`;
         }).join('');
     };
 
@@ -16,7 +18,7 @@ function renderTable(title, headers, rows) {
       <input id="tableFilterInput" type="text" class="form-control mb-2" placeholder="Поиск...">
       <button id="resetSortBtn" class="btn btn-sm btn-outline-secondary mb-3">Сбросить сортировку</button>
       <div class="table-responsive">
-        <table id="excursionsTable" class="table table-bordered table-hover" style="border-collapse: collapse;">
+        <table id="excursionsTable" class="table table-bordered table-hover admin-record-table" style="border-collapse: collapse;">
           <thead>
             <tr>`;
 
