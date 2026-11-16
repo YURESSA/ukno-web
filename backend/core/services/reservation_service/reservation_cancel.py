@@ -1,5 +1,7 @@
 from http import HTTPStatus
+from datetime import datetime
 from typing import Tuple, Dict, Any
+from sqlalchemy import select
 
 from backend.core import db
 from backend.core.models.event_models import Reservation
@@ -23,12 +25,21 @@ def cancel_user_reservation(user_email: str, reservation_id: int) -> Tuple[Dict[
     if not reservation_id:
         return {"message": "reservation_id is required"}, HTTPStatus.BAD_REQUEST
 
-    reservation = db.session.get(Reservation, reservation_id)
+    reservation = db.session.execute(select(Reservation).where(
+        Reservation.reservation_id == reservation_id,
+    ).with_for_update()).scalar_one_or_none()
     if not reservation or reservation.user_id != user.user_id:
+        db.session.rollback()
         return {"message": "Бронирование не найдено или не принадлежит вам"}, HTTPStatus.NOT_FOUND
 
     if reservation.is_cancelled:
+        db.session.rollback()
         return {"message": "Бронирование уже отменено"}, HTTPStatus.BAD_REQUEST
+
+    session = reservation.session
+    if not session or session.start_datetime <= datetime.now(session.start_datetime.tzinfo):
+        db.session.rollback()
+        return {"message": "Нельзя отменить бронь после начала сеанса"}, HTTPStatus.CONFLICT
 
     refund_done = False
     if reservation.is_paid:
@@ -37,6 +48,7 @@ def cancel_user_reservation(user_email: str, reservation_id: int) -> Tuple[Dict[
                 refund_yookassa_payment(reservation.payment.payment_id, float(reservation.payment.amount))
                 refund_done = True
             except Exception as e:
+                db.session.rollback()
                 print(f"Ошибка возврата средств YooKassa: {e}")
                 return {"message": "Не удалось сделать возврат средств"}, HTTPStatus.INTERNAL_SERVER_ERROR
         else:

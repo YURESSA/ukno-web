@@ -268,6 +268,26 @@ def test_very_large_count_cannot_overflow_database_counter(context):
     assert ReservationAdmission.query.count() == 1
 
 
+def test_scan_and_partial_entry_stay_available_after_session_started(context):
+    from datetime import datetime, timedelta
+
+    client, reservation, headers, _ = context
+    reservation.session.start_datetime = datetime.now() - timedelta(minutes=5)
+    db.session.commit()
+    response = client.post(ADMIN + '/tickets/check', headers=headers['admin'],
+                           json={'ticket': QR_PREFIX + reservation.ticket_token})
+    assert response.status_code == 200 and response.json['ticket']['can_enter']
+    first = enter(client, headers['admin'], payload(reservation, count=2))
+    assert first.status_code == 200 and first.json['ticket']['remaining_count'] == 1
+    cancelled = client.delete(
+        '/api/user/v2/reservations', headers=headers['owner'],
+        json={'reservation_id': reservation.reservation_id},
+    )
+    assert cancelled.status_code == 409
+    last = enter(client, headers['admin'], payload(reservation))
+    assert last.status_code == 200 and last.json['ticket']['status'] == 'fully_used'
+
+
 def test_check_resolves_session_from_ticket_without_manual_selection(context):
     client, reservation, headers, _ = context
     response = client.post(ADMIN + '/tickets/check', headers=headers['admin'],
