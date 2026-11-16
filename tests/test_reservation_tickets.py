@@ -268,6 +268,21 @@ def test_very_large_count_cannot_overflow_database_counter(context):
     assert ReservationAdmission.query.count() == 1
 
 
+def test_check_resolves_session_from_ticket_without_manual_selection(context):
+    client, reservation, headers, _ = context
+    response = client.post(ADMIN + '/tickets/check', headers=headers['admin'],
+                           json={'ticket': QR_PREFIX + reservation.ticket_token})
+    assert response.status_code == 200
+    ticket = response.json['ticket']
+    assert ticket['session_id'] == reservation.session_id
+    assert ticket['event_id'] == reservation.session.event_id
+    assert ticket['can_enter'] is True
+    assert ticket['checked_in_count'] == 0
+    admission = enter(client, headers['admin'], payload(reservation, session_id=ticket['session_id'], count=2))
+    assert admission.status_code == 200
+    assert admission.json['ticket']['remaining_count'] == 1
+
+
 @pytest.mark.parametrize('suffix', ['', '/qr'])
 def test_admin_can_view_booking_ticket_but_other_roles_cannot(context, suffix):
     client, reservation, headers, _ = context

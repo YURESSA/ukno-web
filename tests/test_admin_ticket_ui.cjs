@@ -39,9 +39,10 @@ async function main() {
     w.eval(fs.readFileSync('backend/static/js/reservation_tickets.js', 'utf8'));
     const dialog = w.openTicketScanner();
     const form = dialog.querySelector('form');
-    form.elements.session_id.value = '7'; form.elements.ticket.value = ticketCode;
+    assert.equal(form.elements.session_id, undefined); form.elements.ticket.value = ticketCode;
     await form.onsubmit({preventDefault() {}});
     assert.equal(dialog.querySelector('[data-remaining]').textContent, '3');
+    assert.deepEqual(requests.find(r => r.url.endsWith('/check')).body, {ticket: ticketCode});
     assert.equal(dialog.querySelector('[data-name]').textContent, '<img src=x onerror=bad>');
     assert.equal(dialog.querySelector('[data-name] img'), null);
     const count = dialog.querySelector('[data-entry-count]');
