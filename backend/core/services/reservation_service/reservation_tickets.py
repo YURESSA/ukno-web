@@ -119,8 +119,9 @@ def ticket_png(reservation):
     return qr_png(issue_ticket(reservation)['qr_payload'])
 
 
-def check_ticket(payload, session_id):
-    positive_integer(session_id, 'session_id')
+def check_ticket(payload, session_id=None):
+    if session_id is not None:
+        positive_integer(session_id, 'session_id')
     return ticket_summary(_find_ticket(payload), session_id)
 
 

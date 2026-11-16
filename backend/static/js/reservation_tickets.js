@@ -33,8 +33,6 @@ function openTicketScanner() {
       </div>
       <div class="ticket-dialog-body">
         <form data-ticket-check>
-          <label for="ticket-session">Сеанс, на который входят гости</label>
-          <select id="ticket-session" name="session_id" required><option value="">Выберите сеанс</option></select>
           <div class="ticket-actions">
             <button type="button" class="btn btn-outline-primary" data-camera>Открыть камеру</button>
             <button type="button" class="btn btn-outline-secondary" data-photo>Загрузить фото QR</button>
@@ -52,27 +50,10 @@ function openTicketScanner() {
         ticket: null, ticketCode: '', controller: new AbortController()};
     dialog.ticketState = state;
     const form = dialog.querySelector('form');
-    const sessionField = form.elements.session_id;
     const codeField = form.elements.ticket;
     const video = dialog.querySelector('video');
     const result = dialog.querySelector('[data-ticket-result]');
     const notice = dialog.querySelector('[role="status"]');
-    let sessions = 0;
-    for (const event of (typeof reservationEvents !== 'undefined' && reservationEvents) || []) {
-        for (const session of event.sessions || []) {
-            const date = new Date(session.start_datetime).toLocaleString('ru-RU');
-            sessionField.add(new Option(`${event.title} · ${date} · #${session.session_id}`, session.session_id));
-            sessions++;
-        }
-    }
-    if (!sessions) {
-        const input = document.createElement('input');
-        input.type = 'number'; input.name = 'session_id'; input.id = 'ticket-session';
-        input.min = '1'; input.step = '1'; input.required = true; input.placeholder = 'ID сеанса';
-        sessionField.replaceWith(input);
-    }
-    if (typeof reservationFilters !== 'undefined') form.elements.session_id.value = reservationFilters.get('session_id') || '';
-
     function message(text, tone = '') {
         if (state.closed) return;
         notice.hidden = false; notice.textContent = text; notice.dataset.tone = tone;
@@ -81,7 +62,6 @@ function openTicketScanner() {
         state.busy = value;
         dialog.querySelectorAll('button:not(.ticket-dialog-close)').forEach(button => { button.disabled = value; });
         const locked = value || !!state.pending;
-        form.elements.session_id.disabled = locked;
         codeField.disabled = locked;
         const count = dialog.querySelector('[data-entry-count]');
         if (count) count.disabled = locked;
@@ -155,7 +135,7 @@ function openTicketScanner() {
             const code = codeField.value.trim();
             const response = await ticketRequest(`${API_BASE}/reservations/tickets/check`, {
                 method: 'POST', signal: state.controller.signal,
-                body: JSON.stringify({ticket: code, session_id: Number(form.elements.session_id.value)})
+                body: JSON.stringify({ticket: code})
             });
             const data = await response.json();
             state.ticketCode = code;
@@ -224,7 +204,7 @@ function openTicketScanner() {
             state.stream = stream; video.srcObject = stream; video.hidden = false;
             await video.play();
             dialog.querySelector('[data-camera]').textContent = 'Остановить камеру';
-            message('Наведите камеру на QR-билет. Сначала выберите нужный сеанс.');
+            message('Наведите камеру на QR-билет. Событие и сеанс определятся автоматически.');
             const scan = () => {
                 if (state.closed || !state.stream) return;
                 try {

@@ -52,6 +52,7 @@ function initAdminMobileNavigation() {
         document.querySelectorAll('[data-mobile-details]').forEach(details => {
             details.open = !mobile.matches || details.dataset.active === 'true';
         });
+        if (typeof syncReservationFilterLayout === 'function') syncReservationFilterLayout();
     });
     setOpen(false);
 }

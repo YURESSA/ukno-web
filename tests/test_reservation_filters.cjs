@@ -37,6 +37,16 @@ async function main() {
     window.eval(fs.readFileSync('backend/static/js/reservations.js', 'utf8'));
     await window.loadReservations();
     let form = window.document.querySelector('form');
+    assert.equal(form.querySelectorAll('.reservation-filter-grid > .reservation-field').length, 11);
+    const dateInput = form.elements.date_from;
+    window.innerWidth = 390;
+    window.syncReservationFilterLayout(form);
+    assert.equal(form.querySelectorAll('.reservation-filter-grid > .reservation-field').length, 2);
+    assert.equal(form.querySelector('.reservation-advanced').open, false);
+    window.innerWidth = 1024;
+    window.syncReservationFilterLayout(form);
+    assert.equal(form.querySelectorAll('.reservation-filter-grid > .reservation-field').length, 11);
+    assert.equal(form.elements.date_from, dateInput);
     form.elements.event_id.value = '12';
     form.elements.date_from.value = '2026-11-01';
     form.elements.date_to.value = '2026-11-30';
