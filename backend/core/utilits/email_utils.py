@@ -1,7 +1,7 @@
 import re
 import threading
 from io import BytesIO
-from typing import Optional, List, Union, Tuple
+from typing import Dict, Optional, List, Union, Tuple
 
 from flask import Flask, current_app
 from flask_mail import Message
@@ -38,7 +38,8 @@ def send_email(
         recipient: str,
         body: str,
         body_html: Optional[str] = None,
-        attachments: Optional[List[Union[Tuple[str, bytes, str], Tuple[str, bytes]]]] = None
+        attachments: Optional[List[Union[Tuple[str, bytes, str], Tuple[str, bytes]]]] = None,
+        inline_images: Optional[Dict[str, Tuple[str, bytes, str]]] = None,
 ) -> None:
     """
     Отправляет email в отдельном потоке с возможностью вложений.
@@ -50,6 +51,7 @@ def send_email(
     :param attachments: список вложений. Каждый элемент:
                         - (filename, content_bytes, mimetype)
                         - или (filename, content_bytes) с типом по умолчанию "text/csv; charset=utf-8"
+    :param inline_images: Content-ID -> (filename, bytes, mimetype); HTML uses cid:Content-ID.
     """
     if not recipient or not is_valid_email(recipient):
         print(f"Попытка отправить email на невалидный адрес: {recipient}")
@@ -74,5 +76,9 @@ def send_email(
                 msg.attach(filename, "text/csv; charset=utf-8", data.read())
             else:
                 print(f"Некорректный формат вложения: {attachment}")
+
+    for content_id, (filename, image_bytes, mimetype) in (inline_images or {}).items():
+        msg.attach(filename, mimetype, image_bytes, disposition='inline',
+                   headers={'Content-ID': f'<{content_id}>'})
 
     threading.Thread(target=send_async_email, args=(current_app._get_current_object(), msg)).start()

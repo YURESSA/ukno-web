@@ -1,5 +1,6 @@
 alembic==1.15.1
 qrcode==8.2
+pypng==0.20220715.0
 APScheduler==3.11.0
 boto3==1.41.5
 Flask==3.1.2

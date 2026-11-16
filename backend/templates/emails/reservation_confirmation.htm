@@ -13,6 +13,12 @@
 Гостей: {{ participants_count }}
 Номер бронирования: {% if reservation_id is not none %}№ {{ reservation_id }}{% else %}подтверждено{% endif %}
 
+{% if ticket_image_src|default(None) %}
+Ваш QR-билет приложен к письму: {{ ticket_filename }}.
+Покажите его администратору на входе. Один билет действует на всех участников этой брони,
+войти можно вместе или по отдельности. Не пересылайте билет посторонним.
+{% endif %}
+
 Что дальше:
 1. Добавьте событие в календарь — файл reservation.ics приложен к письму.
 2. Перед поездкой ещё раз проверьте дату, время и адрес.
@@ -31,6 +37,18 @@
 {% endblock %}
 {% block content %}
 {{ details([('Дата и время', datetime_label(session_start)), ('Место проведения', place or 'Место уточняется'), ('Гости', guests(participants_count)), ('Бронирование', booking_label(reservation_id))]) }}
+{% if ticket_image_src|default(None) %}
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-top:24px;border:1px solid #e6e1d9;border-radius:12px;">
+  <tr><td align="center" style="padding:24px 18px;background:#ffffff;">
+    <h2 style="margin:0 0 8px;font-size:21px;line-height:28px;">Ваш QR-билет</h2>
+    <p style="margin:0 0 16px;font-size:14px;line-height:22px;color:#66615b;">Покажите администратору на входе</p>
+    <img src="{{ ticket_image_src }}" alt="QR-билет на бронь № {{ reservation_id }}" width="240" height="240" style="display:block;width:240px;max-width:100%;height:auto;border:0;background:#ffffff;">
+    <p style="margin:14px 0 0;font-size:14px;line-height:22px;">Бронь № {{ reservation_id }} · {{ guests(participants_count) }}</p>
+    <p style="margin:8px 0 0;font-size:13px;line-height:21px;color:#66615b;">Один билет на всю группу. Можно войти вместе или по отдельности.</p>
+    <p style="margin:8px 0 0;font-size:12px;line-height:19px;color:#77746c;">Если QR не отображается, откройте вложение <strong>{{ ticket_filename }}</strong>. Не пересылайте билет посторонним.</p>
+  </td></tr>
+</table>
+{% endif %}
 <h2 style="margin:24px 0 10px;font-size:18px;">Что дальше</h2>
 <ol style="margin:0;padding-left:22px;line-height:26px;">
   <li>Добавьте событие в календарь — файл <strong>reservation.ics</strong> приложен к письму.</li>
