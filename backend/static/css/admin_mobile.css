@@ -2,7 +2,8 @@
 .admin-nav-backdrop[hidden] { display:none; }
 #mainContent { min-width:0; }
 .table-responsive { max-width:100%; overflow-x:auto; }
-.reservation-advanced, .reservation-advanced-grid { display:contents; }
+.reservation-advanced { grid-column:1/-1; }
+.reservation-advanced[hidden] { display:none !important; }
 .reservation-advanced > summary { display:none; }
 @media (max-width:768px) {
     body { overflow-x:hidden; }

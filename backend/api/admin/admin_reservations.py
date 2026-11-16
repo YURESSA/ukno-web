@@ -23,9 +23,11 @@ from backend.core.services.reservation_service.reservation_tickets import (
 
 ticket_check_model = admin_ns.model('ReservationTicketCheck', {
     'ticket': fields.String(required=True, description='Полное содержимое QR-кода или токен'),
-    'session_id': fields.Integer(required=True, description='Сеанс, на который проверяется вход'),
+    'session_id': fields.Integer(required=False,
+                                 description='Необязательная проверка сеанса; иначе определяется из билета'),
 })
 ticket_admission_model = admin_ns.inherit('ReservationTicketAdmission', ticket_check_model, {
+    'session_id': fields.Integer(required=True, description='ID сеанса из ответа проверки билета'),
     'count': fields.Integer(required=True, min=1, description='Сколько участников входят сейчас'),
     'request_id': fields.String(required=True, description='UUID операции; повторять тот же UUID при сетевом сбое'),
 })

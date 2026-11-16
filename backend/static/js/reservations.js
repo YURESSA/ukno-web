@@ -1,6 +1,23 @@
 let reservationFilters = new URLSearchParams();
 let reservationEvents = null;
 
+function syncReservationFilterLayout(root = document) {
+    root.querySelectorAll('.reservation-filter-grid').forEach(grid => {
+        const advanced = grid.querySelector('.reservation-advanced');
+        if (!advanced) return;
+        const advancedGrid = advanced.querySelector('.reservation-advanced-grid');
+        const mobile = window.innerWidth <= 768;
+        if (mobile) {
+            [...grid.children].filter(field => field.dataset.advancedFilter === 'true')
+                .forEach(field => advancedGrid.append(field));
+        } else {
+            [...advancedGrid.children].forEach(field => grid.insertBefore(field, advanced));
+        }
+        advanced.hidden = !mobile;
+        advanced.open = !mobile || advanced.dataset.active === 'true';
+    });
+}
+
 function renderReservationFilters() {
     const form = document.createElement('form');
     form.className = 'reservation-filters';
@@ -50,10 +67,12 @@ function renderReservationFilters() {
     summary.textContent = `Дополнительные фильтры${extraFilters ? ` · ${extraFilters}` : ''}`;
     const advancedGrid = document.createElement('div');
     advancedGrid.className = 'reservation-advanced-grid';
-    [...grid.children].slice(2).forEach(field => advancedGrid.append(field));
-    advanced.dataset.active = String([...reservationFilters.keys()].some(key => !['event_id', 'q'].includes(key)));
-    advanced.open = window.innerWidth > 768 || advanced.dataset.active === 'true';
+    [...grid.children].slice(2).forEach(field => {
+        field.dataset.advancedFilter = 'true';
+        advancedGrid.append(field);
+    });
     advanced.append(summary, advancedGrid); grid.append(advanced);
+    syncReservationFilterLayout(form);
     for (const event of reservationEvents || []) {
         form.elements.event_id.add(new Option(event.title, event.excursion_id));
     }
