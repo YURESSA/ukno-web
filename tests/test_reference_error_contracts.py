@@ -110,6 +110,26 @@ def test_reference_parser_errors_keep_details(client):
     }
 
 
+@pytest.mark.parametrize("resource, fields", [
+    ("team", {"full_name": "New member"}),
+    ("partners", {"name": "New partner"}),
+])
+@pytest.mark.parametrize("filename", ["Фото.jpg", "photo.jpg"])
+def test_create_reference_saves_photo(client, tmp_path, monkeypatch, resource, fields, filename):
+    monkeypatch.setattr(Config, "PROJECT_ROOT", str(tmp_path))
+    monkeypatch.setattr(Config, "UPLOAD_FOLDER", "media/uploads")
+    body = b"\xff\xd8\xffimage-bytes"
+    response = client.post(
+        f"/api/references/{resource}",
+        data={**fields, "photo": (BytesIO(body), filename, "image/jpeg")},
+    )
+    assert response.status_code == 201
+    created = response.get_json()
+    assert created["photo"].endswith(".jpg")
+    assert (tmp_path / created["photo"]).read_bytes() == body
+    assert client.get(f"/api/references/{resource}/{created['id']}").get_json()["photo"] == created["photo"]
+
+
 @pytest.mark.parametrize("error_type, status", [(NotFoundError, 404), (ValidationError, 400)])
 def test_status_depends_on_error_type_not_message(client, monkeypatch, error_type, status):
     def fail(partner_id):

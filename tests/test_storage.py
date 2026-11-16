@@ -75,6 +75,29 @@ def test_image_upload_rejects_spoofed_content_type(monkeypatch):
     assert client.objects == {}
 
 
+@pytest.mark.parametrize("filename", ["Фото.jpg", "фото сотрудника.JPG", "伙伴.jpg", "📷.jpg", "photo.jpg"])
+@pytest.mark.parametrize("backend", ["local", "s3"])
+def test_image_names_preserve_extension_and_content(tmp_path, monkeypatch, filename, backend):
+    client = FakeS3Client()
+    configure_s3(monkeypatch, client)
+    monkeypatch.setattr(Config, "STORAGE_BACKEND", backend)
+    monkeypatch.setattr(Config, "PROJECT_ROOT", str(tmp_path))
+    monkeypatch.setattr(Config, "UPLOAD_FOLDER", "media/uploads")
+    body = b"\xff\xd8\xffimage-bytes"
+    image = FileStorage(stream=BytesIO(body), filename=filename, content_type="image/jpeg")
+
+    path = save_image(image, "team_photos")
+
+    assert path.endswith(".jpg")
+    assert path.isascii()
+    if backend == "local":
+        assert (tmp_path / path).read_bytes() == body
+    else:
+        assert client.objects[("test-bucket", object_key(path))] == (
+            body, {"ExtraArgs": {"ContentType": "image/jpeg"}},
+        )
+
+
 def test_s3_document_upload_preserves_bytes_and_content_type(monkeypatch):
     client = FakeS3Client()
     configure_s3(monkeypatch, client)

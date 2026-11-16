@@ -1,0 +1,22 @@
+{% extends 'base.htm' %}
+
+{% block subject %}Сессия удалена: {{ event_title }}{% endblock %}
+
+{% block text %}
+Сессия события «{{ event_title }}» (ID {{ session_id }}) была удалена.
+
+Во вложении — CSV со списком всех отменённых по этой сессии бронирований.
+Если возвраты были оформлены автоматически, дополнительных действий не требуется.
+{% endblock %}
+
+{% from 'components.htm' import details, notice %}
+{% set accent = '#3f3d39' %}
+{% block preheader %}Сессия № {{ session_id }} события {{ event_title }} удалена.{% endblock %}
+{% block eyebrow %}Административное уведомление{% endblock %}
+{% block heading %}Сессия удалена{% endblock %}
+{% block introduction %}Здравствуйте!<p style="margin:10px 0;color:#66615b;">Сессия удалена, а связанные бронирования отменены.</p>{% endblock %}
+{% block content %}
+{{ details([('Событие', event_title), ('Сессия', '№ ' ~ session_id)]) }}
+{% call notice() %}<strong>Список бронирований — во вложении.</strong> CSV-файл поможет сверить участников и возвраты.{% endcall %}
+<p style="margin:20px 0 0;color:#66615b;">Если возвраты были оформлены автоматически, дополнительных действий не требуется.</p>
+{% endblock %}
