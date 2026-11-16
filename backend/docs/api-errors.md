@@ -353,6 +353,7 @@ Swagger описывает схемы и статусы; этот файл до�
 |---|---|---|---|
 | `get` | `400*` | `format: допустимы json или xlsx` | `Если output_format != 'json'` |
 | `get` | `404` | `Бронь не найдена` | `Если not reservation_data` |
+| `get` | `404*` | `Бронирование не найдено` | `Если not reservation` |
 
 ### [backend/api/admin/admin_users.py](../api/admin/admin_users.py)
 
@@ -497,6 +498,7 @@ Swagger описывает схемы и статусы; этот файл до�
 | `get` | `401` | `Пользователь не найден` | `Если not user` |
 | `get` | `404` | `Бронирование не найдено` | `Если not reservation` |
 | `get` | `404` | `Экскурсия не найдена` | `Если not excursion or not excursion.is_active or excursion.moderation_status != 'approved'` |
+| `get` | `404*` | `Бронирование не найдено` | `Если not reservation` |
 
 ### [backend/api/webhook/routes.py](../api/webhook/routes.py)
 
@@ -523,6 +525,12 @@ Swagger описывает схемы и статусы; этот файл до�
 |---|---|---|---|
 | `handle_exception` | `500` | `Internal server error` | `Ветка возврата ошибки` |
 | `handle_request_entity_too_large` | `413` | `Uploaded form data is too large` | `Ветка возврата ошибки` |
+
+### [backend/core/services/email_service/templates.py](../core/services/email_service/templates.py)
+
+| Функция | HTTP / источник статуса | Точный текст / шаблон | Условие в коде |
+|---|---|---|---|
+| `render_email` | `исключение` | `Unknown email template: {name}` | `Если name not in TEMPLATE_NAMES` |
 
 ### [backend/core/services/event_services/event_api.py](../core/services/event_services/event_api.py)
 
@@ -787,6 +795,17 @@ Swagger описывает схемы и статусы; этот файл до�
 | `filtered_reservations` | `400*` | `{name}: укажите положительный целочисленный ID` | `Если len(text) > 10 or not text.isascii() or (not text.isdigit()) or (not 0 < int(text) <= 2147483647)` |
 | `filtered_reservations` | `400*` | `{prefix}_from не может быть позже {prefix}_to` | `Если 'from' in bounds and 'to' in bounds and (bounds['from'] > bounds['to'])` |
 | `filtered_reservations` | `400*` | `Неизвестный payment_status` | `Если status not in ('unpaid', 'pending', 'waiting_for_capture', 'succeeded', 'canceled')` |
+
+### [backend/core/services/reservation_service/reservation_tickets.py](../core/services/reservation_service/reservation_tickets.py)
+
+| Функция | HTTP / источник статуса | Точный текст / шаблон | Условие в коде |
+|---|---|---|---|
+| `_find_ticket` | `404*` | `Билет не найден` | `Если not reservation` |
+| `_token` | `400*` | `ticket: передайте содержимое QR-кода` | `Если not isinstance(payload, str)` |
+| `_token` | `400*` | `Некорректный формат билета` | `Если not re.fullmatch('[A-Za-z0-9_-]{43}', token)` |
+| `admit_ticket` | `400*` | `request_id: укажите UUID в стандартном формате` | `Перехвачено (ValueError, TypeError, AttributeError)` |
+| `admit_ticket` | `404*` | `Билет не найден` | `Если not reservation` |
+| `positive_integer` | `400*` | `{field}: укажите положительное целое число` | `Если isinstance(value, bool) or not isinstance(value, int) or (not 0 < value <= 2147483647)` |
 
 ### [backend/core/services/user_services/auth_service.py](../core/services/user_services/auth_service.py)
 

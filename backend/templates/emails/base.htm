@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>{{ subject }}</title>
+  <style>
+    @media only screen and (max-width: 600px) {
+      .email-padding { padding-left: 24px !important; padding-right: 24px !important; }
+      .email-heading { font-size: 28px !important; line-height: 34px !important; }
+    }
+  </style>
+</head>
+<body style="margin:0;padding:0;background:#f3f0eb;color:#252521;font-family:Arial,Helvetica,sans-serif;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;">{% block preheader %}{% endblock %}</div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f3f0eb;">
+    <tr><td align="center" style="padding:28px 12px;">
+      <!-- Fixed-width fallback for Outlook. -->
+      <!--[if mso]><table role="presentation" width="640"><tr><td><![endif]-->
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:640px;background:#ffffff;border:1px solid #e6e1d9;border-radius:20px;overflow:hidden;">
+        <tr><td class="email-padding" style="padding:26px 40px;border-bottom:1px solid #eee9e2;">
+          <span style="font-size:26px;font-weight:800;letter-spacing:-1px;color:#ff6c36;">5 этаж</span>
+          <span style="padding-left:14px;font-size:12px;line-height:18px;color:#77746c;">Молодёжное бюро</span>
+        </td></tr>
+        <tr><td class="email-padding" style="padding:32px 40px;background:{{ accent|default('#ff6c36') }};color:#ffffff;">
+          <div style="font-size:11px;line-height:18px;letter-spacing:1.5px;text-transform:uppercase;">{% block eyebrow %}Молодёжное бюро · 5 этаж{% endblock %}</div>
+          <h1 class="email-heading" style="margin:12px 0 0;font-size:34px;line-height:40px;font-weight:800;">{% block heading %}{% endblock %}</h1>
+        </td></tr>
+        <tr><td class="email-padding" style="padding:30px 40px 16px;font-size:16px;line-height:26px;">{% block introduction %}{% endblock %}</td></tr>
+        <tr><td class="email-padding" style="padding:8px 40px 36px;font-size:15px;line-height:24px;">{% block content %}{% endblock %}</td></tr>
+        <tr><td class="email-padding" style="padding:22px 40px;background:#faf9f6;border-top:1px solid #eee9e2;color:#77746c;font-size:12px;line-height:19px;">
+          {% block footer %}Это автоматическое письмо от Молодёжного бюро «5 этаж». Пожалуйста, не пересылайте письма со ссылками для доступа другим людям.{% endblock %}
+        </td></tr>
+      </table>
+      <!--[if mso]></td></tr></table><![endif]-->
+    </td></tr>
+  </table>
+</body>
+</html>

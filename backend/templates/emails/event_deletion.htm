@@ -1,0 +1,22 @@
+{% extends 'base.htm' %}
+
+{% block subject %}Событие удалено: {{ event_title }}{% endblock %}
+
+{% block text %}
+Здравствуйте, {{ display_name or 'коллега' }}!
+
+Событие «{{ event_title }}» и все его сессии были удалены.
+В приложении — CSV со списком всех отменённых бронирований.
+Сохраните файл для сверки с участниками и возвратами.
+{% endblock %}
+
+{% from 'components.htm' import notice %}
+{% set accent = '#3f3d39' %}
+{% block preheader %}Событие {{ event_title }} и его сессии удалены.{% endblock %}
+{% block eyebrow %}Административное уведомление{% endblock %}
+{% block heading %}Событие удалено{% endblock %}
+{% block introduction %}Здравствуйте, <strong>{{ display_name or 'коллега' }}</strong>!<p style="margin:10px 0;color:#66615b;">Событие <strong>«{{ event_title }}»</strong> и все связанные с ним сессии удалены.</p>{% endblock %}
+{% block content %}
+{% call notice() %}<strong>CSV-файл приложен к письму.</strong> В нём перечислены все отменённые бронирования.{% endcall %}
+<p style="margin:20px 0 0;color:#66615b;">Сохраните файл для сверки с участниками и возвратами. Если список пуст, активных бронирований у события не было.</p>
+{% endblock %}
