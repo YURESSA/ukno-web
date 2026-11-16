@@ -38,6 +38,7 @@ async function main() {
     };
     w.eval(fs.readFileSync('backend/static/js/reservation_tickets.js', 'utf8'));
     const dialog = w.openTicketScanner();
+    assert.equal(dialog.querySelector('.ticket-manual').open, false);
     const form = dialog.querySelector('form');
     assert.equal(form.elements.session_id, undefined); form.elements.ticket.value = ticketCode;
     await form.onsubmit({preventDefault() {}});

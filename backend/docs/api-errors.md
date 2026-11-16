@@ -759,6 +759,7 @@ Swagger описывает схемы и статусы; этот файл до�
 | `cancel_user_reservation` | `400` | `Бронирование уже отменено` | `Если reservation.is_cancelled` |
 | `cancel_user_reservation` | `401` | `Пользователь не найден` | `Если not user` |
 | `cancel_user_reservation` | `404` | `Бронирование не найдено или не принадлежит вам` | `Если not reservation or reservation.user_id != user.user_id` |
+| `cancel_user_reservation` | `409` | `Нельзя отменить бронь после начала сеанса` | `Если not session or session.start_datetime <= datetime.now(session.start_datetime.tzinfo)` |
 | `cancel_user_reservation` | `500` | `Не удалось сделать возврат средств` | `Перехвачено Exception` |
 
 ### [backend/core/services/reservation_service/reservation_crud.py](../core/services/reservation_service/reservation_crud.py)
