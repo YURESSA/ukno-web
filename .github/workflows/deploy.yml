@@ -103,10 +103,15 @@ jobs:
             git reset --hard origin/main-timeweb
             gzip -dc /tmp/ukno-deploy/deployment/backend.tar.gz | docker load
             gzip -dc /tmp/ukno-deploy/deployment/frontend.tar.gz | docker load
-            IMAGE_TAG=${{ github.sha }} docker compose -f infra/docker-compose.prod.yml up -d --no-build --remove-orphans
+            # Upgrade the existing database before starting code that requires new columns.
+            IMAGE_TAG=${{ github.sha }} docker compose -f infra/docker-compose.prod.yml run --rm --no-deps --entrypoint python backend -m backend.app init_db
+            IMAGE_TAG=${{ github.sha }} docker compose -f infra/docker-compose.prod.yml up -d --no-build --remove-orphans --wait --wait-timeout 120
             IMAGE_TAG=${{ github.sha }} docker compose -f infra/docker-compose.prod.yml ps
+            # A working homepage does not prove authenticated APIs or DB schema work.
+            IMAGE_TAG=${{ github.sha }} docker compose -f infra/docker-compose.prod.yml exec -T backend python -m backend.core.scripts.check_reservation_health
             for attempt in $(seq 1 30); do
-              if curl --fail --silent --show-error --resolve 5buro.ru:443:127.0.0.1 https://5buro.ru/ >/dev/null; then
+              if curl --fail --silent --show-error --max-time 10 --resolve 5buro.ru:443:127.0.0.1 https://5buro.ru/ >/dev/null && \
+                 curl --fail --silent --show-error --max-time 10 --resolve 5buro.ru:443:127.0.0.1 https://5buro.ru/api/user/excursions >/dev/null; then
                 exit 0
               fi
               sleep 2

@@ -25,6 +25,9 @@ def init_database():
     from backend.core.models import auth_models, event_models, merch_models, news_models, ref_models  # noqa: F401
 
     db.create_all()
+    from backend.core.ticket_schema import ensure_ticket_schema, verify_reservation_schema
+    ensure_ticket_schema(db.engine)
+    verify_reservation_schema(db.engine)
 
     # Keep existing local SQLite databases usable when optional content fields
     # are added. create_all() creates missing tables but never adds columns to
