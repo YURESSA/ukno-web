@@ -44,7 +44,7 @@ BUSINESS_ERRORS = {
     "/api/admin/news/{news_id}": {"get": (404,), "put": (400, 404), "delete": (404,)},
     "/api/admin/news/{news_id}/photos": {"get": (404,), "post": (400, 404)},
     "/api/admin/news/{news_id}/photos/{photo_id}": {"delete": (404,)},
-    "/api/user/v2/reservations": {"post": (400, 404, 409, 502), "delete": (400, 404)},
+    "/api/user/v2/reservations": {"post": (400, 404, 409, 502), "delete": (400, 404, 409)},
     "/api/user/reservations/{reservation_id}/export_ical": {"get": (404,)},
     "/api/user/reservations/{reservation_id}/google_calendar_link": {"get": (404,)},
     "/api/admin/reservations/{reservation_id}": {"get": (404,), "delete": (400, 404)},

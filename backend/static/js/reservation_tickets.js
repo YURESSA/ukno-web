@@ -39,9 +39,12 @@ function openTicketScanner() {
             <input type="file" accept="image/*" data-file hidden aria-label="Изображение QR-билета">
           </div>
           <video class="ticket-camera" autoplay muted playsinline hidden></video>
-          <label for="ticket-code">Код билета</label>
-          <textarea id="ticket-code" name="ticket" rows="2" required placeholder="Отсканируйте QR или вставьте код билета" autocomplete="off" spellcheck="false" maxlength="256"></textarea>
-          <button class="btn btn-primary" data-check type="submit">Проверить билет</button>
+          <details class="ticket-manual">
+            <summary>Ввести код вручную</summary>
+            <label for="ticket-code">Код билета</label>
+            <textarea id="ticket-code" name="ticket" rows="2" required placeholder="Вставьте код билета" autocomplete="off" spellcheck="false" maxlength="256"></textarea>
+            <button class="btn btn-primary" data-check type="submit">Проверить билет</button>
+          </details>
         </form>
         <p class="ticket-message" role="status" aria-live="polite" hidden></p>
         <div data-ticket-result></div>
@@ -115,7 +118,8 @@ function openTicketScanner() {
             if (state.qrUrl) URL.revokeObjectURL(state.qrUrl);
             state.qrUrl = null; state.ticket = null; state.ticketCode = '';
             codeField.value = ''; form.hidden = false; notice.hidden = true;
-            result.replaceChildren(); codeField.focus();
+            result.replaceChildren(); form.querySelector('.ticket-manual').open = false;
+            dialog.querySelector('[data-camera]').focus();
         };
         if (state.qrUrl) appendQR();
     }

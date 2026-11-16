@@ -31,6 +31,9 @@
 .ticket-dialog-body { padding:24px; }
 .ticket-dialog form { margin:0; }
 .ticket-dialog textarea { resize:vertical; margin-bottom:12px; }
+.ticket-manual { margin-top:16px; border-top:1px solid #e2e8f0; padding-top:14px; }
+.ticket-manual summary { color:#64748b; font-size:13px; cursor:pointer; }
+.ticket-manual[open] summary { margin-bottom:14px; }
 .ticket-dialog .ticket-actions { display:flex; gap:8px; flex-wrap:wrap; margin:14px 0; }
 .ticket-dialog .ticket-actions .btn { flex:1; white-space:nowrap; }
 .ticket-camera { display:block; width:100%; max-height:300px; object-fit:cover; border-radius:12px; background:#0f172a; margin:16px 0; }
