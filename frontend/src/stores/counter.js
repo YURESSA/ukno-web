@@ -806,6 +806,29 @@ export const useDataStore = defineStore('data', {
       }
     },
 
+    async ExportAdminReservations(params) {
+      const { data, headers } = await axios.get(`${baseUrl}api/admin/reservations/export`, {
+        headers: { Authorization: `Bearer ${this.auth_key}` },
+        params,
+        responseType: 'arraybuffer',
+        transformResponse: [(body, responseHeaders) => {
+          if (responseHeaders['content-type']?.includes('json')) {
+            try {
+              return JSON.parse(new TextDecoder().decode(body))
+            } catch {
+              return body
+            }
+          }
+          return body
+        }],
+      })
+      const mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      if (headers['content-type']?.split(';')[0] !== mimeType || !data?.byteLength) {
+        throw new Error('Expected a reservations spreadsheet')
+      }
+      return new Blob([data], { type: mimeType })
+    },
+
 
     async FetchAdminReservationDetails(id) {
       try {

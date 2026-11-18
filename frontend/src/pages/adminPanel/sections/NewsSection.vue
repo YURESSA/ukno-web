@@ -27,11 +27,11 @@
     >
       <n-form ref="formRef" :model="selectedItem" label-placement="top">
         <n-grid :cols="2" :x-gap="20">
-          <n-form-item-gi span="2" label="Заголовок" v-bind="fieldProps(selectedItem, 'news', 'title', 'selectedItem.title', isEdit)">
+          <n-form-item-gi span="2" label="Заголовок" v-bind="fieldProps(selectedItem, 'news', 'title', isEdit)">
             <n-input v-model:value="selectedItem.title" placeholder="Введите заголовок" />
           </n-form-item-gi>
 
-          <n-form-item-gi span="2" label="Краткое описание" v-bind="fieldProps(selectedItem, 'news', 'short_description', 'selectedItem.short_description', isEdit)">
+          <n-form-item-gi span="2" label="Краткое описание" v-bind="fieldProps(selectedItem, 'news', 'short_description', isEdit)">
             <n-input
               v-model:value="selectedItem.short_description"
               type="textarea"
@@ -40,11 +40,12 @@
             />
           </n-form-item-gi>
 
-          <n-form-item-gi span="2" label="Содержимое" v-bind="fieldProps(selectedItem, 'news', 'content', 'selectedItem.content', isEdit)">
+          <n-form-item-gi span="2" label="Содержимое" v-bind="fieldProps(selectedItem, 'news', 'content', isEdit)">
             <Editor v-model="selectedItem.content" />
           </n-form-item-gi>
           <n-form-item-gi span="2" label="Изображения новости">
             <n-upload
+              :default-upload="false"
               multiple
               directory-dnd
               :default-file-list="fileList"
@@ -63,11 +64,11 @@
             </n-upload>
           </n-form-item-gi>
 
-          <n-form-item-gi label="Автор фото" v-bind="fieldProps(selectedItem, 'news', 'photo_author', 'selectedItem.photo_author', isEdit)">
+          <n-form-item-gi label="Автор фото" v-bind="fieldProps(selectedItem, 'news', 'photo_author', isEdit)">
             <n-input v-model:value="selectedItem.photo_author" placeholder="Кто сделал фото?" />
           </n-form-item-gi>
 
-          <n-form-item-gi label="Дата публикации" v-bind="fieldProps(selectedItem, 'news', 'created_at', 'selectedItem.created_at', isEdit)">
+          <n-form-item-gi label="Дата публикации" v-bind="fieldProps(selectedItem, 'news', 'created_at', isEdit)">
             <n-date-picker
               v-model:formatted-value="selectedItem.created_at"
               value-format="yyyy-MM-dd HH:mm:00"
@@ -96,7 +97,6 @@
 
 <script setup>
 import { useAdminValidation } from '@/composables/useAdminValidation'
-import { validateAdmin } from '@/utils/adminValidation'
 import { getApiErrorMessage } from '@/utils/apiError'
 import { ref, computed, inject, watch, onMounted, h } from 'vue';
 import { useDataStore, baseUrl } from '@/stores/counter';
@@ -108,7 +108,7 @@ import {
 import BaseButton from '@/components/ui/button/BaseButton.vue';
 import Editor from '@/components/ui/Editor.vue';
 
-const { submitted, fieldProps, resetValidation } = useAdminValidation();
+const { fieldProps, submitValidation, resetValidation, applyApiErrors } = useAdminValidation();
 
 const store = useDataStore();
 const message = useMessage();
@@ -268,10 +268,7 @@ watch(addTrigger, () => {
 
 async function handleSave() {
   if (loading.value) return;
-  submitted.value = true;
-  const validationError = validateAdmin(selectedItem.value, 'news', isEdit.value);
-  if (validationError) return message.error(validationError);
-  if (!selectedItem.value.title.trim()) return message.warning('Заголовок обязателен');
+  if (submitValidation(selectedItem.value, 'news', isEdit.value).length) return;
 
   try {
     loading.value = true;
@@ -315,7 +312,8 @@ async function handleSave() {
 
   } catch (e) {
     console.error(e);
-    message.error(getApiErrorMessage(e, 'Ошибка при сохранении'));
+    const { message: feedback } = applyApiErrors(e, selectedItem.value, 'Ошибка при сохранении');
+    if (feedback) message.error(feedback);
   } finally {
     loading.value = false;
   }

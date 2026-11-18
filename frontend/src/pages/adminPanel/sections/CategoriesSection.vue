@@ -22,7 +22,7 @@
       :segmented="{ content: 'soft', footer: 'soft' }"
     >
       <n-form ref="formRef" :model="selectedItem" label-placement="top">
-        <n-form-item label="Название категории" v-bind="fieldProps(selectedItem, 'category', 'category_name', 'selectedItem.category_name', false)">
+        <n-form-item label="Название категории" v-bind="fieldProps(selectedItem, 'category', 'category_name')">
           <n-input v-model:value="selectedItem.category_name" placeholder="Например: Воркшоп" />
         </n-form-item>
       </n-form>
@@ -46,14 +46,13 @@
 
 <script setup>
 import { useAdminValidation } from '@/composables/useAdminValidation'
-import { validateAdmin } from '@/utils/adminValidation'
 import { getApiErrorMessage } from '@/utils/apiError'
 import { ref, computed, inject, watch, onMounted, h } from 'vue';
 import { useDataStore } from '@/stores/counter';
 import { NDataTable, NModal, NForm, NFormItem, NInput, NButton, NSpace, useMessage, useDialog } from 'naive-ui';
 import BaseButton from '@/components/ui/button/BaseButton.vue';
 
-const { submitted, fieldProps, resetValidation } = useAdminValidation();
+const { fieldProps, submitValidation, resetValidation, applyApiErrors } = useAdminValidation();
 
 const store = useDataStore();
 const categories = computed(() => store.getCategories);
@@ -97,13 +96,7 @@ watch(addTrigger, () => {
 
 async function handleSave() {
   if (loading.value) return;
-  submitted.value = true;
-  const validationError = validateAdmin(selectedItem.value, 'category', false);
-  if (validationError) return message.error(validationError);
-  if (!selectedItem.value.category_name.trim()) {
-    message.error('Введите название категории');
-    return;
-  }
+  if (submitValidation(selectedItem.value, 'category').length) return;
 
   try {
     loading.value = true;
@@ -112,7 +105,8 @@ async function handleSave() {
     showModal.value = false;
     await store.FetchCategories();
   } catch (e) {
-    message.error(getApiErrorMessage(e, 'Ошибка при создании'));
+    const { message: feedback } = applyApiErrors(e, selectedItem.value, 'Ошибка при создании', { name: 'category_name' });
+    if (feedback) message.error(feedback);
   } finally {
     loading.value = false;
   }

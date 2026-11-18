@@ -18,16 +18,17 @@
       :title="isEditMode ? 'Редактировать сотрудника' : 'Новый сотрудник'"
     >
       <n-form>
-        <n-form-item label="ФИО" v-bind="fieldProps(memberModel, 'team', 'full_name', 'memberModel.full_name', false)">
+        <n-form-item label="ФИО" v-bind="fieldProps(memberModel, 'team', 'full_name')">
           <n-input v-model:value="memberModel.full_name" placeholder="Константин Константинопольский" />
         </n-form-item>
 
-        <n-form-item label="Описание" v-bind="fieldProps(memberModel, 'team', 'description', 'memberModel.description', false)">
+        <n-form-item label="Описание" v-bind="fieldProps(memberModel, 'team', 'description')">
           <Editor v-model="memberModel.description" />
         </n-form-item>
 
         <n-form-item label="Фото сотрудника">
           <n-upload
+            :default-upload="false"
             v-model:file-list="fileList"
             @change="handleUploadChange"
             @remove="handleRemove"
@@ -54,8 +55,8 @@
 </template>
 
 <script setup>
+import DOMPurify from 'dompurify'
 import { useAdminValidation } from '@/composables/useAdminValidation'
-import { validateAdmin } from '@/utils/adminValidation'
 import { getApiErrorMessage } from '@/utils/apiError'
 import { ref, onMounted, h, inject, watch, computed } from 'vue'
 import { baseUrl, useDataStore } from '@/stores/counter'
@@ -65,7 +66,7 @@ import {
 } from 'naive-ui'
 import Editor from '@/components/ui/Editor.vue'
 
-const { submitted, fieldProps, resetValidation } = useAdminValidation();
+const { fieldProps, submitValidation, resetValidation, applyApiErrors } = useAdminValidation();
 
 const store = useDataStore()
 const message = useMessage()
@@ -108,7 +109,18 @@ const columns = [
     }
   },
   { title: 'ФИО', key: 'full_name', width: 550 },
-  { title: 'Описание', key: 'description' }
+  {
+    title: 'Описание',
+    key: 'description',
+    render: ({ description }) => h('div', {
+      innerHTML: DOMPurify.sanitize(description || '', {
+        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 's', 'ul', 'ol', 'li', 'blockquote', 'h4', 'h5'],
+        ALLOWED_ATTR: [],
+        ALLOW_DATA_ATTR: false,
+        ALLOW_ARIA_ATTR: false
+      })
+    })
+  }
 ]
 
 const rowProps = (row) => {
@@ -159,10 +171,7 @@ const handleUploadChange = (data) => {
 
 const handleSave = async () => {
   if (loading.value || submitLoading.value) return;
-  submitted.value = true;
-  const validationError = validateAdmin(memberModel.value, 'team', false);
-  if (validationError) return message.error(validationError);
-  if (!memberModel.value.full_name) return message.error('Введите ФИО')
+  if (submitValidation(memberModel.value, 'team').length) return;
 
   const formData = new FormData()
   formData.append('full_name', memberModel.value.full_name)
@@ -186,7 +195,8 @@ const handleSave = async () => {
     showModal.value = false
     await store.FetchTeam()
   } catch (e) {
-    message.error(getApiErrorMessage(e, 'Ошибка при сохранении'))
+    const { message: feedback } = applyApiErrors(e, memberModel.value, 'Ошибка при сохранении');
+    if (feedback) message.error(feedback);
     console.error(e)
   } finally {
     submitLoading.value = false

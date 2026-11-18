@@ -13,7 +13,7 @@
     <n-modal v-model:show="showModal" preset="card" style="width: 600px"
              :title="isEditMode ? 'Редактировать элемент' : 'Добавить элемент'">
       <n-form>
-        <n-form-item label="Описание (текст)" v-bind="fieldProps(model, 'culture', 'text', 'model.text', false)">
+        <n-form-item label="Описание (текст)" v-bind="fieldProps(model, 'culture', 'text')">
           <n-input
             v-model:value="model.text"
             type="textarea"
@@ -22,16 +22,17 @@
           />
         </n-form-item>
 
-        <n-form-item label="Порядок вывода. Отсчёт начинается с 0" v-bind="fieldProps(model, 'culture', 'order_index', 'model.order_index', false)">
-          <n-input
-            v-model:value="model.order_index" :precision="0"
+        <n-form-item label="Порядок вывода. Отсчёт начинается с 0" v-bind="fieldProps(model, 'culture', 'order_index')">
+          <n-input-number
+            v-model:value="model.order_index" :precision="0" :min="0"
             placeholder="Введите порядок отображения (0 выводится первым)"
-            widht="100%"
+            style="width: 100%"
           />
         </n-form-item>
 
         <n-form-item label="Фото">
           <n-upload
+            :default-upload="false"
             v-model:file-list="fileList"
             list-type="image-card"
             :max="1"
@@ -60,16 +61,15 @@
 
 <script setup>
 import { useAdminValidation } from '@/composables/useAdminValidation'
-import { validateAdmin } from '@/utils/adminValidation'
 import { getApiErrorMessage } from '@/utils/apiError'
 import { ref, onMounted, h, inject, watch, computed } from 'vue'
 import { useDataStore, baseUrl } from '@/stores/counter'
 import {
   NButton, useMessage, NSpace, NH2, NDataTable,
-  NModal, NForm, NFormItem, NInput, NUpload, NImage, useDialog
+  NModal, NForm, NFormItem, NInput, NInputNumber, NUpload, NImage, useDialog
 } from 'naive-ui'
 
-const { submitted, fieldProps, resetValidation } = useAdminValidation();
+const { fieldProps, submitValidation, resetValidation, applyApiErrors } = useAdminValidation();
 
 const store = useDataStore()
 const data = computed(() => store.getCulturalSpace)
@@ -209,10 +209,7 @@ const handleUploadChange = (data) => {
 
 const handleSave = async () => {
   if (loading.value || submitLoading.value) return;
-  submitted.value = true;
-  const validationError = validateAdmin(model.value, 'culture', false);
-  if (validationError) return message.error(validationError);
-  if (!model.value.text) return message.error('Введите текст')
+  if (submitValidation(model.value, 'culture').length) return;
 
   try {
     submitLoading.value = true
@@ -249,7 +246,8 @@ const handleSave = async () => {
     await store.FetchCulturalSpace()
   } catch (e) {
     console.error(e)
-    message.error(getApiErrorMessage(e, 'Ошибка при сохранении'))
+    const { message: feedback } = applyApiErrors(e, model.value, 'Ошибка при сохранении');
+    if (feedback) message.error(feedback);
   } finally {
     submitLoading.value = false
   }

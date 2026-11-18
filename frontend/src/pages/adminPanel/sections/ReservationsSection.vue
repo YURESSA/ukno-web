@@ -8,9 +8,14 @@
           clearable
           style="width: 400px"
         />
-        <n-button type="info" ghost @click="store.FetchAdminReservations()">
-          Обновить данные
-        </n-button>
+        <n-space>
+          <n-button type="info" ghost @click="store.FetchAdminReservations()">
+            Обновить данные
+          </n-button>
+          <n-button type="primary" @click="showExportModal = true">
+            Выгрузка в Excel
+          </n-button>
+        </n-space>
       </n-space>
     </div>
 
@@ -18,9 +23,47 @@
       :loading="loading"
       :columns="columns"
       :data="filteredReservations"
+      :row-key="row => row.reservation_id"
       :row-props="rowProps"
       :pagination="{ pageSize: 10 }"
     />
+
+    <n-modal
+      v-model:show="showExportModal"
+      preset="card"
+      title="Выгрузка броней в Excel"
+      style="width: min(480px, calc(100vw - 32px))"
+      :closable="!exporting"
+      :mask-closable="!exporting"
+      :close-on-esc="!exporting"
+    >
+      <n-form label-placement="top" :disabled="exporting">
+        <n-form-item label="Фильтровать по">
+          <n-select v-model:value="exportDateType" :options="exportDateOptions" />
+        </n-form-item>
+        <n-form-item label="Период">
+          <n-date-picker
+            v-model:formatted-value="exportDateRange"
+            type="daterange"
+            format="dd.MM.yyyy"
+            value-format="yyyy-MM-dd"
+            start-placeholder="Начало периода"
+            end-placeholder="Конец периода"
+            clearable
+            style="width: 100%"
+          />
+        </n-form-item>
+      </n-form>
+      <p>Без выбранного периода в файл попадут все брони.</p>
+      <template #footer>
+        <n-space justify="end">
+          <n-button :disabled="exporting" @click="showExportModal = false">Отмена</n-button>
+          <n-button type="primary" :loading="exporting" @click="downloadReservations">
+            Скачать Excel
+          </n-button>
+        </n-space>
+      </template>
+    </n-modal>
 
     <n-modal
       v-model:show="showModal"
@@ -103,13 +146,22 @@ import { getApiErrorMessage } from '@/utils/apiError'
 import { ref, computed, onMounted, h } from 'vue';
 import { useDataStore } from '@/stores/counter';
 import {
-  NDataTable, NModal, NFormItemGi, NGrid, NInput, NButton, NSpace, NTag, NSpin, useMessage, useDialog
+  NDataTable, NModal, NForm, NFormItem, NFormItemGi, NGrid, NInput, NSelect, NDatePicker,
+  NButton, NSpace, NTag, NSpin, useMessage, useDialog
 } from 'naive-ui';
 
 const store = useDataStore();
 const message = useMessage();
 const dialog = useDialog();
 const loading = ref(false);
+const exporting = ref(false);
+const showExportModal = ref(false);
+const exportDateType = ref('booked');
+const exportDateRange = ref(null);
+const exportDateOptions = [
+  { label: 'Дата создания брони', value: 'booked' },
+  { label: 'Дата сеанса', value: 'date' },
+];
 
 const showModal = ref(false);
 const searchQuery = ref('');
@@ -183,17 +235,47 @@ const columns = [
   }
 ];
 
+const sortedReservations = computed(() => [...(store.adminReservations?.reservations || [])].sort((a, b) =>
+  (b.booked_at || '').localeCompare(a.booked_at || '') ||
+  b.reservation_id - a.reservation_id
+));
+
 const filteredReservations = computed(() => {
-  const data = store.adminReservations?.reservations || [];
-
-  if (!searchQuery.value) return data;
-
+  if (!searchQuery.value) return sortedReservations.value;
   const s = searchQuery.value.toLowerCase();
-  return data.filter(r =>
+  return sortedReservations.value.filter(r =>
     r.full_name?.toLowerCase().includes(s) ||
     r.reservation_id?.toString().includes(s)
   );
 });
+
+async function downloadReservations() {
+  if (exporting.value) return;
+  exporting.value = true;
+  try {
+    const params = {};
+    if (exportDateRange.value) {
+      const [from, to] = exportDateRange.value;
+      params[`${exportDateType.value}_from`] = from;
+      params[`${exportDateType.value}_to`] = to;
+    }
+    const file = await store.ExportAdminReservations(params);
+    const url = URL.createObjectURL(file);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'reservations.xlsx';
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showExportModal.value = false;
+  } catch (error) {
+    const feedback = getApiErrorMessage(error, 'Не удалось скачать брони в Excel');
+    if (feedback) message.error(feedback);
+  } finally {
+    exporting.value = false;
+  }
+}
 
 function confirmDelete() {
   dialog.warning({

@@ -56,11 +56,11 @@
     >
       <n-form :model="productForm" label-placement="top">
         <n-grid :cols="2" :x-gap="20">
-          <n-form-item-gi span="2" label="Название *" v-bind="fieldProps(productForm, 'product', 'name', 'productForm.name', isEdit)">
+          <n-form-item-gi span="2" label="Название *" v-bind="fieldProps(productForm, 'product', 'name', isEdit)">
             <n-input v-model:value="productForm.name" placeholder="Название товара" />
           </n-form-item-gi>
 
-          <n-form-item-gi label="Категория" v-bind="fieldProps(productForm, 'product', 'category_id', 'productForm.category_id', isEdit)">
+          <n-form-item-gi label="Категория" v-bind="fieldProps(productForm, 'product', 'category_id', isEdit)">
             <n-select
               v-model:value="productForm.category_id"
               :options="categoryOptions"
@@ -69,19 +69,19 @@
             />
           </n-form-item-gi>
 
-          <n-form-item-gi label="Цена, ₽ *" v-bind="fieldProps(productForm, 'product', 'price', 'productForm.price', isEdit)">
+          <n-form-item-gi label="Цена, ₽ *" v-bind="fieldProps(productForm, 'product', 'price', isEdit)">
             <n-input-number v-model:value="productForm.price" :min="0" style="width:100%" />
           </n-form-item-gi>
 
-          <n-form-item-gi label="Коллекция" v-bind="fieldProps(productForm, 'product', 'collection', 'productForm.collection', isEdit)">
+          <n-form-item-gi label="Коллекция" v-bind="fieldProps(productForm, 'product', 'collection', isEdit)">
             <n-input v-model:value="productForm.collection" placeholder="Например: Summer 2026" />
           </n-form-item-gi>
 
-          <n-form-item-gi label="Активен" v-bind="fieldProps(productForm, 'product', 'is_active', 'productForm.is_active', isEdit)">
+          <n-form-item-gi label="Активен" v-bind="fieldProps(productForm, 'product', 'is_active', isEdit)">
             <n-switch v-model:value="productForm.is_active" />
           </n-form-item-gi>
 
-          <n-form-item-gi span="2" label="Описание" v-bind="fieldProps(productForm, 'product', 'description', 'productForm.description', isEdit)">
+          <n-form-item-gi span="2" label="Описание" v-bind="fieldProps(productForm, 'product', 'description', isEdit)">
             <n-input
               v-model:value="productForm.description"
               type="textarea"
@@ -93,16 +93,16 @@
           <!-- Цвета -->
           <n-form-item-gi span="2" label="Цвета и размеры">
             <div class="colors-list">
-              <div v-for="(color, ci) in productForm.colors" :key="ci" class="color-block">
+              <div v-for="(color, ci) in productForm.colors" :key="rowKey(color)" class="color-block">
                 <div class="color-block__header">
-                  <n-form-item :show-label="false" v-bind="fieldProps(color, 'color', 'name', 'colors.' + ci + '.name')"><n-input v-model:value="color.name" placeholder="Название цвета" style="width:180px" /></n-form-item>
+                  <n-form-item :show-label="false" v-bind="fieldProps(color, 'color', 'name', false, productForm, 'colors.' + ci + '.name')"><n-input v-model:value="color.name" placeholder="Название цвета" style="width:180px" /></n-form-item>
                   <n-color-picker v-model:value="color.hex_code" :show-alpha="false" style="width:120px" />
                   <n-button size="small" type="error" ghost @click="removeColor(ci)">✕</n-button>
                 </div>
                 <div class="sizes-list">
-                  <div v-for="(size, si) in color.sizes" :key="si" class="size-row">
-                    <n-form-item :show-label="false" v-bind="fieldProps(size, 'size', 'size_name', 'colors.' + ci + '.sizes.' + si + '.size_name')"><n-input v-model:value="size.size_name" placeholder="Размер" style="width:100px" /></n-form-item>
-                    <n-form-item :show-label="false" v-bind="fieldProps(size, 'size', 'stock', 'colors.' + ci + '.sizes.' + si + '.stock')"><n-input-number v-model:value="size.stock" :precision="0" :min="0" placeholder="Остаток" style="width:110px" /></n-form-item>
+                  <div v-for="(size, si) in color.sizes" :key="rowKey(size)" class="size-row">
+                    <n-form-item :show-label="false" v-bind="fieldProps(size, 'size', 'size_name', false, productForm, 'colors.' + ci + '.sizes.' + si + '.size_name')"><n-input v-model:value="size.size_name" placeholder="Размер" style="width:100px" /></n-form-item>
+                    <n-form-item :show-label="false" v-bind="fieldProps(size, 'size', 'stock', false, productForm, 'colors.' + ci + '.sizes.' + si + '.stock')"><n-input-number v-model:value="size.stock" :precision="0" :min="0" placeholder="Остаток" style="width:110px" /></n-form-item>
                     <n-switch v-model:value="size.is_active" size="small" />
                     <n-button size="tiny" ghost @click="removeSize(ci, si)">✕</n-button>
                   </div>
@@ -116,6 +116,7 @@
           <!-- Фото -->
           <n-form-item-gi span="2" label="Фотографии">
             <n-upload
+              :default-upload="false"
               multiple
               list-type="image-card"
               :default-file-list="productFileList"
@@ -150,19 +151,19 @@
     >
       <n-form :model="categoryForm" label-placement="top">
         <n-grid :cols="2" :x-gap="20">
-          <n-form-item-gi span="2" label="Название *" v-bind="fieldProps(categoryForm, 'merchCategory', 'name', 'categoryForm.name', isEdit)">
+          <n-form-item-gi span="2" label="Название *" v-bind="fieldProps(categoryForm, 'merchCategory', 'name', isEdit)">
             <n-input v-model:value="categoryForm.name" placeholder="Например: Футболки" />
           </n-form-item-gi>
-          <n-form-item-gi label="Slug" v-bind="fieldProps(categoryForm, 'merchCategory', 'slug', 'categoryForm.slug', isEdit)">
+          <n-form-item-gi label="Slug" v-bind="fieldProps(categoryForm, 'merchCategory', 'slug', isEdit)">
             <n-input v-model:value="categoryForm.slug" placeholder="tshirts" />
           </n-form-item-gi>
-          <n-form-item-gi label="Порядок" v-bind="fieldProps(categoryForm, 'merchCategory', 'order_index', 'categoryForm.order_index', isEdit)">
+          <n-form-item-gi label="Порядок" v-bind="fieldProps(categoryForm, 'merchCategory', 'order_index', isEdit)">
             <n-input-number v-model:value="categoryForm.order_index" :precision="0" :min="0" style="width:100%" />
           </n-form-item-gi>
-          <n-form-item-gi span="2" label="Описание" v-bind="fieldProps(categoryForm, 'merchCategory', 'description', 'categoryForm.description', isEdit)">
+          <n-form-item-gi span="2" label="Описание" v-bind="fieldProps(categoryForm, 'merchCategory', 'description', isEdit)">
             <n-input v-model:value="categoryForm.description" type="textarea" :autosize="{ minRows: 2 }" />
           </n-form-item-gi>
-          <n-form-item-gi label="Активна" v-bind="fieldProps(categoryForm, 'merchCategory', 'is_active', 'categoryForm.is_active', isEdit)">
+          <n-form-item-gi label="Активна" v-bind="fieldProps(categoryForm, 'merchCategory', 'is_active', isEdit)">
             <n-switch v-model:value="categoryForm.is_active" />
           </n-form-item-gi>
         </n-grid>
@@ -187,27 +188,29 @@
     >
       <n-form :model="bannerForm" label-placement="top">
         <n-grid :cols="2" :x-gap="20">
-          <n-form-item-gi span="2" label="Заголовок" v-bind="fieldProps(bannerForm, 'banner', 'title', 'bannerForm.title', isEdit)">
+          <n-form-item-gi span="2" label="Заголовок" v-bind="fieldProps(bannerForm, 'banner', 'title', isEdit)">
             <n-input v-model:value="bannerForm.title" placeholder="НОВЫЙ СТИЛЬ" />
           </n-form-item-gi>
-          <n-form-item-gi span="2" label="Описание" v-bind="fieldProps(bannerForm, 'banner', 'description', 'bannerForm.description', isEdit)">
+          <n-form-item-gi span="2" label="Описание" v-bind="fieldProps(bannerForm, 'banner', 'description', isEdit)">
             <n-input v-model:value="bannerForm.description" type="textarea" :autosize="{ minRows: 2 }" placeholder="Текст под заголовком" />
           </n-form-item-gi>
-          <n-form-item-gi label="Текст на кнопке" v-bind="fieldProps(bannerForm, 'banner', 'button_text', 'bannerForm.button_text', isEdit)">
+          <n-form-item-gi label="Текст на кнопке" v-bind="fieldProps(bannerForm, 'banner', 'button_text', isEdit)">
             <n-input v-model:value="bannerForm.button_text" placeholder="Смотреть коллекцию" />
           </n-form-item-gi>
-          <n-form-item-gi label="Ссылка" v-bind="fieldProps(bannerForm, 'banner', 'link_url', 'bannerForm.link_url', isEdit)">
+          <n-form-item-gi label="Ссылка" v-bind="fieldProps(bannerForm, 'banner', 'link_url', isEdit)">
             <n-input v-model:value="bannerForm.link_url" placeholder="/shop/..." />
           </n-form-item-gi>
-          <n-form-item-gi label="Порядок" v-bind="fieldProps(bannerForm, 'banner', 'order_index', 'bannerForm.order_index', isEdit)">
+          <n-form-item-gi label="Порядок" v-bind="fieldProps(bannerForm, 'banner', 'order_index', isEdit)">
             <n-input-number v-model:value="bannerForm.order_index" :precision="0" :min="0" style="width:100%" />
           </n-form-item-gi>
-          <n-form-item-gi label="Активен" v-bind="fieldProps(bannerForm, 'banner', 'is_active', 'bannerForm.is_active', isEdit)">
+          <n-form-item-gi label="Активен" v-bind="fieldProps(bannerForm, 'banner', 'is_active', isEdit)">
             <n-switch v-model:value="bannerForm.is_active" />
           </n-form-item-gi>
-          <n-form-item-gi span="2" label="Изображение баннера">
+          <n-form-item-gi span="2" label="Изображение баннера" :required="!isEdit" v-bind="fieldProps(bannerForm, 'banner', 'image', isEdit)">
             <n-upload
+              :default-upload="false"
               :max="1"
+              accept="image/*"
               list-type="image-card"
               :default-file-list="bannerFileList"
               @change="handleBannerUploadChange"
@@ -304,7 +307,6 @@
 
 <script setup>
 import { useAdminValidation } from '@/composables/useAdminValidation'
-import { validateAdmin } from '@/utils/adminValidation'
 import { getApiErrorMessage } from '@/utils/apiError'
 import { ref, computed, inject, watch, onMounted, onUnmounted, h } from 'vue';
 import axios from 'axios';
@@ -317,7 +319,7 @@ import {
 } from 'naive-ui';
 import { useDataStore, baseUrl } from '@/stores/counter';
 
-const { submitted, fieldProps, resetValidation } = useAdminValidation();
+const { fieldProps, submitValidation, resetValidation, applyApiErrors, rowKey } = useAdminValidation();
 
 const store = useDataStore();
 const message = useMessage();
@@ -485,10 +487,7 @@ async function handleProductRemove({ file }) {
 
 async function saveProduct() {
   if (loading.value) return;
-  submitted.value = true;
-  const validationError = validateAdmin(productForm.value, 'product', isEdit.value);
-  if (validationError) return message.error(validationError);
-  if (!productForm.value.name.trim()) return message.warning('Название обязательно');
+  if (submitValidation(productForm.value, 'product', isEdit.value).length) return;
   loading.value = true;
   try {
     const fd = new FormData();
@@ -519,7 +518,8 @@ async function saveProduct() {
     showProductModal.value = false;
     await fetchProducts();
   } catch (e) {
-    message.error(getApiErrorMessage(e, 'Ошибка сохранения'));
+    const { message: feedback } = applyApiErrors(e, productForm.value, 'Не удалось сохранить товар');
+    if (feedback) message.error(feedback);
   } finally { loading.value = false; }
 }
 
@@ -590,10 +590,7 @@ async function fetchCategories() {
 
 async function saveCategory() {
   if (loading.value) return;
-  submitted.value = true;
-  const validationError = validateAdmin(categoryForm.value, 'merchCategory', isEdit.value);
-  if (validationError) return message.error(validationError);
-  if (!categoryForm.value.name.trim()) return message.warning('Название обязательно');
+  if (submitValidation(categoryForm.value, 'merchCategory', isEdit.value).length) return;
   loading.value = true;
   try {
     if (isEdit.value) {
@@ -607,7 +604,8 @@ async function saveCategory() {
     showCategoryModal.value = false;
     await fetchCategories();
   } catch (e) {
-    message.error(getApiErrorMessage(e, 'Ошибка'));
+    const { message: feedback } = applyApiErrors(e, categoryForm.value, 'Не удалось сохранить категорию');
+    if (feedback) message.error(feedback);
   } finally { loading.value = false; }
 }
 
@@ -630,10 +628,9 @@ const banners = ref([]);
 const showBannerModal = ref(false);
 const bannerForm = ref(emptyBanner());
 const bannerFileList = ref([]);
-const newBannerFile = ref(null);
 
 function emptyBanner() {
-  return { banner_id: null, title: '', description: '', button_text: '', link_url: '', order_index: 0, is_active: true };
+  return { banner_id: null, title: '', description: '', button_text: '', link_url: '', order_index: 0, is_active: true, image: null };
 }
 
 const bannerColumns = [
@@ -655,11 +652,10 @@ const bannerRowProps = (row) => ({
   style: 'cursor:pointer',
   onClick: () => {
     isEdit.value = true;
-    bannerForm.value = { ...row };
+    bannerForm.value = { ...row, image: null };
     bannerFileList.value = row.image_path
       ? [{ id: 'old-0', name: 'Изображение', status: 'finished', url: baseUrl + row.image_path }]
       : [];
-    newBannerFile.value = null;
     showBannerModal.value = true;
   }
 });
@@ -672,15 +668,12 @@ async function fetchBanners() {
 function handleBannerUploadChange({ fileList }) {
   bannerFileList.value = fileList;
   const newFile = fileList.find(f => f.file);
-  newBannerFile.value = newFile ? (newFile.file?.file || newFile.file) : null;
+  bannerForm.value.image = newFile?.file || null;
 }
 
 async function saveBanner() {
-  if (!isEdit.value && !newBannerFile.value) return message.error('Выберите изображение баннера');
   if (loading.value) return;
-  submitted.value = true;
-  const validationError = validateAdmin(bannerForm.value, 'banner', isEdit.value);
-  if (validationError) return message.error(validationError);
+  if (submitValidation(bannerForm.value, 'banner', isEdit.value).length) return;
   loading.value = true;
   try {
     const fd = new FormData();
@@ -693,7 +686,7 @@ async function saveBanner() {
       is_active: bannerForm.value.is_active,
     };
     fd.append('data', JSON.stringify(payload));
-    if (newBannerFile.value) fd.append('image', newBannerFile.value);
+    if (bannerForm.value.image) fd.append('image', bannerForm.value.image);
 
     if (isEdit.value) {
       await axios.put(`${baseUrl}api/admin/merch/banners/${bannerForm.value.banner_id}`, fd, {
@@ -709,7 +702,8 @@ async function saveBanner() {
     showBannerModal.value = false;
     await fetchBanners();
   } catch (e) {
-    message.error(getApiErrorMessage(e, 'Ошибка'));
+    const { message: feedback } = applyApiErrors(e, bannerForm.value, 'Не удалось сохранить баннер');
+    if (feedback) message.error(feedback);
   } finally { loading.value = false; }
 }
 
@@ -886,7 +880,6 @@ watch(addTrigger, () => {
   } else if (activeTab.value === 'banners') {
     bannerForm.value = emptyBanner();
     bannerFileList.value = [];
-    newBannerFile.value = null;
     showBannerModal.value = true;
   }
 });
@@ -898,7 +891,6 @@ onMounted(async () => {
 watch(showProductModal, resetValidation);
 watch(showCategoryModal, resetValidation);
 watch(showBannerModal, resetValidation);
-watch(showOrderModal, resetValidation);
 </script>
 
 <style scoped>
