@@ -4,6 +4,7 @@ from secrets import token_urlsafe
 from sqlalchemy import func
 
 from backend.core import db
+from backend.core.models.auth_models import RoleEnum
 
 event_tags = db.Table(
     'event_tags',
@@ -106,6 +107,16 @@ class Event(db.Model):
     tags = db.relationship("Tag", secondary='event_tags', back_populates="events", lazy='subquery')
 
     creator = db.relationship("User", backref="events_created", foreign_keys=[created_by])
+
+    @property
+    def is_resident_owned(self) -> bool:
+        return self.creator is not None and self.creator.role == RoleEnum.RESIDENT
+
+    @property
+    def can_be_approved(self) -> bool:
+        return self.moderation_status == 'pending' or (
+            self.moderation_status == 'returned' and not self.is_resident_owned
+        )
 
     def __str__(self):
         return f"Event(id={self.event_id}, title={self.title})"

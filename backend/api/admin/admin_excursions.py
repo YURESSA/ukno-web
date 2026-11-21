@@ -20,6 +20,14 @@ from backend.core.services.event_services.event_moderation import change_moderat
 from ...core.services.user_services.user_service import get_user_by_email
 
 
+def _serialize_admin_event(event, *, include_related=False):
+    return {
+        **event.to_dict(include_related=include_related),
+        "can_return": event.is_resident_owned and event.moderation_status in ('pending', 'approved'),
+        "can_approve": event.can_be_approved,
+    }
+
+
 @admin_ns.route('/excursions')
 class AdminExcursionsResource(ApiResource):
     @admin_required
@@ -37,7 +45,7 @@ class AdminExcursionsResource(ApiResource):
         excursions = get_all_events()
         if status_filter is not None:
             excursions = [e for e in excursions if e.moderation_status == status_filter]
-        return {"excursions": [e.to_dict() for e in excursions]}, HTTPStatus.OK
+        return {"excursions": [_serialize_admin_event(e) for e in excursions]}, HTTPStatus.OK
 
     @admin_required
     @admin_ns.doc(
@@ -74,7 +82,7 @@ class AdminExcursionResource(ApiResource):
         excursion, error, status = update_event(excursion_id, data)
         if error:
             return error, status
-        return {"message": "Экскурсия обновлена", "excursion": excursion.to_dict()}, status
+        return {"message": "Экскурсия обновлена", "excursion": _serialize_admin_event(excursion)}, status
 
     @admin_required
     def get(self, excursion_id: int) -> tuple[dict, int]:
@@ -87,7 +95,7 @@ class AdminExcursionResource(ApiResource):
         excursion = get_event(excursion_id)
         if not excursion:
             return {"message": "Экскурсия не найдена"}, HTTPStatus.NOT_FOUND
-        return {"excursion": excursion.to_dict(include_related=True)}, HTTPStatus.OK
+        return {"excursion": _serialize_admin_event(excursion, include_related=True)}, HTTPStatus.OK
 
     @admin_required
     def delete(self, excursion_id: int) -> tuple[dict, int] | Response:
@@ -118,7 +126,7 @@ class AdminExcursionApproveResource(ApiResource):
         excursion, error, status = update_event(excursion_id, data, approve=True)
         if error:
             return error, status
-        return {"message": "Событие опубликовано", "excursion": excursion.to_dict()}, status
+        return {"message": "Событие опубликовано", "excursion": _serialize_admin_event(excursion)}, status
 
 
 @admin_ns.route('/excursions/<int:excursion_id>/return')
