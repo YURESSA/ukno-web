@@ -59,7 +59,7 @@ class Config:
     S3_KEY_PREFIX = os.getenv("S3_KEY_PREFIX", "ukno").strip('/')
     S3_PUBLIC_BASE_URL = os.getenv("S3_PUBLIC_BASE_URL", "").rstrip('/')
     S3_PRESIGNED_URL_EXPIRES = int(os.getenv("S3_PRESIGNED_URL_EXPIRES", "3600"))
-    ALLOWED_EXTENSIONS = os.getenv("ALLOWED_EXTENSIONS", "png,jpg,jpeg,gif").split(',')
+    ALLOWED_EXTENSIONS = os.getenv("ALLOWED_EXTENSIONS", "png,jpg,jpeg,gif,webp").split(',')
     MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", 50 * 1024 * 1024))
     MAX_FORM_MEMORY_SIZE = int(os.getenv("MAX_FORM_MEMORY_SIZE", 5 * 1024 * 1024))
     MAX_FORM_PARTS = int(os.getenv("MAX_FORM_PARTS", 200))

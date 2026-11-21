@@ -68,17 +68,10 @@
         <span>Нажимая кнопку „Зарегистрироваться“, вы соглашаетесь с
           <span class="text-orange">
             <a
-              :href="baseUrl+requisites[0].file"
+              :href="personalDataUrl"
               class="text-orange"
-              target="blank"
-              v-if="personalDataFile">
-                обработкой персональных данных
-              </a>
-            <a
-              href="https://ukno.ru/wp-content/uploads/2024/10/politika_v_otnoshenii_obrabotki_personalnyh_dannyh_ukno.pdf"
-              class="text-orange"
-              target="blank"
-              v-else>
+              target="_blank"
+              rel="noopener noreferrer">
                 обработкой персональных данных
             </a>
           </span>
@@ -91,21 +84,19 @@
 
 <script setup>
 import { getApiErrorMessage } from '@/utils/apiError'
+import { findRequiredRequisite, PERSONAL_DATA_REQUISITE } from '@/utils/requiredRequisites'
 import { ref, onMounted, computed } from 'vue';
 import DefaultButton from '@/components/ui/button/DefaultButton.vue';
-import { useDataStore, baseUrl } from '@/stores/counter';
+import { useDataStore, resolveMediaUrl } from '@/stores/counter';
 import router from '@/router';
 import { notification } from '@/utils/notification'
 
 const store = useDataStore();
 const showErrors = ref(false);
-const requisites = computed(() => store.getRequisites);
-
-const personalDataFile = computed(() => {
-  if (Array.isArray(requisites.value)) {
-    return requisites.value.find(item => item.title === "Обработка персональных данных");
-  }
-  return null;
+const defaultPersonalDataUrl = 'https://ukno.ru/wp-content/uploads/2024/10/politika_v_otnoshenii_obrabotki_personalnyh_dannyh_ukno.pdf';
+const personalDataUrl = computed(() => {
+  const document = findRequiredRequisite(store.getRequisites, PERSONAL_DATA_REQUISITE);
+  return resolveMediaUrl(document?.file) || defaultPersonalDataUrl;
 });
 
 onMounted(() => {

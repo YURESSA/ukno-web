@@ -24,11 +24,11 @@
     >
       <n-form ref="formRef" :model="selectedItem" label-placement="top">
         <n-grid :cols="2" :x-gap="20">
-          <n-form-item-gi span="2" label="Полное имя (ФИО)" v-bind="fieldProps(selectedItem, 'user', 'full_name', 'selectedItem.full_name', isEdit)">
+          <n-form-item-gi span="2" label="Полное имя (ФИО)" v-bind="fieldProps(selectedItem, 'user', 'full_name', isEdit)">
             <n-input v-model:value="selectedItem.full_name" placeholder="Иванов Иван Иванович" />
           </n-form-item-gi>
 
-          <n-form-item-gi label="Электронная почта" v-bind="fieldProps(selectedItem, 'user', 'email', 'selectedItem.email', isEdit)">
+          <n-form-item-gi label="Электронная почта" v-bind="fieldProps(selectedItem, 'user', 'email', isEdit)">
             <n-input
               v-model:value="selectedItem.email"
               placeholder="example@mail.com"
@@ -36,15 +36,15 @@
             />
           </n-form-item-gi>
 
-          <n-form-item-gi label="Номер телефона" v-bind="fieldProps(selectedItem, 'user', 'phone', 'selectedItem.phone', isEdit)">
+          <n-form-item-gi label="Номер телефона" v-bind="fieldProps(selectedItem, 'user', 'phone', isEdit)">
             <n-input v-model:value="selectedItem.phone" :allow-input="allowPhoneInput" :maxlength="32" :input-props="{ inputmode: 'tel', autocomplete: 'tel' }" placeholder="+7 (999) 000-00-00" />
           </n-form-item-gi>
 
-          <n-form-item-gi label="Роль в системе" v-bind="fieldProps(selectedItem, 'user', 'role', 'selectedItem.role', isEdit)">
+          <n-form-item-gi label="Роль в системе" v-bind="fieldProps(selectedItem, 'user', 'role', isEdit)">
             <n-select v-model:value="selectedItem.role" :options="roleOptions" />
           </n-form-item-gi>
 
-          <n-form-item-gi label="Пароль" v-bind="fieldProps(selectedItem, 'user', 'password', 'selectedItem.password', isEdit)">
+          <n-form-item-gi label="Пароль" v-bind="fieldProps(selectedItem, 'user', 'password', isEdit)">
             <n-input
               v-model:value="selectedItem.password"
               type="password"
@@ -85,7 +85,7 @@
 
 <script setup>
 import { useAdminValidation } from '@/composables/useAdminValidation'
-import { validateAdmin, allowPhoneInput } from '@/utils/adminValidation'
+import { allowPhoneInput } from '@/utils/adminValidation'
 import { getApiErrorMessage } from '@/utils/apiError'
 import { ref, computed, inject, watch, onMounted, h } from 'vue';
 import { useDataStore } from '@/stores/counter';
@@ -95,7 +95,7 @@ import {
 } from 'naive-ui';
 import BaseButton from '@/components/ui/button/BaseButton.vue';
 
-const { submitted, fieldProps, resetValidation } = useAdminValidation();
+const { fieldProps, submitValidation, resetValidation, applyApiErrors } = useAdminValidation();
 
 const store = useDataStore();
 const users = computed(() => store.getUsers);
@@ -183,15 +183,13 @@ watch(addTrigger, () => {
 
 async function handleSave() {
   if (loading.value) return;
-  submitted.value = true;
-  const validationError = validateAdmin(selectedItem.value, 'user', isEdit.value);
-  if (validationError) return message.error(validationError);
+  if (submitValidation(selectedItem.value, 'user', isEdit.value).length) return;
   const payload = {
     full_name: selectedItem.value.full_name,
-    email: selectedItem.value.email,
     phone: selectedItem.value.phone,
     role_name: selectedItem.value.role,
   };
+  if (!isEdit.value) payload.email = selectedItem.value.email;
 
   if (selectedItem.value.password) {
     payload.password = selectedItem.value.password;
@@ -209,7 +207,8 @@ async function handleSave() {
     showModal.value = false;
     await store.FetchUsers();
   } catch (e) {
-    message.error(getApiErrorMessage(e, 'Ошибка при сохранении'));
+    const { message: feedback } = applyApiErrors(e, selectedItem.value, 'Ошибка при сохранении', { role_name: 'role' });
+    if (feedback) message.error(feedback);
   } finally {
     loading.value = false;
   }

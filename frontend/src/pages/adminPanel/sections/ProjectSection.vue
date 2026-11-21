@@ -18,15 +18,15 @@
       :title="isEditMode ? 'Редактировать проект' : 'Новый проект'"
     >
       <n-form>
-        <n-form-item label="Название проекта" v-bind="fieldProps(model, 'project', 'title', 'model.title', false)">
+        <n-form-item label="Название проекта" v-bind="fieldProps(model, 'project', 'title')">
           <n-input v-model:value="model.title" placeholder="Например: Молодёжное бюро" />
         </n-form-item>
 
-        <n-form-item label="Ссылка" v-bind="fieldProps(model, 'project', 'link', 'model.link', false)">
+        <n-form-item label="Ссылка" v-bind="fieldProps(model, 'project', 'link')">
           <n-input v-model:value="model.link" placeholder="https://example.com" />
         </n-form-item>
 
-        <n-form-item label="Порядок вывода" v-bind="fieldProps(model, 'project', 'order_index', 'model.order_index', false)">
+        <n-form-item label="Порядок вывода" v-bind="fieldProps(model, 'project', 'order_index')">
           <n-input-number v-model:value="model.order_index" :precision="0" :min="0" style="width: 100%" />
         </n-form-item>
       </n-form>
@@ -47,7 +47,6 @@
 
 <script setup>
 import { useAdminValidation } from '@/composables/useAdminValidation'
-import { validateAdmin } from '@/utils/adminValidation'
 import { getApiErrorMessage } from '@/utils/apiError'
 import { ref, onMounted, h, inject, watch, computed } from 'vue'
 import { useDataStore } from '@/stores/counter'
@@ -56,7 +55,7 @@ import {
   NModal, NForm, NFormItem, NInput, NInputNumber
 } from 'naive-ui'
 
-const { submitted, fieldProps, resetValidation } = useAdminValidation();
+const { fieldProps, submitValidation, resetValidation, applyApiErrors } = useAdminValidation();
 
 const store = useDataStore()
 const message = useMessage()
@@ -117,12 +116,7 @@ const openEditModal = (row) => {
 
 const handleSave = async () => {
   if (loading.value || submitLoading.value) return;
-  submitted.value = true;
-  const validationError = validateAdmin(model.value, 'project', false);
-  if (validationError) return message.error(validationError);
-  if (!model.value.title || !model.value.link) {
-    return message.error('Заполните название и ссылку')
-  }
+  if (submitValidation(model.value, 'project').length) return;
 
   const payload = {
     title: model.value.title,
@@ -143,7 +137,8 @@ const handleSave = async () => {
     await store.FetchProject()
   } catch (e) {
     console.error(e)
-    message.error(getApiErrorMessage(e, 'Ошибка при сохранении'))
+    const { message: feedback } = applyApiErrors(e, model.value, 'Ошибка при сохранении');
+    if (feedback) message.error(feedback);
   } finally {
     submitLoading.value = false
   }

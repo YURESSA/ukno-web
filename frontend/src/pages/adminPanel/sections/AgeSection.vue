@@ -22,7 +22,7 @@
       :segmented="{ content: 'soft', footer: 'soft' }"
     >
       <n-form ref="formRef" :model="selectedItem" label-placement="top">
-        <n-form-item label="Название возрастной категории" v-bind="fieldProps(selectedItem, 'age', 'age_category_name', 'selectedItem.age_category_name', false)">
+        <n-form-item label="Название возрастной категории" v-bind="fieldProps(selectedItem, 'age', 'age_category_name')">
           <n-input v-model:value="selectedItem.age_category_name" placeholder="Например: Для детей (0-6 лет)" />
         </n-form-item>
       </n-form>
@@ -46,14 +46,13 @@
 
 <script setup>
 import { useAdminValidation } from '@/composables/useAdminValidation'
-import { validateAdmin } from '@/utils/adminValidation'
 import { getApiErrorMessage } from '@/utils/apiError'
 import { ref, computed, inject, watch, onMounted, h } from 'vue';
 import { useDataStore } from '@/stores/counter';
 import { NDataTable, NModal, NForm, NFormItem, NInput, NButton, NSpace, useMessage, useDialog } from 'naive-ui';
 import BaseButton from '@/components/ui/button/BaseButton.vue';
 
-const { submitted, fieldProps, resetValidation } = useAdminValidation();
+const { fieldProps, submitValidation, resetValidation, applyApiErrors } = useAdminValidation();
 
 const store = useDataStore();
 const age = computed(() => store.getAge);
@@ -97,13 +96,7 @@ watch(addTrigger, () => {
 
 async function handleSave() {
   if (loading.value) return;
-  submitted.value = true;
-  const validationError = validateAdmin(selectedItem.value, 'age', false);
-  if (validationError) return message.error(validationError);
-  if (!selectedItem.value.age_category_name.trim()) {
-    message.error('Введите название возрастной категории');
-    return;
-  }
+  if (submitValidation(selectedItem.value, 'age').length) return;
 
   try {
     loading.value = true;
@@ -112,7 +105,8 @@ async function handleSave() {
     showModal.value = false;
     await store.FetchAge();
   } catch (e) {
-    message.error(getApiErrorMessage(e, 'Ошибка при создании'));
+    const { message: feedback } = applyApiErrors(e, selectedItem.value, 'Ошибка при создании', { name: 'age_category_name' });
+    if (feedback) message.error(feedback);
   } finally {
     loading.value = false;
   }

@@ -154,7 +154,7 @@ async function logOut(){
   }
   .orange {
     background-color: #F25C03;
-ection: column;
+    /* section: column; */
   }
   .exit--btn{
     font-size: 16px;

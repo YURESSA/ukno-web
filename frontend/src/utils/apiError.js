@@ -21,7 +21,8 @@ const fieldLabels = {
 
 function details(value) {
   if (typeof value === 'string') {
-    if (/is not of type|is a required property|does not match|is too (short|long)|is less than|is greater than|not valid under/i.test(value)) return 'Проверьте значение поля'
+    if (/is a required property|missing required parameter/i.test(value)) return 'Заполните поле'
+    if (/is not of type|does not match|is too (short|long)|is less than|is greater than|not valid under/i.test(value)) return 'Проверьте значение поля'
     return value.trim()
   }
   if (Array.isArray(value)) return value.map(details).filter(Boolean).join('; ')
@@ -29,6 +30,10 @@ function details(value) {
     return Object.entries(value).map(([key, item]) => `${fieldLabels[key] || 'Поле формы'}: ${details(item)}`).join('; ')
   }
   return ''
+}
+
+export function getApiFieldMessage(value) {
+  return details(value)
 }
 
 export function getApiErrorMessage(error, fallback = 'Не удалось выполнить запрос.') {

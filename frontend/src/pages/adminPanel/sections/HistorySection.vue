@@ -18,11 +18,11 @@
       :title="isEditMode ? 'Редактировать событие' : 'Добавить событие'"
     >
       <n-form>
-        <n-form-item label="Заголовок события" v-bind="fieldProps(model, 'history', 'title', 'model.title', false)">
+        <n-form-item label="Заголовок события" v-bind="fieldProps(model, 'history', 'title')">
           <n-input v-model:value="model.title" placeholder="Например: Основание компании" />
         </n-form-item>
 
-        <n-form-item label="Дата события" v-bind="fieldProps(model, 'history', 'date', 'model.date', false)">
+        <n-form-item label="Дата события" v-bind="fieldProps(model, 'history', 'date')">
           <n-date-picker
             v-model:value="model.date"
             type="date"
@@ -31,7 +31,7 @@
           />
         </n-form-item>
 
-        <n-form-item label="Описание" v-bind="fieldProps(model, 'history', 'description', 'model.description', false)">
+        <n-form-item label="Описание" v-bind="fieldProps(model, 'history', 'description')">
           <n-input
             v-model:value="model.description"
             type="textarea"
@@ -40,7 +40,7 @@
           />
         </n-form-item>
 
-        <n-form-item label="Ссылка (опционально)" v-bind="fieldProps(model, 'history', 'link', 'model.link', false)">
+        <n-form-item label="Ссылка (опционально)" v-bind="fieldProps(model, 'history', 'link')">
           <n-input v-model:value="model.link" placeholder="https://..." />
         </n-form-item>
       </n-form>
@@ -61,7 +61,6 @@
 
 <script setup>
 import { useAdminValidation } from '@/composables/useAdminValidation'
-import { validateAdmin } from '@/utils/adminValidation'
 import { getApiErrorMessage } from '@/utils/apiError'
 import { ref, onMounted, h, inject, watch, computed } from 'vue'
 import { useDataStore } from '@/stores/counter'
@@ -71,7 +70,7 @@ import {
 } from 'naive-ui'
 import { format, parseISO } from 'date-fns'
 
-const { submitted, fieldProps, resetValidation } = useAdminValidation();
+const { fieldProps, submitValidation, resetValidation, applyApiErrors } = useAdminValidation();
 
 const store = useDataStore()
 const message = useMessage()
@@ -134,12 +133,7 @@ const openEditModal = (row) => {
 
 const handleSave = async () => {
   if (loading.value || submitLoading.value) return;
-  submitted.value = true;
-  const validationError = validateAdmin(model.value, 'history', false);
-  if (validationError) return message.error(validationError);
-  if (!model.value.title || !model.value.date || !model.value.description) {
-    return message.error('Заполните название, дату и описание')
-  }
+  if (submitValidation(model.value, 'history').length) return;
 
   const formattedDate = format(model.value.date, 'yyyy-MM-dd')
 
@@ -162,7 +156,8 @@ const handleSave = async () => {
     showModal.value = false
     await store.FetchHistory()
   } catch (e) {
-    message.error(getApiErrorMessage(e, 'Ошибка при сохранении'))
+    const { message: feedback } = applyApiErrors(e, model.value, 'Ошибка при сохранении');
+    if (feedback) message.error(feedback);
   } finally {
     submitLoading.value = false
   }

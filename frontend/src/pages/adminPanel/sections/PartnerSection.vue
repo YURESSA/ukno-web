@@ -13,20 +13,21 @@
     <n-modal v-model:show="showModal" preset="card" style="width: 550px"
              :title="isEditMode ? 'Редактировать партнёра' : 'Добавить партнёра'">
       <n-form>
-        <n-form-item label="Название организации" v-bind="fieldProps(model, 'partner', 'name', 'model.name', false)">
+        <n-form-item label="Название организации" v-bind="fieldProps(model, 'partner', 'name')">
           <n-input v-model:value="model.name" placeholder="Введите название..." />
         </n-form-item>
 
-        <n-form-item label="Ссылка на сайт" v-bind="fieldProps(model, 'partner', 'link', 'model.link', false)">
+        <n-form-item label="Ссылка на сайт" v-bind="fieldProps(model, 'partner', 'link')">
           <n-input v-model:value="model.link" placeholder="https://partner-site.com" />
         </n-form-item>
 
-        <n-form-item label="Порядок отображения" v-bind="fieldProps(model, 'partner', 'order_index', 'model.order_index', false)">
+        <n-form-item label="Порядок отображения" v-bind="fieldProps(model, 'partner', 'order_index')">
           <n-input-number v-model:value="model.order_index" :precision="0" :min="0" style="width: 100%" />
         </n-form-item>
 
         <n-form-item label="Логотип">
           <n-upload
+            :default-upload="false"
             v-model:file-list="fileList"
             list-type="image-card"
             :max="1"
@@ -55,7 +56,6 @@
 
 <script setup>
 import { useAdminValidation } from '@/composables/useAdminValidation'
-import { validateAdmin } from '@/utils/adminValidation'
 import { getApiErrorMessage } from '@/utils/apiError'
 import { ref, onMounted, h, inject, watch, computed } from 'vue'
 import { useDataStore, baseUrl } from '@/stores/counter'
@@ -64,7 +64,7 @@ import {
   NModal, NForm, NFormItem, NInput, NUpload, NImage, useDialog, NInputNumber
 } from 'naive-ui'
 
-const { submitted, fieldProps, resetValidation } = useAdminValidation();
+const { fieldProps, submitValidation, resetValidation, applyApiErrors } = useAdminValidation();
 
 const store = useDataStore()
 const message = useMessage()
@@ -190,10 +190,7 @@ const handleRemove = (options) => {
 
 const handleSave = async () => {
   if (loading.value || submitLoading.value) return;
-  submitted.value = true;
-  const validationError = validateAdmin(model.value, 'partner', false);
-  if (validationError) return message.error(validationError);
-  if (!model.value.name) return message.error('Введите название партнера')
+  if (submitValidation(model.value, 'partner').length) return;
 
   try {
     submitLoading.value = true
@@ -227,7 +224,8 @@ const handleSave = async () => {
     showModal.value = false
     await store.FetchPartners()
   } catch (e) {
-    message.error(getApiErrorMessage(e, 'Ошибка при сохранении'))
+    const { message: feedback } = applyApiErrors(e, model.value, 'Ошибка при сохранении');
+    if (feedback) message.error(feedback);
   } finally {
     submitLoading.value = false
   }

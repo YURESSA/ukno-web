@@ -198,7 +198,7 @@ def update_event(event_id: int, data: dict, *, resident_edit: bool = False,
     if not event:
         return None, {"message": "Экскурсия не найдена"}, HTTPStatus.NOT_FOUND
 
-    if approve and event.moderation_status != 'pending':
+    if approve and not event.can_be_approved:
         return None, {"message": "Событие не ожидает модерации"}, HTTPStatus.CONFLICT
 
     allowed_fields = [
