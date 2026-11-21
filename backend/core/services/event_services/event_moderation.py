@@ -18,6 +18,8 @@ def change_moderation_status(event_id, target, comment=None):
     if target == 'returned':
         if not isinstance(comment, str) or not comment.strip():
             return {"message": "Укажите комментарий для возврата"}, HTTPStatus.BAD_REQUEST
+        if not event.is_resident_owned:
+            return {"message": "На доработку можно вернуть только событие резидента"}, HTTPStatus.CONFLICT
         if event.moderation_status not in ('pending', 'approved'):
             return {"message": "Событие уже возвращено на доработку"}, HTTPStatus.CONFLICT
         event.moderation_comment = comment.strip()

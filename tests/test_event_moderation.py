@@ -1,5 +1,6 @@
 import json
 import importlib.util
+from base64 import b64decode
 from io import BytesIO
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -8,8 +9,8 @@ import pytest
 
 from tests import test_security_regressions
 from tests.test_security_regressions import add_user, add_session, auth_header
-from backend.core import db
-from backend.core.models.auth_models import RoleEnum
+from backend.core import Config, db
+from backend.core.models.auth_models import RoleEnum, User
 from backend.core.models.event_models import Event, Reservation
 from backend.core.services.event_services import event_photo_service
 
@@ -140,6 +141,52 @@ def test_admin_edits_do_not_publish_until_approval(context):
     response = client.post(url + '/approve', headers=headers['admin'])
     assert response.status_code == 200, response.json
     assert event.event_id in visible_ids(client)
+
+
+def test_admin_event_cannot_be_returned_and_can_be_recovered(context):
+    client, event, _, headers = context
+    event.creator = User.query.filter_by(email='admin@example.com').one()
+    db.session.commit()
+    url = f'/api/admin/excursions/{event.event_id}'
+    admin_headers = headers['admin']
+    listing = client.get('/api/admin/excursions', headers=admin_headers)
+    assert listing.json['excursions'][0]['can_return'] is False
+
+    response = client.post(url + '/return', json={'comment': 'Return'}, headers=admin_headers)
+    assert response.status_code == 409, response.json
+    assert event.event_id in visible_ids(client)
+
+    event.moderation_status = 'returned'
+    event.moderation_comment = 'Previously returned'
+    db.session.commit()
+    assert event.event_id not in visible_ids(client)
+    details = client.get(url, headers=admin_headers).json['excursion']
+    assert details['can_approve'] is True
+
+    response = client.post(url + '/approve', headers=admin_headers)
+    assert response.status_code == 200, response.json
+    assert response.json['excursion']['moderation_status'] == 'approved'
+    assert response.json['excursion']['moderation_comment'] is None
+    assert event.event_id in visible_ids(client)
+
+
+def test_admin_uploads_webp_photo(context, tmp_path, monkeypatch):
+    client, event, _, headers = context
+    monkeypatch.setattr(Config, 'PROJECT_ROOT', str(tmp_path))
+    monkeypatch.setattr(Config, 'UPLOAD_FOLDER', 'media/uploads')
+    url = f'/api/admin/excursions/{event.event_id}/photos'
+    webp = b64decode('UklGRh4AAABXRUJQVlA4TBEAAAAvAAAAAAfQ//73v/+BiOh/AAA=')
+
+    response = client.post(url, headers=headers['admin'],
+                           data={'photo': (BytesIO(webp), 'photo.webp', 'image/webp')})
+    assert response.status_code == 200, response.json
+    path = response.json['photos'][0]['photo_url']
+    assert path.endswith('.webp')
+    assert (tmp_path / path).read_bytes() == webp
+
+    response = client.post(url, headers=headers['admin'],
+                           data={'photo': (BytesIO(b'not an image'), 'fake.webp', 'image/webp')})
+    assert response.status_code == 400, response.json
 
 
 def test_migration_preserves_existing_events_and_can_be_reversed():

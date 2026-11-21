@@ -554,7 +554,7 @@ Swagger описывает схемы и статусы; этот файл до�
 | `update_event` | `400` | `Категория '{data['category']}' не найдена` | `Если not category` |
 | `update_event` | `400` | `Формат '{data['format_type']}' не найден` | `Если not format_type` |
 | `update_event` | `404` | `Экскурсия не найдена` | `Если not event` |
-| `update_event` | `409` | `Событие не ожидает модерации` | `Если approve and event.moderation_status != 'pending'` |
+| `update_event` | `409` | `Событие не ожидает модерации` | `Если approve and (not event.can_be_approved)` |
 | `update_event` | `500` | `Ошибка при обновлении экскурсии: {str(e)}` | `Перехвачено Exception` |
 | `verify_resident_owns_event` | `403` | `У вас нет доступа к этой экскурсии` | `Если event.created_by != resident_id` |
 | `verify_resident_owns_event` | `404` | `Экскурсия не найдена` | `Если not event` |
@@ -565,6 +565,7 @@ Swagger описывает схемы и статусы; этот файл до�
 |---|---|---|---|
 | `change_moderation_status` | `400` | `Укажите комментарий для возврата` | `Если not isinstance(comment, str) or not comment.strip()` |
 | `change_moderation_status` | `404` | `Экскурсия не найдена` | `Если event is None` |
+| `change_moderation_status` | `409` | `На доработку можно вернуть только событие резидента` | `Если not event.is_resident_owned` |
 | `change_moderation_status` | `409` | `Повторно отправить можно только возвращённое событие` | `Если event.moderation_status != 'returned'` |
 | `change_moderation_status` | `409` | `Событие уже возвращено на доработку` | `Если event.moderation_status not in ('pending', 'approved')` |
 | `change_moderation_status` | `исключение` | `Unsupported moderation status` | `Иначе для target == 'pending'` |
