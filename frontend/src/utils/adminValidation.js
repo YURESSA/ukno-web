@@ -86,7 +86,7 @@ const requiredValues = {
   residentEvent: ['duration'],
   session: ['start_datetime', 'max_participants', 'cost'],
   history: ['date'],
-  product: ['price', 'stock', 'colors', 'images'],
+  product: ['category_id', 'price', 'stock', 'colors', 'images'],
   color: ['name'],
   size: ['size_name', 'stock'],
   banner: ['image'],
@@ -257,6 +257,9 @@ export function getAdminFieldError(model, kind, key, isEdit = false) {
     }
   }
   if (kind === 'product') {
+    if (key === 'category_id' && (!Number.isInteger(value) || value < 1)) {
+      return 'Выберите категорию товара'
+    }
     if (key === 'price' && !isNonNegativeNumber(value)) {
       return 'Укажите неотрицательную цену товара'
     }

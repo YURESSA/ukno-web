@@ -57,7 +57,7 @@ def create_news_with_images(user_email: str, data_str: str, image_files: List[Fi
         short_description=short_description,
         author_id=user.user_id,
         photo_author=photo_author,
-        created_at=created_at
+        created_at=created_at.replace(second=0, microsecond=0)
     )
     db.session.add(news)
     db.session.flush()
@@ -81,10 +81,14 @@ def get_all_news() -> List[Dict]:
     """
     Получает все новости в порядке убывания даты создания.
 
-    :return: Список словарей с новостями
+    :return: Список словарей с новостями и статусом публикации
     """
+    now = datetime.now()
     news_list = News.query.order_by(News.created_at.desc()).all()
-    return [n.to_dict() for n in news_list]
+    return [
+        {**news.to_dict(), "is_published": news.created_at <= now}
+        for news in news_list
+    ]
 
 
 def get_news_by_id(news_id: int) -> Optional[News]:
@@ -124,7 +128,7 @@ def update_news(news_id: int, form_data: dict, files: Optional[dict] = None) -> 
     if created_at:
         try:
             created_at = datetime.fromisoformat(created_at)
-            news.created_at = created_at
+            news.created_at = created_at.replace(second=0, microsecond=0)
         except ValueError:
             raise ValidationError("Неверный формат даты")
     else:

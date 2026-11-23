@@ -979,7 +979,9 @@ export const useDataStore = defineStore('data', {
       }
     },
     async DeleteCulturalSpace(id) {
-      return await axios.delete(`${baseUrl}api/references/cultural-space/${id}`)
+      return await axios.delete(`${baseUrl}api/references/cultural-space/${id}`, {
+        headers: { Authorization: `Bearer ${this.auth_key}` },
+      })
     },
     async FetchProject() {
       try {

@@ -15,6 +15,7 @@ from backend.core.models.merch_models import (
     MerchOrder,
     MerchProduct,
     MerchProductColor,
+    MerchProductImage,
     MerchProductVariant,
     MerchSize,
 )
@@ -127,6 +128,7 @@ def test_last_merch_item_cannot_be_sold_twice(postgres_app):
         category = MerchCategory(name="Race merch", slug="race-merch")
         size = MerchSize(name="Race size")
         product = MerchProduct(category=category, name="Last item", price=Decimal("100.00"))
+        product.images.append(MerchProductImage(image_path="media/uploads/merch/race-item.jpg", order_index=0))
         color = MerchProductColor(product=product, name="Black")
         variant = MerchProductVariant(product=product, size=size, color=color, stock=1)
         db.session.add_all([category, size, product, color, variant])
