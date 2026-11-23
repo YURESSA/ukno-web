@@ -18,24 +18,10 @@
         <li><RouterLink :to="{ path: '/ukno'}" replace >О нас</RouterLink></li>
       </ul>
       <div class="profile">
-        <RouterLink to="/login" v-if="hasToken">
+        <RouterLink :to="profilePath" :aria-label="profileLinkLabel">
           <button>
-            <img src="/icon/header/profile-fill.svg" alt="">
-          </button>
-        </RouterLink>
-        <RouterLink to="/profile" v-else-if="!hasToken && role === 'user'">
-          <button>
-            <h4>{{ (profileData?.full_name?.trim()?.[0] || '…').toUpperCase() }}</h4>
-          </button>
-        </RouterLink>
-        <RouterLink to="/resident-profile" v-else-if="!hasToken && role === 'resident'">
-          <button>
-            <h4>{{ (profileData?.full_name?.trim()?.[0] || '…').toUpperCase() }}</h4>
-          </button>
-        </RouterLink>
-        <RouterLink to="/admin-profile" v-else-if="!hasToken && role === 'admin'">
-          <button>
-            <h4>{{ (profileData?.full_name?.trim()?.[0] || '…').toUpperCase() }}</h4>
+            <h4 v-if="profileInitial">{{ profileInitial }}</h4>
+            <img v-else src="/icon/header/profile-fill.svg" alt="">
           </button>
         </RouterLink>
       </div>
@@ -55,24 +41,11 @@
           </RouterLink>
         </div>
         <div class="mobile-profile">
-          <RouterLink to="/login" v-if="hasToken">
+          <RouterLink :to="profilePath" :aria-label="profileLinkLabel">
             <button>
-              <img src="/icon/header/profile-fill.svg" alt="">
-            </button>
-          </RouterLink>
-          <RouterLink to="/profile" v-else-if="!hasToken && role === 'user'">
-            <button>
-              <span>{{ (profileData?.full_name?.trim()?.[0] || '…').toUpperCase() }}</span>
-            </button>
-          </RouterLink>
-          <RouterLink to="/resident-profile" v-else-if="!hasToken && role === 'resident'">
-            <button>
-              <span>{{ (profileData?.full_name?.trim()?.[0] || '…').toUpperCase() }}</span>
-            </button>
-          </RouterLink>
-          <RouterLink to="/admin-profile" v-else-if="!hasToken && role === 'admin'">
-            <button>
-              <h4>{{ (profileData?.full_name?.trim()?.[0] || '…').toUpperCase() }}</h4>
+              <h4 v-if="profileInitial && store.role === 'admin'">{{ profileInitial }}</h4>
+              <span v-else-if="profileInitial">{{ profileInitial }}</span>
+              <img v-else src="/icon/header/profile-fill.svg" alt="">
             </button>
           </RouterLink>
         </div>
@@ -110,8 +83,10 @@
 <script setup>
 import { ref, computed, watch, onUnmounted, onMounted } from 'vue';
 import { useDataStore } from '@/stores/counter';
+import { useRoute } from 'vue-router';
 
 const store = useDataStore();
+const route = useRoute();
 const menuOpen = ref(false)
 const showProjects = ref(false);
 const projects = computed(() => store.getProject)
@@ -131,6 +106,9 @@ watch(menuOpen, (open) => {
 });
 
 onMounted(async () => {
+  if (store.auth_key && !route.meta.requiredRole && !store.getProfileData?.full_name) {
+    store.GetProfile().catch(() => {})
+  }
   await store.FetchProject();
 });
 
@@ -145,15 +123,17 @@ const toggleProjects = () => {
   showProjects.value = !showProjects.value;
 };
 
-const hasToken = computed(() => {
-  return !store.auth_key;
+const profilePath = computed(() => {
+  if (!store.auth_key) return '/login'
+  if (store.role === 'admin') return '/admin-profile'
+  if (store.role === 'resident') return '/resident-profile'
+  return '/profile'
 });
 
-const role = computed(() => {
-  return store.role;
-});
-
-const profileData = computed(() => store.getProfileData)
+const profileLinkLabel = computed(() => store.auth_key ? 'Личный кабинет' : 'Войти');
+const profileInitial = computed(() => (
+  store.auth_key ? store.getProfileData?.full_name?.trim()[0]?.toUpperCase() : ''
+));
 </script>
 
 <style scoped>

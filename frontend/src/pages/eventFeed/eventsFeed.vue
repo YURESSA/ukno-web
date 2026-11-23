@@ -8,7 +8,6 @@
           placeholder="Найти событие"
           round
           clearable
-          @keydown.enter="sendSearch"
           class="search"
         >
           <template #prefix>
@@ -25,7 +24,7 @@
               ]"
               title="По названию"
               name="sort-by-name"
-              @update:modelValue="handleTitleSortChange"
+              @update:modelValue="sendSort"
             />
             <DropDown
               v-model="sortByPrice"
@@ -35,7 +34,7 @@
               ]"
               title="По цене"
               name="sort-by-price"
-              @update:modelValue="handleTitleSortChange"
+              @update:modelValue="sendSort"
             />
           </div>
           <div class="sorting-mobile">
@@ -61,6 +60,8 @@
     </div>
     <Filter
     :class="{ 'filter-open': isFilterOpen }"
+    @apply="applyFilters"
+    @reset="applyFilters('', false)"
     @close="closeAll"/>
     <!-- <Sorting
     :class="{ 'sorting-open': isSortingOpen }"
@@ -131,7 +132,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue';
 import { NInput, NIcon } from 'naive-ui';
 import { SearchOutline } from "@vicons/ionicons5";
 import IconButton from '@/components/ui/button/IconButton.vue';
@@ -139,7 +140,6 @@ import DropDown from '@/components/ui/dropDown/dropDown.vue';
 import BaseButton from '@/components/ui/button/BaseButton.vue';
 import EventCard from './components/event-card.vue';
 import Filter from './components/filter.vue';
-import Sorting from './components/sorting.vue';
 import { useDataStore } from '@/stores/counter';
 import DropMenu from '@/components/shared/dropMenu.vue';
 
@@ -151,16 +151,27 @@ const sortByPrice = ref('');
 const isFilterOpen = ref(false);
 const isSortingOpen = ref(false);
 // const { excursions } = storeToRefs(store);
-const excursions = computed(() => store.getExcursions )
+const excursions = computed(() => store.getExcursions);
 
+let appliedFilters = '';
+let appliedSort = '';
+let searchTimer = null;
+let activeRequest = null;
 
+onMounted(loadExcursions);
 
-onMounted(async () => {
-  try {
-    await store.FetchExcursions();
-  } catch (error) {
-    console.error('Ошибка при загрузке экскурсий:', error);
-  }
+watch(searchQuery, () => {
+  clearTimeout(searchTimer);
+  activeRequest?.abort();
+  searchTimer = setTimeout(() => {
+    searchTimer = null;
+    loadExcursions();
+  }, 500);
+});
+
+onBeforeUnmount(() => {
+  clearTimeout(searchTimer);
+  activeRequest?.abort();
 });
 
 function openFilter() {
@@ -183,43 +194,42 @@ function closeAll(){
   isSortingOpen.value = false;
 }
 
-const handleTitleSortChange = (value) => {
-  sendSort();
-};
-
-const sendSort = async () => {
-  const params = new URLSearchParams();
-  const sortValues = [];
-
-  if (sortByPrice.value) {
-    sortValues.push(sortByPrice.value);
-  }
-
-  if (sortByTitle.value) {
-    sortValues.push(sortByTitle.value);
-  }
-
-  if (sortValues.length > 0) {
-    params.append('sort', sortValues.join(','));
-  }
-  try {
-    await store.GetFilterExcursions(params.toString());
-    document.body.classList.remove('body-no-scroll');
-    isFilterOpen.value = false;
-    isSortingOpen.value = false;
-  } catch (error) {
-    console.error('Ошибка при загрузке экскурсий:', error);
-  }
+function sendSort() {
+  appliedSort = [sortByPrice.value, sortByTitle.value].filter(Boolean).join(',');
+  refreshExcursions();
 }
 
-const sendSearch = async () => {
-  const params = new URLSearchParams();
-  params.append('title', searchQuery.value);
-  const queryString = params.toString();
+function applyFilters(query, closePanel = true) {
+  appliedFilters = query;
+  refreshExcursions(closePanel);
+}
+
+async function refreshExcursions(closePanel = true) {
+  // Если поиск уже ждёт debounce, его запрос учтёт новые фильтры и сортировку.
+  const updated = searchTimer !== null || await loadExcursions();
+  if (updated && closePanel) closeAll();
+}
+
+async function loadExcursions() {
+  activeRequest?.abort();
+  const controller = new AbortController();
+  activeRequest = controller;
+
+  const params = new URLSearchParams(appliedFilters);
+  const title = searchQuery.value.trim();
+  if (title) params.set('title', title);
+  if (appliedSort) params.set('sort', appliedSort);
+
   try {
-    await store.GetFilterExcursions(queryString);
+    await store.FetchExcursions(params, controller.signal);
+    return !controller.signal.aborted;
   } catch (error) {
-    console.error('Ошибка при загрузке экскурсий:', error);
+    if (!controller.signal.aborted && error.code !== 'ERR_CANCELED') {
+      console.error('Ошибка при загрузке экскурсий:', error);
+    }
+    return false;
+  } finally {
+    if (activeRequest === controller) activeRequest = null;
   }
 }
 </script>

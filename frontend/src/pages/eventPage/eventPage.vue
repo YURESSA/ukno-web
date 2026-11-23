@@ -1,5 +1,5 @@
 <template>
-  <div class="page-wrapper" :class="previewEvent ? 'preview-mode' : 'page--margin'" v-if="load">
+  <div class="page-wrapper" :class="previewEvent ? 'preview-mode' : 'page--margin'" v-if="excursion">
     <div class="asterick"></div>
 
     <div class="event-wrapper" v-if="!$isMobile()">
@@ -287,32 +287,39 @@
     </div>
   </div>
 
-  <div v-else class="loading">
-    <Loading/>
-     <!-- <h3>Загрузка...</h3> -->
+  <NotFoundPage
+    v-else-if="notFound"
+    description="Событие не найдено"
+    action-label="К списку событий"
+    to="/events"
+  />
+  <div v-else-if="error" class="event-details-error">
+    <p role="alert">{{ error }}</p>
+    <BaseButton text="Повторить" @click="retry" />
   </div>
+  <LoadingAnimation v-else />
 </template>
 
 <script setup>
-import { onMounted, computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useDataStore } from '@/stores/counter';
 import { resolveMediaUrl } from '@/stores/counter';
 import IconButton from '@/components/ui/button/IconButton.vue';
 import Contact from '../../components/shared/contact-block.vue';
-import Loading from '@/components/shared/loading-animation.vue';
+import NotFoundPage from '@/components/shared/NotFoundPage.vue';
+import LoadingAnimation from '@/components/shared/loading-animation.vue';
+import BaseButton from '@/components/ui/button/BaseButton.vue';
+import { useEventDetails } from '@/composables/useEventDetails';
 import MapView from '@/components/shared/MapView.vue';
-import { notification } from '@/utils/notification'
 import DOMPurify from 'dompurify';
 
 const props = defineProps({ previewEvent: { type: Object, default: null } });
-const store = useDataStore();
 const route = useRoute();
 const router = useRouter();
-const load = ref(!!props.previewEvent);
 const descriptOpen = ref(false);
 
-const excursion = computed(() => props.previewEvent || store.getExcursionDetail);
+const { event, notFound, error, retry } = useEventDetails(() => route.params.id, () => !props.previewEvent);
+const excursion = computed(() => props.previewEvent || event.value);
 const safeExcursion = computed(() => DOMPurify.sanitize(excursion.value.description));
 
 const selectedSessionId = ref(null);
@@ -345,21 +352,8 @@ const src = computed(() => {
   }
 });
 
-onMounted(async () => {
-  if (props.previewEvent) return;
-  document.body.style.overflow = 'hidden'
-  try {
-    await store.FetchExcursionDetail(route.params.id);
-    setTimeout(() => {
-      load.value = true
-      document.body.style.overflow = 'auto'
-      const first = excursion.value.sessions?.find(s => s.available > 0);
-      selectedSession.value = first ?? excursion.value.sessions?.[0] ?? null;
-    }, 1000)
-  } catch (error) {
-    console.error('Ошибка при загрузке экскурсий:', error);
-    await notification('Произошла ошибка, попробуйте ещё раз', 'negative');
-  }
+watch(event, (data) => {
+  selectedSession.value = data?.sessions?.find(s => s.available > 0) ?? data?.sessions?.[0] ?? null;
 });
 
 const moveToBooked = () => {
@@ -435,6 +429,16 @@ const EventFormat = computed(() => {
 
 
 <style scoped>
+.event-details-error {
+  display: grid;
+  min-height: 100vh;
+  padding: 100px 16px 32px;
+  gap: 16px;
+  align-content: center;
+  justify-items: center;
+  text-align: center;
+}
+
 .page-wrapper.preview-mode { padding-top: 16px; margin-top: 0; }
 .preview-mode :deep(h2) { font-size: clamp(28px, 4vw, 52px); line-height: 1.2; }
 .preview-mode :deep(h3) { font-size: clamp(22px, 3vw, 32px); line-height: 1.3; }
@@ -461,10 +465,6 @@ span > a{
   font-size: 16px;
   font-weight: 400;
   color: #525252;
-}
-
-.loading{
-  overflow: hidden;
 }
 
 .event-wrapper{

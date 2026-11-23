@@ -90,8 +90,15 @@
             />
           </n-form-item-gi>
 
-          <!-- Цвета -->
-          <n-form-item-gi span="2" label="Цвета и размеры">
+          <n-form-item-gi span="2" :show-label="false">
+            <n-checkbox v-model:checked="productForm.withSizeChart">Нужна размерная сетка</n-checkbox>
+          </n-form-item-gi>
+          <n-form-item-gi v-if="!productForm.withSizeChart" span="2" label="Количество в наличии" required
+            v-bind="fieldProps(productForm, 'product', 'stock', isEdit)">
+            <n-input-number v-model:value="productForm.stock" :precision="0" :min="0" style="width:100%" />
+          </n-form-item-gi>
+          <n-form-item-gi v-else span="2" label="Цвета и размеры" required
+            v-bind="fieldProps(productForm, 'product', 'colors', isEdit)">
             <div class="colors-list">
               <div v-for="(color, ci) in productForm.colors" :key="rowKey(color)" class="color-block">
                 <div class="color-block__header">
@@ -114,14 +121,14 @@
           </n-form-item-gi>
 
           <!-- Фото -->
-          <n-form-item-gi span="2" label="Фотографии">
+          <n-form-item-gi span="2" label="Фотографии" required
+            v-bind="fieldProps(productForm, 'product', 'images', isEdit)">
             <n-upload
+              v-model:file-list="productForm.images"
               :default-upload="false"
+              accept="image/*"
               multiple
               list-type="image-card"
-              :default-file-list="productFileList"
-              @change="handleProductUploadChange"
-              @remove="handleProductRemove"
             >
               <n-upload-dragger>
                 <n-icon size="28">+</n-icon>
@@ -271,7 +278,7 @@
             <div class="item-info">
               <div class="item-name">{{ item.product_name }}</div>
               <div class="item-meta">
-                Размер: {{ item.size_name }}<span v-if="item.color_name">, цвет: {{ item.color_name }}</span>
+                <span v-if="item.size_name">Размер: {{ item.size_name }}</span><span v-if="item.color_name">{{ item.size_name ? ', цвет' : 'Цвет' }}: {{ item.color_name }}</span>
               </div>
             </div>
             <div class="item-price-col">
@@ -312,12 +319,12 @@ import { ref, computed, inject, watch, onMounted, onUnmounted, h } from 'vue';
 import axios from 'axios';
 import {
   NTabs, NTabPane, NDataTable, NModal, NForm, NFormItem, NFormItemGi, NGrid,
-  NInput, NInputNumber, NSelect, NSwitch, NColorPicker,
+  NInput, NInputNumber, NSelect, NSwitch, NCheckbox, NColorPicker,
   NButton, NSpace, NAvatar, NUpload, NUploadDragger, NIcon, NTag,
   NDescriptions, NDescriptionsItem, NDivider,
   useMessage, useDialog
 } from 'naive-ui';
-import { useDataStore, baseUrl } from '@/stores/counter';
+import { useDataStore, baseUrl, resolveMediaUrl } from '@/stores/counter';
 
 const { fieldProps, submitValidation, resetValidation, applyApiErrors, rowKey } = useAdminValidation();
 
@@ -335,8 +342,7 @@ const authHeaders = computed(() => ({ Authorization: `Bearer ${store.auth_key}` 
 const products = ref([]);
 const showProductModal = ref(false);
 const isEdit = ref(false);
-const productFileList = ref([]);
-const newProductFiles = ref([]);
+const savedProductImages = ref([]);
 
 const productForm = ref(emptyProduct());
 
@@ -349,7 +355,10 @@ function emptyProduct() {
     category_id: null,
     collection: '',
     is_active: true,
+    withSizeChart: false,
+    stock: 0,
     colors: [],
+    images: [],
   };
 }
 
@@ -413,6 +422,8 @@ async function openEditProduct(row) {
       category_id: data.category?.category_id || null,
       collection: data.collection || '',
       is_active: data.is_active ?? true,
+      withSizeChart: !data.simple_variant && Boolean(data.colors?.length),
+      stock: data.simple_variant?.stock ?? data.available ?? 0,
       colors: (data.colors || []).map(c => ({
         color_id: c.color_id,
         name: c.name,
@@ -425,13 +436,13 @@ async function openEditProduct(row) {
         })),
       })),
     };
-    productFileList.value = (data.images || []).map((img, i) => ({
-      id: `old-${img.image_id}`,
+    savedProductImages.value = (data.images || []).map((img, i) => ({
+      id: String(img.image_id),
       name: `Фото ${i + 1}`,
       status: 'finished',
-      url: baseUrl + img.image_path,
+      url: resolveMediaUrl(img.image_path),
     }));
-    newProductFiles.value = [];
+    productForm.value.images = [...savedProductImages.value];
     showProductModal.value = true;
   } catch (e) {
     message.error(getApiErrorMessage(e, 'Ошибка загрузки данных товара'));
@@ -444,46 +455,16 @@ async function openEditProduct(row) {
 function openCreateProduct() {
   isEdit.value = false;
   productForm.value = emptyProduct();
-  productFileList.value = [];
-  newProductFiles.value = [];
+  savedProductImages.value = [];
   showProductModal.value = true;
 }
 
-function addColor() { productForm.value.colors.push({ name: '', hex_code: '#000000', sizes: [] }); }
+function addColor() {
+  productForm.value.colors.push({ name: '', hex_code: '#000000', sizes: [{ size_name: '', stock: 0, is_active: true }] });
+}
 function removeColor(i) { productForm.value.colors.splice(i, 1); }
 function addSize(ci) { productForm.value.colors[ci].sizes.push({ size_name: '', stock: 0, is_active: true }); }
 function removeSize(ci, si) { productForm.value.colors[ci].sizes.splice(si, 1); }
-
-function handleProductUploadChange({ fileList }) {
-  productFileList.value = fileList;
-  newProductFiles.value = fileList.filter(f => f.file).map(f => f.file);
-}
-
-async function handleProductRemove({ file }) {
-  if (!file.id.toString().startsWith('old-')) {
-    newProductFiles.value = newProductFiles.value.filter(f => f.name !== file.name);
-    return true;
-  }
-  return new Promise(resolve => {
-    dialog.warning({
-      title: 'Удалить фото?',
-      positiveText: 'Удалить',
-      negativeText: 'Отмена',
-      onPositiveClick: async () => {
-        const imageId = parseInt(file.id.replace('old-', ''));
-        try {
-          await axios.delete(
-            `${baseUrl}api/admin/merch/products/${productForm.value.product_id}/images/${imageId}`,
-            { headers: authHeaders.value }
-          );
-          message.success('Фото удалено');
-          resolve(true);
-        } catch (e) { message.error(getApiErrorMessage(e, 'Ошибка удаления фото')); resolve(false); }
-      },
-      onNegativeClick: () => resolve(false),
-    });
-  });
-}
 
 async function saveProduct() {
   if (loading.value) return;
@@ -498,10 +479,16 @@ async function saveProduct() {
       category_id: productForm.value.category_id,
       collection: productForm.value.collection,
       is_active: productForm.value.is_active,
-      colors: productForm.value.colors,
+      stock: productForm.value.withSizeChart ? null : productForm.value.stock,
+      colors: productForm.value.withSizeChart ? productForm.value.colors : [],
+      remove_image_ids: savedProductImages.value
+        .filter(saved => !productForm.value.images.some(image => image.id === saved.id))
+        .map(image => Number(image.id)),
     };
     fd.append('data', JSON.stringify(payload));
-    newProductFiles.value.forEach(f => fd.append('images', f.file || f));
+    for (const image of productForm.value.images) {
+      if (image.file) fd.append('images', image.file);
+    }
 
     if (isEdit.value) {
       await axios.put(

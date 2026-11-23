@@ -33,7 +33,7 @@
   </div>
   <div class="history-wrapper" id="history">
     <div class="container" v-if="news && news.length > 0">
-      <div class="img-block">
+      <div class="img-block" v-if="news[0].images && news[0].images.length > 0">
         <img :src="imageUrl" alt="">
       </div>
       <div class="content-block">

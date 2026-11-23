@@ -679,8 +679,11 @@ onUnmounted(() => {
 }
 
 .event-title {
-  min-width: max-content;
   width: 100%;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: break-word;
+  text-wrap: balance;
 }
 
 .timeline-element-right > .event-info {
@@ -935,8 +938,9 @@ onUnmounted(() => {
   }
 
   .date {
-    padding: 10px;
-    padding-right: 38px;
+    text-align: center;
+    width: 180px;
+    padding: 10px 0px;
     font-size: 16px;
   }
   .event-info {
@@ -947,8 +951,14 @@ onUnmounted(() => {
     padding: 10px;
     padding-bottom: 24px;
     top: 42px!important;
-    left: 49px!important;
+    left: 10px!important;
   }
+
+  .event-title {
+    min-width: 100%;
+    width: 100%;
+  }
+
   .event-info > .text-l {
     font-size: 16px;
     font-weight: 600;

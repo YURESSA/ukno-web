@@ -299,7 +299,8 @@
           <!-- Actions -->
           <div class="product-actions">
             <!-- Add / Qty -->
-            <div v-if="selectedVariant && selectedVariant.stock > 0" class="unified-add-btn">
+            <button v-if="!allImages.length" class="product-add-btn" disabled>Недоступно для заказа</button>
+            <div v-else-if="selectedVariant && selectedVariant.stock > 0" class="unified-add-btn">
               <template v-if="cartItem">
                 <div class="quantity-selector">
                   <button class="qty-btn" @click="updateCartQty(cartItem.quantity - 1)" :disabled="isUpdatingCart">−</button>
@@ -314,7 +315,7 @@
               </template>
             </div>
             <button v-else class="product-add-btn" disabled>
-              {{ selectedVariant ? 'Нет в наличии' : 'Выберите размер' }}
+              {{ shopStore.productDetail.available === 0 || selectedVariant ? 'Нет в наличии' : 'Выберите размер' }}
             </button>
 
             <!-- Favorite -->
@@ -413,6 +414,7 @@ onMounted(async () => {
   if (p) {
     const firstColor = p.colors?.find(c => c.available > 0) || p.colors?.[0]
     if (firstColor) selectColor(firstColor)
+    else selectedVariant.value = p.simple_variant ?? null
     activeIdx.value = 0
   }
 })

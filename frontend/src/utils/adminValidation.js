@@ -86,7 +86,7 @@ const requiredValues = {
   residentEvent: ['duration'],
   session: ['start_datetime', 'max_participants', 'cost'],
   history: ['date'],
-  product: ['price'],
+  product: ['price', 'stock', 'colors', 'images'],
   color: ['name'],
   size: ['size_name', 'stock'],
   banner: ['image'],
@@ -114,7 +114,7 @@ export function getAdminIssues(model, kind, isEdit = false) {
     }
   }
   const nested = nestedFields[kind]
-  if (nested) {
+  if (nested && (kind !== 'product' || model.withSizeChart)) {
     const [key, childKind] = nested
     const children = model[key] || []
     children.forEach((child, index) => {
@@ -256,8 +256,19 @@ export function getAdminFieldError(model, kind, key, isEdit = false) {
       return 'Укажите неотрицательную стоимость сеанса'
     }
   }
-  if (kind === 'product' && key === 'price' && !isNonNegativeNumber(value)) {
-    return 'Укажите неотрицательную цену товара'
+  if (kind === 'product') {
+    if (key === 'price' && !isNonNegativeNumber(value)) {
+      return 'Укажите неотрицательную цену товара'
+    }
+    if (key === 'stock' && !model.withSizeChart && (!Number.isInteger(value) || value < 0)) {
+      return 'Укажите целое неотрицательное количество товара'
+    }
+    if (key === 'colors' && model.withSizeChart && !value?.some(color => color.sizes?.length)) {
+      return 'Добавьте хотя бы один цвет с размером'
+    }
+    if (key === 'images' && !value?.length) {
+      return 'Добавьте хотя бы одну фотографию товара'
+    }
   }
   if (
     kind === 'merchCategory' &&

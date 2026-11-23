@@ -4,6 +4,9 @@ from decimal import Decimal
 from backend.core import db
 
 
+UNSIZED_MERCH_SIZE = "__ukno_no_size__"
+
+
 class MerchBanner(db.Model):
     __tablename__ = "merch_banners"
 
@@ -135,15 +138,20 @@ class MerchProduct(db.Model):
 
     def to_detail_dict(self, is_favorite=False):
         data = self.to_list_dict(is_favorite=is_favorite)
+        simple_variant = self.simple_variant()
         data.update(
             {
                 "description": self.description,
                 "images": [image.to_dict() for image in self.sorted_images()],
-                "colors": self.color_options(),
+                "colors": [] if simple_variant else self.color_options(),
+                "simple_variant": simple_variant.to_dict() if simple_variant else None,
                 "created_at": self.created_at.isoformat(),
             }
         )
         return data
+
+    def simple_variant(self):
+        return next((variant for variant in self.variants if variant.is_simple and variant.is_active), None)
 
     def color_options(self):
         options = []
@@ -228,11 +236,15 @@ class MerchProductVariant(db.Model):
     size = db.relationship("MerchSize", back_populates="variants")
     color = db.relationship("MerchProductColor", back_populates="variants")
 
+    @property
+    def is_simple(self):
+        return self.color_id is None and self.size is not None and self.size.name == UNSIZED_MERCH_SIZE
+
     def to_dict(self):
         return {
             "variant_id": self.variant_id,
             "product_id": self.product_id,
-            "size": self.size.to_dict() if self.size else None,
+            "size": self.size.to_dict() if self.size and not self.is_simple else None,
             "color": self.color.to_dict() if self.color else None,
             "stock": self.stock,
             "is_active": self.is_active,
@@ -293,7 +305,7 @@ class MerchCartItem(db.Model):
             "available": self.variant.stock if self.variant else 0,
             "subtotal": str(self.subtotal()),
             "product": product.to_list_dict(is_favorite=is_favorite) if product else None,
-            "size": self.variant.size.to_dict() if self.variant and self.variant.size else None,
+            "size": self.variant.size.to_dict() if self.variant and self.variant.size and not self.variant.is_simple else None,
             "color": self.variant.color.to_dict() if self.variant and self.variant.color else None,
         }
 

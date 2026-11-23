@@ -1,209 +1,165 @@
 <template>
-  <div class="modal" @click.stop>
-    <form @submit.prevent="handleSubmit" autocomplete="off">
-      <div class="header-form">
-        <h4>Сменить пароль</h4>
-        <IconButton @click="$emit('close')" class="close_btn"><img src="/icon/maki_cross.svg" alt=""></IconButton>
-      </div>
-      <input
-        type="password"
-        name="password"
-        placeholder="Старый пароль *"
-        v-model="formData.old_password"
-        required
-        autocomplete="new-password"
-        @input="clearError('password')"
-        minlength="5"
-      >
-      <input
-        type="password"
-        name="password"
-        placeholder="Новый пароль *"
-        v-model="formData.new_password"
-        required
-        autocomplete="new-password"
-        @input="clearError('password')"
-        minlength="5"
-      >
-      <span class="error-message" v-if="showErrors && errors.password">{{ errors.password }}</span>
-      <input
-        type="password"
-        name="passwordConfirmation"
-        placeholder="Повторите пароль *"
-        v-model="passwordConfirmation"
-        required
-        autocomplete="new-password"
-        @input="clearError('passwordConfirmation')"
-      >
-      <span class="error-message" v-if="showErrors && errors.passwordConfirmation">{{ errors.passwordConfirmation }}</span>
-      <div class="button-wrapper">
-        <BaseButton text="Сохранить" />
-        <DefaultButton class="reset-button" text="Сбросить" @click="resetForm" type="button" />
+  <n-modal
+    :show="true"
+    preset="card"
+    title="Сменить пароль"
+    style="width: min(520px, calc(100% - 32px)); border-radius: 20px"
+    :mask-closable="!saving"
+    :close-on-esc="!saving"
+    :closable="!saving"
+    @update:show="visible => { if (!visible) emit('close') }"
+  >
+    <form class="password-form" novalidate @submit.prevent="handleSubmit" @input="formError = ''">
+      <label>
+        Текущий пароль
+        <input
+          v-model="passwords.old_password"
+          type="password"
+          name="old_password"
+          autocomplete="current-password"
+          :disabled="saving"
+          :aria-invalid="Boolean(showErrors && errors.old_password)"
+          required
+        >
+        <span v-if="showErrors && errors.old_password" class="password-error" role="alert">{{ errors.old_password }}</span>
+      </label>
+      <label>
+        Новый пароль
+        <input
+          v-model="passwords.new_password"
+          type="password"
+          name="new_password"
+          autocomplete="new-password"
+          :disabled="saving"
+          :aria-invalid="Boolean(showErrors && errors.new_password)"
+          minlength="5"
+          required
+        >
+        <span v-if="showErrors && errors.new_password" class="password-error" role="alert">{{ errors.new_password }}</span>
+      </label>
+      <label>
+        Повторите новый пароль
+        <input
+          v-model="confirmation"
+          type="password"
+          name="password_confirmation"
+          autocomplete="new-password"
+          :disabled="saving"
+          :aria-invalid="Boolean(showErrors && errors.confirmation)"
+          required
+        >
+        <span v-if="showErrors && errors.confirmation" class="password-error" role="alert">{{ errors.confirmation }}</span>
+      </label>
+      <p v-if="formError" class="password-error" role="alert">{{ formError }}</p>
+      <div class="password-actions">
+        <BaseButton type="submit" text="Сохранить" :loading="saving" />
+        <DefaultButton type="button" text="Сбросить" :disabled="saving" @click="resetForm" />
       </div>
     </form>
-  </div>
+  </n-modal>
 </template>
 
 <script setup>
+import { computed, reactive, ref } from 'vue'
+import { NModal } from 'naive-ui'
+import BaseButton from '@/components/ui/button/BaseButton.vue'
+import DefaultButton from '@/components/ui/button/DefaultButton.vue'
+import { useDataStore } from '@/stores/counter'
 import { getApiErrorMessage } from '@/utils/apiError'
-import { ref } from 'vue';
-import { useDataStore } from '@/stores/counter';
-import IconButton from '@/components/ui/button/IconButton.vue';
-import BaseButton from '@/components/ui/button/BaseButton.vue';
-import DefaultButton from '@/components/ui/button/DefaultButton.vue';
 import { notification } from '@/utils/notification'
 
-const store = useDataStore();
-const passwordConfirmation = ref('');
-const showErrors = ref(true);
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close'])
+const store = useDataStore()
 
-const props = defineProps({
-  role: String,
-})
+const passwords = reactive({ old_password: '', new_password: '' })
+const confirmation = ref('')
+const showErrors = ref(false)
+const saving = ref(false)
+const formError = ref('')
 
-const formData = ref({
-  old_password: '',
-  new_password: ''
-});
+const errors = computed(() => ({
+  old_password: passwords.old_password ? '' : 'Введите текущий пароль',
+  new_password: passwords.new_password.length < 5 ? 'Введите не менее 5 символов' : '',
+  confirmation: !confirmation.value
+    ? 'Повторите новый пароль'
+    : confirmation.value !== passwords.new_password ? 'Пароли не совпадают' : '',
+}))
 
-const errors = ref({
-  password: '',
-  passwordConfirmation: ''
-});
+async function handleSubmit() {
+  if (saving.value) return
+  showErrors.value = true
+  formError.value = ''
+  if (Object.values(errors.value).some(Boolean)) return
 
-// Валидация пароля
-const validatePassword = () => {
-  if (formData.value.new_password.length < 5) {
-    errors.value.password = 'Пароль должен быть не менее 5 символов';
-  } else {
-    errors.value.password = '';
+  saving.value = true
+  try {
+    await store.PutPassword({ ...passwords })
+    emit('close')
+    notification('Пароль успешно изменён!', 'positive')
+  } catch (error) {
+    formError.value = getApiErrorMessage(error, 'Не удалось изменить пароль. Попробуйте ещё раз.')
+  } finally {
+    saving.value = false
   }
-  validatePasswordConfirmation();
-};
-
-// Проверка совпадения паролей
-const validatePasswordConfirmation = () => {
-  if (formData.value.new_password !== passwordConfirmation.value) {
-    errors.value.passwordConfirmation = 'Пароли не совпадают';
-  } else {
-    errors.value.passwordConfirmation = '';
-  }
-};
-
-const clearError = (field) => {
-  errors.value[field] = '';
-};
-
-const handleSubmit = async () => {
-  showErrors.value = true;
-
-  validatePassword();
-  validatePasswordConfirmation();
-
-  // Проверяем наличие ошибок
-  const hasErrors = Object.values(errors.value).some(error => error !== '');
-
-  if (hasErrors) {
-    return;
-  }
-
-  let url = ''
-
-  switch(props.role) {
-  case 'user':
-    url = '/api/user/profile/password'
-    break;
-
-  case 'resident':
-    url = '/api/resident/profile'
-    break;
-
-  case 'admin':
-    url = '/api/admin/profile'
-    break;
-
-  default:
-    console.warn(`Неизвестная роль: ${props.role}`);
-    break;
 }
 
-  try {
-    await store.PutPassword(JSON.stringify(formData.value), url);
-    await notification('Пароль успешно изменён!', 'positive');
-    emit('close')
-  } catch (error) {
-    notification(getApiErrorMessage(error), 'negative');
-    console.error('Ошибка при смене пароля', error);
-  }
-};
-
-function resetForm(){
-  formData.value.old_password = '';
-  formData.value.new_password = '';
-  passwordConfirmation.value = '';
+function resetForm() {
+  passwords.old_password = ''
+  passwords.new_password = ''
+  confirmation.value = ''
+  formError.value = ''
+  showErrors.value = false
 }
 </script>
 
 <style scoped>
-.header-form{
-  display: flex;
-  justify-content: space-between;
-}
-
-.button-wrapper{
-  display: flex;
-  gap: 20px;
-}
-
-.modal{
-  position: absolute;
-  width: 460px;
-  background-color: #FFFFFF;
-  box-shadow: 0px 4px 12.7px 0px #00000040;
-  border-radius: 14px;
-  padding: 40px 40px 45px 40px;
-  top: 50%;
-  left: 50%;
-  transform: translateY(-50%) translateX(-50%);
-  z-index: 1000;
-}
-
-form {
+.password-form,
+.password-form label {
   display: flex;
   flex-direction: column;
-  gap: 40px;
-  margin-bottom: 30px;
+  gap: 16px;
 }
 
-input {
-  padding: 15px 0;
-  border: none;
-  border-bottom: 1px solid #0000008C;
-  transition: all 0.5s ease;
+.password-form label {
+  gap: 6px;
+  font-size: 16px;
 }
 
-input:focus {
-  outline: none;
-  background-color: #F3F3F3;
-}
-
-.reset-button{
+.password-form input {
+  box-sizing: border-box;
   width: 100%;
-  height: 45;
-  border-radius: 15px;
-  padding: 10px 50px;
-  color: #000000;
-  font-weight: 400;
-  font-size: 20px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #b2b2b2;
+  border-radius: 8px;
+  font: inherit;
 }
 
-.close_btn{
-  width: 23px;
-  height: 23px;
-  padding: 4px;
-  border-radius: 5px;
-  border: none;
-  background-color: #EDEDED8A;
+.password-form input:focus {
+  outline: 2px solid #f25c03;
+  outline-offset: 2px;
+}
+
+.password-form input[aria-invalid='true'] {
+  border-color: #b42318;
+}
+
+.password-error {
+  margin: 0;
+  color: #b42318;
+  font-size: 14px;
+}
+
+.password-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.password-actions button {
+  flex: 1 1 130px;
+  width: auto;
+  height: 45px;
+  padding: 10px 16px;
 }
 </style>

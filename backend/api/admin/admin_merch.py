@@ -94,7 +94,9 @@ PRODUCT_FORM_PARAMS = {
         "type": "string",
         "required": True,
         "description": (
-            "JSON с данными товара, цветами, размерами и остатками. "
+            "JSON с данными товара. Передайте stock целым числом для товара без размерной сетки. "
+            "Для размерной сетки передайте stock: null и варианты. При обновлении "
+            "remove_image_ids содержит ID фотографий, которые нужно убрать. "
             f"Пример: {PRODUCT_DATA_EXAMPLE}"
         ),
     },
@@ -103,7 +105,7 @@ PRODUCT_FORM_PARAMS = {
         "type": "file",
         "required": False,
         "multiple": True,
-        "description": "Файлы фотографий товара.",
+        "description": "Файлы фотографий. После создания или обновления у товара должна остаться хотя бы одна фотография.",
     },
 }
 
@@ -523,7 +525,10 @@ class AdminMerchProductImage(ApiResource):
         return update_product_image(product_id, image_id, data, request.files.get("image"))
 
     @admin_required
-    @admin_ns.doc(description="Удаление фотографии товара мерча")
+    @admin_ns.doc(
+        description="Удаление фотографии товара мерча",
+        responses={200: "Фотография удалена", 400: "У товара должна остаться хотя бы одна фотография"},
+    )
     def delete(self, product_id, image_id):
         """Удаление фотографии товара мерча."""
         return delete_product_image(product_id, image_id)

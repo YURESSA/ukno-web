@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 from decimal import Decimal
 from http import HTTPStatus
@@ -19,6 +20,7 @@ from backend.core.models.merch_models import (
     MerchProductImage,
     MerchProductVariant,
     MerchSize,
+    UNSIZED_MERCH_SIZE,
 )
 from backend.core.services.reservation_service.yookassa_service import create_yookassa_payment
 from backend.core.services.user_services.user_service import get_user_by_email
@@ -26,6 +28,7 @@ from backend.core.utilits.file_utils import remove_file_if_exists, save_image
 
 
 DELIVERY_PICKUP = "pickup"
+logger = logging.getLogger(__name__)
 
 
 def slugify(value):
@@ -254,6 +257,76 @@ def get_product_detail(product_id, user_id=None, active_only=True):
     return product.to_detail_dict(is_favorite=is_favorite)
 
 
+def _remove_product_files(paths):
+    for path in paths:
+        try:
+            remove_file_if_exists(path)
+        except Exception:
+            logger.exception("Failed to remove merch image %s", path)
+
+
+def _append_product_uploads(product, image_files, saved_paths):
+    next_index = max((image.order_index for image in product.images), default=-1) + 1
+    for index, image in enumerate(image_files, start=next_index):
+        path = save_image(image, "merch/products")
+        saved_paths.append(path)
+        product.images.append(MerchProductImage(image_path=path, order_index=index))
+
+
+def _deactivate_product_variants(product, retained):
+    retired_ids = []
+    for variant in product.variants:
+        if variant not in retained and variant.is_active:
+            variant.is_active = False
+            retired_ids.append(variant.variant_id)
+    if retired_ids:
+        MerchCartItem.query.filter(MerchCartItem.variant_id.in_(retired_ids)).delete(synchronize_session=False)
+
+
+def _apply_product_variants(product, data):
+    if data.get("stock") is not None:
+        stock = data["stock"]
+        if type(stock) is not int or stock < 0:
+            raise ValueError("Укажите целое неотрицательное количество товара")
+        if data.get("colors") or data.get("variants"):
+            raise ValueError("Укажите общий остаток или варианты товара")
+
+        simple = next((variant for variant in product.variants if variant.is_simple), None)
+        if simple is None:
+            # Reuse the variant foreign keys used by the cart and past orders.
+            size = MerchSize.query.filter_by(name=UNSIZED_MERCH_SIZE).first()
+            if size is None:
+                try:
+                    with db.session.begin_nested():
+                        size = MerchSize(name=UNSIZED_MERCH_SIZE, is_active=False)
+                        db.session.add(size)
+                except IntegrityError:
+                    size = MerchSize.query.filter_by(name=UNSIZED_MERCH_SIZE).one()
+            simple = MerchProductVariant(product=product, size=size)
+            db.session.add(simple)
+        _deactivate_product_variants(product, {simple})
+        simple.is_active = True
+        simple.stock = stock
+        return
+
+    if product.simple_variant() is not None and "stock" not in data:
+        if data.get("colors") or data.get("variants"):
+            raise ValueError("Сначала включите размерную сетку товара")
+        return
+
+    if "colors" in data:
+        _sync_colors(product, data["colors"], remove_missing=False)
+    if "colors" in data or "variants" in data:
+        variants = _collect_variants(product, data)
+        if "stock" in data and not variants:
+            raise ValueError("Добавьте хотя бы один цвет с размером")
+        updated = {_upsert_product_variant(product, item) for item in variants}
+        if "stock" in data:
+            _deactivate_product_variants(product, updated)
+    elif "stock" in data:
+        raise ValueError("Добавьте хотя бы один цвет с размером")
+
+
 def create_product(data, image_files=None):
     required = ("category_id", "name", "price")
     missing = [field for field in required if data.get(field) in (None, "")]
@@ -263,6 +336,11 @@ def create_product(data, image_files=None):
     if not category:
         return {"message": "Category not found"}, HTTPStatus.NOT_FOUND
 
+    image_files = image_files or []
+    images = [image for image in data.get("images", []) if image.get("image_path")]
+    if not image_files and not images:
+        return {"message": "Добавьте хотя бы одну фотографию товара"}, HTTPStatus.BAD_REQUEST
+
     product = MerchProduct(
         category_id=data["category_id"],
         name=data["name"],
@@ -271,37 +349,40 @@ def create_product(data, image_files=None):
         collection=data.get("collection"),
         is_active=_bool_value(data.get("is_active"), True),
     )
-    db.session.add(product)
-    db.session.flush()
-
-    for index, image_file in enumerate(image_files or []):
-        product.images.append(
-            MerchProductImage(image_path=save_image(image_file, "merch/products"), order_index=index)
-        )
-    for image in data.get("images", []):
-        if not image.get("image_path"):
-            continue
-        product.images.append(
-            MerchProductImage(
-                image_path=image.get("image_path"),
-                order_index=_int_value(image.get("order_index"), len(product.images)),
-            )
-        )
-    _sync_colors(product, data.get("colors", []))
-    _sync_variants(product, _collect_variants(product, data))
-
+    saved_paths = []
     try:
+        db.session.add(product)
+        db.session.flush()
+        _apply_product_variants(product, data)
+        _append_product_uploads(product, image_files, saved_paths)
+        for image in images:
+            product.images.append(MerchProductImage(
+                image_path=image["image_path"],
+                order_index=_int_value(image.get("order_index"), len(product.images)),
+            ))
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
+        _remove_product_files(saved_paths)
         return {"message": "Product data conflicts with existing records"}, HTTPStatus.BAD_REQUEST
+    except Exception:
+        db.session.rollback()
+        _remove_product_files(saved_paths)
+        raise
     return {"product": product.to_detail_dict()}, HTTPStatus.CREATED
 
 
 def update_product(product_id, data, image_files=None):
-    product = db.session.get(MerchProduct, product_id)
+    product = db.session.get(MerchProduct, product_id, with_for_update=True)
     if not product or product.is_deleted:
         return {"message": "Product not found"}, HTTPStatus.NOT_FOUND
+
+    remove_ids = data.get("remove_image_ids", [])
+    if not isinstance(remove_ids, list) or any(type(image_id) is not int for image_id in remove_ids):
+        return {"message": "Некорректный список фотографий для удаления"}, HTTPStatus.BAD_REQUEST
+    images_to_remove = [image for image in product.images if image.image_id in remove_ids]
+    if not image_files and len(images_to_remove) == len(product.images):
+        return {"message": "Добавьте хотя бы одну фотографию товара"}, HTTPStatus.BAD_REQUEST
 
     if "category_id" in data:
         category = db.session.get(MerchCategory, data["category_id"])
@@ -316,32 +397,33 @@ def update_product(product_id, data, image_files=None):
     if "is_active" in data:
         product.is_active = _bool_value(data.get("is_active"), True)
 
-    if image_files:
-        start_index = len(product.images)
-        for offset, image_file in enumerate(image_files):
-            product.images.append(
-                MerchProductImage(
-                    image_path=save_image(image_file, "merch/products"),
-                    order_index=start_index + offset,
-                )
-            )
-    if "colors" in data:
-        _sync_colors(product, data.get("colors", []), remove_missing=False)
-    if "colors" in data or "variants" in data:
-        _sync_variants(product, _collect_variants(product, data))
-
+    saved_paths = []
+    removed_paths = [image.image_path for image in images_to_remove]
     try:
+        _apply_product_variants(product, data)
+        _append_product_uploads(product, image_files or [], saved_paths)
+        for image in images_to_remove:
+            product.images.remove(image)
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
+        _remove_product_files(saved_paths)
         return {"message": "Product data conflicts with existing records"}, HTTPStatus.BAD_REQUEST
+    except Exception:
+        db.session.rollback()
+        _remove_product_files(saved_paths)
+        raise
+    retained_paths = {image.image_path for image in product.images}
+    _remove_product_files(path for path in removed_paths if path not in retained_paths)
     return {"product": product.to_detail_dict()}, HTTPStatus.OK
 
 
 def add_product_color(product_id, data):
-    product = db.session.get(MerchProduct, product_id)
+    product = db.session.get(MerchProduct, product_id, with_for_update=True)
     if not product or product.is_deleted:
         return {"message": "Product not found"}, HTTPStatus.NOT_FOUND
+    if product.simple_variant() is not None:
+        return {"message": "Сначала включите размерную сетку товара"}, HTTPStatus.BAD_REQUEST
     if not data.get("name"):
         return {"message": "Color name is required"}, HTTPStatus.BAD_REQUEST
 
@@ -369,10 +451,12 @@ def add_product_color(product_id, data):
 
 
 def add_product_color_size(product_id, color_id, data):
-    product = db.session.get(MerchProduct, product_id)
+    product = db.session.get(MerchProduct, product_id, with_for_update=True)
     if not product or product.is_deleted:
         return {"message": "Product not found"}, HTTPStatus.NOT_FOUND
 
+    if product.simple_variant() is not None:
+        return {"message": "Сначала включите размерную сетку товара"}, HTTPStatus.BAD_REQUEST
     color = _find_product_color(product, color_id=color_id)
     if not color:
         return {"message": "Color not found"}, HTTPStatus.NOT_FOUND
@@ -404,12 +488,18 @@ def delete_product(product_id):
 
 
 def delete_product_image(product_id, image_id):
-    image = MerchProductImage.query.filter_by(product_id=product_id, image_id=image_id).first()
-    if not image or not image.product or image.product.is_deleted:
+    product = db.session.get(MerchProduct, product_id, with_for_update=True)
+    image = next((image for image in product.images if image.image_id == image_id), None) if product else None
+    if not image or product.is_deleted:
         return {"message": "Image not found"}, HTTPStatus.NOT_FOUND
-    remove_file_if_exists(image.image_path)
-    db.session.delete(image)
+    if len(product.images) == 1:
+        return {"message": "У товара должна остаться хотя бы одна фотография"}, HTTPStatus.BAD_REQUEST
+    product.images.remove(image)
+    path = image.image_path
+    path_is_retained = any(other.image_path == path for other in product.images)
     db.session.commit()
+    if not path_is_retained:
+        _remove_product_files([path])
     return {"message": "Image deleted"}, HTTPStatus.OK
 
 
@@ -445,17 +535,27 @@ def add_product_images(product_id, image_files, order_indexes=None):
 
 
 def update_product_image(product_id, image_id, data, image_file=None):
-    image = MerchProductImage.query.filter_by(product_id=product_id, image_id=image_id).first()
-    if not image or not image.product or image.product.is_deleted:
+    product = db.session.get(MerchProduct, product_id, with_for_update=True)
+    image = next((image for image in product.images if image.image_id == image_id), None) if product else None
+    if not image or product.is_deleted:
         return {"message": "Image not found"}, HTTPStatus.NOT_FOUND
 
-    if "order_index" in data:
-        image.order_index = _int_value(data.get("order_index"))
-    if image_file:
-        remove_file_if_exists(image.image_path)
-        image.image_path = save_image(image_file, "merch/products")
-
-    db.session.commit()
+    old_path = image.image_path
+    new_path = None
+    try:
+        if "order_index" in data:
+            image.order_index = _int_value(data.get("order_index"))
+        if image_file:
+            new_path = save_image(image_file, "merch/products")
+            image.image_path = new_path
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        if new_path:
+            _remove_product_files([new_path])
+        raise
+    if new_path and all(other.image_path != old_path for other in product.images):
+        _remove_product_files([old_path])
     return {"image": image.to_dict()}, HTTPStatus.OK
 
 
@@ -486,16 +586,13 @@ def _sync_colors(product, colors, remove_missing=True):
     db.session.flush()
 
 
-def _sync_variants(product, variants):
-    for item in variants:
-        _upsert_product_variant(product, item)
-
-
 def _upsert_product_variant(product, item):
     variant_id = item.get("variant_id")
     variant = db.session.get(MerchProductVariant, variant_id) if variant_id else None
     if variant and variant.product_id != product.product_id:
         raise ValueError("Variant belongs to another product")
+    if variant and variant.is_simple:
+        raise ValueError("Укажите общий остаток для товара без размерной сетки")
     size_id = _resolve_variant_size(item, variant)
     color_id = _resolve_variant_color(product, item)
     if color_id:
@@ -512,7 +609,7 @@ def _upsert_product_variant(product, item):
         ).first()
     is_new = variant is None
     if not variant:
-        variant = MerchProductVariant(product_id=product.product_id)
+        variant = MerchProductVariant(product=product)
         db.session.add(variant)
     variant.size_id = size_id
     variant.color_id = color_id
@@ -561,7 +658,9 @@ def _find_product_color(product, color_id=None, color_name=None):
 def _resolve_variant_size(item, variant=None):
     size_name = str(item.get("size_name") or "").strip()
     if size_name:
-        size = MerchSize.query.filter(MerchSize.name.ilike(size_name)).first()
+        if size_name.lower() == UNSIZED_MERCH_SIZE:
+            raise ValueError("Укажите название размера")
+        size = MerchSize.query.filter(func.lower(MerchSize.name) == size_name.lower()).first()
         if size:
             return size.size_id
 
@@ -574,7 +673,7 @@ def _resolve_variant_size(item, variant=None):
     size_id = item.get("size_id")
     if size_id:
         size = db.session.get(MerchSize, size_id)
-        if not size:
+        if not size or size.name == UNSIZED_MERCH_SIZE:
             raise ValueError("Valid size_id is required for each variant")
         return size.size_id
 
@@ -640,6 +739,14 @@ def list_favorites(user_email):
     }, HTTPStatus.OK
 
 
+def _cart_items_with_photos(user_id):
+    return MerchCartItem.query.filter_by(user_id=user_id).filter(
+        MerchCartItem.variant.has(
+            MerchProductVariant.product.has(MerchProduct.images.any(MerchProductImage.image_path != ""))
+        )
+    )
+
+
 def get_cart(user_email):
     user, error = get_current_user(user_email)
     if error:
@@ -654,7 +761,7 @@ def get_cart(user_email):
             .all()
         )
     }
-    items = MerchCartItem.query.filter_by(user_id=user.user_id).all()
+    items = _cart_items_with_photos(user.user_id).all()
     total = sum((item.subtotal() for item in items), Decimal("0"))
     return {
         "items": [
@@ -669,7 +776,7 @@ def upsert_cart_item(user_email, variant_id, quantity):
     user, error = get_current_user(user_email)
     if error:
         return error
-    variant = db.session.get(MerchProductVariant, variant_id)
+    variant = db.session.get(MerchProductVariant, variant_id, with_for_update=True)
     if (
         not variant
         or not variant.product
@@ -678,6 +785,8 @@ def upsert_cart_item(user_email, variant_id, quantity):
         or not variant.product.is_active
     ):
         return {"message": "Variant not found"}, HTTPStatus.NOT_FOUND
+    if not any(image.image_path for image in variant.product.images):
+        return {"message": "Товар без фотографии недоступен для заказа"}, HTTPStatus.BAD_REQUEST
     quantity = _int_value(quantity, 1)
     if quantity < 1:
         return {"message": "quantity must be greater than zero"}, HTTPStatus.BAD_REQUEST
@@ -727,8 +836,7 @@ def create_order(user_email, data):
     # Lock the cart and every affected stock row. Concurrent checkout requests
     # then serialize instead of both validating against the same stock value.
     cart_items = (
-        MerchCartItem.query
-        .filter_by(user_id=user.user_id)
+        _cart_items_with_photos(user.user_id)
         .order_by(MerchCartItem.cart_item_id)
         .with_for_update()
         .all()
@@ -794,7 +902,7 @@ def create_order(user_email, data):
                 variant_id=variant.variant_id,
                 product_name=product.name,
                 color_name=variant.color.name if variant.color else None,
-                size_name=variant.size.name,
+                size_name="" if variant.is_simple else variant.size.name,
                 unit_price=unit_price,
                 quantity=item.quantity,
                 total_price=unit_price * item.quantity,

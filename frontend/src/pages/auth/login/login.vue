@@ -95,10 +95,13 @@ const handleSubmit = async () => {
     await notification('Вход выполнен успешно!', 'positive');
     const previousRoute = router.options.history.state.back;
 
-    if (previousRoute && previousRoute !== '/register' && previousRoute !== '/login') {
+    const canReturn = typeof previousRoute === 'string' && previousRoute &&
+      !router.resolve(previousRoute).matched.some(record => record.name === 'LoginLayout')
+
+    if (canReturn) {
       router.back();
     } else {
-      router.push('/');
+      await router.replace({ name: 'MainPage' });
     }
 
   } catch (error) {

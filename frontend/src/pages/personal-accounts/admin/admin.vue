@@ -6,16 +6,12 @@
       <Userdata
         :email="profileData.email"
         :phone="profileData.phone"
-        @open="openChange"/>
+        @open="openPasswordModal = true"/>
       <BaseButton @click="router.push('/panel')" class="profie__btn orange" text="Панель управления" />
       <DefaultButton @click="logOut" class="profie__btn" text="Выйти"/>
     </div>
   </div>
-  <DropMenu
-    :class="{ 'drop-open': isOpen }"
-    @close="closeAll">
-    <ChangePassword @close="closeChange" :role="profileData.role" v-if="openPasswordModal"/>
-  </DropMenu>
+  <ChangePassword v-if="openPasswordModal" @close="openPasswordModal = false"/>
   <EventsModal @close="closeEvents" v-if="openEventsModal"/>
 </template>
 
@@ -27,7 +23,6 @@ import Username from '../_shared/username.vue';
 import Userdata from '../_shared/userdata.vue';
 import DefaultButton from '@/components/ui/button/DefaultButton.vue';
 import BaseButton from '@/components/ui/button/BaseButton.vue';
-import DropMenu from '@/components/shared/dropMenu.vue';
 import { onMounted, computed, ref } from 'vue';
 import { useDataStore } from '@/stores/counter';
 import router from '@/router';
@@ -36,18 +31,6 @@ const store = useDataStore();
 const profileData = computed(() => store.profileData);
 const openPasswordModal = ref(false);
 const openEventsModal = ref(false);
-const isOpen = ref(false)
-
-function openChange(){
-  document.body.style.overflowY = 'hidden'
-  openPasswordModal.value = true;
-  isOpen.value = true
-}
-
-function closeChange(){
-  document.body.style.overflowY = 'auto'
-  openPasswordModal.value = false;
-}
 
 function openEvents(){
   document.body.style.overflowY = 'hidden'
@@ -85,10 +68,6 @@ async function logOut(){
   margin: 0 auto;
 }
 
-.drop-open{
-  bottom: 0;
-  opacity: 1;
-}
 
 .user-data-wrapper{
   display: flex;
@@ -97,8 +76,7 @@ async function logOut(){
   align-items: flex-start;
   max-height: max-content;
   padding: 60px 80px;
-  min-width: 660px;
-  max-width: 740px;
+  width: 660px;
   gap: 20px;
 
   border-radius: 26px;

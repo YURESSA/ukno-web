@@ -1,13 +1,15 @@
 <template>
-  <div class="modal" @click.stop>
-    <div class="header-modal">
-      <h4>История записей</h4>
-      <IconButton @click="$emit('close')" class="close_btn">
-        <img src="/icon/maki_cross.svg" alt="Закрыть">
-      </IconButton>
-    </div>
+  <n-modal
+    :show="true"
+    preset="card"
+    title="История записей"
+    style="width: min(880px, calc(100% - 24px)); border-radius: 20px"
+    :trap-focus="!showNotification"
+    :close-on-esc="!showNotification"
+    @update:show="visible => { if (!visible) emit('close') }"
+  >
     <div class="modal-content">
-      <div v-if="events.reservations && events.reservations.length > 0" class="reservations-list">
+      <div v-if="localReservations.length" class="reservations-list">
         <!-- Активные записи -->
         <div v-if="activeReservations.length > 0" class="reservation-group">
           <h4 class="group-title active-title">Активные записи ({{ activeReservations.length }})</h4>
@@ -115,22 +117,27 @@
         <p>У вас пока нет записей на экскурсии.</p>
       </div>
     </div>
-  </div>
+  </n-modal>
 </template>
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import IconButton from '@/components/ui/button/IconButton.vue'
+import { NModal } from 'naive-ui'
+import { useNotification } from '@/composables/useNotification'
 import { useDataStore } from '@/stores/counter'
 import { notification } from '@/utils/notification'
 
 
-const store = useDataStore();
+const store = useDataStore()
+const { showNotification } = useNotification()
 const props = defineProps({
-  events: Object,
+  reservations: {
+    type: Array,
+    default: () => [],
+  },
 })
 
-const emit = defineEmits(['close', 'cancelReservation'])
+const emit = defineEmits(['close'])
 
 const showCancelled = ref(false)
 const showPast = ref(false)
@@ -142,8 +149,8 @@ const isEventPast = (reservation) => {
   return eventDate < now
 }
 
-watch(() => props.events.reservations, (newVal) => {
-  localReservations.value = newVal ? [...newVal] : []
+watch(() => props.reservations, (reservations) => {
+  localReservations.value = [...reservations]
 }, { immediate: true })
 
 const activeReservations = computed(() => {
@@ -254,38 +261,10 @@ const togglePast = () => {
 </script>
 
 <style scoped>
-.modal{
-  position: absolute;
-  width: 800px;
-  background-color: #FFFFFF;
-  box-shadow: 0px 4px 12.7px 0px #00000040;
-  border-radius: 14px;
-  padding: 40px 40px 45px 40px;
-  top: 50%;
-  left: 50%;
-  transform: translateY(-50%) translateX(-50%);
-  z-index: 1000;
-}
-
-.close_btn{
-  width: 23px;
-  height: 23px;
-  padding: 4px;
-  border-radius: 5px;
-  border: none;
-  background-color: #EDEDED8A;
-}
-
-.header-modal{
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
 .modal-content {
-  max-height: 70vh;
+  max-height: min(70vh, calc(100dvh - 112px));
   overflow-y: auto;
-  padding: 20px;
+  overscroll-behavior: contain;
 }
 
 .reservations-list {
@@ -379,6 +358,8 @@ const togglePast = () => {
 
 .reservation-info {
   flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .reservation-header {
@@ -458,7 +439,7 @@ const togglePast = () => {
   font-size: 14px;
   font-weight: 500;
   transition: all 0.2s;
-  white-space: nowrap;
+  justify-content: center;
 }
 
 .cancel-btn:hover {
