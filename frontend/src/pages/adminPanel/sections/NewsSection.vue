@@ -1,12 +1,18 @@
 <template>
   <div class="section-container">
     <div class="filter-panel" style="margin-bottom: 20px;">
-      <n-space justify="space-between">
+      <n-space>
         <n-input
           v-model:value="searchQuery"
           placeholder="Поиск по заголовку, тексту или автору..."
           clearable
           style="width: 400px"
+        />
+        <n-select
+          v-model:value="publicationFilter"
+          :options="publicationOptions"
+          aria-label="Статус публикации"
+          style="width: 180px"
         />
       </n-space>
     </div>
@@ -71,7 +77,9 @@
           <n-form-item-gi label="Дата публикации" v-bind="fieldProps(selectedItem, 'news', 'created_at', isEdit)">
             <n-date-picker
               v-model:formatted-value="selectedItem.created_at"
+              format="yyyy-MM-dd HH:mm"
               value-format="yyyy-MM-dd HH:mm:00"
+              :time-picker-props="{ format: 'HH:mm' }"
               type="datetime"
               style="width: 100%"
               clearable
@@ -103,7 +111,7 @@ import { useDataStore, baseUrl } from '@/stores/counter';
 import {
   NDataTable, NModal, NForm, NFormItemGi, NGrid, NInput,
   NDatePicker, NButton, NSpace, NAvatar, NUpload, NUploadDragger,
-  NIcon, useMessage, useDialog
+  NIcon, NSelect, NTag, useMessage, useDialog
 } from 'naive-ui';
 import BaseButton from '@/components/ui/button/BaseButton.vue';
 import Editor from '@/components/ui/Editor.vue';
@@ -118,6 +126,16 @@ const loading = ref(false);
 const showModal = ref(false);
 const isEdit = ref(false);
 const searchQuery = ref('');
+const publicationFilter = ref('all');
+const publicationLabels = {
+  published: 'Опубликовано',
+  scheduled: 'Ждёт публикации'
+};
+const publicationOptions = [
+  { label: 'Все статусы', value: 'all' },
+  { label: publicationLabels.published, value: 'published' },
+  { label: publicationLabels.scheduled, value: 'scheduled' }
+];
 
 const selectedItem = ref({
   news_id: null,
@@ -158,19 +176,27 @@ const columns = [
     key: 'created_at',
     width: 150,
     render: (row) => row.created_at?.split('T')[0]
+  },
+  {
+    title: 'Статус',
+    key: 'is_published',
+    width: 170,
+    render: (row) => h(NTag, { type: row.is_published ? 'success' : 'warning' }, {
+      default: () => row.is_published ? publicationLabels.published : publicationLabels.scheduled
+    })
   }
 ];
 
 const filteredNews = computed(() => {
   const data = store.getNews?.news || [];
-  if (!searchQuery.value) return data;
-
-  const s = searchQuery.value.toLowerCase();
-  return data.filter(n =>
-    n.title?.toLowerCase().includes(s) ||
-    n.author?.full_name?.toLowerCase().includes(s) ||
-    n.content?.toLowerCase().includes(s)
-  );
+  const query = searchQuery.value.trim().toLowerCase();
+  return data.filter((news) => {
+    const status = news.is_published ? 'published' : 'scheduled';
+    const matchesStatus = publicationFilter.value === 'all' || publicationFilter.value === status;
+    const matchesSearch = !query || [news.title, news.author?.full_name, news.content]
+      .some(value => value?.toLowerCase().includes(query));
+    return matchesStatus && matchesSearch;
+  });
 });
 
 const fileList = ref([]);
@@ -242,7 +268,7 @@ const rowProps = (row) => ({
 
     newFiles.value = [];
     if (item.created_at) {
-      item.created_at = item.created_at.replace('T', ' ').substring(0, 19);
+      item.created_at = item.created_at.replace('T', ' ').slice(0, 16) + ':00';
     }
     selectedItem.value = item;
     showModal.value = true;

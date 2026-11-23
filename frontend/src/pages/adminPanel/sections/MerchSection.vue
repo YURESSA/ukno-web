@@ -60,7 +60,7 @@
             <n-input v-model:value="productForm.name" placeholder="Название товара" />
           </n-form-item-gi>
 
-          <n-form-item-gi label="Категория" v-bind="fieldProps(productForm, 'product', 'category_id', isEdit)">
+          <n-form-item-gi label="Категория" required v-bind="fieldProps(productForm, 'product', 'category_id', isEdit)">
             <n-select
               v-model:value="productForm.category_id"
               :options="categoryOptions"

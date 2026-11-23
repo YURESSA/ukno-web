@@ -606,17 +606,26 @@ Swagger описывает схемы и статусы; этот файл до�
 
 | Функция | HTTP / источник статуса | Точный текст / шаблон | Условие в коде |
 |---|---|---|---|
+| `_apply_product_variants` | `исключение` | `Добавьте хотя бы один цвет с размером` | `Если 'stock' in data` |
+| `_apply_product_variants` | `исключение` | `Добавьте хотя бы один цвет с размером` | `Если 'stock' in data and (not variants)` |
+| `_apply_product_variants` | `исключение` | `Сначала включите размерную сетку товара` | `Если data.get('colors') or data.get('variants')` |
+| `_apply_product_variants` | `исключение` | `Укажите общий остаток или варианты товара` | `Если data.get('colors') or data.get('variants')` |
+| `_apply_product_variants` | `исключение` | `Укажите целое неотрицательное количество товара` | `Если type(stock) is not int or stock < 0` |
 | `_collect_variants` | `исключение` | `Valid color is required for color sizes` | `Если not color` |
-| `_resolve_variant_size` | `исключение` | `Valid size_id is required for each variant` | `Если not size` |
+| `_resolve_variant_size` | `исключение` | `Valid size_id is required for each variant` | `Если not size or size.name == UNSIZED_MERCH_SIZE` |
 | `_resolve_variant_size` | `исключение` | `size_name is required for each variant` | `Ветка возврата ошибки` |
+| `_resolve_variant_size` | `исключение` | `Укажите название размера` | `Если size_name.lower() == UNSIZED_MERCH_SIZE` |
 | `_sync_colors` | `исключение` | `Color name is required` | `Если not item.get('name')` |
 | `_upsert_product_variant` | `исключение` | `Valid color_id is required for variant` | `Если not color or color.product_id != product.product_id` |
 | `_upsert_product_variant` | `исключение` | `Variant belongs to another color` | `Если variant and color_id and (variant.color_id != color_id)` |
 | `_upsert_product_variant` | `исключение` | `Variant belongs to another product` | `Если variant and variant.product_id != product.product_id` |
+| `_upsert_product_variant` | `исключение` | `Укажите общий остаток для товара без размерной сетки` | `Если variant and variant.is_simple` |
 | `add_product_color` | `400` | `Color name is required` | `Если not data.get('name')` |
 | `add_product_color` | `400` | `Product color or size conflicts with existing records` | `Перехвачено IntegrityError` |
+| `add_product_color` | `400` | `Сначала включите размерную сетку товара` | `Если product.simple_variant() is not None` |
 | `add_product_color` | `404` | `Product not found` | `Если not product or product.is_deleted` |
 | `add_product_color_size` | `400` | `Product size conflicts with existing records` | `Перехвачено IntegrityError` |
+| `add_product_color_size` | `400` | `Сначала включите размерную сетку товара` | `Если product.simple_variant() is not None` |
 | `add_product_color_size` | `404` | `Color not found` | `Если not color` |
 | `add_product_color_size` | `404` | `Product not found` | `Если not product or product.is_deleted` |
 | `add_product_images` | `400` | `At least one image is required` | `Если not image_files` |
@@ -633,13 +642,15 @@ Swagger описывает схемы и статусы; этот файл до�
 | `create_order` | `502` | `Failed to create payment` | `Перехвачено Exception` |
 | `create_product` | `400` | `Missing fields: {', '.join(missing)}` | `Если missing` |
 | `create_product` | `400` | `Product data conflicts with existing records` | `Перехвачено IntegrityError` |
+| `create_product` | `400` | `Добавьте хотя бы одну фотографию товара` | `Если not image_files and (not images)` |
 | `create_product` | `404` | `Category not found` | `Если not category` |
 | `delete_banner` | `404` | `Banner not found` | `Если not banner` |
 | `delete_cart_item` | `404` | `Cart item not found` | `Если not item` |
 | `delete_category` | `400` | `Category has products` | `Если category.products` |
 | `delete_category` | `404` | `Category not found` | `Если not category` |
 | `delete_product` | `404` | `Product not found` | `Если not product or product.is_deleted` |
-| `delete_product_image` | `404` | `Image not found` | `Если not image or not image.product or image.product.is_deleted` |
+| `delete_product_image` | `400` | `У товара должна остаться хотя бы одна фотография` | `Если len(product.images) == 1` |
+| `delete_product_image` | `404` | `Image not found` | `Если not image or product.is_deleted` |
 | `list_product_images` | `404` | `Product not found` | `Если not product or product.is_deleted` |
 | `parse_json_payload` | `вызывающий код` | `Invalid JSON payload` | `Если not isinstance(raw_data, str)` |
 | `parse_json_payload` | `вызывающий код` | `Invalid JSON payload` | `Перехвачено json.JSONDecodeError` |
@@ -650,11 +661,14 @@ Swagger описывает схемы и статусы; этот файл до�
 | `update_category` | `404` | `Category not found` | `Если not category` |
 | `update_order_status` | `404` | `Order not found` | `Если not order` |
 | `update_product` | `400` | `Product data conflicts with existing records` | `Перехвачено IntegrityError` |
+| `update_product` | `400` | `Добавьте хотя бы одну фотографию товара` | `Если not image_files and len(images_to_remove) == len(product.images)` |
+| `update_product` | `400` | `Некорректный список фотографий для удаления` | `Если not isinstance(remove_ids, list) or any((type(image_id) is not int for image_id in remove_ids))` |
 | `update_product` | `404` | `Category not found` | `Если not category` |
 | `update_product` | `404` | `Product not found` | `Если not product or product.is_deleted` |
-| `update_product_image` | `404` | `Image not found` | `Если not image or not image.product or image.product.is_deleted` |
+| `update_product_image` | `404` | `Image not found` | `Если not image or product.is_deleted` |
 | `upsert_cart_item` | `400` | `Not enough stock` | `Если quantity > variant.stock` |
 | `upsert_cart_item` | `400` | `quantity must be greater than zero` | `Если quantity < 1` |
+| `upsert_cart_item` | `400` | `Товар без фотографии недоступен для заказа` | `Если not any((image.image_path for image in variant.product.images))` |
 | `upsert_cart_item` | `404` | `Variant not found` | `Если not variant or not variant.product or (not variant.is_active) or variant.product.is_deleted or (not variant.product.is_active)` |
 
 ### [backend/core/services/news_service/news_image_service.py](../core/services/news_service/news_image_service.py)
