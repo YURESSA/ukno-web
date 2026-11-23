@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useDataStore } from '@/stores/counter'
+import { checkAdminAccess, closeAdminSession, isAdminAccessDenied } from '@/utils/adminAccess'
 import Main from '@/pages/main/main.vue'
 
 import MainLayout from '@/layouts/MainLayout.vue'
@@ -264,20 +265,31 @@ const router = createRouter({
   }
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from) => {
+  if (!to.meta.requiresAuth) return
+
   const store = useDataStore()
+  const token = store.auth_key
 
-  if (to.meta.requiresAuth) {
-    if (!store.auth_key) {
-      return next('/login')
-    }
+  if (!token) return '/login'
+  if (to.meta.requiredRole && store.role !== to.meta.requiredRole) return '/'
+  if (to.meta.requiredRole !== 'admin') return
 
-    if (to.meta.requiredRole && store.role !== to.meta.requiredRole) {
-      return next('/')
+  const showLoader = from.matched.length === 0
+  if (showLoader) document.documentElement.classList.add('admin-navigation-pending')
+
+  try {
+    await checkAdminAccess(token)
+  } catch (error) {
+    if (store.auth_key === token && isAdminAccessDenied(error)) {
+      closeAdminSession(store, error.response.status)
     }
+    if (!store.auth_key) return { name: 'LoginPage', replace: true }
+  } finally {
+    if (showLoader) document.documentElement.classList.remove('admin-navigation-pending')
   }
 
-  next()
+  return store.auth_key === token && store.role === 'admin'
 })
 
 export default router

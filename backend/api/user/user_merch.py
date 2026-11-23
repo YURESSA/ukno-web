@@ -190,7 +190,7 @@ class MerchCart(ApiResource):
     @jwt_required()
     @user_ns.expect(cart_item_model, validate=True)
     @user_ns.doc(
-        description="Добавление выбранного цвета и размера товара в корзину или обновление количества",
+        description="Добавление товара с фотографией в корзину или обновление количества",
         body=cart_item_model,
         responses={200: "Позиция корзины обновлена", 400: "Недостаточно остатка или ошибка в данных"},
     )
@@ -269,7 +269,7 @@ class MerchOrders(ApiResource):
     @user_ns.expect(order_model, validate=True)
     @user_ns.doc(
         description=(
-            "Оформление заказа мерча из текущей корзины. "
+            "Оформление заказа мерча из текущей корзины. Товары без фото исключаются из заказа. "
             "Остатки проверяются и списываются при создании заказа."
         ),
         body=order_model,

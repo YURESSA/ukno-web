@@ -1,8 +1,13 @@
 <script setup>
-import { RouterView } from 'vue-router'
+import { RouterLink, RouterView } from 'vue-router'
 import { useNotification } from '@/composables/useNotification'
+import { useAdminAccessMonitor } from '@/composables/useAdminAccessMonitor'
 import Alert from '@/components/ui/alert.vue'
+import BaseButton from '@/components/ui/button/BaseButton.vue'
+import LoadingAnimation from '@/components/shared/loading-animation.vue'
 import { NConfigProvider, ruRU, dateRuRU } from 'naive-ui'
+
+const { canRenderRoute, accessUnavailable, isChecking, refreshAdminAccess } = useAdminAccessMonitor()
 
 const themeOverrides = {
   common: {
@@ -23,7 +28,7 @@ const {
 
 <template>
   <n-config-provider :locale="ruRU" :date-locale="dateRuRU" :theme-overrides="themeOverrides">
-    <router-view />
+    <router-view v-if="canRenderRoute" />
     <alert
       :show="showNotification"
       :message="notificationMessage"
@@ -31,7 +36,52 @@ const {
       @close="closeNotification"
     />
   </n-config-provider>
+  <Teleport to="body">
+    <div class="admin-access-loader">
+      <div v-if="accessUnavailable && !isChecking" class="admin-access-error">
+        <p role="alert">Не удалось проверить доступ. Попробуйте ещё раз.</p>
+        <BaseButton text="Повторить" @click="refreshAdminAccess" />
+        <RouterLink to="/">На главную</RouterLink>
+      </div>
+      <div v-else role="status" aria-label="Проверяем доступ к админке">
+        <LoadingAnimation />
+      </div>
+    </div>
+  </Teleport>
 </template>
+
+<style>
+.admin-access-loader {
+  display: none;
+  position: fixed;
+  inset: 0;
+}
+
+html:is(.admin-access-pending, .admin-navigation-pending, .admin-access-unavailable) body > :not(.admin-access-loader) {
+  display: none !important;
+}
+
+html:is(.admin-access-pending, .admin-navigation-pending, .admin-access-unavailable) .admin-access-loader {
+  display: block;
+}
+
+.admin-access-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  min-height: 100%;
+  padding: 24px;
+  box-sizing: border-box;
+  background: white;
+  text-align: center;
+}
+
+.admin-access-error a {
+  text-decoration: underline;
+}
+</style>
 
 <style scoped>
 header {

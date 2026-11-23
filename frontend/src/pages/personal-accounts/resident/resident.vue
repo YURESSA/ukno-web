@@ -6,7 +6,7 @@
       <Userdata
         :email="profileData.email"
         :phone="profileData.phone"
-        @open="openChange"
+        @open="openPasswordModal = true"
       />
       <DefaultButton @click="openEvents" class="profie__btn" text="Управление событиями"/>
       <DefaultButton @click="openAnalytics" class="profie__btn" text="Статистика"/>
@@ -16,7 +16,7 @@
       </div>
     </div>
   </div>
-  <ChangePassword @close="closeChange" :role="profileData.role" v-if="openPasswordModal"/>
+  <ChangePassword v-if="openPasswordModal" @close="openPasswordModal = false"/>
   <EventsModal @close="closeEvents" v-if="openEventsModal"/>
   <AnalyticsModal @close="closeAnalytics" v-if="openAnalyticsModal"/>
 </template>
@@ -39,16 +39,6 @@ const profileData = computed(() => store.profileData);
 const openPasswordModal = ref(false);
 const openEventsModal = ref(false);
 const openAnalyticsModal = ref(false);
-
-function openChange(){
-  document.body.style.overflowY = 'hidden'
-  openPasswordModal.value = true;
-}
-
-function closeChange(){
-  document.body.style.overflowY = 'auto'
-  openPasswordModal.value = false;
-}
 
 function openEvents(){
   document.body.style.overflowY = 'hidden'
@@ -107,8 +97,7 @@ async function logOut(){
   align-items: flex-start;
   max-height: max-content;
   padding: 60px 80px;
-  min-width: 660px;
-  max-width: 740px;
+  width: 660px;
   gap: 20px;
 
   border-radius: 26px;

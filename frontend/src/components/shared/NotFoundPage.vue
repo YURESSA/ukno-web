@@ -4,17 +4,30 @@
       <img src="/NotFound.png" alt="">
     </div>
     <h2>404</h2>
-    <h4>такой страницы не существует</h4>
-    <BaseButton class="to-main--bth" text="На главную" @click="router.push('/')"/>
+    <h4>{{ description }}</h4>
+    <BaseButton class="to-main--bth" :text="actionLabel" @click="router.push(to)"/>
     <div class="top-semicircle"></div>
     <div class="bottom-semicircle"></div>
   </div>
 </template>
 
 <script setup>
+import { inject, onMounted, onUnmounted } from 'vue';
 import router from '@/router';
 import BaseButton from '../ui/button/BaseButton.vue';
 
+defineProps({
+  description: { type: String, default: 'такой страницы не существует' },
+  actionLabel: { type: String, default: 'На главную' },
+  to: { type: String, default: '/' },
+});
+
+const setMainHeaderAndFooterHidden = inject('set-main-header-and-footer-hidden', null);
+
+if (setMainHeaderAndFooterHidden) {
+  onMounted(() => setMainHeaderAndFooterHidden(true));
+  onUnmounted(() => setMainHeaderAndFooterHidden(false));
+}
 </script>
 
 <style scoped>
@@ -31,8 +44,16 @@ import BaseButton from '../ui/button/BaseButton.vue';
   z-index: 999;
 }
 
-.loading-wrapper > h2, .loading-wrapper > h4 {
-  z-index: 99;
+.not-found-wrapper > h2,
+.not-found-wrapper > h4,
+.not-found-img,
+.to-main--bth {
+  z-index: 1;
+}
+
+h4 {
+  text-align: center;
+  padding-inline: 16px;
 }
 
 .to-main--bth {
@@ -63,11 +84,6 @@ import BaseButton from '../ui/button/BaseButton.vue';
 }
 
 @media (max-width: 768px) {
-  .loading-wrapper{
-    position: fixed;
-    top: 0;
-  }
-
   h4{
     font-size: 28px;
     text-align: center;

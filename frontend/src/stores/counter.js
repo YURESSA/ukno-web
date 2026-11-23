@@ -42,11 +42,15 @@ export const useDataStore = defineStore('data', {
   }),
   actions: {
     setTokenRole(auth_key, role) {
-      this.auth_key = auth_key
-      this.role = role
+      this.$patch(state => {
+        if (state.auth_key !== auth_key) state.profileData = []
+        state.auth_key = auth_key
+        state.role = role
+      })
     },
     clearTokenRole() {
       this.$reset()
+      this.$persist?.()
     },
     deletEvent() {
       this.residentExcursions = []
@@ -89,18 +93,18 @@ export const useDataStore = defineStore('data', {
         throw error
       }
     },
-    async PutPassword(jsonData, url) {
-      try {
-        await axios.put(`${baseUrl}${url}`, jsonData, {
-          headers: {
-            Authorization: `Bearer ${this.auth_key}`,
-            'Content-Type': 'application/json',
-          },
-        })
-      } catch (error) {
-        console.error('Ошибка при смене пароля:', error.response?.data || error.message)
-        throw error
+    async PutPassword(passwords) {
+      const endpoints = {
+        user: 'api/user/profile/password',
+        resident: 'api/resident/profile',
+        admin: 'api/admin/profile',
       }
+      if (!Object.hasOwn(endpoints, this.role)) throw new Error('Unknown profile role')
+
+      await axios.put(baseUrl + endpoints[this.role], passwords, {
+        headers: { Authorization: 'Bearer ' + this.auth_key },
+        passwordChange: true,
+      })
     },
     async PostLoginAdmin(jsonData) {
       try {
@@ -141,32 +145,16 @@ export const useDataStore = defineStore('data', {
         throw error
       }
     },
-    async FetchExcursions() {
-      try {
-        const response = await axios.get(`${baseUrl}api/user/excursions`)
-        this.excursions = response.data
-      } catch (error) {
-        console.error('Ошибка при получении данных:', error.response?.data || error.message)
-        throw error
-      }
+    async FetchExcursions(params, signal) {
+      const response = await axios.get(`${baseUrl}api/user/excursions`, { params, signal })
+      if (!signal?.aborted) this.excursions = response.data
     },
-    async GetFilterExcursions(props) {
-      try {
-        const response = await axios.get(`${baseUrl}api/user/excursions?${props}`)
-        this.excursions = response.data
-      } catch (error) {
-        console.error('Ошибка при получении данных:', error.response?.data || error.message)
-        throw error
-      }
+    async GetFilterExcursions(query) {
+      return this.FetchExcursions(new URLSearchParams(query))
     },
-    async FetchExcursionDetail(excursion_id) {
-      try {
-        const response = await axios.get(`${baseUrl}api/user/excursions_detail/${excursion_id}`)
-        this.excursionDetail = response.data
-      } catch (error) {
-        console.error('Ошибка при получении данных:', error.response?.data || error.message)
-        throw error
-      }
+    async FetchExcursionDetail(excursionId, signal) {
+      const response = await axios.get(`${baseUrl}api/user/excursions_detail/${excursionId}`, { signal })
+      return response.data
     },
     async FetchExcursionDetailResident(excursion_id) {
       try {
@@ -437,7 +425,6 @@ export const useDataStore = defineStore('data', {
             Authorization: `Bearer ${this.auth_key}`,
           },
         })
-        console.log('Данные успешно получены:', response.data)
         this.users = response.data
       } catch (error) {
         console.error('Ошибка при получении данных:', error.response?.data || error.message)
@@ -446,13 +433,12 @@ export const useDataStore = defineStore('data', {
     },
     async PostAdminNewUser(jsonData) {
       try {
-        const response = await axios.post(`${baseUrl}api/admin/users`, jsonData, {
+        await axios.post(`${baseUrl}api/admin/users`, jsonData, {
           headers: {
             Authorization: `Bearer ${this.auth_key}`,
             'Content-Type': 'application/json'
           },
         })
-        console.log('Пользователь успешно добавлен:', response.data)
       } catch (error) {
         console.error('Ошибка при создании:', error.response?.data || error.message)
         throw error
@@ -460,13 +446,12 @@ export const useDataStore = defineStore('data', {
     },
     async PutAdminUser(jsonData, email) {
       try {
-        const response = await axios.put(`${baseUrl}api/admin/users/detail/${encodeURIComponent(email)}`, jsonData, {
+        await axios.put(`${baseUrl}api/admin/users/detail/${encodeURIComponent(email)}`, jsonData, {
           headers: {
             Authorization: `Bearer ${this.auth_key}`,
             'Content-Type': 'application/json',
           },
         })
-        console.log('Успешная смена данных пользователя:', response.data)
       } catch (error) {
         console.error('Ошибка при смене данных пользователя:', error.response?.data || error.message)
         throw error
@@ -474,7 +459,7 @@ export const useDataStore = defineStore('data', {
     },
     async DeleteAdminUser(email) {
       try {
-        const response = await axios.delete(
+        await axios.delete(
           `${baseUrl}api/admin/users/detail/${encodeURIComponent(email)}`,
           {
             headers: {
@@ -482,7 +467,6 @@ export const useDataStore = defineStore('data', {
             },
           },
         )
-        console.log('Пользователь успешно удален:', response.data)
       } catch (error) {
         console.error('Ошибка при удалении :', error.response?.data || error.message)
         throw error
@@ -642,7 +626,6 @@ export const useDataStore = defineStore('data', {
             Authorization: `Bearer ${this.auth_key}`,
           },
         })
-        console.log('Данные успешно получены:', response.data)
         this.adminExcursions = response.data
       } catch (error) {
         console.error('Ошибка при получении данных:', error.response?.data || error.message)
@@ -798,7 +781,6 @@ export const useDataStore = defineStore('data', {
             Authorization: `Bearer ${this.auth_key}`,
           },
         })
-        console.log('Данные успешно получены:', response.data)
         this.adminReservations = response.data
       } catch (error) {
         console.error('Ошибка при получении данных:', error.response?.data || error.message)
@@ -1240,6 +1222,10 @@ export const useDataStore = defineStore('data', {
   persist: {
     key: 'data-store',
     storage: window.localStorage,
-    paths: ['auth_key', 'excursionsStats'],
+    pick: ['auth_key', 'role', 'profileData', 'excursionsStats'],
+    afterHydrate: ({ store }) => {
+      if (!store.auth_key) store.profileData = []
+      store.$persist()
+    },
   },
 })

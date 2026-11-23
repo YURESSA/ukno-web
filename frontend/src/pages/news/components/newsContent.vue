@@ -6,7 +6,7 @@
     <div class="created-at">
       <span>{{ formattedDate }} • УКНО: Сообщество на Урале</span>
     </div>
-    <div class="news-img">
+    <div class="news-img" v-if="news.images && news.images.length > 0">
       <img
         :src="getMainImage"
         :alt="news.title"

@@ -3,6 +3,7 @@ import { useDataStore } from '@/stores/counter'
 import router from '@/router'
 import { notification } from '@/utils/notification'
 import { getApiErrorMessage } from '@/utils/apiError'
+import { checkAdminAccess, closeAdminSession } from '@/utils/adminAccess'
 
 let isHandling401 = false
 
@@ -10,7 +11,6 @@ export function setupAxiosInterceptors() {
   axios.interceptors.response.use(
     (response) => {
       const authorization = response.config?.headers?.Authorization
-      // A request from the previous session must not refill cleared stores.
       if (authorization && authorization !== `Bearer ${useDataStore().auth_key}`) {
         return Promise.reject(new axios.CanceledError('Session changed'))
       }
@@ -24,13 +24,24 @@ export function setupAxiosInterceptors() {
         error.response.data.message = errorMessage
       }
       const status = error.response?.status
-      const authenticated = Boolean(error.config?.headers?.Authorization)
+      const authorization = error.config?.headers?.Authorization
+      const store = authorization ? useDataStore() : null
+      if (status === 403 && store?.role === 'admin' && authorization === `Bearer ${store.auth_key}`) {
+        if (error.config.adminAccessCheck) {
+          closeAdminSession(store, status)
+          if (router.currentRoute.value.path !== '/login') router.replace('/login')
+        } else if (router.currentRoute.value.meta.requiredRole === 'admin') {
+          checkAdminAccess(store.auth_key).catch(() => {})
+        }
+      }
+
+      const authenticated = Boolean(authorization)
       const invalidJwt = status === 422 && /token|signature|segments|jwt|header|padding|subject|claim|\balg\b|алгоритм|токен/i.test(originalMessage || '')
-      if ((status === 401 && authenticated) || (invalidJwt && authenticated)) {
+      const wrongCurrentPassword = error.config?.passwordChange && originalMessage === 'Неверный текущий пароль'
+      if (authenticated && ((status === 401 && !wrongCurrentPassword) || invalidJwt)) {
         const isLoginRequest = error.config?.url?.includes('/login')
         if (!isLoginRequest) {
           const store = useDataStore()
-          // Ignore failures from a token replaced by a subsequent login.
           if (error.config.headers.Authorization === `Bearer ${store.auth_key}`) {
             store.clearTokenRole()
 

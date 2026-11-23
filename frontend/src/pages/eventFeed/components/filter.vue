@@ -113,7 +113,7 @@
 </template>
 
 <script setup>
-import { ref, defineEmits, watch, onMounted, computed } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
 import { NCheckbox, NCheckboxGroup, NSpace, NInputNumber, NSlider, NDatePicker } from 'naive-ui'
 import BaseButton from '@/components/ui/button/BaseButton.vue'
 import DefaultButton from '@/components/ui/button/DefaultButton.vue'
@@ -180,7 +180,7 @@ function handleCheckboxChange(ch){
 //   formData.value.participants_count += 1;
 // }
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close', 'apply', 'reset']);
 
 function closeFilter(){
   emit('close')
@@ -215,32 +215,22 @@ function buildQueryString(formData) {
   return params.toString();
 }
 
-const sendFilter = async () => {
-  const queryString = buildQueryString(formData);
-  try {
-    await store.GetFilterExcursions(queryString);
-    emit('close')
-  } catch (error) {
-    console.error('Ошибка при загрузке экскурсий:', error);
-  }
+function sendFilter() {
+  emit('apply', buildQueryString(formData));
 }
 
-const resetFilter = async () => {
-  try {
-    await store.FetchExcursions();
-    formData.value = {
-      category: [],
-      start_date: '',
-      end_date: '',
-      participants_count: null,
-      format_type: [],
-      min_price: '',
-      max_price: '',
-      age_category: [],
-    }
-  } catch (error) {
-    console.error('Ошибка при загрузке экскурсий:', error);
-  }
+function resetFilter() {
+  formData.value = {
+    category: [],
+    start_date: '',
+    end_date: '',
+    participants_count: null,
+    format_type: [],
+    min_price: '',
+    max_price: '',
+    age_category: [],
+  };
+  emit('reset');
 }
 </script>
 

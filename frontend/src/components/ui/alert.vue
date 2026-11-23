@@ -153,6 +153,7 @@ button:hover{
   p {
     font-size: 16px;
     margin-bottom: 10px;
+    width: 100%;
   }
 
   .notification-header{

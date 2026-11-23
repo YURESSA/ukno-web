@@ -53,7 +53,7 @@ onMounted(() => {
   token.value = route.query.token;
   if (!token.value) {
     notification('Токен отсутствует или недействителен', 'negative');
-    router.push('/login');
+    router.replace({ name: 'LoginPage' });
   }
 });
 
@@ -77,7 +77,7 @@ const handleSubmit = async () => {
       new_password: password.value
     }));
     await notification('Пароль успешно изменен', 'positive');
-    router.push('/login');
+    await router.replace({ name: 'LoginPage' });
   } catch (err) {
     notification(getApiErrorMessage(err, 'Ошибка при смене пароля'), 'negative');
     console.error(err);

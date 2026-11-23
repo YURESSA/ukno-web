@@ -1,5 +1,5 @@
   <template>
-    <div class="page-wrapper">
+    <div v-if="selectedSession" class="page-wrapper">
       <div class="payment-wrapper">
         <Header :title="excursion.title"/>
         <div class="booked-form">
@@ -58,34 +58,62 @@
               </div>
 
               <div class="participants-input">
-                <span>Количество участников</span>
+                <label for="participants-count">Количество участников</label>
                 <div class="participants">
-                  <IconButton class="participants--btn left--btn" type="button" @click="minusParticipants" text="-"/>
-                  <input v-model="formData.participants_count" @input="validateParticipants"/>
-                  <IconButton class="participants--btn right--btn" type="button" @click="plusParticipants" text="+"/>
+                  <IconButton class="participants--btn left--btn" type="button" @click="changeParticipants(-1)" text="-"/>
+                  <input
+                    id="participants-count"
+                    type="text"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    :value="formData.participants_count"
+                    :aria-invalid="showErrors && Boolean(participantsError)"
+                    :aria-describedby="showErrors && participantsError ? 'participants-error' : undefined"
+                    @input="onParticipantsInput"
+                  >
+                  <IconButton class="participants--btn right--btn" type="button" @click="changeParticipants(1)" text="+"/>
                 </div>
+                <p v-if="showErrors && participantsError" id="participants-error" class="booking-error" role="alert">
+                  {{ participantsError }}
+                </p>
               </div>
-              <div v-if="selectedSession">
-                <h5>Итого к оплате: {{ formData.participants_count * selectedSession.cost }} ₽</h5>
+              <div v-if="selectedSession && !participantsError">
+                <h5>Итого к оплате: {{ participantsCount * selectedSession.cost }} ₽</h5>
               </div>
               <BaseButton type="submit" class="sumbit--btn" text="Забронировать"/>
+              <p v-if="bookingError" class="booking-error" role="alert">{{ bookingError }}</p>
               <span class="offer">Нажимая «Забронировать», вы соглашаетесь с условиями приобретения и офертой</span>
             </form>
           </div>
         </div>
       </div>
     </div>
+    <NotFoundPage
+      v-else-if="isBookingNotFound"
+      description="Ссылка на бронирование недействительна"
+      action-label="К списку событий"
+      to="/events"
+    />
+    <div v-else-if="error" class="event-details-error">
+      <p role="alert">{{ error }}</p>
+      <BaseButton text="Повторить" @click="retry" />
+    </div>
+    <LoadingAnimation v-else />
   </template>
 
   <script setup>
 import { sanitizePhoneInput } from '@/utils/adminValidation'
   import Header from './components/header.vue';
+  import NotFoundPage from '@/components/shared/NotFoundPage.vue';
+  import LoadingAnimation from '@/components/shared/loading-animation.vue';
+  import { parseEventRouteId, useEventDetails } from '@/composables/useEventDetails';
   import BaseButton from '@/components/ui/button/BaseButton.vue';
   import IconButton from '@/components/ui/button/IconButton.vue';
   import { useDataStore } from '@/stores/counter';
-  import { onMounted, computed, ref } from 'vue';
+  import { computed, ref, watch } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import { notification } from '@/utils/notification'
+  import { getApiErrorMessage } from '@/utils/apiError'
 
   const onPhoneInput = event => {
     const value = sanitizePhoneInput(event.target.value)
@@ -102,22 +130,21 @@ import { sanitizePhoneInput } from '@/utils/adminValidation'
   const route = useRoute();
   const router = useRouter();
 
-  const excursion = computed(() => store.getExcursionDetail);
+  const routeSessionId = computed(() => parseEventRouteId(route.params.id));
+  const { event: excursion, notFound, error, retry } = useEventDetails(
+    () => route.query.excursion_id,
+    () => routeSessionId.value !== null,
+  );
   const userData = computed(() => store.getProfileData);
-
-  const selectedSession = computed(() => {
-    if (!excursion.value || !excursion.value.sessions) return null;
-    return excursion.value.sessions.find(s => s.session_id === formData.value.session_id) || excursion.value.sessions[0];
-  });
 
   const showErrors = ref(false);
 
   const formData = ref({
-    session_id: parseInt(route.params.id),
+    session_id: routeSessionId.value,
     full_name: userData.value.full_name,
     phone_number: userData.value.phone,
     email: userData.value.email,
-    participants_count: 1,
+    participants_count: '1',
   });
 
   const errors = ref({
@@ -126,34 +153,43 @@ import { sanitizePhoneInput } from '@/utils/adminValidation'
     email: '',
   });
 
-  const load = ref(false)
-
-  onMounted(async () => {
-    try {
-      await store.FetchExcursionDetail(route.query.excursion_id);
-      setTimeout(() => {
-        load.value = true
-      }, 1000)
-    } catch (error) {
-      console.error('Ошибка при загрузке экскурсий:', error);
-      await notification('Произошла ошибка, попробуйте ещё раз', 'negative');
+  const bookingError = ref('')
+  const selectedSession = computed(() =>
+    excursion.value?.sessions?.find(s => s.session_id === formData.value.session_id),
+  );
+  const isBookingNotFound = computed(() =>
+    routeSessionId.value === null || notFound.value || Boolean(excursion.value && !selectedSession.value),
+  );
+  const participantsCount = computed(() => Number(formData.value.participants_count))
+  const participantsError = computed(() => {
+    const count = participantsCount.value
+    if (!Number.isSafeInteger(count) || count < 1) {
+      return 'Укажите целое количество участников от 1'
     }
+    const available = selectedSession.value?.available
+    return Number.isFinite(available) && count > available ? `Свободных мест: ${available}` : ''
+  })
+
+  watch([routeSessionId, () => route.query.excursion_id], ([id]) => {
+    formData.value.session_id = id;
+    showErrors.value = false;
+    bookingError.value = '';
   });
 
-  function validateParticipants(){
-    if(formData.value.participants_count < 1){
-      formData.value.participants_count = 1
+  function onParticipantsInput(event) {
+    const input = event.target
+    if (/^[0-9]*$/.test(input.value)) {
+      formData.value.participants_count = input.value
+    } else {
+      input.value = formData.value.participants_count
     }
   }
 
-  function minusParticipants(){
-    if (formData.value.participants_count > 1){
-      formData.value.participants_count -= 1;
-    }
-  }
-
-  function plusParticipants(){
-    formData.value.participants_count += 1;
+  function changeParticipants(delta) {
+    const count = participantsCount.value
+    const current = Number.isSafeInteger(count) ? count : 0
+    const next = Math.max(1, current + delta)
+    if (Number.isSafeInteger(next)) formData.value.participants_count = String(next)
   }
 
   function formatSessionDate(session) {
@@ -192,7 +228,7 @@ import { sanitizePhoneInput } from '@/utils/adminValidation'
   // Валидация телефона
   const validatePhone = () => {
     const phoneRegex = /^(\+7|8)[0-9]{10}$/;
-    const cleanPhone = formData.value.phone_number.replace(/[^\d+]/g, '');
+    const cleanPhone = (formData.value.phone_number || '').replace(/[^\d+]/g, '');
 
     if (!phoneRegex.test(cleanPhone)) {
       errors.value.phone_number = 'Введите корректный номер телефона';
@@ -203,7 +239,9 @@ import { sanitizePhoneInput } from '@/utils/adminValidation'
   };
 
   const handleSubmit = async () => {
+    if (!selectedSession.value) return;
     showErrors.value = true;
+    bookingError.value = '';
 
     validateName();
     validateEmail();
@@ -211,20 +249,33 @@ import { sanitizePhoneInput } from '@/utils/adminValidation'
 
     const hasErrors = Object.values(errors.value).some(error => error !== '');
 
-    if (hasErrors) {
+    if (hasErrors || participantsError.value) {
       return;
     }
     try {
-      await store.PostReservation(JSON.stringify(formData.value));
+      await store.PostReservation(JSON.stringify({
+        ...formData.value,
+        participants_count: participantsCount.value,
+      }));
       await notification('Бронирование прошло успешно!', 'positive');
       router.push('/profile');
     } catch (error) {
-      console.error('Ошибка бронировании', error);
+      bookingError.value = getApiErrorMessage(error, 'Не удалось забронировать. Попробуйте ещё раз.');
     }
   };
   </script>
 
   <style scoped>
+  .event-details-error {
+    display: grid;
+    min-height: 100vh;
+    padding: 100px 16px 32px;
+    gap: 16px;
+    align-content: center;
+    justify-items: center;
+    text-align: center;
+  }
+
   .page-wrapper {
     display: flex;
     justify-content: center;
@@ -318,6 +369,10 @@ import { sanitizePhoneInput } from '@/utils/adminValidation'
 
   .text-orange{
     color: #F25C03;
+  }
+
+  .booking-error {
+    color: #b42318;
   }
 
   .error-message {
